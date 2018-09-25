@@ -1,0 +1,49 @@
+define
+
+name sub attribute datatype string;
+job-title sub name;
+
+ownership sub relationship,
+    relates owner,
+    relates property;
+
+organisation sub entity,
+    plays member,
+    plays group,
+    plays property,
+    plays owner,
+    plays party,
+    has name;
+
+company sub organisation,
+    plays employer;
+
+person sub entity,
+    has name,
+    plays employee,
+#    plays author,
+    plays party,
+    plays member;
+
+
+affiliation sub relationship,
+    relates party;
+
+membership sub affiliation,
+    relates member as party,
+    relates group as party;
+
+employment sub affiliation,
+    relates employee as member,
+    relates employer as group,
+    has job-title;
+
+
+insert
+$ceo isa person, has name "Sundar Pichai";
+$google isa company, has name "Google";
+$alphabet isa company, has name "Alphabet Group";
+(employee: $ceo, employer: $google) isa employment, has job-title "CEO";
+(property: $google, owner: $alphabet) isa ownership;
+$alphabet-ceo isa person, has name "Larry Page";
+(employee: $alphabet-ceo, employer: $alphabet) isa employment, has job-title "CEO";
