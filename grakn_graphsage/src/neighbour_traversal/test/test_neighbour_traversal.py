@@ -48,8 +48,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
             self.assertTrue(isinstance(neighbour_role.role, Role) or neighbour_role.role in [UNKNOWN_ROLE_TARGET_PLAYS,
                                                                                              UNKNOWN_ROLE_NEIGHBOUR_PLAYS])
-            self.assertIn(neighbour_role.target_or_neighbour_plays, [TARGET_PLAYS, NEIGHBOUR_PLAYS])
-            self.assertTrue(self._assert_types_correct(neighbour_role.neighbour))
+            self.assertIn(neighbour_role.role_direction, [TARGET_PLAYS, NEIGHBOUR_PLAYS])
+            self.assertTrue(self._assert_types_correct(neighbour_role.neighbour_with_neighbourhood))
         except StopIteration:
             pass
 

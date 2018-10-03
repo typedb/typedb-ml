@@ -2,7 +2,6 @@ import itertools
 
 import grakn
 
-
 TARGET_PLAYS = 'target_plays'  # In this case, the neighbour is a relationship in which this concept plays a role
 NEIGHBOUR_PLAYS = 'neighbour_plays'  # In this case the target
 
@@ -12,22 +11,23 @@ UNKNOWN_ROLE_TARGET_PLAYS = "UNKNOWN_ROLE_TARGET_PLAYS"
 
 
 class NeighbourRole:
-    def __init__(self, role, neighbour, target_or_neighbour_plays):
+    def __init__(self, role, neighbour_with_neighbourhood, role_direction):
         self.role = role
-        self.neighbour = neighbour
-        self.target_or_neighbour_plays = target_or_neighbour_plays
+        self.neighbour_with_neighbourhood = neighbour_with_neighbourhood
+        self.role_direction = role_direction
 
 
 class ConceptWithNeighbourhood:
     def __init__(self, concept, neighbourhood):
         self.concept = concept
-        self.neighbourhood = neighbourhood
+        self.neighbourhood = neighbourhood  # An iterator of `NeighbourRole`s
 
 
 def _get_neighbour_role(grakn_tx, role_and_concept_iterator, depth):
-    for role, neighbour, target_or_neighbour_plays in role_and_concept_iterator:
-        neighbour = build_neighbourhood_generator(grakn_tx, neighbour, depth - 1)
-        yield NeighbourRole(role=role, neighbour=neighbour, target_or_neighbour_plays=target_or_neighbour_plays)
+    for role, neighbour, role_direction in role_and_concept_iterator:
+        neighbour_with_neighbourhood = build_neighbourhood_generator(grakn_tx, neighbour, depth - 1)
+        yield NeighbourRole(role=role, neighbour_with_neighbourhood=neighbour_with_neighbourhood,
+                            role_direction=role_direction)
 
 
 def build_neighbourhood_generator(grakn_tx: grakn.Transaction,
@@ -119,19 +119,46 @@ def build_neighbourhood_generator(grakn_tx: grakn.Transaction,
 def collect_to_tree(concept_with_neighbourhood):
     """
     Given the neighbour generators, yield the fully populated tree of each of the target concept's neighbours
-    :param neighbourhood_generators:
+    :param concept_with_neighbourhood:
     :return:
     """
     if concept_with_neighbourhood is not None:
-        neighbour_roles = set()
+        concept_with_neighbourhood.neighbourhood = materialise_subordinate_neighbours(concept_with_neighbourhood)
         for neighbour_role in concept_with_neighbourhood.neighbourhood:
-            neighbour_roles.add(neighbour_role)
-            collect_to_tree(neighbour_role.neighbour)
-
-        concept_with_neighbourhood.neighbourhood = neighbour_roles
+            collect_to_tree(neighbour_role.neighbour_with_neighbourhood)
 
     return concept_with_neighbourhood
 
+
+def materialise_subordinate_neighbours(concept_with_neighbourhood):
+    """
+    Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one
+    layer deeper in the neighbour graph
+    :param concept_with_neighbourhood:
+    :return:
+    """
+    # neighbour_roles = list()
+    # for neighbour_role in concept_with_neighbourhood.neighbourhood:
+    #     neighbour_roles.append(neighbour_role)
+    # return neighbour_roles
+    return [neighbour_role for neighbour_role in concept_with_neighbourhood.neighbourhood]
+
+
+# def generate_depth_layers(concepts_with_neighbourhoods):
+#     """
+#     Create a generator that yields a layer consisting of the neighbours of the preceding layer.
+#     :return:
+#     """
+#     all_neighbour_roles = []
+#     for concept_with_neighbourhood in concepts_with_neighbourhoods:
+#         neighbour_roles = materialise_subordinate_neighbours(concept_with_neighbourhood)
+#         all_neighbour_roles.append(neighbour_roles)
+
+
+# def encode_neighbour_roles(neighbour_roles, role_encoder, thing_encoder):
+#     arr = np.empty(shape)
+#     for neighbour_role in neighbour_roles:
+#         encode_neighbour_role(neighbour_role, role_encoder, thing_encoder)
 
 def get_max_depth(concept_with_neighbourhood):
     """
@@ -145,7 +172,7 @@ def get_max_depth(concept_with_neighbourhood):
     else:
         max_depth = 0
         for neighbour_role in concept_with_neighbourhood.neighbourhood:
-            m = get_max_depth(neighbour_role.neighbour)
+            m = get_max_depth(neighbour_role.neighbour_with_neighbourhood)
             if m > max_depth:
                 max_depth = m
         return max_depth + 1
