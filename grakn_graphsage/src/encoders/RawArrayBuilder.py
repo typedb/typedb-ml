@@ -5,25 +5,6 @@ import numpy as np
 from grakn_graphsage.src.neighbour_traversal.neighbour_traversal import NeighbourRole
 
 
-class ArraysAtDepth:
-    def __init__(self, role_type, role_dir, thing_type, data_type, values, long_value, double_value, boolean_value, date_value,
-                 string_value):
-        self.role_dir = role_dir
-        self.role_type = role_type
-        self.thing_type = thing_type
-
-        self.data_type = data_type
-
-        # # data_type = 0 for non-attributes, TODO or use None/NaN and then zero-index instead?
-        # self.long_value = long_value  # data_type = 1
-        # self.double_value = double_value  # data_type = 2
-        # self.boolean_value = boolean_value  # data_type = 3
-        # self.date_value = date_value  # data_type = 4
-        # self.string_value = string_value  # data_type = 5
-
-        self._values = values
-
-
 class RawArrayBuilder:
 
     DEFAULT_VALUE = np.nan
@@ -83,7 +64,7 @@ class RawArrayBuilder:
         # Populate the arrays from the neighbour traversals
         #####################################################
 
-        def build_for_thing(thing, matrices_at_this_depth, current_indices):
+        def _build_for_thing(thing, matrices_at_this_depth, current_indices):
             thing_type_index = self._thing_type_labels.index(
                 thing.type().label())
             matrices_at_this_depth['thing_type'][current_indices] = thing_type_index
@@ -102,7 +83,7 @@ class RawArrayBuilder:
             # Store the index of the matrix the value was written to (which should match with its type)
             matrices_at_this_depth['data_type'][current_indices] = data_type_index
 
-        def build_neighbour_roles(neighbour_roles, depthwise_matrices, indices):
+        def _build_neighbour_roles(neighbour_roles, depthwise_matrices, indices):
 
             depth = len(indices)
             matrices_at_this_depth = depthwise_matrices[depth]
@@ -110,36 +91,23 @@ class RawArrayBuilder:
             for n, neighbour_role in enumerate(neighbour_roles):
                 current_indices = tuple(indices + [n])  # Needs to be a tuple to index a numpy array
 
-                if depth > 0:
+                if neighbour_role.role is not None:
                     role_type_index = self._role_type_labels.index(neighbour_role.role.label())
                     matrices_at_this_depth['role_type'][current_indices] = role_type_index
 
+                if neighbour_role.role_direction is not None:
                     role_direction = neighbour_role.role_direction
                     matrices_at_this_depth['role_direction'][current_indices] = role_direction
 
-                    concept_with_neighbourhood = neighbour_role
-                else:
-                    concept_with_neighbourhood = neighbour_role.neighbour_with_neighbourhood
+                _build_for_thing(neighbour_role.neighbour_with_neighbourhood, matrices_at_this_depth, current_indices)
 
-                build_for_thing(concept_with_neighbourhood, matrices_at_this_depth, current_indices)
-
-                depthwise_matrices = build_neighbour_roles(concept_with_neighbourhood.neighbourhood,
-                                                           depthwise_matrices, current_indices)
-
+                depthwise_matrices = _build_neighbour_roles(neighbour_role.neighbour_with_neighbourhood.neighbourhood,
+                                                            depthwise_matrices, current_indices)
             return depthwise_matrices
 
+        # Dummy NeighbourRoles so that a consistent data structure can be used right from the top level
+        top_neighbour_roles = [NeighbourRole(None, concept_with_neighbourhood, None) for concept_with_neighbourhood in
+                               concepts_with_neighbourhoods]
 
-        for c, concept_with_neighbourhood in enumerate(concepts_with_neighbourhoods):
-            # concept_tree = collect_to_tree(concept_with_neighbourhood)
-
-            # TODO Should I change the top level concepts into the form of NeighbourRoles, or treat the top level as a special case?
-
-            build_for_thing(concept_with_neighbourhood.concept, [], depthwise_matrices[0])
-            indices = [c]
-            depthwise_matrices = build_neighbour_roles(concept_with_neighbourhood.neighbourhood, depthwise_matrices, indices)
-
-
-
-            concept_with_neighbourhood.neighbourhood = [neighbour_role ]
-            for neighbour_role in concept_with_neighbourhood.neighbourhood:
-                collect_to_tree(neighbour_role.neighbour_with_neighbourhood)
+        depthwise_matrices = _build_neighbour_roles(top_neighbour_roles, depthwise_matrices, [])
+        return depthwise_matrices
