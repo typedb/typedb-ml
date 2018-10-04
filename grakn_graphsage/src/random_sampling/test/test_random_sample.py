@@ -3,6 +3,11 @@ import unittest
 from grakn_graphsage.src.random_sampling.random_sampling import random_sample
 
 
+def generator(iterable):
+    for it in iterable:
+        yield it
+
+
 class TestRandomSample(unittest.TestCase):
 
     def _default_tests(self, population, sample_size, samples):
@@ -27,7 +32,8 @@ class TestRandomSample(unittest.TestCase):
         """
         sample_size = 5
         population = list(range(10))
-        samples = random_sample(population, sample_size)
+        population_generator = generator(population)
+        samples = random_sample(population_generator, sample_size)
 
         self._default_tests(population, sample_size, samples)
 
@@ -41,7 +47,8 @@ class TestRandomSample(unittest.TestCase):
         """
         sample_size = 10
         population = list(range(5))
-        samples = random_sample(population, sample_size)
+        population_generator = generator(population)
+        samples = random_sample(population_generator, sample_size)
 
         self._default_tests(population, sample_size, samples)
 
@@ -50,6 +57,6 @@ class TestRandomSample(unittest.TestCase):
 
     def test_zero_population(self):
         sample_size = 10
-        population = []
+        population = generator([])
         samples = random_sample(population, sample_size)
-        self.assertEqual(None, samples)
+        self.assertEqual([], samples)

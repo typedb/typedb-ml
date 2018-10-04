@@ -1,12 +1,5 @@
 
-
 import unittest
-# from parameterized import parameterized
-# from collections import Generator
-# import itertools.Chain as chain
-
-from ddt import ddt, data
-
 import grakn
 from grakn.service.Session.Concept.Concept import Concept, Role
 
@@ -17,7 +10,7 @@ from grakn_graphsage.src.neighbour_traversal.neighbour_traversal import build_ne
 client = grakn.Grakn(uri="localhost:48555")
 session = client.session(keyspace="test_schema")
 
-@ddt
+
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
     def setUp(self):
         self.tx = session.transaction(grakn.TxType.WRITE)
@@ -60,16 +53,22 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         if neighbour_role is not None:
             self._assert_depth_correct(neighbour_role.neighbour)
 
-    @data(1, 2, 3)
-    def test_neighbour_traversal_structure_types(self, k):
-        self._concept_with_neighbourhood = build_neighbourhood_generator(self.tx, self._concept, k)
-        self._assert_types_correct(self._concept_with_neighbourhood)
+    def test_neighbour_traversal_structure_types(self):
+        data = ((1,), (2, 3), (2, 3, 4))
+        for sample_sizes in data:
+            with self.subTest(sample_sizes=str(data)):
+                self._concept_with_neighbourhood = build_neighbourhood_generator(self.tx, self._concept, sample_sizes)
+                self._assert_types_correct(self._concept_with_neighbourhood)
 
-    @data(1, 2, 3)
-    def test_neighbour_traversal_check_depth(self, k):
-        self._concept_with_neighbourhood = build_neighbourhood_generator(self.tx, self._concept, k)
+    def test_neighbour_traversal_check_depth(self):
+        data = ((1,), (2, 3), (2, 3, 4))
+        for sample_sizes in data:
+            with self.subTest(sample_sizes=str(data)):
+                self._concept_with_neighbourhood = build_neighbourhood_generator(self.tx, self._concept, sample_sizes)
 
-        collected_tree = collect_to_tree(self._concept_with_neighbourhood)
+                collected_tree = collect_to_tree(self._concept_with_neighbourhood)
 
-        self.assertEqual(len(collected_tree.neighbourhood), 2)
-        self.assertEqual(k, get_max_depth(self._concept_with_neighbourhood))
+                with self.subTest("Check number of immediate neighbours"):
+                    self.assertEqual(len(collected_tree.neighbourhood), sample_sizes[0])
+                with self.subTest("Check max depth of tree"):
+                    self.assertEqual(len(sample_sizes), get_max_depth(self._concept_with_neighbourhood))

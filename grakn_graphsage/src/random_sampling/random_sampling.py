@@ -22,9 +22,6 @@ def random_sample(population, sample_size):
     results = []
     stored_items = []
 
-    if len(population) == 0:
-        return None
-
     for i, item in enumerate(population):
         if i <= sample_size and stored_items is not None:
             # If we aren't yet sure if we have enough items then record the ones we've seen
@@ -38,10 +35,12 @@ def random_sample(population, sample_size):
                 results.insert(r, item)  # add first n items in random order
             else:
                 results[r] = item  # at a decreasing rate, replace random items
-
-    while len(results) < sample_size:
-        # Now we start sampling with replacement
-        n_additional_required = sample_size - len(results)
-        results += random_sample(stored_items, n_additional_required)
+    if len(results) > 0:
+        while len(results) < sample_size:
+            # Now we start sampling with replacement
+            n_additional_required = sample_size - len(results)
+            results += random_sample(stored_items, n_additional_required)
+    else:
+        return []
 
     return results
