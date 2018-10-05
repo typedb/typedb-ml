@@ -1,8 +1,6 @@
 import itertools
-
 import grakn
-
-from grakn_graphsage.src.sampling import random
+import grakn_graphsage.src.sampling.random as rnd
 
 TARGET_PLAYS = 'target_plays'  # In this case, the neighbour is a relationship in which this concept plays a role
 NEIGHBOUR_PLAYS = 'neighbour_plays'  # In this case the target
@@ -155,7 +153,7 @@ def random_sample_generator(population, sample_size):
     """
     Just a wrapper for `random_sample` to make a generator
     """
-    samples = random.random_sample(population, sample_size)
+    samples = rnd.random_sample(population, sample_size)
     for sample in samples:
         yield sample
 

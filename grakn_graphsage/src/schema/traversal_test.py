@@ -1,9 +1,6 @@
 import unittest
-
 import grakn
-
-from grakn_graphsage.src.schema_extraction.get_schema_concept_types import labels_from_types, get_schema_concept_types, \
-    METATYPE_LABELS, GET_THING_TYPES_QUERY, GET_ROLE_TYPES_QUERY
+import grakn_graphsage.src.schema.traversal as trv
 
 
 class TestGetSchemaConceptTypes(unittest.TestCase):
@@ -17,8 +14,8 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
         self._tx.close()
 
     def _function_calls(self, query, include_implicit, include_metatypes):
-        schema_concept_types = get_schema_concept_types(self._tx, query, include_implicit=include_implicit, include_metatypes=include_metatypes)
-        labels = labels_from_types(schema_concept_types)
+        schema_concept_types = trv.get_schema_concept_types(self._tx, query, include_implicit=include_implicit, include_metatypes=include_metatypes)
+        labels = trv.labels_from_types(schema_concept_types)
         return labels
 
     def _filtering(self, query, num_types):
@@ -29,23 +26,23 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
 
         with self.subTest('metatype_filtering'):
             labels = self._function_calls(query, True, False)
-            self.assertFalse(any([label in METATYPE_LABELS for label in labels]))
+            self.assertFalse(any([label in trv.METATYPE_LABELS for label in labels]))
 
         with self.subTest('all_members'):
             labels = list(self._function_calls(query, True, True))
             print(labels)
 
             with self.subTest("contains implicit"):
-                self.assertTrue(any([label in METATYPE_LABELS for label in labels]))
+                self.assertTrue(any([label in trv.METATYPE_LABELS for label in labels]))
 
             with self.subTest("contains metatypes"):
-                self.assertFalse(all([label in METATYPE_LABELS for label in labels]))
+                self.assertFalse(all([label in trv.METATYPE_LABELS for label in labels]))
 
             with self.subTest("length correct"):
                 self.assertEqual(len(labels), num_types)
 
     def test_thing_filtering(self):
-        self._filtering(GET_THING_TYPES_QUERY, 16)
+        self._filtering(trv.GET_THING_TYPES_QUERY, 16)
 
     def test_role_filtering(self):
-        self._filtering(GET_ROLE_TYPES_QUERY, 14)
+        self._filtering(trv.GET_ROLE_TYPES_QUERY, 14)

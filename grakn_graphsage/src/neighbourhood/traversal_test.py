@@ -1,11 +1,7 @@
-
 import unittest
 import grakn
-from grakn.service.Session.Concept.Concept import Concept, Role
-
-from grakn_graphsage.src.neighbourhood.neighbour_traversal import build_neighbourhood_generator, NeighbourRole, \
-    ConceptWithNeighbourhood, NEIGHBOUR_PLAYS, TARGET_PLAYS, collect_to_tree, UNKNOWN_ROLE_TARGET_PLAYS, \
-    UNKNOWN_ROLE_NEIGHBOUR_PLAYS, get_max_depth
+import grakn.service.Session.Concept.Concept as concept
+import grakn_graphsage.src.neighbourhood.traversal as trv
 
 client = grakn.Grakn(uri="localhost:48555")
 session = client.session(keyspace="test_schema")
@@ -30,18 +26,20 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         :param concept_with_neighbourhood:
         :return:
         """
-        self.assertIsInstance(concept_with_neighbourhood, ConceptWithNeighbourhood)
-        self.assertIsInstance(concept_with_neighbourhood.concept, Concept)
+        self.assertIsInstance(concept_with_neighbourhood, trv.ConceptWithNeighbourhood)
+        self.assertIsInstance(concept_with_neighbourhood.concept, concept.Concept)
         self.assertIn(type(concept_with_neighbourhood.neighbourhood).__name__, ('generator', 'chain'))
 
         try:
             neighbour_role = next(concept_with_neighbourhood.neighbourhood)
 
-            self.assertIsInstance(neighbour_role, NeighbourRole)
+            self.assertIsInstance(neighbour_role, trv.NeighbourRole)
 
-            self.assertTrue(isinstance(neighbour_role.role, Role) or neighbour_role.role in [UNKNOWN_ROLE_TARGET_PLAYS,
-                                                                                             UNKNOWN_ROLE_NEIGHBOUR_PLAYS])
-            self.assertIn(neighbour_role.role_direction, [TARGET_PLAYS, NEIGHBOUR_PLAYS])
+            self.assertTrue(
+                isinstance(neighbour_role.role, concept.Role)
+                or neighbour_role.role in [trv.UNKNOWN_ROLE_TARGET_PLAYS,
+                                           trv.UNKNOWN_ROLE_NEIGHBOUR_PLAYS])
+            self.assertIn(neighbour_role.role_direction, [trv.TARGET_PLAYS, trv.NEIGHBOUR_PLAYS])
             self.assertTrue(self._assert_types_correct(neighbour_role.neighbour_with_neighbourhood))
         except StopIteration:
             pass
@@ -57,18 +55,20 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_with_neighbourhood = build_neighbourhood_generator(self.tx, self._concept, sample_sizes)
+                self._concept_with_neighbourhood = trv.build_neighbourhood_generator(self.tx, self._concept,
+                                                                                           sample_sizes)
                 self._assert_types_correct(self._concept_with_neighbourhood)
 
     def test_neighbour_traversal_check_depth(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_with_neighbourhood = build_neighbourhood_generator(self.tx, self._concept, sample_sizes)
+                self._concept_with_neighbourhood = trv.build_neighbourhood_generator(self.tx, self._concept,
+                                                                                           sample_sizes)
 
-                collected_tree = collect_to_tree(self._concept_with_neighbourhood)
+                collected_tree = trv.collect_to_tree(self._concept_with_neighbourhood)
 
                 with self.subTest("Check number of immediate neighbours"):
                     self.assertEqual(len(collected_tree.neighbourhood), sample_sizes[0])
                 with self.subTest("Check max depth of tree"):
-                    self.assertEqual(len(sample_sizes), get_max_depth(self._concept_with_neighbourhood))
+                    self.assertEqual(len(sample_sizes), trv.get_max_depth(self._concept_with_neighbourhood))
