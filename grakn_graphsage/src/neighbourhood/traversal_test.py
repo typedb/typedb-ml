@@ -3,7 +3,7 @@ import unittest
 import grakn
 from grakn.service.Session.Concept.Concept import Concept, Role
 
-from grakn_graphsage.src.neighbour_traversal.neighbour_traversal import build_neighbourhood_generator, NeighbourRole, \
+from grakn_graphsage.src.neighbourhood.neighbour_traversal import build_neighbourhood_generator, NeighbourRole, \
     ConceptWithNeighbourhood, NEIGHBOUR_PLAYS, TARGET_PLAYS, collect_to_tree, UNKNOWN_ROLE_TARGET_PLAYS, \
     UNKNOWN_ROLE_NEIGHBOUR_PLAYS, get_max_depth
 
