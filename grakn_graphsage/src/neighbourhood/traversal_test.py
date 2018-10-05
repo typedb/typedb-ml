@@ -72,3 +72,16 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                     self.assertEqual(len(collected_tree.neighbourhood), sample_sizes[0])
                 with self.subTest("Check max depth of tree"):
                     self.assertEqual(len(sample_sizes), trv.get_max_depth(self._concept_with_neighbourhood))
+
+    def test_neighbour_traversal_is_deterministic(self):
+        data = ((1,), (2, 3), (2, 3, 4))
+        for sample_sizes in data:
+            def to_test():
+                return trv.collect_to_tree(trv.build_neighbourhood_generator(self.tx, self._concept, sample_sizes))
+
+            with self.subTest(sample_sizes=str(data)):
+                concept_with_neighbourhood = to_test()
+
+                for i in range(10):
+                    new_concept_with_neighbourhood = to_test()
+                    self.assertEqual(new_concept_with_neighbourhood, concept_with_neighbourhood)

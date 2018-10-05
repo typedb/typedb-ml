@@ -31,11 +31,11 @@ if __name__ == '__main__':
     session = client.session(keyspace="test_schema")
     tx = session.transaction(grakn.TxType.WRITE)
 
-    schema_concept_types = get_schema_concept_types(tx, GET_THING_TYPES_QUERY, include_implicit=False, include_metatypes=True)
+    schema_concept_types = get_schema_concept_types(tx, GET_THING_TYPES_QUERY, include_implicit=True, include_metatypes=False)
     labels = labels_from_types(schema_concept_types)
-    [print(label) for label in labels]
+    print(list(labels))
 
     print("=======================================")
-    schema_concept_types = get_schema_concept_types(tx, GET_ROLE_TYPES_QUERY, include_implicit=True, include_metatypes=True)
+    schema_concept_types = get_schema_concept_types(tx, GET_ROLE_TYPES_QUERY, include_implicit=True, include_metatypes=False)
     labels = labels_from_types(schema_concept_types)
-    [print(label) for label in labels]
+    print(list(labels))

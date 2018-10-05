@@ -2,12 +2,25 @@ import itertools
 import grakn
 import grakn_graphsage.src.sampling.random as rnd
 
-TARGET_PLAYS = 'target_plays'  # In this case, the neighbour is a relationship in which this concept plays a role
-NEIGHBOUR_PLAYS = 'neighbour_plays'  # In this case the target
 
-# Only needed due to a bug
-UNKNOWN_ROLE_NEIGHBOUR_PLAYS = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
-UNKNOWN_ROLE_TARGET_PLAYS = "UNKNOWN_ROLE_TARGET_PLAYS"
+TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this concept plays a role
+NEIGHBOUR_PLAYS = 1  # In this case the target
+
+
+class MockRole:
+    """Only needed due to a bug"""
+    def __init__(self, label):
+        self._label = label
+
+    def label(self):
+        return self._label
+
+
+UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
+UNKNOWN_ROLE_TARGET_PLAYS_LABEL = "UNKNOWN_ROLE_TARGET_PLAYS"
+
+UNKNOWN_ROLE_NEIGHBOUR_PLAYS = MockRole(UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL)
+UNKNOWN_ROLE_TARGET_PLAYS = MockRole(UNKNOWN_ROLE_TARGET_PLAYS_LABEL)
 
 MAX_LIMIT = 10000
 

@@ -9,6 +9,8 @@ with replacement.
 
 """
 
+random.seed(1)
+
 
 def random_sample(population, sample_size):
     """
