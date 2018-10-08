@@ -4,38 +4,50 @@ import grakn
 
 import grakn_graphsage.src.encoders.raw_array_building as builders
 import grakn_graphsage.src.neighbourhood.traversal as trv
+import grakn_graphsage.src.neighbourhood.traversal_mocks as mock
 
+
+import numpy as np
 client = grakn.Grakn(uri="localhost:48555")
 session = client.session(keyspace="test_schema")
 
 
+# def expected_output():
+#     """
+#
+#     :return: A list of length 3, each element is a dict. Each dict holds matrices for the different properties we need.
+#     """
+#
+#     # 'role_direction', np.int), ('role_type', np.int), ('thing_type', np.int), ('data_type', np.int),
+#     #          ('value_long', np.int), ('value_double', np.float), ('value_boolean', np.bool),
+#     #          ('value_date', np.datetime64), ('value_string', np.str)])
+#
+#     full_shape = (1, 2, 2)
+#
+#     o = {'role_type': np.full(full_shape[:1], np.nan, np.int)}
+
+
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
+
     def setUp(self):
-        self.tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._neighbourhood_sizes = (2, 2)
+        self._concept_info_with_neighbourhood = mock.mock_traversal_output()
 
-        # identifier = "Jacob J. Niesz"
-        # entity_query = "match $x isa person, has identifier '{}'; get $x;".format(identifier)
-        entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
-
-        self._concept = list(self.tx.query(entity_query))[0].get('x')
-        self._neighbourhood_sizes = (2, 3)
-        self._concept_with_neighbourhood = trv.build_neighbourhood_generator(self.tx, self._concept, self._neighbourhood_sizes)
-
+        self._top_level_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(
+            [self._concept_info_with_neighbourhood])
+        
     def tearDown(self):
-        self.tx.close()
+        self._tx.close()
 
     def test_build_raw_arrays(self):
-        thing_type_labels = ['ownership', 'affiliation', 'name', 'organisation', 'person', '@has-name', 'employment',
-                             'membership', 'job-title', 'company', '@has-job-title']
-        # role_type_labels = ['property', 'owner', 'party', '@has-name-value', 'group', 'member', '@has-name-owner',
-        #                     '@has-job-title-value', 'employer', 'employee', '@has-job-title-owner']
+        thing_type_labels = ['name', 'person', '@has-name', 'employment', 'company']
 
         # TODO Only required while we have a bug on roles as variables in Graql
-        role_type_labels = [trv.UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL, trv.UNKNOWN_ROLE_TARGET_PLAYS_LABEL]
+        role_type_labels = ['employee', 'employer', '@has-name-value', '@has-name-owner']
 
-        starting_concepts = [self._concept_with_neighbourhood]
-        n_starting_concepts = len(starting_concepts)
+        n_starting_concepts = len(self._top_level_roles)
 
         builder = builders.RawArrayBuilder(thing_type_labels, role_type_labels, self._neighbourhood_sizes,
                                            n_starting_concepts)
-        depthwise_matrices = builder.build_raw_arrays(starting_concepts)
+        depthwise_matrices = builder.build_raw_arrays(self._top_level_roles)

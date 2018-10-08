@@ -1,9 +1,9 @@
 
 class ConceptInfo:
-    def __init__(self, id, type_label, metatype_label, data_type=None, value=None):
+    def __init__(self, id, type_label, base_type_label, data_type=None, value=None):
         self.id = id
         self.type_label = type_label
-        self.metatype_label = metatype_label
+        self.base_type_label = base_type_label  # TODO rename to base_type in line with Client Python
 
         # If the concept is an attribute
         self.data_type = data_type

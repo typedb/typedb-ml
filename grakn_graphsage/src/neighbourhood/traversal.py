@@ -78,7 +78,7 @@ class NeighbourhoodSampler:
         #     # Optionally stop further propagation through attributes, since they are shared across the knowledge
         #     # graph so this may not provide relevant information
 
-        if target_concept_info.metatype_label == 'relationship':
+        if target_concept_info.base_type_label == 'relationship':
             # Find its roleplayers
             roleplayers = self._query_executor.get_roleplayers(target_concept_info, limit)
 
