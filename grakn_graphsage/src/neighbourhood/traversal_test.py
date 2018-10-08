@@ -5,13 +5,22 @@ import grakn_graphsage.src.neighbourhood.traversal as trv
 import grakn_graphsage.src.neighbourhood.executor as ex
 import grakn_graphsage.src.sampling.first as first
 
-client = grakn.Grakn(uri="localhost:48555")
-session = client.session(keyspace="test_schema")
-
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
+
+    session = None
+
+    @classmethod
+    def setUpClass(cls):
+        client = grakn.Grakn(uri="localhost:48555")
+        cls.session = client.session(keyspace="test_schema")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.session.close()
+
     def setUp(self):
-        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = self.session.transaction(grakn.TxType.WRITE)
 
         # identifier = "Jacob J. Niesz"
         # entity_query = "match $x isa person, has identifier '{}'; get $x;".format(identifier)
