@@ -14,7 +14,7 @@ def build_concept_info(concept):
 
     id = concept.id
     type_label = concept.type().label()
-    metatype_label = concept.base_type.name
+    metatype_label = concept.base_type.lower()
 
     if metatype_label == 'ATTRIBUTE':
         data_type = concept.data_type()

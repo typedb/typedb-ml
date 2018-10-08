@@ -34,7 +34,7 @@ class TraversalExecutor:
                 relationship_concept = answer.get("relationship")
                 relationship_info = concept.build_concept_info(relationship_concept)
 
-                yield role_label, TARGET_PLAYS, relationship_info
+                yield {'role_label': role_label, 'role_direction': TARGET_PLAYS, 'neighbour_info': relationship_info}
 
         return _roles_played_iterator()
 
@@ -60,6 +60,6 @@ class TraversalExecutor:
                 role_label = UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL
                 roleplayer_concept = answer.get("x")
                 roleplayer_info = concept.build_concept_info(roleplayer_concept)
-                yield role_label, NEIGHBOUR_PLAYS, roleplayer_info
+                yield {'role_label': role_label, 'role_direction': NEIGHBOUR_PLAYS, 'neighbour_info': roleplayer_info}
 
         return _get_roleplayers_iterator()

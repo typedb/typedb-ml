@@ -31,8 +31,8 @@ class NeighbourhoodSampler:
         self._query_executor = query_executor
         self._sampler = sampler
 
-    def build_neighbourhood_generator(self, target_concept_info: concept.ConceptInfo, neighbour_sample_sizes: tuple,
-                                      limit_factor=2):
+    def __call__(self, target_concept_info: concept.ConceptInfo, neighbour_sample_sizes: tuple,
+                 limit_factor=2):
 
         def _empty():
             yield from ()
@@ -93,11 +93,12 @@ class NeighbourhoodSampler:
                                                                          sample_size)
         return concept_info_with_neighbourhood
 
-    def _get_neighbour_role(self, role_and_concept_iterator, neighbour_sample_sizes, **kwargs):
-        for role_label, neighbour_id, role_direction in role_and_concept_iterator:
-            neighbour_info_with_neighbourhood = self.build_neighbourhood_generator(neighbour_id, neighbour_sample_sizes,
-                                                                                   **kwargs)
-            yield NeighbourRole(role_label=role_label, role_direction=role_direction,
+    def _get_neighbour_role(self, role_and_concept_info_iterator, neighbour_sample_sizes, **kwargs):
+
+        for connection in role_and_concept_info_iterator:
+            neighbour_info_with_neighbourhood = self(connection['neighbour_info'], neighbour_sample_sizes, **kwargs)
+
+            yield NeighbourRole(role_label=connection['role_label'], role_direction=connection['role_direction'],
                                 neighbour_info_with_neighbourhood=neighbour_info_with_neighbourhood)
 
 
