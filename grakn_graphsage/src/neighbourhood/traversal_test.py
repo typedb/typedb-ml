@@ -26,7 +26,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         :param concept_with_neighbourhood:
         :return:
         """
-        self.assertIsInstance(concept_with_neighbourhood, trv.ConceptWithNeighbourhood)
+        self.assertIsInstance(concept_with_neighbourhood, trv.ConceptInfoWithNeighbourhood)
         self.assertIsInstance(concept_with_neighbourhood.concept, concept.Concept)
         self.assertIn(type(concept_with_neighbourhood.neighbourhood).__name__, ('generator', 'chain'))
 

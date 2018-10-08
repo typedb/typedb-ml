@@ -5,17 +5,25 @@ import grakn_graphsage.src.neighbourhood.concept as concept
 MAX_LIMIT = 10000
 
 
-class ConceptWithNeighbourhood:
+class ConceptInfoWithNeighbourhood:
     def __init__(self, concept_info: concept.ConceptInfo, neighbourhood: collections.Generator):
         self.concept_info = concept_info
         self.neighbourhood = neighbourhood  # An iterator of `NeighbourRole`s
 
 
 class NeighbourRole:
-    def __init__(self, role_label: str, role_direction: int, neighbour_with_neighbourhood: ConceptWithNeighbourhood):
+    def __init__(self, role_label: (str, None), role_direction: (int, None),
+                 neighbour_info_with_neighbourhood: ConceptInfoWithNeighbourhood):
         self.role_label = role_label
         self.role_direction = role_direction
-        self.neighbour_with_neighbourhood = neighbour_with_neighbourhood
+        self.neighbour_info_with_neighbourhood = neighbour_info_with_neighbourhood
+
+
+def concepts_with_neighbourhoods_to_neighbour_roles(concept_infos_with_neighbourhoods):
+    """Dummy NeighbourRoles so that a consistent data structure can be used right from the top level"""
+    top_level_neighbour_roles = [NeighbourRole(None, None, concept_info_with_neighbourhood) for
+                                 concept_info_with_neighbourhood in concept_infos_with_neighbourhoods]
+    return top_level_neighbour_roles
 
 
 class NeighbourhoodSampler:
@@ -23,9 +31,8 @@ class NeighbourhoodSampler:
         self._query_executor = query_executor
         self._sampler = sampler
 
-    def build_neighbourhood_generator(self,
-                                      target_concept_info: concept.ConceptInfo,
-                                      neighbour_sample_sizes: tuple, limit_factor=2):
+    def build_neighbourhood_generator(self, target_concept_info: concept.ConceptInfo, neighbour_sample_sizes: tuple,
+                                      limit_factor=2):
 
         def _empty():
             yield from ()
@@ -34,7 +41,7 @@ class NeighbourhoodSampler:
 
         if depth == 0:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return ConceptWithNeighbourhood(concept_info=target_concept_info, neighbourhood=_empty())
+            return ConceptInfoWithNeighbourhood(concept_info=target_concept_info, neighbourhood=_empty())
 
         sample_size = neighbour_sample_sizes[0]
         next_neighbour_sample_sizes = neighbour_sample_sizes[1:]
@@ -56,8 +63,8 @@ class NeighbourhoodSampler:
 
         neighbourhood = self._get_neighbour_role(roles_played, next_neighbour_sample_sizes, limit_factor=limit_factor)
 
-        concept_with_neighbourhood = ConceptWithNeighbourhood(concept_info=target_concept_info,
-                                                              neighbourhood=neighbourhood)
+        concept_info_with_neighbourhood = ConceptInfoWithNeighbourhood(concept_info=target_concept_info,
+                                                                       neighbourhood=neighbourhood)
 
         # TODO If user doesn't attach anything to impicit @has relationships, then these could be filtered out. Instead
         # another query would be required: "match $x id {}, has attribute $attribute; get $attribute;"
@@ -76,23 +83,22 @@ class NeighbourhoodSampler:
             roleplayers = self._query_executor.get_roleplayers(target_concept_info, limit)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
-            concept_with_neighbourhood.neighbourhood = itertools.chain(concept_with_neighbourhood.neighbourhood,
-                                                                       self._get_neighbour_role(
-                                                                                           roleplayers,
-                                                                                           next_neighbour_sample_sizes))
+            concept_info_with_neighbourhood.neighbourhood = itertools.chain(
+                concept_info_with_neighbourhood.neighbourhood,
+                self._get_neighbour_role(roleplayers, next_neighbour_sample_sizes))
 
         # Randomly sample the neighbourhood
-        concept_with_neighbourhood.neighbourhood = sample_generator(self._sampler,
-                                                                    concept_with_neighbourhood.neighbourhood,
-                                                                    sample_size)
-        return concept_with_neighbourhood
+        concept_info_with_neighbourhood.neighbourhood = sample_generator(self._sampler,
+                                                                         concept_info_with_neighbourhood.neighbourhood,
+                                                                         sample_size)
+        return concept_info_with_neighbourhood
 
     def _get_neighbour_role(self, role_and_concept_iterator, neighbour_sample_sizes, **kwargs):
         for role_label, neighbour_id, role_direction in role_and_concept_iterator:
-            neighbour_with_neighbourhood = self.build_neighbourhood_generator(neighbour_id, neighbour_sample_sizes,
-                                                                              **kwargs)
+            neighbour_info_with_neighbourhood = self.build_neighbourhood_generator(neighbour_id, neighbour_sample_sizes,
+                                                                                   **kwargs)
             yield NeighbourRole(role_label=role_label, role_direction=role_direction,
-                                neighbour_with_neighbourhood=neighbour_with_neighbourhood)
+                                neighbour_info_with_neighbourhood=neighbour_info_with_neighbourhood)
 
 
 def sample_generator(sampler, population, sample_size):
@@ -104,43 +110,44 @@ def sample_generator(sampler, population, sample_size):
         yield sample
 
 
-def collect_to_tree(concept_with_neighbourhood):
+def collect_to_tree(concept_info_with_neighbourhood):
     """
     Given the neighbour generators, yield the fully populated tree of each of the target concept's neighbours
-    :param concept_with_neighbourhood:
+    :param concept_info_with_neighbourhood:
     :return:
     """
-    if concept_with_neighbourhood is not None:
-        concept_with_neighbourhood.neighbourhood = materialise_subordinate_neighbours(concept_with_neighbourhood)
-        for neighbour_role in concept_with_neighbourhood.neighbourhood:
-            collect_to_tree(neighbour_role.neighbour_with_neighbourhood)
+    if concept_info_with_neighbourhood is not None:
+        concept_info_with_neighbourhood.neighbourhood = materialise_subordinate_neighbours(
+            concept_info_with_neighbourhood)
+        for neighbour_role in concept_info_with_neighbourhood.neighbourhood:
+            collect_to_tree(neighbour_role.neighbour_info_with_neighbourhood)
 
-    return concept_with_neighbourhood
+    return concept_info_with_neighbourhood
 
 
-def materialise_subordinate_neighbours(concept_with_neighbourhood):
+def materialise_subordinate_neighbours(concept_info_with_neighbourhood):
     """
     Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one
     layer deeper in the neighbour graph
-    :param concept_with_neighbourhood:
+    :param concept_info_with_neighbourhood:
     :return:
     """
-    return [neighbour_role for neighbour_role in concept_with_neighbourhood.neighbourhood]
+    return [neighbour_role for neighbour_role in concept_info_with_neighbourhood.neighbourhood]
 
 
-def get_max_depth(concept_with_neighbourhood):
+def get_max_depth(concept_info_with_neighbourhood):
     """
     Find the length of the deepest aggregation path
-    :param concept_with_neighbourhood:
+    :param concept_info_with_neighbourhood:
     :return:
     """
 
-    if len(concept_with_neighbourhood.neighbourhood) == 0:
+    if len(concept_info_with_neighbourhood.neighbourhood) == 0:
         return 0
     else:
         max_depth = 0
-        for neighbour_role in concept_with_neighbourhood.neighbourhood:
-            m = get_max_depth(neighbour_role.neighbour_with_neighbourhood)
+        for neighbour_role in concept_info_with_neighbourhood.neighbourhood:
+            m = get_max_depth(neighbour_role.neighbour_info_with_neighbourhood)
             if m > max_depth:
                 max_depth = m
         return max_depth + 1

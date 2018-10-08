@@ -1,6 +1,5 @@
 import collections
 import numpy as np
-import grakn_graphsage.src.neighbourhood.traversal as trv
 
 
 class RawArrayBuilder:
@@ -26,10 +25,10 @@ class RawArrayBuilder:
              ('value_long', np.int), ('value_double', np.float), ('value_boolean', np.bool),
              ('value_date', np.datetime64), ('value_string', np.str)])
 
-    def build_raw_arrays(self, concepts_with_neighbourhoods):
+    def build_raw_arrays(self, top_level_neighbour_roles):
         """
         Build the arrays to represent the depths of neighbour traversals.
-        :param concepts_with_neighbourhoods:
+        :param top_level_neighbour_roles:
         :return: a list of arrays, one for each depth, including one for the starting nodes of interest
         """
 
@@ -101,9 +100,5 @@ class RawArrayBuilder:
                                                             depthwise_matrices, current_indices)
             return depthwise_matrices
 
-        # Dummy NeighbourRoles so that a consistent data structure can be used right from the top level
-        top_neighbour_roles = [trv.NeighbourRole(None, concept_with_neighbourhood, None) for concept_with_neighbourhood in
-                               concepts_with_neighbourhoods]
-
-        depthwise_matrices = _build_neighbour_roles(top_neighbour_roles, depthwise_matrices, [])
+        depthwise_matrices = _build_neighbour_roles(top_level_neighbour_roles, depthwise_matrices, [])
         return depthwise_matrices
