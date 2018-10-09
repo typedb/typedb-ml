@@ -2,12 +2,11 @@ import collections
 import numpy as np
 import typing as typ
 import grakn_graphsage.src.neighbourhood.traversal as trv
-import grakn_graphsage.src.neighbourhood.concept as concept
 
 
 class RawArrayBuilder:
 
-    DEFAULT_VALUE = np.nan
+    DEFAULT_VALUE = -5
     DEFAULT_DATATYPE_INDEX = -1  # For use when a concept is not an attribute and hence doesn't have a data type
 
     def __init__(self,
@@ -28,17 +27,11 @@ class RawArrayBuilder:
         self._n_starting_concepts = n_starting_concepts
 
         self._matrix_data_types = collections.OrderedDict(
-            [('role_direction', np.int), ('role_type', np.int), ('thing_type', np.int), ('data_type', np.int),
-             ('value_long', np.int), ('value_double', np.float), ('value_boolean', np.bool),
-             ('value_date', np.datetime64), ('value_string', np.str)])
+            [('role_type', np.int), ('role_direction', np.int), ('neighbour_type', np.int), ('neighbour_data_type', np.int),
+             ('neighbour_value_long', np.int), ('neighbour_value_double', np.float), ('neighbour_value_boolean', np.bool),
+             ('neighbour_value_date', np.datetime64), ('neighbour_value_string', np.dtype('U25'))])
 
-    def build_raw_arrays(self, top_level_neighbour_roles: typ.List[trv.NeighbourRole]):
-        """
-        Build the arrays to represent the depths of neighbour traversals.
-        :param top_level_neighbour_roles:
-        :return: a list of arrays, one for each depth, including one for the starting nodes of interest
-        """
-
+    def _initialise_arrays(self):
         #####################################################
         # Make the empty arrays to fill
         #####################################################
@@ -61,6 +54,16 @@ class RawArrayBuilder:
                                                     dtype=matrix_data_type)
 
             depthwise_matrices.append(matrices)
+        return depthwise_matrices
+
+    def build_raw_arrays(self, top_level_neighbour_roles: typ.List[trv.NeighbourRole]):
+        """
+        Build the arrays to represent the depths of neighbour traversals.
+        :param top_level_neighbour_roles:
+        :return: a list of arrays, one for each depth, including one for the starting nodes of interest
+        """
+
+        depthwise_matrices = self._initialise_arrays()
 
         #####################################################
         # Populate the arrays from the neighbour traversals
@@ -69,25 +72,30 @@ class RawArrayBuilder:
         depthwise_matrices = self._build_neighbour_roles(top_level_neighbour_roles, depthwise_matrices, tuple())
         return depthwise_matrices
 
-    def _build_for_thing(self, thing_info: concept.ConceptInfo, matrices_at_this_depth: typ.Dict[str, np.ndarray],
-                             current_indices: typ.Tuple[int]):
+    def _determine_values_to_put(self, role_label, role_direction, neighbour_type_label, neighbour_data_type,
+                                 neighbour_value):
+        values_to_put = {}
+        if role_label is not None:
+            values_to_put['role_type'] = self._role_type_labels.index(role_label)
+        if role_direction is not None:
+            values_to_put['role_direction'] = role_direction
 
-        thing_type_index = self._thing_type_labels.index(
-            thing_info.type_label)
-        matrices_at_this_depth['thing_type'][current_indices] = thing_type_index
+        values_to_put['neighbour_type'] = self._thing_type_labels.index(neighbour_type_label)
 
-        data_type_index = RawArrayBuilder.DEFAULT_DATATYPE_INDEX
+        if neighbour_data_type is not None:
+            values_to_put['neighbour_data_type'] = list(self._matrix_data_types.keys()).index('neighbour_value_' + neighbour_data_type)
+            values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
 
-        if thing_info.base_type_label == 'attribute':
+        return values_to_put
 
-            # TODO Do any preprocessing of attribute values here ready to write them to numpy arrays
-            data_type_index = list(self._matrix_data_types.keys()).index('value_' + thing_info.data_type)
+    # def _put_in_matrices(self, matrices, values_to_put, indices):
+    #     for key, value in values_to_put.items():
+    #         matrices[key][indices] = value
+    #     return matrices
 
-            matrices_at_this_depth['value_' + thing_info.data_type][current_indices] = thing_info.value
-
-        # Store the index of the matrix the value was written to (which should match with its type)
-        matrices_at_this_depth['data_type'][current_indices] = data_type_index
-        return matrices_at_this_depth
+    # def _put_in_matrix(self, matrix, indices, value):
+    #     matrix[indices] = value
+    #     return matrix
 
     def _build_neighbour_roles(self, neighbour_roles: typ.List[trv.NeighbourRole],
                                depthwise_matrices: typ.List[typ.Dict[str, np.ndarray]],
@@ -99,20 +107,16 @@ class RawArrayBuilder:
             matrices_at_this_depth = depthwise_matrices[depth]
             current_indices = tuple(list(indices) + [n])  # Needs to be a tuple to index a numpy array
 
-            if neighbour_role.role_label is not None:
-                role_type_index = self._role_type_labels.index(neighbour_role.role_label)
-                matrices_at_this_depth['role_type'][current_indices] = role_type_index
+            concept_info = neighbour_role.neighbour_info_with_neighbourhood.concept_info
+            values_to_put = self._determine_values_to_put(neighbour_role.role_label, neighbour_role.role_direction,
+                                                          concept_info.type_label, concept_info.data_type,
+                                                          concept_info.value)
 
-            if neighbour_role.role_direction is not None:
-                role_direction = neighbour_role.role_direction
-                matrices_at_this_depth['role_direction'][current_indices] = role_direction
-
-            matrices_at_this_depth = self._build_for_thing(
-                neighbour_role.neighbour_info_with_neighbourhood.concept_info,
-                matrices_at_this_depth,
-                current_indices)
+            for key, value in values_to_put.items():
+                matrices_at_this_depth[key][current_indices] = value
 
             depthwise_matrices = self._build_neighbour_roles(
                 neighbour_role.neighbour_info_with_neighbourhood.neighbourhood,
                 depthwise_matrices, current_indices)
+
         return depthwise_matrices
