@@ -47,8 +47,30 @@ def combine(target_features, neighbour_representations, weights, activation=tf.n
     :return: full representations of target nodes
     """
     with tf.name_scope(name, default_name="combine") as scope:
-        concatenated_features = tf.concat([target_features, neighbour_representations], axis=1)
+        concatenated_features = tf.concat([target_features, neighbour_representations], axis=-1)
 
         weighted_output = tf.matmul(concatenated_features, weights, name='apply_weights')
 
         return activation(weighted_output)
+
+
+def normalise(features, normalise_op=tf.nn.l2_normalize, *args, **kwargs):
+    return normalise_op(features, axis=-1, *args, **kwargs)
+
+
+def chain_aggregate_combine(neighbourhood, aggregators, combiners, normalisers, name=None):
+    # zip(range(len(r)-1, -1, -1), reversed(r))  # To iterate in reverse with an index. Doesn't play well with zip()
+
+    with tf.name_scope(name, default_name="chain_aggregate_combine") as scope:
+        for i, (aggregator, combiner, normaliser) in enumerate(zip(aggregators, combiners, normalisers)):
+            if i == 0:
+                neighbour_representations = tf.gather_nd(neighbourhood, [i])
+            else:
+                neighbour_representations = full_representations
+
+            neighbourhood_representations = aggregator(neighbour_representations)
+
+            targets = tf.gather_nd(neighbourhood, [i + 1])
+            full_representations = normaliser(combiner(targets, neighbourhood_representations))
+
+        return full_representations

@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+
 def initialise_glorot_weights(shape, name=None):
     """
     Glorot & Bengio (AISTATS 2010) init.
