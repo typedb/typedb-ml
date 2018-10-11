@@ -35,24 +35,20 @@ def aggregate(neighbour_features, aggregated_length, reduction=tf.reduce_max, ac
         return reduced_output
 
 
-def combine(target_features, neighbour_representations, combined_length, output_length,
-            activation=tf.nn.relu, name=None):
+def combine(target_features, neighbour_representations, weights, activation=tf.nn.relu, name=None):
     """
     Combine the results of neighbour aggregation with the features of target nodes. Combine using concatenation,
     multiplication with a weight matrix (GCN approach) and process with some activation function
     :param target_features: the features of the target nodes
     :param neighbour_representations: the representations of the neighbours of the target nodes, one representation
     for each target
-    :param combined_length: the combined length of a target feature vector and a neighbour representation
-    :param output_length: the desired output length, used to determine the shape of the weights matrix
+    :param weights: weight matrix, shape (combined_length, output_length)
     :param activation: activation function performed on the
     :param name: Name for the operation (optional).
     :return: full representations of target nodes
     """
     with tf.name_scope(name, default_name="combine") as scope:
         concatenated_features = tf.concat([target_features, neighbour_representations], axis=1)
-
-        weights = initialise_glorot_weights((combined_length, output_length))
 
         weighted_output = tf.matmul(concatenated_features, weights, name='apply_weights')
 
