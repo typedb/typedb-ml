@@ -1,8 +1,9 @@
+import numpy as np
 import tensorflow as tf
 
 
-def aggregator(neighbour_features, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.3,
-               name=None):
+def aggregate(neighbour_features, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.3,
+              name=None):
     """
     Take a tensor that describes the features (aggregated or otherwise) of a set of neighbours and aggregate
     them through a dense layer and order-independent pooling/reduction
@@ -12,11 +13,11 @@ def aggregator(neighbour_features, aggregated_length, reduction=tf.reduce_max, a
     :param reduction: order-independent method of pooling the response for each neighbour
     :param activation: activation function for the included dense layer
     :param dropout: quantity of dropout regularisation on the output of the included dense layer
-    :param name: this op's name for use in graph visualisation
-    :return: aggregated representation of neighbours, shape (aggregated_length, 1)
+    :param name: Name for the operation (optional).
+    :return: aggregated representation of neighbours, shape (1, aggregated_length)
     """
 
-    with tf.name_scope(name, "aggregator") as scope:
+    with tf.name_scope(name, default_name="aggregate") as scope:
         dense_output = tf.layers.dense(neighbour_features, aggregated_length, activation, use_bias=False,
                                        name='dense_layer')
 
@@ -28,7 +29,44 @@ def aggregator(neighbour_features, aggregated_length, reduction=tf.reduce_max, a
         # not pooling, which is equivalent to having a pool size of num_neighbours
         reduced_output = reduction(regularised_output, axis=0)
 
-        # Get the output from shape (1, neighbour_feat_length) to (neighbour_feat_length, 1)
-        final_output = tf.transpose(reduced_output)
+        # # Get the output from shape (1, neighbour_feat_length) to (neighbour_feat_length, 1)
+        # final_output = tf.transpose(reduced_output)
 
-        return final_output
+        return reduced_output
+
+
+def combine(target_features, neighbour_representations, combined_length, output_length,
+            activation=tf.nn.relu, name=None):
+    """
+    Combine the results of neighbour aggregation with the features of target nodes. Combine using concatenation,
+    multiplication with a weight matrix (GCN approach) and process with some activation function
+    :param target_features: the features of the target nodes
+    :param neighbour_representations: the representations of the neighbours of the target nodes, one representation
+    for each target
+    :param combined_length: the combined length of a target feature vector and a neighbour representation
+    :param output_length: the desired output length, used to determine the shape of the weights matrix
+    :param activation: activation function performed on the
+    :param name: Name for the operation (optional).
+    :return: full representations of target nodes
+    """
+    with tf.name_scope(name, default_name="combine") as scope:
+        concatenated_features = tf.concat([target_features, neighbour_representations], axis=1)
+
+        weights = initialise_glorot_weights((combined_length, output_length))
+
+        weighted_output = tf.matmul(concatenated_features, weights, name='apply_weights')
+
+        return activation(weighted_output)
+
+
+def initialise_glorot_weights(shape, name=None):
+    """
+    Glorot & Bengio (AISTATS 2010) init.
+    :param shape: shape of the weights matrix to build
+    :param name: Name for the operation (optional).
+    :return: initialised matrix of weights
+    """
+    with tf.name_scope(name, default_name="init_glorot_weights") as scope:
+        init_range = np.sqrt(6.0/(shape[0]+shape[1]))
+        initial = tf.random_uniform(shape, minval=-init_range, maxval=init_range, dtype=tf.float32)
+        return tf.Variable(initial, name=name)
