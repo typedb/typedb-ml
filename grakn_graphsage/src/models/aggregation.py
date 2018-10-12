@@ -1,19 +1,26 @@
 import tensorflow as tf
+import tensorflow.contrib.layers as layers
 
 
 class Aggregate:
-    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.3, name=None):
+    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.3,
+                 initializer=tf.contrib.layers.xavier_initializer(), regularizer=layers.l2_regularizer(scale=0.1),
+                 name=None):
         """
         :param aggregated_length: the number of elements in the representation created
         :param reduction: order-independent method of pooling the response for each neighbour
         :param activation: activation function for the included dense layer
         :param dropout: quantity of dropout regularisation on the output of the included dense layer
+        :param regularizer: regularisation for the dense layer
+        :param initializer: initializer for the weights of the dense layer
         :param name: Name for the operation (optional).
         """
         self._aggregated_length = aggregated_length
         self._reduction = reduction
         self._activation = activation
         self._dropout = dropout
+        self._initializer = initializer
+        self._regularizer = regularizer
         self._name = name
 
     def __call__(self, neighbour_features):
@@ -27,7 +34,8 @@ class Aggregate:
 
         with tf.name_scope(self._name, default_name="aggregate") as scope:
             dense_output = tf.layers.dense(neighbour_features, self._aggregated_length, self._activation,
-                                           use_bias=False, name='dense_layer')
+                                           use_bias=False, kernel_initializer=self._initializer,
+                                           kernel_regularizer=self._regularizer, name='dense_layer')
 
             # Use dropout on output from the dense layer to prevent overfitting
             regularised_output = tf.nn.dropout(dense_output, self._dropout)
