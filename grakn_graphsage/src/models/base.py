@@ -45,10 +45,10 @@ class Model:
 
 class SupervisedModel(Model):
 
-    def __init__(self, labels_length, *args, sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,
+    def __init__(self, labels_length, feature_length, aggregated_length, output_length, neighbourhood_sizes, sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,
                  classification_activation=tf.nn.relu, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(feature_length, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
         self._regularisation_weight = regularisation_weight
         self._sigmoid_loss = sigmoid_loss
         self._classification_dropout = classification_dropout
