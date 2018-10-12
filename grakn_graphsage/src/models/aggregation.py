@@ -45,6 +45,16 @@ class Aggregate:
             # not pooling, which is equivalent to having a pool size of num_neighbours
             reduced_output = self._reduction(regularised_output, axis=0)
 
+            # If reducing reduced rank to 1, then add a dimension so that we continue to deal with matrices not vectors
+            rank = tf.rank(reduced_output)
+            if tf.executing_eagerly():
+                evaluated_rank = rank.numpy()
+            else:
+                evaluated_rank = rank.eval()
+
+            if evaluated_rank == 1:
+                reduced_output = tf.expand_dims(reduced_output, 0)
+
             # # Get the output from shape (1, neighbour_feat_length) to (neighbour_feat_length, 1)
             # final_output = tf.transpose(reduced_output)
 
@@ -83,19 +93,19 @@ def normalise(features, normalise_op=tf.nn.l2_normalize):
     return normalise_op(features, axis=-1)
 
 
-def chain_aggregate_combine(neighbourhood, aggregators, combiners, normalisers, name=None):
+def chain_aggregate_combine(neighbourhoods, aggregators, combiners, normalisers, name=None):
     # zip(range(len(r)-1, -1, -1), reversed(r))  # To iterate in reverse with an index. Doesn't play well with zip()
 
     with tf.name_scope(name, default_name="chain_aggregate_combine") as scope:
         for i, (aggregator, combiner, normaliser) in enumerate(zip(aggregators, combiners, normalisers)):
             if i == 0:
-                neighbour_representations = tf.gather_nd(neighbourhood, [i])
+                neighbour_representations = neighbourhoods[i]
             else:
                 neighbour_representations = full_representations
 
             neighbourhood_representations = aggregator(neighbour_representations)
 
-            targets = tf.gather_nd(neighbourhood, [i + 1])
+            targets = neighbourhoods[i + 1]
             full_representations = normaliser(combiner(targets, neighbourhood_representations))
 
         return full_representations
