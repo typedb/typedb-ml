@@ -43,7 +43,7 @@ class Aggregate:
             # Use max-pooling (or similar) to aggregate the results for each neighbour. This is an important operation
             # since the order of the neighbours isn't considered, which is a property we need Note that this is reducing
             # not pooling, which is equivalent to having a pool size of num_neighbours
-            reduced_output = self._reduction(regularised_output, axis=0)
+            reduced_output = self._reduction(regularised_output, axis=1)
 
             # If reducing reduced rank to 1, then add a dimension so that we continue to deal with matrices not vectors
             rank = tf.rank(reduced_output)
@@ -84,7 +84,7 @@ class Combine:
         with tf.name_scope(self._name, default_name="combine") as scope:
             concatenated_features = tf.concat([target_features, neighbour_representations], axis=-1)
 
-            weighted_output = tf.matmul(concatenated_features, self._weights, name='apply_weights')
+            weighted_output = tf.tensordot(concatenated_features, self._weights, (-1, 0), name='apply_weights')
 
             return self._activation(weighted_output)
 
