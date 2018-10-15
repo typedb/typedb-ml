@@ -68,16 +68,9 @@ class SupervisedModel(Model):
         return regularised_output
 
     def loss(self, predictions, labels=None):
-        # Get the losses from the various layers
-        loss = self._regularisation_weight * tf.losses.get_regularization_loss()
-        # classification loss
-        if self._sigmoid_loss:
-            loss_fn = tf.nn.sigmoid_cross_entropy_with_logits
-        else:
-            loss_fn = tf.nn.softmax_cross_entropy_with_logits
 
-        loss += tf.reduce_mean(loss_fn(logits=predictions, labels=labels))
-
+        loss = supervised_loss(predictions, labels, regularisation_weight=self._regularisation_weight,
+                               sigmoid_loss=self._sigmoid_loss)
         tf.summary.scalar('loss', loss)
         return loss
 
@@ -86,3 +79,18 @@ class SupervisedModel(Model):
             return tf.nn.sigmoid(prediction)
         else:
             return tf.nn.softmax(prediction)
+
+
+def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):
+    # Get the losses from the various layers
+    loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float64)
+    # classification loss
+    if sigmoid_loss:
+        loss_fn = tf.nn.sigmoid_cross_entropy_with_logits
+    else:
+        loss_fn = tf.nn.softmax_cross_entropy_with_logits
+
+    loss += tf.reduce_mean(loss_fn(logits=predictions, labels=labels))
+
+    tf.summary.scalar('loss', loss)
+    return loss

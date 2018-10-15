@@ -20,7 +20,7 @@ for n in raw_neighbourhood:
 
 print([n.shape for n in neighbourhood])
 
-raw_labels = [1]
+raw_labels = [1] * num_samples
 labels = tf.convert_to_tensor(raw_labels, dtype=tf.float64)
 print(labels.shape)
 
@@ -33,3 +33,10 @@ model = models.SupervisedModel(len(raw_labels), feature_length, aggregated_lengt
 embedding = model.embedding(neighbourhood)
 print("==============================")
 print(embedding)
+
+print("===== Loss =====")
+raw_predictions = [1] * num_samples
+predictions = tf.convert_to_tensor(raw_predictions, dtype=tf.float64)
+loss = model.loss(predictions=predictions, labels=labels)
+
+print(loss)
