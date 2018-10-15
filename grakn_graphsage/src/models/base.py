@@ -45,27 +45,28 @@ class Model:
 
 class SupervisedModel(Model):
 
-    def __init__(self, labels_length, feature_length, aggregated_length, output_length, neighbourhood_sizes, sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,
+    def __init__(self, labels_length, feature_length, aggregated_length, output_length, neighbourhood_sizes, optimizer,
+                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,
                  classification_activation=tf.nn.relu, classification_regularizer=layers.l2_regularizer(scale=0.1),
-                 kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
+                 classification_kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
         super().__init__(feature_length, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
+        self._optimizer = optimizer
         self._regularisation_weight = regularisation_weight
         self._sigmoid_loss = sigmoid_loss
         self._classification_dropout = classification_dropout
         self._labels_length = labels_length
         self._classification_activation = classification_activation
         self._classification_regularizer = classification_regularizer
-        self._kernel_initializer = kernel_initializer
+        self._classification_kernel_initializer = classification_kernel_initializer
 
-    def inference(self, neighbourhoods):
-        embeddings = self.embedding(neighbourhoods)
-        dense_output = tf.layers.dense(embeddings, self._labels_length, activation=self._classification_activation,
-                                       use_bias=False, kernel_regularizer=self._classification_regularizer,
-                                       kernel_initializer=self._kernel_initializer,
-                                       name='classification_dense_layer')
-        regularised_output = tf.nn.dropout(dense_output, self._classification_dropout)
+    def inference(self, embeddings):
+        class_predictions = tf.layers.dense(embeddings, self._labels_length, activation=self._classification_activation,
+                                            use_bias=False, kernel_regularizer=self._classification_regularizer,
+                                            kernel_initializer=self._classification_kernel_initializer,
+                                            name='classification_dense_layer')
+        regularised_class_predictions = tf.nn.dropout(class_predictions, self._classification_dropout)
 
-        return regularised_output
+        return regularised_class_predictions
 
     def loss(self, predictions, labels=None):
 
@@ -79,6 +80,19 @@ class SupervisedModel(Model):
             return tf.nn.sigmoid(prediction)
         else:
             return tf.nn.softmax(prediction)
+
+    def optimise(self, loss):
+        grads_and_vars = self._optimizer.compute_gradients(loss)
+        clipped_grads_and_vars = [(tf.clip_by_value(grad, -5.0, 5.0) if grad is not None else None, var)
+                for grad, var in grads_and_vars]
+        grad, _ = clipped_grads_and_vars[0]
+        return self._optimizer.apply_gradients(clipped_grads_and_vars), loss
+
+    def train(self, neighbourhoods, labels):
+        embeddings = self.embedding(neighbourhoods)
+        class_predictions = self.inference(embeddings)
+        loss = self.loss(class_predictions, labels)
+        return self.optimise(loss)
 
 
 def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):

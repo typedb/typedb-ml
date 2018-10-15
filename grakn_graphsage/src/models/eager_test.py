@@ -27,8 +27,10 @@ print(labels.shape)
 aggregated_length = 12
 output_length = 17
 
+optimizer = tf.train.AdamOptimizer(learning_rate=0.01)
+
 model = models.SupervisedModel(len(raw_labels), feature_length, aggregated_length, output_length=output_length,
-                               neighbourhood_sizes=neighbourhood_sizes)
+                               neighbourhood_sizes=neighbourhood_sizes, optimizer=optimizer)
 
 embedding = model.embedding(neighbourhood)
 print("==============================")
