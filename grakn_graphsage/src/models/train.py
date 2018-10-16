@@ -13,7 +13,7 @@ flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('training_batch_size', 30, 'Training batch size')
 flags.DEFINE_integer('neighbourhood_size_depth_1', 3, 'Neighbourhood size for depth 1')
 flags.DEFINE_integer('neighbourhood_size_depth_2', 4, 'Neighbourhood size for depth 2')
-flags.DEFINE_integer('neighbourhood_size_depth_3', 5, 'Neighbourhood size for depth 3')
+NEIGHBOURHOOD_SIZES = (FLAGS.neighbourhood_size_depth_2, FLAGS.neighbourhood_size_depth_1)
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
 flags.DEFINE_integer('features_length', 8, 'Number of features after encoding')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
@@ -42,18 +42,21 @@ def trial_data():
 def main():
     optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
 
-    neighbourhood_sizes = (FLAGS.neighbourhood_size_depth_2, FLAGS.neighbourhood_size_depth_1)
     model = base.SupervisedModel(FLAGS.classes_length, FLAGS.features_length, FLAGS.aggregated_length,
-                                 FLAGS.output_length, neighbourhood_sizes, optimizer, sigmoid_loss=True,
+                                 FLAGS.output_length, NEIGHBOURHOOD_SIZES, optimizer, sigmoid_loss=True,
                                  regularisation_weight=0.0, classification_dropout=0.3,
                                  classification_activation=tf.nn.relu,
                                  classification_regularizer=layers.l2_regularizer(scale=0.1),
                                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
 
-    neighbourhood_placeholders = [tf.placeholder(tf.float64, shape=(30, 4, 3, 8)),
-                                  tf.placeholder(tf.float64, shape=(30, 3, 8)),
-                                  tf.placeholder(tf.float64, shape=(30, 8))]
-    labels_placeholder = tf.placeholder(tf.float64, shape=(30, 2))
+    # Build the placeholders for the neighbourhood_depths
+    neighbourhood_placeholders = []
+    for i in range(len(NEIGHBOURHOOD_SIZES) + 1):
+        shape = [FLAGS.training_batch_size] + list(NEIGHBOURHOOD_SIZES[i:]) + [FLAGS.features_length]
+        neighbourhood_placeholders.append(tf.placeholder(tf.float64, shape=shape))
+
+    # Build the placeholder for the labels
+    labels_placeholder = tf.placeholder(tf.float64, shape=(FLAGS.training_batch_size, FLAGS.classes_length))
 
     # train_op, loss = model.train(neighbourhood_placeholders, labels_placeholder)
     train_op, loss, precision, recall, f1_score = model.train_and_evaluate(neighbourhood_placeholders,
