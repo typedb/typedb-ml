@@ -54,13 +54,17 @@ def main():
                                   tf.placeholder(tf.float64, shape=(30, 3, 8)),
                                   tf.placeholder(tf.float64, shape=(30, 8))]
     labels_placeholder = tf.placeholder(tf.float64, shape=(30, 2))
-    train_op, loss = model.train(neighbourhood_placeholders, labels_placeholder)
+
+    # train_op, loss = model.train(neighbourhood_placeholders, labels_placeholder)
+    train_op, loss, precision, recall, f1_score = model.train_and_evaluate(neighbourhood_placeholders,
+                                                                           labels_placeholder)
 
     # Build the summary Tensor based on the TF collection of Summaries.
     summary = tf.summary.merge_all()
 
     # Add the variable initializer Op.
-    init = tf.global_variables_initializer()
+    init_global = tf.global_variables_initializer()
+    init_local = tf.local_variables_initializer()  # Added to initialise tf.metrics.recall
 
     # Create a session for running Ops on the Graph.
     sess = tf.Session()
@@ -69,7 +73,8 @@ def main():
     summary_writer = tf.summary.FileWriter(FLAGS.log_dir, sess.graph)
 
     # Run the Op to initialize the variables.
-    sess.run(init)
+    sess.run(init_global)
+    sess.run(init_local)
 
     neighbourhoods_depths, labels = trial_data()
 
@@ -79,16 +84,20 @@ def main():
 
     for step in range(FLAGS.max_training_steps):
         start_time = time.time()
-        _, loss_value = sess.run([train_op, loss], feed_dict=feed_dict)
-        duration = time.time() - start_time
 
         if step % int(FLAGS.max_training_steps / 20) == 0:
-            # Print status to stdout.
-            print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
-            # Update the events file.
+            _, loss_value, precision_value, recall_value, f1_score_value = sess.run(
+                [train_op, loss, precision, recall, f1_score], feed_dict=feed_dict)
+
+            duration = time.time() - start_time
+            print(f'Step {step}: loss {loss_value:.2f}, precision {precision_value}, '
+                  f'recall {recall_value}, f1-score {f1_score_value}     ({duration:.3f} sec)')
+
             summary_str = sess.run(summary, feed_dict=feed_dict)
             summary_writer.add_summary(summary_str, step)
             summary_writer.flush()
+        else:
+            _, loss_value = sess.run([train_op, loss], feed_dict=feed_dict)
 
 
 if __name__ == "__main__":

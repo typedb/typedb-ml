@@ -94,6 +94,15 @@ class SupervisedModel(Model):
         loss = self.loss(class_predictions, labels)
         return self.optimise(loss)
 
+    def train_and_evaluate(self, neighbourhoods, labels):
+        embeddings = self.embedding(neighbourhoods)
+        class_predictions = self.inference(embeddings)
+        loss = self.loss(class_predictions, labels)
+        precision, _ = tf.metrics.precision(labels, class_predictions)
+        recall, _ = tf.metrics.recall(labels, class_predictions)
+        f1_score = (2 * precision * recall) / (precision + recall)
+        return self.optimise(loss), loss, precision, recall, f1_score
+
 
 def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):
     # Get the losses from the various layers
