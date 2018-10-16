@@ -58,6 +58,7 @@ class SupervisedModel(Model):
         self._classification_activation = classification_activation
         self._classification_regularizer = classification_regularizer
         self._classification_kernel_initializer = classification_kernel_initializer
+        self._class_predictions = None
 
     def inference(self, embeddings):
         class_predictions = tf.layers.dense(embeddings, self._labels_length, activation=self._classification_activation,
@@ -65,6 +66,8 @@ class SupervisedModel(Model):
                                             kernel_initializer=self._classification_kernel_initializer,
                                             name='classification_dense_layer')
         regularised_class_predictions = tf.nn.dropout(class_predictions, self._classification_dropout)
+
+        self._class_predictions = regularised_class_predictions
 
         return regularised_class_predictions
 
@@ -101,7 +104,8 @@ class SupervisedModel(Model):
         precision, _ = tf.metrics.precision(labels, class_predictions)
         recall, _ = tf.metrics.recall(labels, class_predictions)
         f1_score = (2 * precision * recall) / (precision + recall)
-        return self.optimise(loss), loss, precision, recall, f1_score
+
+        return self.optimise(loss), loss, self.predict(class_predictions), precision, recall, f1_score
 
 
 def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):

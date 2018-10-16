@@ -59,8 +59,8 @@ def main():
     labels_placeholder = tf.placeholder(tf.float64, shape=(FLAGS.training_batch_size, FLAGS.classes_length))
 
     # train_op, loss = model.train(neighbourhood_placeholders, labels_placeholder)
-    train_op, loss, precision, recall, f1_score = model.train_and_evaluate(neighbourhood_placeholders,
-                                                                           labels_placeholder)
+    train_op, loss, class_predictions, precision, recall, f1_score = model.train_and_evaluate(
+        neighbourhood_placeholders, labels_placeholder)
 
     # Build the summary Tensor based on the TF collection of Summaries.
     summary = tf.summary.merge_all()
@@ -85,6 +85,7 @@ def main():
     for neighbourhood_placeholder, neighbourhood_depth in zip(neighbourhood_placeholders, neighbourhoods_depths):
         feed_dict[neighbourhood_placeholder] = neighbourhood_depth
 
+    print("\n\n========= Training and Evaluation =========")
     for step in range(FLAGS.max_training_steps):
         start_time = time.time()
 
@@ -101,6 +102,10 @@ def main():
             summary_writer.flush()
         else:
             _, loss_value = sess.run([train_op, loss], feed_dict=feed_dict)
+
+    print("\n\n========= Prediction =========")
+    class_prediction_values = sess.run([class_predictions], feed_dict=feed_dict)
+    print(f'predictions: \n{class_prediction_values}')
 
 
 if __name__ == "__main__":
