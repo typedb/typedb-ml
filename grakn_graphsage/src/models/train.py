@@ -1,3 +1,4 @@
+import time
 
 import numpy as np
 import tensorflow as tf
@@ -20,7 +21,7 @@ flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" ope
                                           'and the final length of the embeddings')
 
 flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
-flags.DEFINE_string('log_dir', './', 'directory to use to store data from training')
+flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 
 def trial_data():
@@ -30,18 +31,12 @@ def trial_data():
     neighbourhood_shape = list(neighbourhood_sizes) + [feature_length]
     shapes = [[num_samples] + neighbourhood_shape[i:] for i in range(len(neighbourhood_shape))]
 
-    raw_neighbourhood = [np.ones(shape) for shape in shapes]
+    raw_neighbourhood_depths = [np.ones(shape) for shape in shapes]
 
-    neighbourhood = []
-    for n in raw_neighbourhood:
-        neighbourhood.append(tf.convert_to_tensor(n, dtype=tf.float64))
-
-    print([n.shape for n in neighbourhood])
-
-    raw_labels = [1, 0] * num_samples
-    labels = tf.convert_to_tensor(raw_labels, dtype=tf.float64)
-    print(labels.shape)
-    return neighbourhood, labels
+    label_value = [1, 0]
+    raw_labels = [label_value for _ in range(num_samples)]
+    labels = raw_labels
+    return raw_neighbourhood_depths, labels
 
 
 def main():
@@ -55,10 +50,11 @@ def main():
                                  classification_regularizer=layers.l2_regularizer(scale=0.1),
                                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
 
-    neighbourhoods = [tf.placeholder(tf.float64, shape=(30, 4, 3, 8)), tf.placeholder(tf.float64, shape=(30, 3, 8)),
-                      tf.placeholder(tf.float64, shape=(30, 8))]
-    labels = tf.placeholder(tf.float64, shape=(30, 2))
-    train_op, loss = model.train(neighbourhoods, labels)
+    neighbourhood_placeholders = [tf.placeholder(tf.float64, shape=(30, 4, 3, 8)),
+                                  tf.placeholder(tf.float64, shape=(30, 3, 8)),
+                                  tf.placeholder(tf.float64, shape=(30, 8))]
+    labels_placeholder = tf.placeholder(tf.float64, shape=(30, 2))
+    train_op, loss = model.train(neighbourhood_placeholders, labels_placeholder)
 
     # Build the summary Tensor based on the TF collection of Summaries.
     summary = tf.summary.merge_all()
@@ -75,18 +71,21 @@ def main():
     # Run the Op to initialize the variables.
     sess.run(init)
 
-    nh, lb = trial_data()
+    neighbourhoods_depths, labels = trial_data()
 
-    feed_dict = {neighbourhoods: nh, labels: lb}
+    feed_dict = {labels_placeholder: labels}
+    for neighbourhood_placeholder, neighbourhood_depth in zip(neighbourhood_placeholders, neighbourhoods_depths):
+        feed_dict[neighbourhood_placeholder] = neighbourhood_depth
 
-    for step in range(FLAGS.max_steps):
-
+    for step in range(FLAGS.max_training_steps):
+        start_time = time.time()
         _, loss_value = sess.run([train_op, loss], feed_dict=feed_dict)
+        duration = time.time() - start_time
 
-        if step % 100 == 0:
+        if step % int(FLAGS.max_training_steps / 20) == 0:
             # Print status to stdout.
+            print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
             # Update the events file.
-            summary = sess.run(summary, feed_dict=feed_dict)
             summary_str = sess.run(summary, feed_dict=feed_dict)
             summary_writer.add_summary(summary_str, step)
             summary_writer.flush()

@@ -105,6 +105,4 @@ def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss
         loss_fn = tf.nn.softmax_cross_entropy_with_logits
 
     loss += tf.reduce_mean(loss_fn(logits=predictions, labels=labels))
-
-    tf.summary.scalar('loss', loss)
     return loss
