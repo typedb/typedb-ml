@@ -31,7 +31,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def setUp(self):
         self._tx = session.transaction(grakn.TxType.WRITE)
-        self._neighbourhood_sizes = (2, 2)
+        self._neighbourhood_sizes = (2, 3)
         self._concept_info_with_neighbourhood = mock.mock_traversal_output()
 
         self._top_level_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(
@@ -61,6 +61,11 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         builder = builders.RawArrayBuilder(thing_type_labels, role_type_labels, self._neighbourhood_sizes,
                                            n_starting_concepts)
         depthwise_matrices = builder.build_raw_arrays(self._top_level_roles)
+
+        expected_dims = [1] + list(self._neighbourhood_sizes)
+        for i in range(len(expected_dims)):
+            with self.subTest():
+                self.assertEqual(depthwise_matrices[i]['role_type'].shape, tuple(expected_dims[:i + 1]))
 
     def test__determine_values_to_put_with_entity(self):
         role_label = 'employer'

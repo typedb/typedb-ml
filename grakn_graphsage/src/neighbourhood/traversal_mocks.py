@@ -20,12 +20,19 @@ def mock_traversal_output():
                     )),
                     trv.NeighbourRole("employer", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
                         concept.ConceptInfo("2", "company", "entity"), gen([])
+                    )),
+                    trv.NeighbourRole("employer", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
+                        concept.ConceptInfo("2", "company", "entity"), gen([])
                     ))
                 ])
             )),
             trv.NeighbourRole("@has-name-owner", ex.TARGET_PLAYS, trv.ConceptInfoWithNeighbourhood(
                 concept.ConceptInfo("3", "@has-name", "relationship"),
                 gen([
+                    trv.NeighbourRole("@has-name-value", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
+                        concept.ConceptInfo("4", "name", "attribute", data_type='string', value="Employee Name"),
+                        gen([])
+                    )),
                     trv.NeighbourRole("@has-name-value", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
                         concept.ConceptInfo("4", "name", "attribute", data_type='string', value="Employee Name"),
                         gen([])
