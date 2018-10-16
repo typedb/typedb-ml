@@ -19,17 +19,17 @@ class Model:
     def embedding(self, neighbourhoods):
 
         # TODO pass through params for aggregators, combiners and normalisers
-        aggregators = [agg.Aggregate(self._aggregated_length) for _ in range(len(self._neighbourhood_sizes))]
+        aggregators = [agg.Aggregate(self._aggregated_length, name=f'aggregate_{i}') for i in range(len(self._neighbourhood_sizes))]
 
         combiners = []
         for i in range(len(self._neighbourhood_sizes)):
 
-            weights = init.initialise_glorot_weights((self._combined_length, self._output_length))
+            weights = init.initialise_glorot_weights((self._combined_length, self._output_length), name=f'weights_{i}')
 
             if i + 1 == len(self._neighbourhood_sizes):
-                combiner = agg.Combine(weights, activation=lambda x: x, name='combine_linear')
+                combiner = agg.Combine(weights, activation=lambda x: x, name=f'combine_{i}_linear')
             else:
-                combiner = agg.Combine(weights, activation=tf.nn.relu)
+                combiner = agg.Combine(weights, activation=tf.nn.relu, name=f'combine_{i}_relu')
             combiners.append(combiner)
 
         normalisers = [agg.normalise for _ in range(len(self._neighbourhood_sizes))]

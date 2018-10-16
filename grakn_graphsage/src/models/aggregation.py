@@ -35,7 +35,7 @@ class Aggregate:
         with tf.name_scope(self._name, default_name="aggregate") as scope:
             dense_output = tf.layers.dense(neighbour_features, self._aggregated_length, self._activation,
                                            use_bias=False, kernel_initializer=self._initializer,
-                                           kernel_regularizer=self._regularizer, name='dense_layer')
+                                           kernel_regularizer=self._regularizer, name=f'dense_layer_{self._name}')
 
             # Use dropout on output from the dense layer to prevent overfitting
             regularised_output = tf.nn.dropout(dense_output, self._dropout)
@@ -50,7 +50,7 @@ class Aggregate:
             if tf.executing_eagerly():
                 evaluated_rank = rank.numpy()
             else:
-                evaluated_rank = rank.eval()
+                evaluated_rank = rank
 
             if evaluated_rank == 1:
                 reduced_output = tf.expand_dims(reduced_output, 0)

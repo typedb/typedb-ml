@@ -14,12 +14,13 @@ flags.DEFINE_integer('neighbourhood_size_depth_1', 3, 'Neighbourhood size for de
 flags.DEFINE_integer('neighbourhood_size_depth_2', 4, 'Neighbourhood size for depth 2')
 flags.DEFINE_integer('neighbourhood_size_depth_3', 5, 'Neighbourhood size for depth 3')
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
-flags.DEFINE_integer('features_length', 20, 'Number of features after encoding')
+flags.DEFINE_integer('features_length', 8, 'Number of features after encoding')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
 flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_string('log_dir', './', 'directory to use to store data from training')
 
 
 def trial_data():
@@ -54,9 +55,9 @@ def main():
                                  classification_regularizer=layers.l2_regularizer(scale=0.1),
                                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
 
-    neighbourhoods = [tf.placeholder(tf.float32, shape=(30, 4, 3, 8)), tf.placeholder(tf.float32, shape=(30, 3, 8)),
-                      tf.placeholder(tf.float32, shape=(30, 8))]
-    labels = tf.placeholder(tf.float32, shape=(30, 2))
+    neighbourhoods = [tf.placeholder(tf.float64, shape=(30, 4, 3, 8)), tf.placeholder(tf.float64, shape=(30, 3, 8)),
+                      tf.placeholder(tf.float64, shape=(30, 8))]
+    labels = tf.placeholder(tf.float64, shape=(30, 2))
     train_op, loss = model.train(neighbourhoods, labels)
 
     # Build the summary Tensor based on the TF collection of Summaries.
