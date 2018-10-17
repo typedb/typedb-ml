@@ -31,41 +31,46 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def setUp(self):
         self._tx = session.transaction(grakn.TxType.WRITE)
-        self._neighbourhood_sizes = (2, 3)
+        self._neighbourhood_sizes = (3, 2)
         self._concept_info_with_neighbourhood = mock.mock_traversal_output()
 
-        self._top_level_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(
-            [self._concept_info_with_neighbourhood])
+        self._concept_infos_with_neighbourhoods = trv.concepts_with_neighbourhoods_to_neighbour_roles(
+            [self._concept_info_with_neighbourhood, self._concept_info_with_neighbourhood])
 
         thing_type_labels = ['name', 'person', '@has-name', 'employment', 'company']
 
         # TODO Only required while we have a bug on roles as variables in Graql
         role_type_labels = ['employee', 'employer', '@has-name-value', '@has-name-owner']
 
-        n_starting_concepts = len(self._top_level_roles)
+        self._n_starting_concepts = len(self._concept_infos_with_neighbourhoods)
 
         self._builder = builders.RawArrayBuilder(thing_type_labels, role_type_labels, self._neighbourhood_sizes,
-                                           n_starting_concepts)
+                                                 self._n_starting_concepts)
+
+        self._expected_dims = [self._n_starting_concepts] + list(self._neighbourhood_sizes) + [1]
         
     def tearDown(self):
         self._tx.close()
 
+    def _check_dims(self, arrays):
+        # We expect dimensions:
+        # (2, 3, 2, 1)
+        # (2, 2, 1)
+        # (2, 1)
+        exp = [[self._expected_dims[0]] + list(self._expected_dims[i+1:]) for i in range(len(self._expected_dims)-1)]
+        for i in range(len(self._expected_dims) - 1):
+            with self.subTest(exp[i]):
+                self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
+
     def test_build_raw_arrays(self):
-        thing_type_labels = ['name', 'person', '@has-name', 'employment', 'company']
 
-        # TODO Only required while we have a bug on roles as variables in Graql
-        role_type_labels = ['employee', 'employer', '@has-name-value', '@has-name-owner']
+        depthwise_matrices = self._builder.build_raw_arrays(self._concept_infos_with_neighbourhoods)
+        self._check_dims(depthwise_matrices)
 
-        n_starting_concepts = len(self._top_level_roles)
+    def test_initialised_array_sizes(self):
 
-        builder = builders.RawArrayBuilder(thing_type_labels, role_type_labels, self._neighbourhood_sizes,
-                                           n_starting_concepts)
-        depthwise_matrices = builder.build_raw_arrays(self._top_level_roles)
-
-        expected_dims = [1] + list(self._neighbourhood_sizes)
-        for i in range(len(expected_dims)):
-            with self.subTest():
-                self.assertEqual(depthwise_matrices[i]['role_type'].shape, tuple(expected_dims[:i + 1]))
+        initialised_arrays = self._builder._initialise_arrays()
+        self._check_dims(initialised_arrays)
 
     def test__determine_values_to_put_with_entity(self):
         role_label = 'employer'
