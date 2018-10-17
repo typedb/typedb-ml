@@ -7,30 +7,16 @@ import grakn_graphsage.src.neighbourhood.traversal as trv
 import grakn_graphsage.src.neighbourhood.traversal_mocks as mock
 import grakn_graphsage.src.neighbourhood.executor as ex
 
-import numpy as np
-client = grakn.Grakn(uri="localhost:48555")
-session = client.session(keyspace="test_schema")
-
-
-# def expected_output():
-#     """
-#
-#     :return: A list of length 3, each element is a dict. Each dict holds arrays for the different properties we need.
-#     """
-#
-#     # 'role_direction', np.int), ('role_type', np.int), ('thing_type', np.int), ('data_type', np.int),
-#     #          ('neighbour_value_long', np.int), ('neighbour_value_double', np.float), ('neighbour_value_boolean', np.bool),
-#     #          ('neighbour_value_date', np.datetime64), ('neighbour_value_string', np.str)])
-#
-#     full_shape = (1, 2, 2)
-#
-#     o = {'role_type': np.full(full_shape[:1], np.nan, np.int)}
-
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls._client = grakn.Grakn(uri="localhost:48555")
+        cls._session = cls._client.session(keyspace="test_schema")
+
     def setUp(self):
-        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = self._session.transaction(grakn.TxType.WRITE)
         self._neighbourhood_sizes = (3, 2)
         self._concept_info_with_neighbourhood = mock.mock_traversal_output()
 
