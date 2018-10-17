@@ -6,9 +6,6 @@ import grakn_graphsage.src.neighbourhood.traversal as trv
 
 class RawArrayBuilder:
 
-    DEFAULT_VALUE = -5
-    DEFAULT_DATATYPE_INDEX = -1  # For use when a concept is not an attribute and hence doesn't have a data type
-
     def __init__(self,
                  thing_type_labels: typ.List[str],
                  role_type_labels: typ.List[str],
@@ -26,10 +23,12 @@ class RawArrayBuilder:
         self._neighbourhood_sizes = neighbourhood_sizes
         self._n_starting_concepts = n_starting_concepts
 
+        # Array types and default values
         self._array_data_types = collections.OrderedDict(
-            [('role_type', np.int), ('role_direction', np.int), ('neighbour_type', np.int), ('neighbour_data_type', np.int),
-             ('neighbour_value_long', np.int), ('neighbour_value_double', np.float), ('neighbour_value_boolean', np.bool),
-             ('neighbour_value_date', np.datetime64), ('neighbour_value_string', np.dtype('U25'))])
+            [('role_type', (np.int, 0)), ('role_direction', (np.int, 0)), ('neighbour_type', (np.int, 0)),
+             ('neighbour_data_type', (np.int, -1)), ('neighbour_value_long', (np.int, 0)),
+             ('neighbour_value_double', (np.float, 0.0)), ('neighbour_value_boolean', (np.int, -1)),
+             ('neighbour_value_date', (np.datetime64, '')), ('neighbour_value_string', (np.dtype('U25'), ''))])
 
     def _initialise_arrays(self):
         #####################################################
@@ -42,15 +41,15 @@ class RawArrayBuilder:
         for i in range(len(depth_shape)):
             shape_at_this_depth = [self._n_starting_concepts] + depth_shape[i:]
             arrays = {}
-            for array_name, array_data_type in self._array_data_types.items():
+            for array_name, (array_data_type, default_value) in self._array_data_types.items():
 
                 if i == len(depth_shape) - 1 and array_name in ['role_direction', 'role_type']:
                     # For the starting nodes we don't need to store roles
                     arrays[array_name] = None
                 else:
                     arrays[array_name] = np.full(shape=shape_at_this_depth,
-                                                   fill_value=RawArrayBuilder.DEFAULT_VALUE,
-                                                   dtype=array_data_type)
+                                                 fill_value=default_value,
+                                                 dtype=array_data_type)
 
             depthwise_arrays.append(arrays)
         return depthwise_arrays
@@ -68,8 +67,8 @@ class RawArrayBuilder:
         # Populate the arrays from the neighbour traversals
         #####################################################
         depthwise_arrays = self._build_neighbour_roles(concept_infos_with_neighbourhoods,
-                                                         depthwise_arrays,
-                                                         tuple())
+                                                       depthwise_arrays,
+                                                       tuple())
         return depthwise_arrays
 
     def _build_neighbour_roles(self, neighbour_roles: typ.List[trv.NeighbourRole],
@@ -119,12 +118,3 @@ class RawArrayBuilder:
             values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
 
         return values_to_put
-
-    # def _put_in_arrays(self, arrays, values_to_put, indices):
-    #     for key, value in values_to_put.items():
-    #         arrays[key][indices] = value
-    #     return arrays
-
-    # def _put_in_array(self, array, indices, value):
-    #     array[indices] = value
-    #     return array
