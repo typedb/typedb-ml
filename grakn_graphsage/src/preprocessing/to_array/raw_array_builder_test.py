@@ -3,9 +3,9 @@ import unittest
 import grakn
 
 import grakn_graphsage.src.encoders.raw_array_building as builders
-import grakn_graphsage.src.neighbourhood.traversal as trv
-import grakn_graphsage.src.neighbourhood.traversal_mocks as mock
-import grakn_graphsage.src.neighbourhood.executor as ex
+import grakn_graphsage.src.neighbourhood.data.traversal as trv
+import grakn_graphsage.src.neighbourhood.data.traversal_mocks as mock
+import grakn_graphsage.src.neighbourhood.data.executor as ex
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
