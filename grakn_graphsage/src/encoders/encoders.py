@@ -13,7 +13,7 @@ class OneHotTypeLabelEncoder:
         """
         Takes
         :param type_labels: A tensor of Grakn type labels
-        :return: A tensor of Grakn type labels encoded into a matrix
+        :return: A tensor of Grakn type labels encoded into an array
         """
 
         # TODO One-hot encoding of either type labels or of a tensor of type ids (some class renaming required in the

@@ -15,7 +15,7 @@ session = client.session(keyspace="test_schema")
 # def expected_output():
 #     """
 #
-#     :return: A list of length 3, each element is a dict. Each dict holds matrices for the different properties we need.
+#     :return: A list of length 3, each element is a dict. Each dict holds arrays for the different properties we need.
 #     """
 #
 #     # 'role_direction', np.int), ('role_type', np.int), ('thing_type', np.int), ('data_type', np.int),
@@ -64,8 +64,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def test_build_raw_arrays(self):
 
-        depthwise_matrices = self._builder.build_raw_arrays(self._concept_infos_with_neighbourhoods)
-        self._check_dims(depthwise_matrices)
+        depthwise_arrays = self._builder.build_raw_arrays(self._concept_infos_with_neighbourhoods)
+        self._check_dims(depthwise_arrays)
 
     def test_initialised_array_sizes(self):
 
