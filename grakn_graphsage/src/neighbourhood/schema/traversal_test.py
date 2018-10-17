@@ -1,6 +1,6 @@
 import unittest
 import grakn
-import grakn_graphsage.src.schema.traversal as trv
+import grakn_graphsage.src.neighbourhood.schema.traversal as trv
 
 
 class TestGetSchemaConceptTypes(unittest.TestCase):

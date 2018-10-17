@@ -1,6 +1,6 @@
-import grakn_graphsage.src.neighbourhood.concept as concept
-import grakn_graphsage.src.neighbourhood.traversal as trv
-import grakn_graphsage.src.neighbourhood.executor as ex
+import grakn_graphsage.src.neighbourhood.data.concept as concept
+import grakn_graphsage.src.neighbourhood.data.traversal as trv
+import grakn_graphsage.src.neighbourhood.data.executor as ex
 
 
 def gen(elements):

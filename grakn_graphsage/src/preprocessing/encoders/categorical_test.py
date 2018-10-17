@@ -2,7 +2,7 @@ import unittest
 import tensorflow as tf
 import numpy as np
 
-import grakn_graphsage.src.encoders.categorical as cat
+import grakn_graphsage.src.preprocessing.encoders.categorical as cat
 
 
 class TestIndicesFromCategories(unittest.TestCase):

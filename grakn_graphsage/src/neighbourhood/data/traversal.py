@@ -1,6 +1,6 @@
 import itertools
 import collections
-import grakn_graphsage.src.neighbourhood.concept as concept
+import grakn_graphsage.src.neighbourhood.data.concept as concept
 
 MAX_LIMIT = 10000
 

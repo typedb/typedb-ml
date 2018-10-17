@@ -1,4 +1,4 @@
-import grakn_graphsage.src.neighbourhood.concept as concept
+import grakn_graphsage.src.neighbourhood.data.concept as concept
 
 UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
 UNKNOWN_ROLE_TARGET_PLAYS_LABEL = "UNKNOWN_ROLE_TARGET_PLAYS"
