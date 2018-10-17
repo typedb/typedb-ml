@@ -14,7 +14,8 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
         self._tx.close()
 
     def _function_calls(self, query, include_implicit, include_metatypes):
-        schema_concept_types = trv.get_schema_concept_types(self._tx, query, include_implicit=include_implicit, include_metatypes=include_metatypes)
+        exec = trv.TraversalExecutor(self._tx)
+        schema_concept_types = exec.get_schema_concept_types(query, include_implicit=include_implicit, include_metatypes=include_metatypes)
         labels = trv.labels_from_types(schema_concept_types)
         return labels
 
