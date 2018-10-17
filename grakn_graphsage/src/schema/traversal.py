@@ -1,3 +1,5 @@
+import collections
+
 import grakn
 
 GET_THING_TYPES_QUERY = "match $x sub thing; get;"
@@ -13,17 +15,21 @@ def labels_from_types(schema_concept_types):
 
 
 def get_sups_labels_per_type(schema_concept_types, include_metatypes=False, include_self=False):
+
+    schema_concept_super_types = collections.OrderedDict()
+
     for schema_concept_type in schema_concept_types:
         super_types = schema_concept_type.sups()
 
-        supertype_labels = []
+        super_type_labels = []
         for super_type in super_types:
             super_type_label = super_type.label()
 
             if not (((not include_self) and super_type_label == schema_concept_type.label()) or (
                 (not include_metatypes) and super_type.label() in METATYPE_LABELS)):
-                supertype_labels.append(super_type.label())
-        yield schema_concept_type.label(), supertype_labels
+                super_type_labels.append(super_type.label())
+        schema_concept_super_types[schema_concept_type.label()] = super_type_labels
+    return schema_concept_super_types
 
 
 class TraversalExecutor:
@@ -54,7 +60,7 @@ if __name__ == '__main__':
     schema_concept_types = te.get_schema_concept_types(GET_THING_TYPES_QUERY, include_implicit=True, include_metatypes=False)
     super_types = get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
     print("==== super types ====")
-    [print(super_type) for super_type in super_types]
+    [print(type, super_types) for type, super_types in super_types.items()]
 
     print("================= ROLES ======================")
     schema_concept_types = te.get_schema_concept_types(GET_ROLE_TYPES_QUERY, include_implicit=True, include_metatypes=False)
@@ -64,6 +70,6 @@ if __name__ == '__main__':
     schema_concept_types = te.get_schema_concept_types(GET_ROLE_TYPES_QUERY, include_implicit=True, include_metatypes=False)
     super_types = get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
     print("==== super types ====")
-    [print(super_type) for super_type in super_types]
+    [print(type, super_types) for type, super_types in super_types.items()]
 
 
