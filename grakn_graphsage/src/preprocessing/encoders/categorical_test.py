@@ -22,8 +22,8 @@ class TestIndicesFromCategories(unittest.TestCase):
         # output[0, 2, 1, 0] = 3
         # output[1, 1, 1, 0] = 0
         # output[0, 0, 0, 1] = -1
-        output = cat.indices_from_categories(tf.convert_to_tensor(raw_features, dtype=tf.string),
-                                             tf.convert_to_tensor(categories, dtype=tf.string))
+        output = cat.get_indices_from_categories(tf.convert_to_tensor(raw_features, dtype=tf.string),
+                                                 tf.convert_to_tensor(categories, dtype=tf.string))
 
         desired_output = np.array([[[[1], [-1]],
                                     [[-1], [-1]],
