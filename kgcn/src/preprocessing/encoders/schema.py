@@ -13,4 +13,5 @@ class SchemaTypeEncoder:
 
         # Then look up the row of the multi-hot embeddings to use for each
         embeddings = tf.nn.embedding_lookup(self._multi_hot_embeddings, type_indices)
-        return embeddings
+        embeddings = tf.squeeze(embeddings, axis=-2)
+        return embeddings, type_indices

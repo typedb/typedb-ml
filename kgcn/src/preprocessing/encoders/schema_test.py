@@ -19,12 +19,14 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         multi_hot_embeddings[[2, 4], 1] = 1
         multi_hot_embeddings[4, 2] = 1
 
-        schema_type_features = ['dog', 'dog', 'border collie', 'animal', 'fish', 'fish', 'fish']
+        schema_type_features = ['dog', 'dog', 'border collie', 'animal', 'fish', 'fish']
 
-        expected_result = np.empty((len(schema_type_features), len(schema_types)))
-        for i, schema_type_feature in enumerate(schema_type_features):
-            j = schema_types.index(schema_type_feature)
-            expected_result[i, :] = multi_hot_embeddings[j, :]
+        expected_type_indices = np.reshape(np.array([schema_types.index(label) for label in schema_type_features]),
+                                           (2, 3, 1))
+
+        expected_result = np.squeeze(np.take(multi_hot_embeddings, expected_type_indices, axis=0))
+
+        schema_type_features = np.reshape(np.array(schema_type_features), (2, 3, 1))
 
         print(multi_hot_embeddings)
         print(schema_types)
@@ -39,7 +41,14 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         tf.enable_eager_execution()
         encoder = se.SchemaTypeEncoder(tf.convert_to_tensor(schema_types, dtype=tf.string),
                                        tf.convert_to_tensor(multi_hot_embeddings, dtype=tf.int64))
-        result = encoder(tf.convert_to_tensor(schema_type_features, dtype=tf.string))
+        embeddings, type_indices = encoder(tf.convert_to_tensor(schema_type_features, dtype=tf.string))
         print("\nResult:")
-        print(result.numpy())
-        np.testing.assert_array_equal(result.numpy(), expected_result)
+        print(embeddings.numpy())
+        with self.subTest("Embedding correctness"):
+            np.testing.assert_array_equal(embeddings.numpy(), expected_result)
+
+        with self.subTest("Embedding shape"):
+            np.testing.assert_array_equal(embeddings.numpy().shape, (2, 3, 5))
+
+        with self.subTest("Type indices correctness"):
+            np.testing.assert_array_equal(type_indices.numpy(), expected_type_indices)
