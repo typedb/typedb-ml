@@ -27,3 +27,6 @@ tmp/
 
 # Pycharm config
 .idea
+
+# Python cache files
+__pycache__/
