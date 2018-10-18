@@ -3,7 +3,7 @@ import time
 import numpy as np
 import tensorflow as tf
 
-import grakn_graphsage.src.models.base as base
+import kgcn.src.models.base as base
 import tensorflow.contrib.layers as layers
 
 flags = tf.app.flags

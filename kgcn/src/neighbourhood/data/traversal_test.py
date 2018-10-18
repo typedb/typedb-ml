@@ -1,9 +1,9 @@
 import unittest
 import grakn
-import grakn_graphsage.src.neighbourhood.data.concept as concept
-import grakn_graphsage.src.neighbourhood.data.traversal as trv
-import grakn_graphsage.src.neighbourhood.data.executor as ex
-import grakn_graphsage.src.sampling.first as first
+import kgcn.src.neighbourhood.data.concept as concept
+import kgcn.src.neighbourhood.data.traversal as trv
+import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.sampling.first as first
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):

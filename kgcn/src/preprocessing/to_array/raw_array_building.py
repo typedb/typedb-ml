@@ -1,7 +1,7 @@
 import collections
 import numpy as np
 import typing as typ
-import grakn_graphsage.src.neighbourhood.data.traversal as trv
+import kgcn.src.neighbourhood.data.traversal as trv
 
 
 class RawArrayBuilder:

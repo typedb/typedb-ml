@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-import grakn_graphsage.src.models.base as models
+import kgcn.src.models.base as models
 
 tf.enable_eager_execution()
 

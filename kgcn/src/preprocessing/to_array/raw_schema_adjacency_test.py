@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-import grakn_graphsage.src.preprocessing.to_array.raw_schema_adjacency as adj
+import kgcn.src.preprocessing.to_array.raw_schema_adjacency as adj
 
 
 class TestBuildAdjacencyMatrix(unittest.TestCase):

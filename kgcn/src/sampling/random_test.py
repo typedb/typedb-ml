@@ -1,6 +1,6 @@
 import unittest
 
-import grakn_graphsage.src.sampling.random as rnd
+import kgcn.src.sampling.random as rnd
 
 
 def generator(iterable):

@@ -3,7 +3,7 @@ import unittest
 import tensorflow as tf
 import numpy as np
 
-import grakn_graphsage.src.preprocessing.encoders.schema as se
+import kgcn.src.preprocessing.encoders.schema as se
 
 
 class TestEncodeSchemaTypes(unittest.TestCase):

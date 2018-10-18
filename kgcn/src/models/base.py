@@ -1,6 +1,6 @@
 import tensorflow as tf
-import grakn_graphsage.src.models.aggregation as agg
-import grakn_graphsage.src.models.initialise as init
+import kgcn.src.models.aggregation as agg
+import kgcn.src.models.initialise as init
 import tensorflow.contrib.layers as layers
 import abc
 
