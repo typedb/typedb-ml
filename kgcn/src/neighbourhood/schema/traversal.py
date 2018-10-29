@@ -46,6 +46,23 @@ class TraversalExecutor:
                 yield t
 
 
+def traverse_schema(schema_strategy, traversal_executor):
+    if schema_strategy.kind == "thing":
+        query = GET_THING_TYPES_QUERY
+    else:
+        query = GET_ROLE_TYPES_QUERY
+
+    schema_concept_types = \
+        list(traversal_executor.get_schema_concept_types(query,
+                                                         include_implicit=schema_strategy.include_implicit,
+                                                         include_metatypes=schema_strategy.include_metatypes))
+
+    schema_concept_super_type_labels = get_sups_labels_per_type(schema_concept_types, include_self=True,
+                                                                include_metatypes=schema_strategy.include_metatypes)
+
+    return schema_concept_super_type_labels
+
+
 if __name__ == '__main__':
     client = grakn.Grakn(uri="localhost:48555")
     session = client.session(keyspace="test_schema")

@@ -4,6 +4,27 @@ import typing as typ
 import kgcn.src.neighbourhood.data.traversal as trv
 
 
+def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_types):
+    depthwise_arrays = []
+    depth_shape = list(neighbourhood_sizes) + [1]
+
+    for i in range(len(depth_shape)):
+        shape_at_this_depth = [n_starting_concepts] + depth_shape[i:]
+        arrays = {}
+        for array_name, (array_data_type, default_value) in array_data_types.items():
+
+            if i == len(depth_shape) - 1 and array_name in ['role_direction', 'role_type']:
+                # For the starting nodes we don't need to store roles
+                arrays[array_name] = None
+            else:
+                arrays[array_name] = np.full(shape=shape_at_this_depth,
+                                             fill_value=default_value,
+                                             dtype=array_data_type)
+
+        depthwise_arrays.append(arrays)
+    return depthwise_arrays
+
+
 class RawArrayBuilder:
 
     def __init__(self,
@@ -35,24 +56,7 @@ class RawArrayBuilder:
         # Make the empty arrays to fill
         #####################################################
 
-        depthwise_arrays = []
-        depth_shape = list(self._neighbourhood_sizes) + [1]
-
-        for i in range(len(depth_shape)):
-            shape_at_this_depth = [self._n_starting_concepts] + depth_shape[i:]
-            arrays = {}
-            for array_name, (array_data_type, default_value) in self._array_data_types.items():
-
-                if i == len(depth_shape) - 1 and array_name in ['role_direction', 'role_type']:
-                    # For the starting nodes we don't need to store roles
-                    arrays[array_name] = None
-                else:
-                    arrays[array_name] = np.full(shape=shape_at_this_depth,
-                                                 fill_value=default_value,
-                                                 dtype=array_data_type)
-
-            depthwise_arrays.append(arrays)
-        return depthwise_arrays
+        return build_default_arrays(self._neighbourhood_sizes, self._n_starting_concepts, self._array_data_types)
 
     def build_raw_arrays(self, concept_infos_with_neighbourhoods: typ.List[trv.NeighbourRole]):
         """
