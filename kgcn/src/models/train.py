@@ -39,7 +39,7 @@ def trial_data():
     return raw_neighbourhood_depths, labels
 
 
-def main():
+def supervised_train(neighbourhoods_depths, labels):
     optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
 
     model = base.SupervisedModel(FLAGS.classes_length, FLAGS.features_length, FLAGS.aggregated_length,
@@ -79,8 +79,6 @@ def main():
     sess.run(init_global)
     sess.run(init_local)
 
-    neighbourhoods_depths, labels = trial_data()
-
     feed_dict = {labels_placeholder: labels}
     for neighbourhood_placeholder, neighbourhood_depth in zip(neighbourhood_placeholders, neighbourhoods_depths):
         feed_dict[neighbourhood_placeholder] = neighbourhood_depth
@@ -109,4 +107,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    neighbourhoods_depths, labels = trial_data()
+    supervised_train(neighbourhoods_depths, labels)
