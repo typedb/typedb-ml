@@ -5,7 +5,7 @@ import tensorflow.contrib.layers as layers
 import abc
 
 
-class Model:
+class AccumulationLearner:
     def __init__(self, feature_length, aggregated_length, output_length, neighbourhood_sizes,
                  normalisation=tf.nn.l2_normalize):
 
@@ -43,7 +43,7 @@ class Model:
         pass
 
 
-class SupervisedModel(Model):
+class SupervisedAccumulationLearner(AccumulationLearner):
 
     def __init__(self, labels_length, feature_length, aggregated_length, output_length, neighbourhood_sizes, optimizer,
                  sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,

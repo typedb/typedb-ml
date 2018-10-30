@@ -1,9 +1,8 @@
 import time
 
-import numpy as np
 import tensorflow as tf
 
-import kgcn.src.models.base as base
+import kgcn.src.models.learners as base
 import tensorflow.contrib.layers as layers
 
 flags = tf.app.flags
@@ -24,30 +23,15 @@ flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to
 flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 
-def trial_data():
-    num_samples = 30
-    neighbourhood_sizes = (4, 3)
-    feature_length = 8
-    neighbourhood_shape = list(neighbourhood_sizes) + [feature_length]
-    shapes = [[num_samples] + neighbourhood_shape[i:] for i in range(len(neighbourhood_shape))]
-
-    raw_neighbourhood_depths = [np.ones(shape) for shape in shapes]
-
-    label_value = [1, 0]
-    raw_labels = [label_value for _ in range(num_samples)]
-    labels = raw_labels
-    return raw_neighbourhood_depths, labels
-
-
 def supervised_train(neighbourhoods_depths, labels):
     optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
 
-    model = base.SupervisedModel(FLAGS.classes_length, FLAGS.features_length, FLAGS.aggregated_length,
-                                 FLAGS.output_length, NEIGHBOURHOOD_SIZES, optimizer, sigmoid_loss=True,
-                                 regularisation_weight=0.0, classification_dropout=0.3,
-                                 classification_activation=tf.nn.relu,
-                                 classification_regularizer=layers.l2_regularizer(scale=0.1),
-                                 classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
+    model = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length, FLAGS.aggregated_length,
+                                               FLAGS.output_length, NEIGHBOURHOOD_SIZES, optimizer, sigmoid_loss=True,
+                                               regularisation_weight=0.0, classification_dropout=0.3,
+                                               classification_activation=tf.nn.relu,
+                                               classification_regularizer=layers.l2_regularizer(scale=0.1),
+                                               classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
 
     # Build the placeholders for the neighbourhood_depths
     neighbourhood_placeholders = []
@@ -104,8 +88,3 @@ def supervised_train(neighbourhoods_depths, labels):
     print("\n\n========= Prediction =========")
     class_prediction_values = sess.run([class_predictions], feed_dict=feed_dict)
     print(f'predictions: \n{class_prediction_values}')
-
-
-if __name__ == "__main__":
-    neighbourhoods_depths, labels = trial_data()
-    supervised_train(neighbourhoods_depths, labels)

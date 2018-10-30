@@ -1,7 +1,7 @@
 import unittest
 import tensorflow as tf
 
-import kgcn.src.models.base as base
+import kgcn.src.models.learners as base
 
 tf.enable_eager_execution()
 

@@ -54,7 +54,7 @@ def build_encoders(keyspace, uri="localhost:48555"):
 
 class TestEncode(unittest.TestCase):
 
-    def test_input_output(self):
+    def test_encode(self):
         encoders = build_encoders(keyspace="test_schema", uri="localhost:48555")
 
         array_data_types = collections.OrderedDict(
