@@ -1,5 +1,7 @@
 import itertools
+
 import collections
+
 import kgcn.src.neighbourhood.data.concept as concept
 
 MAX_LIMIT = 10000

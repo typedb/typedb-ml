@@ -1,8 +1,10 @@
+import abc
+
 import tensorflow as tf
+import tensorflow.contrib.layers as layers
+
 import kgcn.src.models.aggregation as agg
 import kgcn.src.models.initialise as init
-import tensorflow.contrib.layers as layers
-import abc
 
 
 class AccumulationLearner:

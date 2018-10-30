@@ -1,9 +1,9 @@
 import time
 
 import tensorflow as tf
+import tensorflow.contrib.layers as layers
 
 import kgcn.src.models.learners as base
-import tensorflow.contrib.layers as layers
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS

@@ -1,8 +1,10 @@
 import unittest
+
 import grakn
+
 import kgcn.src.neighbourhood.data.concept as concept
-import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.sampling.first as first
 
 

@@ -1,6 +1,8 @@
+import typing as typ
+
 import collections
 import numpy as np
-import typing as typ
+
 import kgcn.src.neighbourhood.data.traversal as trv
 
 

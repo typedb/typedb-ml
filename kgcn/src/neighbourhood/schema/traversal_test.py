@@ -1,4 +1,5 @@
 import unittest
+
 import grakn
 
 import kgcn.src.neighbourhood.schema.executor as ex

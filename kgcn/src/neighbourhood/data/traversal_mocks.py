@@ -1,6 +1,6 @@
 import kgcn.src.neighbourhood.data.concept as concept
-import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.neighbourhood.data.traversal as trv
 
 
 def gen(elements):

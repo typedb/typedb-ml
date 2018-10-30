@@ -1,7 +1,7 @@
 import sys
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 
 def _build_adjacency_matrix(schema_traversal):

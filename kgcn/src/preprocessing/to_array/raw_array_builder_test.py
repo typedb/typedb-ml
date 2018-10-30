@@ -2,10 +2,10 @@ import unittest
 
 import grakn
 
-import kgcn.src.preprocessing.to_array.raw_array_building as builders
+import kgcn.src.neighbourhood.data.executor as ex
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
-import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.preprocessing.to_array.raw_array_building as builders
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
