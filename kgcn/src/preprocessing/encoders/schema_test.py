@@ -5,6 +5,7 @@ import numpy as np
 
 import kgcn.src.preprocessing.encoders.schema as se
 import collections
+import kgcn.src.preprocessing.to_array.raw_array_building as raw
 
 schema_traversal = collections.OrderedDict((('animal', ['animal']),
                                             ('dog', ['animal', 'dog']),
@@ -77,3 +78,11 @@ class TestEncodeSchemaTypes(unittest.TestCase):
 
         with self.subTest("Type indices correctness"):
             np.testing.assert_array_equal(type_indices.numpy(), expected_type_indices)
+
+    def test_integration(self):
+        array_data_types = collections.OrderedDict([('neighbour_type', ('U25', 'collie'))])
+        example_arrays = raw.build_default_arrays((3, 2), 4, array_data_types)
+        example = np.array(example_arrays[0]['neighbour_type'], dtype=str)
+        tf.enable_eager_execution()
+        encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)
+        embeddings = encoder(example)

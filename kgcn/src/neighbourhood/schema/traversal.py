@@ -1,7 +1,5 @@
 import collections
 
-import grakn
-
 GET_THING_TYPES_QUERY = "match $x sub thing; get;"
 GET_ROLE_TYPES_QUERY = "match $x sub role; get;"
 
@@ -32,20 +30,6 @@ def get_sups_labels_per_type(schema_concept_types, include_metatypes=False, incl
     return schema_concept_super_types
 
 
-class TraversalExecutor:
-    def __init__(self, grakn_tx):
-        self._grakn_tx = grakn_tx
-
-    def get_schema_concept_types(self, get_types_query, include_implicit=True, include_metatypes=False):
-
-        for answer in self._grakn_tx.query(get_types_query):
-            t = answer.get('x')
-
-            if not (((not include_implicit) and t.is_implicit()) or (
-                    (not include_metatypes) and t.label() in METATYPE_LABELS)):
-                yield t
-
-
 def traverse_schema(schema_strategy, traversal_executor):
     if schema_strategy.kind == "thing":
         query = GET_THING_TYPES_QUERY
@@ -61,32 +45,3 @@ def traverse_schema(schema_strategy, traversal_executor):
                                                                 include_metatypes=schema_strategy.include_metatypes)
 
     return schema_concept_super_type_labels
-
-
-if __name__ == '__main__':
-    client = grakn.Grakn(uri="localhost:48555")
-    session = client.session(keyspace="test_schema")
-    tx = session.transaction(grakn.TxType.WRITE)
-
-    print("================= THINGS ======================")
-    te = TraversalExecutor(tx)
-    schema_concept_types = te.get_schema_concept_types(GET_THING_TYPES_QUERY, include_implicit=True, include_metatypes=False)
-    labels = labels_from_types(schema_concept_types)
-    print(list(labels))
-
-    schema_concept_types = te.get_schema_concept_types(GET_THING_TYPES_QUERY, include_implicit=True, include_metatypes=False)
-    super_types = get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
-    print("==== super types ====")
-    [print(type, super_types) for type, super_types in super_types.items()]
-
-    print("================= ROLES ======================")
-    schema_concept_types = te.get_schema_concept_types(GET_ROLE_TYPES_QUERY, include_implicit=True, include_metatypes=False)
-    labels = labels_from_types(schema_concept_types)
-    print(list(labels))
-
-    schema_concept_types = te.get_schema_concept_types(GET_ROLE_TYPES_QUERY, include_implicit=True, include_metatypes=False)
-    super_types = get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
-    print("==== super types ====")
-    [print(type, super_types) for type, super_types in super_types.items()]
-
-

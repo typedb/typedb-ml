@@ -1,5 +1,7 @@
 import unittest
 import grakn
+
+import kgcn.src.neighbourhood.schema.executor as ex
 import kgcn.src.neighbourhood.schema.traversal as trv
 
 
@@ -14,7 +16,7 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
         self._tx.close()
 
     def _function_calls(self, query, include_implicit, include_metatypes):
-        exec = trv.TraversalExecutor(self._tx)
+        exec = ex.TraversalExecutor(self._tx)
         schema_concept_types = exec.get_schema_concept_types(query, include_implicit=include_implicit, include_metatypes=include_metatypes)
         labels = trv.labels_from_types(schema_concept_types)
         return labels
@@ -47,3 +49,33 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
 
     def test_role_filtering(self):
         self._filtering(trv.GET_ROLE_TYPES_QUERY, 14)
+
+    def test_integration(self):
+        client = grakn.Grakn(uri="localhost:48555")
+        session = client.session(keyspace="test_schema")
+        tx = session.transaction(grakn.TxType.WRITE)
+
+        print("================= THINGS ======================")
+        te = ex.TraversalExecutor(tx)
+        schema_concept_types = te.get_schema_concept_types(trv.GET_THING_TYPES_QUERY, include_implicit=True,
+                                                           include_metatypes=False)
+        labels = trv.labels_from_types(schema_concept_types)
+        print(list(labels))
+
+        schema_concept_types = te.get_schema_concept_types(trv.GET_THING_TYPES_QUERY, include_implicit=True,
+                                                           include_metatypes=False)
+        super_types = trv.get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
+        print("==== super types ====")
+        [print(type, super_types) for type, super_types in super_types.items()]
+
+        print("================= ROLES ======================")
+        schema_concept_types = te.get_schema_concept_types(trv.GET_ROLE_TYPES_QUERY, include_implicit=True,
+                                                           include_metatypes=False)
+        labels = trv.labels_from_types(schema_concept_types)
+        print(list(labels))
+
+        schema_concept_types = te.get_schema_concept_types(trv.GET_ROLE_TYPES_QUERY, include_implicit=True,
+                                                           include_metatypes=False)
+        super_types = trv.get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
+        print("==== super types ====")
+        [print(type, super_types) for type, super_types in super_types.items()]

@@ -13,10 +13,8 @@ def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_ty
         arrays = {}
         for array_name, (array_data_type, default_value) in array_data_types.items():
 
-            if i == len(depth_shape) - 1 and array_name in ['role_direction', 'role_type']:
+            if not (i == len(depth_shape) - 1 and array_name in ['role_direction', 'role_type']):
                 # For the starting nodes we don't need to store roles
-                arrays[array_name] = None
-            else:
                 arrays[array_name] = np.full(shape=shape_at_this_depth,
                                              fill_value=default_value,
                                              dtype=array_data_type)
