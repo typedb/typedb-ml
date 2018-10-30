@@ -8,11 +8,11 @@ import tensorflow as tf
 import kgcn.src.neighbourhood.schema.executor as ex
 import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.neighbourhood.schema.traversal as trav
-import kgcn.src.preprocessing.encoders.boolean as boolean
-import kgcn.src.preprocessing.encoders.encode as encode
-import kgcn.src.preprocessing.encoders.schema as schema
-import kgcn.src.preprocessing.preprocess as pp
-import kgcn.src.preprocessing.to_array.raw_array_building as raw
+import kgcn.src.encoder.boolean as boolean
+import kgcn.src.encoder.encode as encode
+import kgcn.src.encoder.schema as schema
+import kgcn.src.preprocess.preprocess as pp
+import kgcn.src.preprocess.raw_array_building as raw
 
 tf.enable_eager_execution()
 

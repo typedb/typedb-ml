@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-import kgcn.src.preprocessing.to_array.date_to_unixtime as date
+import kgcn.src.preprocess.date_to_unixtime as date
 
 
 def preprocess(raw_arrays):

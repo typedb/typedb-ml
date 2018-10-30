@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-import kgcn.src.preprocessing.encoders.boolean as bool_enc
+import kgcn.src.encoder.boolean as bool_enc
 
 tf.enable_eager_execution()
 
