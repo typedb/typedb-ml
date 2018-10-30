@@ -64,7 +64,12 @@ class NeighbourhoodSampler:
 
         # Distinguish the concepts found as roles-played
         # Get them lazily
-        roles_played = self._query_executor.get_roles_played(target_concept_info, limit)
+        rpd = self._strategy.roles_played_query
+        roles_played = self._query_executor.get_neighbour_connections(
+            rpd['query'].format(target_concept_info.id, 0, limit),
+            rpd['role_variable'],
+            rpd['role_direction'],
+            rpd['neighbour_variable'])
 
         neighbourhood = self._get_neighbour_role(roles_played, next_neighbour_sample_sizes, limit_factor=limit_factor,
                                                  max_samples_limit=max_samples_limit)
@@ -86,7 +91,12 @@ class NeighbourhoodSampler:
 
         if target_concept_info.base_type_label == 'relationship':
             # Find its roleplayers
-            roleplayers = self._query_executor.get_roleplayers(target_concept_info, limit)
+            rpr = self._strategy.roleplayers_query
+            roleplayers = self._query_executor.get_neighbour_connections(
+                rpr['query'].format(target_concept_info.id, target_concept_info.type_label, 0, limit),
+                rpr['role_variable'],
+                rpr['role_direction'],
+                rpr['neighbour_variable'])
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             concept_info_with_neighbourhood.neighbourhood = itertools.chain(
