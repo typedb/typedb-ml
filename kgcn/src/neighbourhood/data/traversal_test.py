@@ -4,6 +4,7 @@ import grakn
 
 import kgcn.src.neighbourhood.data.concept as concept
 import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.sampling.first as first
 
@@ -30,9 +31,13 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
         self._concept_info = concept.build_concept_info(list(self._tx.query(entity_query))[0].get('x'))
 
-        executor = ex.TraversalExecutor(self._tx)
+        self._executor = ex.TraversalExecutor(self._tx)
+
+    def _neighbourhood_sampler_factory(self, neighbour_sample_sizes):
         sampler = first.first_n_sample
-        self._neighbourhood_sampler = trv.NeighbourhoodSampler(executor, sampler)
+        strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)
+        neighourhood_sampler = trv.NeighbourhoodSampler(self._executor, strategy)
+        return neighourhood_sampler
 
     def tearDown(self):
         self._tx.close()
@@ -72,14 +77,16 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_info_with_neighbourhood = self._neighbourhood_sampler(self._concept_info, sample_sizes)
+                self._concept_info_with_neighbourhood = self._neighbourhood_sampler_factory(sample_sizes)(
+                    self._concept_info)
                 self._assert_types_correct(self._concept_info_with_neighbourhood)
 
     def test_neighbour_traversal_check_depth(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_info_with_neighbourhood = self._neighbourhood_sampler(self._concept_info, sample_sizes)
+                self._concept_info_with_neighbourhood = self._concept_info_with_neighbourhood = \
+                    self._neighbourhood_sampler_factory(sample_sizes)(self._concept_info)
 
                 collected_tree = trv.collect_to_tree(self._concept_info_with_neighbourhood)
 
@@ -92,7 +99,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             def to_test():
-                return trv.collect_to_tree(self._neighbourhood_sampler(self._concept_info, sample_sizes))
+                return trv.collect_to_tree(self._neighbourhood_sampler_factory(sample_sizes)(self._concept_info))
 
             with self.subTest(sample_sizes=str(data)):
                 concept_info_with_neighbourhood = to_test()

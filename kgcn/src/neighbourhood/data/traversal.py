@@ -1,10 +1,7 @@
 import itertools
-
 import collections
-
 import kgcn.src.neighbourhood.data.concept as concept
-
-MAX_LIMIT = 10000
+import kgcn.src.neighbourhood.data.strategy as strat
 
 
 class ConceptInfoWithNeighbourhood:
@@ -29,12 +26,18 @@ def concepts_with_neighbourhoods_to_neighbour_roles(concept_infos_with_neighbour
 
 
 class NeighbourhoodSampler:
-    def __init__(self, query_executor, sampler):
+    def __init__(self, query_executor, strategy: strat.DataTraversalStrategy):
         self._query_executor = query_executor
-        self._sampler = sampler
+        self._strategy = strategy
 
-    def __call__(self, target_concept_info: concept.ConceptInfo, neighbour_sample_sizes: tuple,
-                 limit_factor=2):
+    def __call__(self, target_concept_info: concept.ConceptInfo):
+        return self._sample(target_concept_info,
+                            self._strategy.neighbour_sample_sizes,
+                            limit_factor=self._strategy.limit_factor,
+                            max_samples_limit=self._strategy.max_samples_limit)
+
+    def _sample(self, target_concept_info: concept.ConceptInfo, neighbour_sample_sizes: tuple,
+                limit_factor=2, max_samples_limit=10000):
 
         def _empty():
             yield from ()
@@ -51,7 +54,7 @@ class NeighbourhoodSampler:
         # Rather than looking at all roleplayers and roles played, limit the number to a multiple of the number of
         # samples wanted. This makes the process pseudo-random, but saves a lot of time when querying
         if limit_factor is None:
-            limit = MAX_LIMIT
+            limit = max_samples_limit
         else:
             limit = sample_size * limit_factor
 
@@ -63,7 +66,8 @@ class NeighbourhoodSampler:
         # Get them lazily
         roles_played = self._query_executor.get_roles_played(target_concept_info, limit)
 
-        neighbourhood = self._get_neighbour_role(roles_played, next_neighbour_sample_sizes, limit_factor=limit_factor)
+        neighbourhood = self._get_neighbour_role(roles_played, next_neighbour_sample_sizes, limit_factor=limit_factor,
+                                                 max_samples_limit=max_samples_limit)
 
         concept_info_with_neighbourhood = ConceptInfoWithNeighbourhood(concept_info=target_concept_info,
                                                                        neighbourhood=neighbourhood)
@@ -90,7 +94,7 @@ class NeighbourhoodSampler:
                 self._get_neighbour_role(roleplayers, next_neighbour_sample_sizes))
 
         # Randomly sample the neighbourhood
-        concept_info_with_neighbourhood.neighbourhood = sample_generator(self._sampler,
+        concept_info_with_neighbourhood.neighbourhood = sample_generator(self._strategy.sampler,
                                                                          concept_info_with_neighbourhood.neighbourhood,
                                                                          sample_size)
         return concept_info_with_neighbourhood
@@ -98,7 +102,8 @@ class NeighbourhoodSampler:
     def _get_neighbour_role(self, role_and_concept_info_iterator, neighbour_sample_sizes, **kwargs):
 
         for connection in role_and_concept_info_iterator:
-            neighbour_info_with_neighbourhood = self(connection['neighbour_info'], neighbour_sample_sizes, **kwargs)
+            neighbour_info_with_neighbourhood = self._sample(connection['neighbour_info'], neighbour_sample_sizes,
+                                                             **kwargs)
 
             yield NeighbourRole(role_label=connection['role_label'], role_direction=connection['role_direction'],
                                 neighbour_info_with_neighbourhood=neighbour_info_with_neighbourhood)

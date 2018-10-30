@@ -24,15 +24,14 @@ def build_encoders(keyspace, uri="localhost:48555"):
 
     traversal_executor = ex.TraversalExecutor(tx)
     # ================ THINGS ======================
-    thing_schema_strategy = schema_strat.SchemaTraversalStrategy(kind="thing", include_implicit=True,
-                                                                 include_metatypes=False)
+    thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True,
+                                                                      include_metatypes=False)
 
     thing_schema_traversal = trav.traverse_schema(thing_schema_strategy, traversal_executor)
     thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
 
     # ================ ROLES ======================
-    role_schema_strategy = schema_strat.SchemaTraversalStrategy(kind="role", include_implicit=True,
-                                                                include_metatypes=False)
+    role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
     role_schema_traversal = trav.traverse_schema(role_schema_strategy, traversal_executor)
     role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
 

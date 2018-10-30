@@ -1,8 +1,5 @@
 import collections
 
-GET_THING_TYPES_QUERY = "match $x sub thing; get;"
-GET_ROLE_TYPES_QUERY = "match $x sub role; get;"
-
 METATYPE_LABELS = ['thing', 'entity', 'relationship', 'attribute', 'role', '@has-attribute-value',
                    '@has-attribute-owner', '@has-attribute']
 
@@ -31,13 +28,8 @@ def get_sups_labels_per_type(schema_concept_types, include_metatypes=False, incl
 
 
 def traverse_schema(schema_strategy, traversal_executor):
-    if schema_strategy.kind == "thing":
-        query = GET_THING_TYPES_QUERY
-    else:
-        query = GET_ROLE_TYPES_QUERY
-
     schema_concept_types = \
-        list(traversal_executor.get_schema_concept_types(query,
+        list(traversal_executor.get_schema_concept_types(schema_strategy.query,
                                                          include_implicit=schema_strategy.include_implicit,
                                                          include_metatypes=schema_strategy.include_metatypes))
 
