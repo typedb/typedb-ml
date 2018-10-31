@@ -2,7 +2,7 @@ import unittest
 
 import grakn
 
-import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
 import kgcn.src.preprocess.raw_array_building as builders
@@ -60,7 +60,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def test__determine_values_to_put_with_entity(self):
         role_label = 'employer'
-        role_direction = ex.TARGET_PLAYS
+        role_direction = strat.TARGET_PLAYS
         neighbour_type_label = 'company'
         neighbour_data_type = None
         neighbour_value = None
@@ -74,7 +74,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def test__determine_values_to_put_with_string_attribute(self):
         role_label = '@has-name-value'
-        role_direction = ex.NEIGHBOUR_PLAYS
+        role_direction = strat.NEIGHBOUR_PLAYS
         neighbour_type_label = 'name'
         neighbour_data_type = 'string'
         neighbour_value = 'Person\'s Name'

@@ -110,7 +110,7 @@ class KGCN:
                     'neighbour_value_double': lambda x: x,
                     'neighbour_value_boolean': lambda x: tf.cast(boolean.one_hot_boolean_encode(x), dtype=tf.float64),  # TODO Hacky, don't like it
                     'neighbour_value_date': lambda x: x,
-                    'neighbour_value_string': lambda x: x}
+                    'neighbour_value_string': lambda x: x}  # TODO Add actual string encoder
 
         encoded_arrays = encode.encode_all(preprocessed_arrays, encoders)
 

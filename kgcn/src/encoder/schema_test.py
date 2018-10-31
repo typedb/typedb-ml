@@ -67,7 +67,7 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         ###############################################################
         tf.enable_eager_execution()
         encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)
-        embeddings, type_indices = encoder(tf.convert_to_tensor(schema_type_features, dtype=tf.string))
+        embeddings = encoder(tf.convert_to_tensor(schema_type_features, dtype=tf.string))
         print("\nResult:")
         print(embeddings.numpy())
         with self.subTest("Embedding correctness"):
@@ -76,8 +76,9 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         with self.subTest("Embedding shape"):
             np.testing.assert_array_equal(embeddings.numpy().shape, (2, 3, 5))
 
-        with self.subTest("Type indices correctness"):
-            np.testing.assert_array_equal(type_indices.numpy(), expected_type_indices)
+        # Omitted since the type_indices are no longer returned along with the embeddings
+        # with self.subTest("Type indices correctness"):
+        #     np.testing.assert_array_equal(type_indices.numpy(), expected_type_indices)
 
     def test_integration(self):
         array_data_types = collections.OrderedDict([('neighbour_type', ('U25', 'collie'))])
@@ -85,4 +86,4 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         example = np.array(example_arrays[0]['neighbour_type'], dtype=str)
         tf.enable_eager_execution()
         encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)
-        embeddings = encoder(example)
+        embeddings = encoder(tf.convert_to_tensor(example, tf.string))

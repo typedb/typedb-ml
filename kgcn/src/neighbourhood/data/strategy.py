@@ -1,8 +1,9 @@
 
-class DataTraversalStrategy:
+TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this concept plays a role
+NEIGHBOUR_PLAYS = 1  # In this case the target
 
-    TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this concept plays a role
-    NEIGHBOUR_PLAYS = 1  # In this case the target
+
+class DataTraversalStrategy:
 
     # TODO Changing queries due to bug
     # query = "match $x id {}; $relationship($role: $x); offset {}; limit {}; get $relationship, $role;")
