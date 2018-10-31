@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-def encode(raw_arrays, encoders):
+def encode_all(raw_arrays, encoders):
     """
     Take data from traversals and build neighbourhood_depths
     :param encoders: encoder to use for each key in the supplied dictionaries

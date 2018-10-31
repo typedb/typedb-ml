@@ -63,4 +63,4 @@ class TestEncode(unittest.TestCase):
         print(example_arrays)
 
         preprocessed_example_arrays = pp.preprocess(example_arrays)
-        print(encode.encode(preprocessed_example_arrays, encoders))
+        print(encode.encode_all(preprocessed_example_arrays, encoders))

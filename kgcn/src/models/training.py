@@ -26,12 +26,12 @@ flags.DEFINE_string('log_dir', './out', 'directory to use to store data from tra
 def supervised_train(neighbourhoods_depths, labels):
     optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
 
-    model = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length, FLAGS.aggregated_length,
-                                               FLAGS.output_length, NEIGHBOURHOOD_SIZES, optimizer, sigmoid_loss=True,
-                                               regularisation_weight=0.0, classification_dropout=0.3,
-                                               classification_activation=tf.nn.relu,
-                                               classification_regularizer=layers.l2_regularizer(scale=0.1),
-                                               classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
+    learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length, FLAGS.aggregated_length,
+                                                 FLAGS.output_length, NEIGHBOURHOOD_SIZES, optimizer, sigmoid_loss=True,
+                                                 regularisation_weight=0.0, classification_dropout=0.3,
+                                                 classification_activation=tf.nn.relu,
+                                                 classification_regularizer=layers.l2_regularizer(scale=0.1),
+                                                 classification_kernel_initializer=tf.contrib.layers.xavier_initializer())
 
     # Build the placeholders for the neighbourhood_depths
     neighbourhood_placeholders = []
@@ -42,8 +42,8 @@ def supervised_train(neighbourhoods_depths, labels):
     # Build the placeholder for the labels
     labels_placeholder = tf.placeholder(tf.float64, shape=(FLAGS.training_batch_size, FLAGS.classes_length))
 
-    # train_op, loss = model.train(neighbourhood_placeholders, labels_placeholder)
-    train_op, loss, class_predictions, precision, recall, f1_score = model.train_and_evaluate(
+    # train_op, loss = learner.train(neighbourhood_placeholders, labels_placeholder)
+    train_op, loss, class_predictions, precision, recall, f1_score = learner.train_and_evaluate(
         neighbourhood_placeholders, labels_placeholder)
 
     # Build the summary Tensor based on the TF collection of Summaries.
