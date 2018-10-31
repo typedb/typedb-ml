@@ -1,9 +1,14 @@
 import unittest
 
+import kgcn.src.neighbourhood.data.concept as ci  # TODO Needs renaming from concept to avoid confusion
+import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
+import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.preprocess.raw_array_building as builders
+import kgcn.src.preprocess.raw_array_building as raw
+import kgcn.src.sampling.first as first
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
@@ -80,3 +85,52 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                            'neighbour_data_type': 'string',
                            'neighbour_value_string': neighbour_value}
         self.assertEqual(expected_result, values_dict)
+
+
+class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
+    def setUp(self):
+        import grakn
+        entity_query = "match $x isa company, has name 'Google'; get;"
+        uri = "localhost:48555"
+        keyspace = "test_schema"
+        client = grakn.Grakn(uri=uri)
+        session = client.session(keyspace=keyspace)
+        self._tx = session.transaction(grakn.TxType.WRITE)
+
+        neighbour_sample_sizes = (4, 3)
+        sampler = first.first_n_sample
+
+        # Strategies
+        data_strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)
+        role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
+        thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True,
+                                                                          include_metatypes=False)
+
+        self._traversal_strategies = {'data': data_strategy,
+                                      'role': role_schema_strategy,
+                                      'thing': thing_schema_strategy}
+
+        concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
+
+        concept_infos = [ci.build_concept_info(concept) for concept in concepts]
+
+        data_executor = data_ex.TraversalExecutor(self._tx)
+
+        neighourhood_sampler = trv.NeighbourhoodSampler(data_executor, self._traversal_strategies['data'])
+
+        neighbourhood_depths = [neighourhood_sampler(concept_info) for concept_info in concept_infos]
+
+        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+
+        ################################################################################################################
+        # Raw Array Building
+        ################################################################################################################
+
+        raw_builder = raw.RawArrayBuilder(self._traversal_strategies['data'].neighbour_sample_sizes, len(concepts))
+        self._raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
+
+    def test_array_values(self):
+        with self.subTest('role_type not empty'):
+            self.assertFalse('' in self._raw_arrays[0]['role_type'])
+        with self.subTest('thing_type not empty'):
+            self.assertFalse('' in self._raw_arrays[0]['thing_type'])
