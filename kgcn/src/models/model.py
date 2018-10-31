@@ -21,7 +21,7 @@ import kgcn.src.sampling.first as first
 def main():
     tf.enable_eager_execution()
     # entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
-    entity_query = "match $x isa company; get;"
+    entity_query = "match $x isa company, has name 'Google'; get;"
     uri = "localhost:48555"
     keyspace = "test_schema"
     client = grakn.Grakn(uri=uri)
@@ -70,22 +70,8 @@ class KGCN:
         neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
 
         ################################################################################################################
-        # Schema Traversals
-        ################################################################################################################
-
-        schema_traversal_executor = schema_ex.TraversalExecutor(self._tx)
-        # THINGS
-        thing_schema_traversal = trav.traverse_schema(self._traversal_strategies['thing'], schema_traversal_executor)
-
-        # ROLES
-        role_schema_traversal = trav.traverse_schema(self._traversal_strategies['role'], schema_traversal_executor)
-
-        ################################################################################################################
         # Raw Array Building
         ################################################################################################################
-
-        thing_type_labels = list(thing_schema_traversal.keys())
-        role_type_labels = list(role_schema_traversal.keys())
 
         raw_builder = raw.RawArrayBuilder(self._traversal_strategies['data'].neighbour_sample_sizes, len(concepts))
         raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
@@ -106,6 +92,17 @@ class KGCN:
                          'neighbour_value_string': lambda x: x}
 
         preprocessed_arrays = pp.preprocess_all(raw_arrays, preprocessors)
+
+        ################################################################################################################
+        # Schema Traversals
+        ################################################################################################################
+
+        schema_traversal_executor = schema_ex.TraversalExecutor(self._tx)
+        # THINGS
+        thing_schema_traversal = trav.traverse_schema(self._traversal_strategies['thing'], schema_traversal_executor)
+
+        # ROLES
+        role_schema_traversal = trav.traverse_schema(self._traversal_strategies['role'], schema_traversal_executor)
 
         ################################################################################################################
         # Encoders
