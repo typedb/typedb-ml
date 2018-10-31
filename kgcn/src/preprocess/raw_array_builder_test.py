@@ -1,7 +1,5 @@
 import unittest
 
-import grakn
-
 import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
@@ -10,33 +8,21 @@ import kgcn.src.preprocess.raw_array_building as builders
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls._client = grakn.Grakn(uri="localhost:48555")
-        cls._session = cls._client.session(keyspace="test_schema")
-
     def setUp(self):
-        self._tx = self._session.transaction(grakn.TxType.WRITE)
         self._neighbourhood_sizes = (3, 2)
         self._concept_info_with_neighbourhood = mock.mock_traversal_output()
 
         self._concept_infos_with_neighbourhoods = trv.concepts_with_neighbourhoods_to_neighbour_roles(
             [self._concept_info_with_neighbourhood, self._concept_info_with_neighbourhood])
 
-        thing_type_labels = ['name', 'person', '@has-name', 'employment', 'company']
-
-        # TODO Only required while we have a bug on roles as variables in Graql
-        role_type_labels = ['employee', 'employer', '@has-name-value', '@has-name-owner']
+        # thing_type_labels = ['name', 'person', '@has-name', 'employment', 'company']
+        # role_type_labels = ['employee', 'employer', '@has-name-value', '@has-name-owner']
 
         self._n_starting_concepts = len(self._concept_infos_with_neighbourhoods)
 
-        self._builder = builders.RawArrayBuilder(thing_type_labels, role_type_labels, self._neighbourhood_sizes,
-                                                 self._n_starting_concepts)
+        self._builder = builders.RawArrayBuilder(self._neighbourhood_sizes, self._n_starting_concepts)
 
         self._expected_dims = [self._n_starting_concepts] + list(self._neighbourhood_sizes) + [1]
-        
-    def tearDown(self):
-        self._tx.close()
 
     def _check_dims(self, arrays):
         # We expect dimensions:
@@ -52,6 +38,14 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
         depthwise_arrays = self._builder.build_raw_arrays(self._concept_infos_with_neighbourhoods)
         self._check_dims(depthwise_arrays)
+        with self.subTest('spot-check thing type'):
+            self.assertEqual(depthwise_arrays[-1]['neighbour_type'][0, 0], 'person')
+        with self.subTest('spot-check role type'):
+            self.assertEqual(depthwise_arrays[0]['role_type'][0, 0, 0, 0], 'employer')
+        with self.subTest('check role_type absent in final arrays'):
+            self.assertFalse('role_type' in list(depthwise_arrays[-1].keys()))
+        with self.subTest('check role_direction absent in final arrays'):
+            self.assertFalse('role_direction' in list(depthwise_arrays[-1].keys()))
 
     def test_initialised_array_sizes(self):
 
@@ -66,9 +60,9 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         neighbour_value = None
         values_dict = self._builder._determine_values_to_put(role_label, role_direction, neighbour_type_label,
                                                              neighbour_data_type, neighbour_value)
-        expected_result = {"role_type": 1,
+        expected_result = {"role_type": 'employer',
                            'role_direction': role_direction,
-                           'neighbour_type': 4
+                           'neighbour_type': 'company'
                            }
         self.assertEqual(values_dict, expected_result)
 
@@ -80,9 +74,9 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         neighbour_value = 'Person\'s Name'
         values_dict = self._builder._determine_values_to_put(role_label, role_direction, neighbour_type_label,
                                                              neighbour_data_type, neighbour_value)
-        expected_result = {"role_type": 2,
+        expected_result = {"role_type": '@has-name-value',
                            'role_direction': role_direction,
-                           'neighbour_type': 0,
-                           'neighbour_data_type': 8,
+                           'neighbour_type': 'name',
+                           'neighbour_data_type': 'string',
                            'neighbour_value_string': neighbour_value}
         self.assertEqual(expected_result, values_dict)

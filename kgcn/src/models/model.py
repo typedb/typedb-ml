@@ -12,12 +12,14 @@ import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.schema.executor as schema_ex
 import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.neighbourhood.schema.traversal as trav
+import kgcn.src.preprocess.date_to_unixtime as date
 import kgcn.src.preprocess.preprocess as pp
 import kgcn.src.preprocess.raw_array_building as raw
 import kgcn.src.sampling.first as first
 
 
 def main():
+    tf.enable_eager_execution()
     # entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
     entity_query = "match $x isa company; get;"
     uri = "localhost:48555"
@@ -85,15 +87,25 @@ class KGCN:
         thing_type_labels = list(thing_schema_traversal.keys())
         role_type_labels = list(role_schema_traversal.keys())
 
-        raw_builder = raw.RawArrayBuilder(thing_type_labels, role_type_labels,
-                                          self._traversal_strategies['data'].neighbour_sample_sizes, len(concepts))
+        raw_builder = raw.RawArrayBuilder(self._traversal_strategies['data'].neighbour_sample_sizes, len(concepts))
         raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
 
         ################################################################################################################
         # Preprocessing
         ################################################################################################################
 
-        preprocessed_arrays = pp.preprocess(raw_arrays)
+        # Preprocessors
+        preprocessors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                         'role_direction': lambda x: x,
+                         'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                         'neighbour_data_type': lambda x: x,
+                         'neighbour_value_long': lambda x: x,
+                         'neighbour_value_double': lambda x: x,
+                         'neighbour_value_boolean': lambda x: x,
+                         'neighbour_value_date': date.datetime_to_unixtime,
+                         'neighbour_value_string': lambda x: x}
+
+        preprocessed_arrays = pp.preprocess_all(raw_arrays, preprocessors)
 
         ################################################################################################################
         # Encoders

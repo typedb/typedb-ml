@@ -62,5 +62,5 @@ class TestEncode(unittest.TestCase):
         example_arrays = raw.build_default_arrays((3, 2), 4, array_data_types)
         print(example_arrays)
 
-        preprocessed_example_arrays = pp.preprocess(example_arrays)
+        preprocessed_example_arrays = pp.preprocess_all(example_arrays)
         print(encode.encode_all(preprocessed_example_arrays, encoders))

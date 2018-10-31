@@ -27,29 +27,26 @@ def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_ty
 
 class RawArrayBuilder:
 
-    def __init__(self,
-                 thing_type_labels: typ.List[str],
-                 role_type_labels: typ.List[str],
-                 neighbourhood_sizes: typ.Tuple[int],
-                 n_starting_concepts: int):
+    def __init__(self, neighbourhood_sizes: typ.Tuple[int], n_starting_concepts: int):
         """
 
-        :param thing_type_labels: A list the index of which will be used to uniquely identify each thing label
-        :param role_type_labels: A list the index of which will be used to uniquely identify each role label
         :param neighbourhood_sizes: The number of neighbours sampled at each recursion
         :param n_starting_concepts: number of concepts whose traversals are supplied
         """
-        self._thing_type_labels = thing_type_labels
-        self._role_type_labels = role_type_labels
         self._neighbourhood_sizes = neighbourhood_sizes
         self._n_starting_concepts = n_starting_concepts
 
         # Array types and default values
         self._array_data_types = collections.OrderedDict(
-            [('role_type', (np.int, 0)), ('role_direction', (np.int, 0)), ('neighbour_type', (np.int, 0)),
-             ('neighbour_data_type', (np.int, -1)), ('neighbour_value_long', (np.int, 0)),
-             ('neighbour_value_double', (np.float, 0.0)), ('neighbour_value_boolean', (np.int, -1)),
-             ('neighbour_value_date', (np.datetime64, '')), ('neighbour_value_string', (np.dtype('U25'), ''))])
+            [('role_type', (np.dtype('U25'), '')),
+             ('role_direction', (np.int, 0)),
+             ('neighbour_type', (np.dtype('U25'), '')),
+             ('neighbour_data_type', (np.dtype('U10'), '')),
+             ('neighbour_value_long', (np.int, 0)),
+             ('neighbour_value_double', (np.float, 0.0)),
+             ('neighbour_value_boolean', (np.int, -1)),
+             ('neighbour_value_date', (np.datetime64, '')),
+             ('neighbour_value_string', (np.dtype('U25'), ''))])
 
     def _initialise_arrays(self):
         #####################################################
@@ -110,15 +107,18 @@ class RawArrayBuilder:
                                  neighbour_value):
         values_to_put = {}
         if role_label is not None:
-            values_to_put['role_type'] = self._role_type_labels.index(role_label)
+            values_to_put['role_type'] = role_label
         if role_direction is not None:
             values_to_put['role_direction'] = role_direction
 
-        values_to_put['neighbour_type'] = self._thing_type_labels.index(neighbour_type_label)
+        values_to_put['neighbour_type'] = neighbour_type_label
 
         if neighbour_data_type is not None:
-            values_to_put['neighbour_data_type'] = list(self._array_data_types.keys()).index(
-                'neighbour_value_' + neighbour_data_type)
+            # Potentially confusing to create an index of these arrays, since role type and direction will be omitted
+            #  for the starting concepts
+            # values_to_put['neighbour_data_type'] = list(self._array_data_types.keys()).index(
+            #     'neighbour_value_' + neighbour_data_type)
+            values_to_put['neighbour_data_type'] = neighbour_data_type
             values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
 
         return values_to_put
