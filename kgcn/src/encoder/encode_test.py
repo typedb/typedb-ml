@@ -13,6 +13,7 @@ import kgcn.src.encoder.encode as encode
 import kgcn.src.encoder.schema as schema
 import kgcn.src.preprocess.preprocess as pp
 import kgcn.src.preprocess.raw_array_building as raw
+import kgcn.src.preprocess.date_to_unixtime as date
 
 tf.enable_eager_execution()
 
@@ -62,5 +63,15 @@ class TestEncode(unittest.TestCase):
         example_arrays = raw.build_default_arrays((3, 2), 4, array_data_types)
         print(example_arrays)
 
-        preprocessed_example_arrays = pp.preprocess_all(example_arrays)
+        preprocessors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                         'role_direction': lambda x: x,
+                         'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                         'neighbour_data_type': lambda x: x,
+                         'neighbour_value_long': lambda x: x,
+                         'neighbour_value_double': lambda x: x,
+                         'neighbour_value_boolean': lambda x: x,
+                         'neighbour_value_date': date.datetime_to_unixtime,
+                         'neighbour_value_string': lambda x: x}
+
+        preprocessed_example_arrays = pp.preprocess_all(example_arrays, preprocessors)
         print(encode.encode_all(preprocessed_example_arrays, encoders))
