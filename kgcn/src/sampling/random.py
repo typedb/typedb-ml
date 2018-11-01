@@ -41,6 +41,7 @@ def random_sample(population, sample_size):
         while len(results) < sample_size:
             # Now we start sampling with replacement
             n_additional_required = sample_size - len(results)
+            # TODO calling random_sample recursively looks memory inefficient
             results += random_sample(stored_items, n_additional_required)
     else:
         return []

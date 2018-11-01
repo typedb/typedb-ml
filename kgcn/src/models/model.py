@@ -29,7 +29,7 @@ def main():
     tx = session.transaction(grakn.TxType.WRITE)
 
     neighbour_sample_sizes = (4, 3)
-    sampler = first.first_n_sample
+    sampler = first.ordered_sample
 
     # Strategies
     data_strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)

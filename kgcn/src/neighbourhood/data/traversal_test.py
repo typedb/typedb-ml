@@ -34,7 +34,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         self._executor = ex.TraversalExecutor(self._tx)
 
     def _neighbourhood_sampler_factory(self, neighbour_sample_sizes):
-        sampler = first.first_n_sample
+        sampler = first.ordered_sample
         strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)
         neighourhood_sampler = trv.NeighbourhoodSampler(self._executor, strategy)
         return neighourhood_sampler
@@ -86,8 +86,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_info_with_neighbourhood = self._concept_info_with_neighbourhood = \
-                    self._neighbourhood_sampler_factory(sample_sizes)(self._concept_info)
+                self._concept_info_with_neighbourhood = self._neighbourhood_sampler_factory(sample_sizes)(
+                    self._concept_info)
 
                 collected_tree = trv.collect_to_tree(self._concept_info_with_neighbourhood)
 
