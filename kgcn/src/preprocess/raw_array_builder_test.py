@@ -8,7 +8,7 @@ import kgcn.src.neighbourhood.data.traversal_mocks as mock
 import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.preprocess.raw_array_building as builders
 import kgcn.src.preprocess.raw_array_building as raw
-import kgcn.src.sampling.first as first
+import kgcn.src.sampling.ordered as ordered
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
@@ -98,7 +98,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         self._tx = session.transaction(grakn.TxType.WRITE)
 
         neighbour_sample_sizes = (4, 3)
-        sampler = first.ordered_sample
+        sampler = ordered.ordered_sample
 
         # Strategies
         data_strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)

@@ -15,7 +15,7 @@ import kgcn.src.neighbourhood.schema.traversal as trav
 import kgcn.src.preprocess.date_to_unixtime as date
 import kgcn.src.preprocess.preprocess as pp
 import kgcn.src.preprocess.raw_array_building as raw
-import kgcn.src.sampling.first as first
+import kgcn.src.sampling.ordered as ordered
 
 
 def main():
@@ -29,7 +29,7 @@ def main():
     tx = session.transaction(grakn.TxType.WRITE)
 
     neighbour_sample_sizes = (4, 3)
-    sampler = first.ordered_sample
+    sampler = ordered.ordered_sample
 
     # Strategies
     data_strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)

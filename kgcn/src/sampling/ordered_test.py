@@ -1,7 +1,7 @@
 
 import unittest
 
-import kgcn.src.sampling.first as first
+import kgcn.src.sampling.ordered as ordered
 
 
 def _gen(l):
@@ -17,7 +17,7 @@ class TestOrderedSample(unittest.TestCase):
 
         population = _gen(self._p)
         n = 3
-        first_n = first.ordered_sample(population, n)
+        first_n = ordered.ordered_sample(population, n)
         self.assertListEqual(first_n, self._p[:n])
 
     def test_when_sample_size_more_than_population(self):
@@ -31,7 +31,7 @@ class TestOrderedSample(unittest.TestCase):
             with self.subTest(f'population size = {len(self._p)}, n = {n}'):
                 population = _gen(self._p)
 
-                first_n = first.ordered_sample(population, n)
+                first_n = ordered.ordered_sample(population, n)
 
                 self.assertListEqual(first_n, expanded_population[:n])
 
@@ -39,5 +39,5 @@ class TestOrderedSample(unittest.TestCase):
 
         population = _gen(self._p)
         n = 0
-        first_n = first.ordered_sample(population, n)
+        first_n = ordered.ordered_sample(population, n)
         self.assertListEqual(first_n, [])
