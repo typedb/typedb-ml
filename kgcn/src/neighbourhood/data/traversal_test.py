@@ -4,6 +4,7 @@ import grakn
 
 import kgcn.src.neighbourhood.data.concept as concept
 import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
@@ -34,9 +35,14 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         self._executor = ex.TraversalExecutor(self._tx)
 
     def _neighbourhood_sampler_factory(self, neighbour_sample_sizes):
-        sampler = ordered.ordered_sample
-        strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)
-        neighourhood_sampler = trv.NeighbourhoodTraverser(self._executor, strategy)
+        sampling_method = ordered.ordered_sample
+        strategy = strat.DataTraversalStrategy()
+
+        samplers = []
+        for sample_size in neighbour_sample_sizes:
+            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
+
+        neighourhood_sampler = trv.NeighbourhoodTraverser(self._executor, strategy, samplers)
         return neighourhood_sampler
 
     def tearDown(self):

@@ -2,6 +2,7 @@ import unittest
 
 import kgcn.src.neighbourhood.data.concept as ci  # TODO Needs renaming from concept to avoid confusion
 import kgcn.src.neighbourhood.data.executor as data_ex
+import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
@@ -98,10 +99,14 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         self._tx = session.transaction(grakn.TxType.WRITE)
 
         neighbour_sample_sizes = (4, 3)
-        sampler = ordered.ordered_sample
+        sampling_method = ordered.ordered_sample
+
+        samplers = []
+        for sample_size in neighbour_sample_sizes:
+            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
         # Strategies
-        data_strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)
+        data_strategy = strat.DataTraversalStrategy()
         role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
         thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True,
                                                                           include_metatypes=False)
@@ -116,9 +121,9 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         data_executor = data_ex.TraversalExecutor(self._tx)
 
-        neighourhood_sampler = trv.NeighbourhoodTraverser(data_executor, self._traversal_strategies['data'])
+        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_strategies['data'], samplers)
 
-        neighbourhood_depths = [neighourhood_sampler(concept_info) for concept_info in concept_infos]
+        neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
 
         neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
 
@@ -126,7 +131,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         # Raw Array Building
         ################################################################################################################
 
-        raw_builder = raw.RawArrayBuilder(self._traversal_strategies['data'].neighbour_sample_sizes, len(concepts))
+        raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes, len(concepts))
         self._raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
 
     def test_array_values(self):
