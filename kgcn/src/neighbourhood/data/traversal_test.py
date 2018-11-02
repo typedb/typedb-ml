@@ -6,7 +6,7 @@ import kgcn.src.neighbourhood.data.concept as concept
 import kgcn.src.neighbourhood.data.executor as ex
 import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
-import kgcn.src.sampling.ordered as ordered
+import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):

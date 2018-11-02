@@ -1,7 +1,7 @@
 
 import unittest
 
-import kgcn.src.sampling.ordered as ordered
+import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 
 def _gen(l):
