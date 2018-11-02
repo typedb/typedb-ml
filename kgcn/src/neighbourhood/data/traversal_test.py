@@ -36,7 +36,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
     def _neighbourhood_sampler_factory(self, neighbour_sample_sizes):
         sampler = ordered.ordered_sample
         strategy = strat.DataTraversalStrategy(neighbour_sample_sizes, sampler)
-        neighourhood_sampler = trv.NeighbourhoodSampler(self._executor, strategy)
+        neighourhood_sampler = trv.NeighbourhoodTraverser(self._executor, strategy)
         return neighourhood_sampler
 
     def tearDown(self):

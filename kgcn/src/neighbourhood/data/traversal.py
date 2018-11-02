@@ -1,6 +1,7 @@
 import itertools
 import collections
 import kgcn.src.neighbourhood.data.concept as concept
+import kgcn.src.neighbourhood.data.executor as data_executor
 import kgcn.src.neighbourhood.data.strategy as strat
 
 
@@ -25,8 +26,8 @@ def concepts_with_neighbourhoods_to_neighbour_roles(concept_infos_with_neighbour
     return top_level_neighbour_roles
 
 
-class NeighbourhoodSampler:
-    def __init__(self, query_executor, strategy: strat.DataTraversalStrategy):
+class NeighbourhoodTraverser:
+    def __init__(self, query_executor: data_executor.TraversalExecutor, strategy: strat.DataTraversalStrategy):
         self._query_executor = query_executor
         self._strategy = strategy
 

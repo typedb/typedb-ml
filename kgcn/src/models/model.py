@@ -63,7 +63,7 @@ class KGCN:
 
         data_executor = data_ex.TraversalExecutor(self._tx)
 
-        neighourhood_sampler = trv.NeighbourhoodSampler(data_executor, self._traversal_strategies['data'])
+        neighourhood_sampler = trv.NeighbourhoodTraverser(data_executor, self._traversal_strategies['data'])
 
         neighbourhood_depths = [neighourhood_sampler(concept_info) for concept_info in concept_infos]
 
