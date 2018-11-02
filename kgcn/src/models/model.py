@@ -8,7 +8,6 @@ import kgcn.src.models.training as training
 import kgcn.src.neighbourhood.data.concept as ci  # TODO Needs renaming from concept to avoid confusion
 import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.schema.executor as schema_ex
 import kgcn.src.neighbourhood.schema.strategy as schema_strat
@@ -38,12 +37,10 @@ def main():
         samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
     # Strategies
-    data_strategy = strat.DataTraversalStrategy()
     role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
     thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True, include_metatypes=False)
 
-    traversal_strategies = {'data': data_strategy,
-                            'role': role_schema_strategy,
+    traversal_strategies = {'role': role_schema_strategy,
                             'thing': thing_schema_strategy}
 
     concepts = [concept.get('x') for concept in list(tx.query(entity_query))]
@@ -70,8 +67,7 @@ class KGCN:
 
         data_executor = data_ex.TraversalExecutor(self._tx)
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_strategies['data'],
-                                                            self._traversal_samplers)
+        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
 
         neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
 

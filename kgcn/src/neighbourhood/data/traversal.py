@@ -4,7 +4,6 @@ import collections
 
 import kgcn.src.neighbourhood.data.concept as concept
 import kgcn.src.neighbourhood.data.executor as data_executor
-import kgcn.src.neighbourhood.data.strategy as strat
 
 
 class ConceptInfoWithNeighbourhood:
@@ -29,10 +28,8 @@ def concepts_with_neighbourhoods_to_neighbour_roles(concept_infos_with_neighbour
 
 
 class NeighbourhoodTraverser:
-    def __init__(self, query_executor: data_executor.TraversalExecutor, strategy: strat.DataTraversalStrategy,
-                 depth_samplers):
+    def __init__(self, query_executor: data_executor.TraversalExecutor, depth_samplers):
         self._query_executor = query_executor
-        self._strategy = strategy
         self._depth_samplers = depth_samplers
 
     def __call__(self, target_concept_info: concept.ConceptInfo):
@@ -57,13 +54,7 @@ class NeighbourhoodTraverser:
         # Any concept could play a role in a relationship if the schema permits it
 
         # Distinguish the concepts found as roles-played
-        # Get them lazily
-        rpd = self._strategy.roles_played_query
-        roles_played = self._query_executor.get_neighbour_connections(
-            rpd['query'].format(target_concept_info.id),
-            rpd['role_variable'],
-            rpd['role_direction'],
-            rpd['neighbour_variable'])
+        roles_played = self._query_executor(data_executor.ROLES_PLAYED, target_concept_info.id)
 
         neighbourhood = self._get_neighbour_role(roles_played, next_depth)
 
@@ -84,12 +75,7 @@ class NeighbourhoodTraverser:
 
         if target_concept_info.base_type_label == 'relationship':
             # Find its roleplayers
-            rpr = self._strategy.roleplayers_query
-            roleplayers = self._query_executor.get_neighbour_connections(
-                rpr['query'].format(target_concept_info.id, target_concept_info.type_label),
-                rpr['role_variable'],
-                rpr['role_direction'],
-                rpr['neighbour_variable'])
+            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, target_concept_info.id, target_concept_info.type_label)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             concept_info_with_neighbourhood.neighbourhood = itertools.chain(

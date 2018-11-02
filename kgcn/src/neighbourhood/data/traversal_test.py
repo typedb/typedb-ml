@@ -5,7 +5,6 @@ import grakn
 import kgcn.src.neighbourhood.data.concept as concept
 import kgcn.src.neighbourhood.data.executor as ex
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
@@ -36,13 +35,12 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def _neighbourhood_sampler_factory(self, neighbour_sample_sizes):
         sampling_method = ordered.ordered_sample
-        strategy = strat.DataTraversalStrategy()
 
         samplers = []
         for sample_size in neighbour_sample_sizes:
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-        neighourhood_sampler = trv.NeighbourhoodTraverser(self._executor, strategy, samplers)
+        neighourhood_sampler = trv.NeighbourhoodTraverser(self._executor, samplers)
         return neighourhood_sampler
 
     def tearDown(self):
@@ -67,8 +65,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                 isinstance(neighbour_role.role_label, str)
                 or neighbour_role.role_label in [ex.UNKNOWN_ROLE_TARGET_PLAYS_LABEL,
                                                  ex.UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL])
-            self.assertIn(neighbour_role.role_direction, [strat.TARGET_PLAYS,
-                                                          strat.NEIGHBOUR_PLAYS])
+            self.assertIn(neighbour_role.role_direction, [ex.TARGET_PLAYS,
+                                                          ex.NEIGHBOUR_PLAYS])
             self.assertTrue(self._assert_types_correct(neighbour_role.neighbour_info_with_neighbourhood))
         except StopIteration:
             pass

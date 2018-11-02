@@ -2,14 +2,13 @@ import unittest
 
 import kgcn.src.neighbourhood.data.concept as ci  # TODO Needs renaming from concept to avoid confusion
 import kgcn.src.neighbourhood.data.executor as data_ex
+import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.data.strategy as strat
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
 import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.preprocess.raw_array_building as builders
 import kgcn.src.preprocess.raw_array_building as raw
-import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
@@ -60,7 +59,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def test__determine_values_to_put_with_entity(self):
         role_label = 'employer'
-        role_direction = strat.TARGET_PLAYS
+        role_direction = data_ex.TARGET_PLAYS
         neighbour_type_label = 'company'
         neighbour_data_type = None
         neighbour_value = None
@@ -74,7 +73,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
     def test__determine_values_to_put_with_string_attribute(self):
         role_label = '@has-name-value'
-        role_direction = strat.NEIGHBOUR_PLAYS
+        role_direction = data_ex.NEIGHBOUR_PLAYS
         neighbour_type_label = 'name'
         neighbour_data_type = 'string'
         neighbour_value = 'Person\'s Name'
@@ -106,13 +105,11 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
         # Strategies
-        data_strategy = strat.DataTraversalStrategy()
         role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
         thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True,
                                                                           include_metatypes=False)
 
-        self._traversal_strategies = {'data': data_strategy,
-                                      'role': role_schema_strategy,
+        self._traversal_strategies = {'role': role_schema_strategy,
                                       'thing': thing_schema_strategy}
 
         concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
@@ -121,7 +118,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         data_executor = data_ex.TraversalExecutor(self._tx)
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_strategies['data'], samplers)
+        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
 
         neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
 
