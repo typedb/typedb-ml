@@ -5,7 +5,6 @@ import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
-import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.preprocess.raw_array_building as builders
 import kgcn.src.preprocess.raw_array_building as raw
 
@@ -103,14 +102,6 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         for sample_size in neighbour_sample_sizes:
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-        # Strategies
-        role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
-        thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True,
-                                                                          include_metatypes=False)
-
-        self._traversal_strategies = {'role': role_schema_strategy,
-                                      'thing': thing_schema_strategy}
-
         concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
 
         concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
@@ -135,3 +126,43 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
             self.assertFalse('' in self._raw_arrays[0]['role_type'])
         with self.subTest('thing_type not empty'):
             self.assertFalse('' in self._raw_arrays[0]['thing_type'])
+
+
+class TestIntegrationsNeighbourTraversal(unittest.TestCase):
+    def setUp(self):
+
+        self._neighbour_sample_sizes = (2, 3)
+
+        neighbourhood_depths = [mock.mock_traversal_output()]
+
+        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+
+        ################################################################################################################
+        # Raw Array Building
+        ################################################################################################################
+
+        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes, 1)
+        self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
+
+    def test_role_type_not_empty(self):
+        self.assertFalse('' in self._raw_arrays[0]['role_type'])
+
+    def test_neighbour_type_not_empty(self):
+        self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
+
+    def test_string_values_not_empty(self):
+        self.assertFalse('' in self._raw_arrays[0]['neighbour_value_string'][0, :, 1, 0])
+
+    def test_data_type_values_not_empty(self):
+        self.assertFalse('' in self._raw_arrays[0]['neighbour_data_type'][0, :, 1, 0])
+
+    def test_shapes_as_expected(self):
+        self.assertTupleEqual(self._raw_arrays[0]['neighbour_type'].shape, (1, 3, 2, 1))
+        self.assertTupleEqual(self._raw_arrays[1]['neighbour_type'].shape, (1, 2, 1))
+        self.assertTupleEqual(self._raw_arrays[2]['neighbour_type'].shape, (1, 1))
+
+    def test_all_indices_visited(self):
+        print(self._raw_builder.indices_visited)
+        self.assertEqual(len(self._raw_builder.indices_visited), 6+2+1)
+
+

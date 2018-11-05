@@ -33,7 +33,7 @@ class RawArrayBuilder:
         :param neighbourhood_sizes: The number of neighbours sampled at each recursion
         :param n_starting_concepts: number of concepts whose traversals are supplied
         """
-        self._neighbourhood_sizes = neighbourhood_sizes
+        self._neighbourhood_sizes = tuple(reversed(neighbourhood_sizes))
         self._n_starting_concepts = n_starting_concepts
 
         # Array types and default values
@@ -47,6 +47,7 @@ class RawArrayBuilder:
              ('neighbour_value_boolean', (np.int, -1)),
              ('neighbour_value_date', (np.datetime64, '')),
              ('neighbour_value_string', (np.dtype('U25'), ''))])
+        self.indices_visited = []
 
     def _initialise_arrays(self):
         #####################################################
@@ -81,6 +82,7 @@ class RawArrayBuilder:
                 current_indices = (n, 0)
             else:
                 current_indices = tuple([indices[0], n] + list(indices[1:]))
+            self.indices_visited.append(current_indices)
 
             depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
             arrays_at_this_depth = depthwise_arrays[depth]
