@@ -14,7 +14,7 @@ import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.neighbourhood.schema.traversal as trav
 import kgcn.src.preprocess.date_to_unixtime as date
 import kgcn.src.preprocess.preprocess as pp
-import kgcn.src.preprocess.raw_array_building as raw
+import kgcn.src.preprocess.raw_array_builder as raw
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 

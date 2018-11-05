@@ -5,8 +5,8 @@ import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
-import kgcn.src.preprocess.raw_array_building as builders
-import kgcn.src.preprocess.raw_array_building as raw
+import kgcn.src.preprocess.raw_array_builder as builders
+import kgcn.src.preprocess.raw_array_builder as raw
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):

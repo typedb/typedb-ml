@@ -12,7 +12,7 @@ import kgcn.src.encoder.boolean as boolean
 import kgcn.src.encoder.encode as encode
 import kgcn.src.encoder.schema as schema
 import kgcn.src.preprocess.preprocess as pp
-import kgcn.src.preprocess.raw_array_building as raw
+import kgcn.src.preprocess.raw_array_builder as raw
 import kgcn.src.preprocess.date_to_unixtime as date
 
 tf.enable_eager_execution()
