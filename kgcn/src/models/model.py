@@ -5,7 +5,7 @@ import kgcn.src.encoder.boolean as boolean
 import kgcn.src.encoder.encode as encode
 import kgcn.src.encoder.schema as schema
 import kgcn.src.models.training as training
-import kgcn.src.neighbourhood.data.concept as ci  # TODO Needs renaming from concept to avoid confusion
+import kgcn.src.neighbourhood.data.executor
 import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.traversal as trv
@@ -63,7 +63,7 @@ class KGCN:
         :return:
         """
 
-        concept_infos = [ci.build_concept_info(concept) for concept in concepts]
+        concept_infos = [kgcn.src.neighbourhood.data.executor.build_concept_info(concept) for concept in concepts]
 
         data_executor = data_ex.TraversalExecutor(self._tx)
 

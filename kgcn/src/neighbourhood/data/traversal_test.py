@@ -2,7 +2,6 @@ import unittest
 
 import grakn
 
-import kgcn.src.neighbourhood.data.concept as concept
 import kgcn.src.neighbourhood.data.executor as ex
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.traversal as trv
@@ -29,7 +28,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         # entity_query = "match $x isa person, has identifier '{}'; get $x;".format(identifier)
         entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
 
-        self._concept_info = concept.build_concept_info(list(self._tx.query(entity_query))[0].get('x'))
+        self._concept_info = ex.build_concept_info(list(self._tx.query(entity_query))[0].get('x'))
 
         self._executor = ex.TraversalExecutor(self._tx)
 
@@ -53,7 +52,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         :return:
         """
         self.assertIsInstance(concept_info_with_neighbourhood, trv.ConceptInfoWithNeighbourhood)
-        self.assertIsInstance(concept_info_with_neighbourhood.concept_info, concept.ConceptInfo)
+        self.assertIsInstance(concept_info_with_neighbourhood.concept_info,
+                              ex.ConceptInfo)
         self.assertIn(type(concept_info_with_neighbourhood.neighbourhood).__name__, ('generator', 'chain'))
 
         try:

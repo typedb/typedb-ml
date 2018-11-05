@@ -1,5 +1,3 @@
-import kgcn.src.neighbourhood.data.concept as concept
-
 UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
 UNKNOWN_ROLE_TARGET_PLAYS_LABEL = "UNKNOWN_ROLE_TARGET_PLAYS"
 
@@ -57,9 +55,35 @@ class TraversalExecutor:
                     # role_label = answer.get(base_query['role_variable']).label()
                     role_label = UNKNOWN_ROLE_TARGET_PLAYS_LABEL
                     relationship_concept = answer.get(base_query['neighbour_variable'])
-                    relationship_info = concept.build_concept_info(relationship_concept)
+                    relationship_info = build_concept_info(relationship_concept)
 
                     yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
                            'neighbour_info': relationship_info}
 
             return _roles_iterator()
+
+
+class ConceptInfo:
+    def __init__(self, id, type_label, base_type_label, data_type=None, value=None):
+        self.id = id
+        self.type_label = type_label
+        self.base_type_label = base_type_label  # TODO rename to base_type in line with Client Python
+
+        # If the concept is an attribute
+        self.data_type = data_type
+        self.value = value
+
+
+def build_concept_info(concept):
+
+    id = concept.id
+    type_label = concept.type().label()
+    metatype_label = concept.base_type.lower()
+
+    if metatype_label == 'ATTRIBUTE':
+        data_type = concept.data_type()
+        value = concept.value()
+
+        return ConceptInfo(id, type_label, metatype_label, data_type, value)
+
+    return ConceptInfo(id, type_label, metatype_label)

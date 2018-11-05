@@ -1,6 +1,5 @@
 import unittest
 
-import kgcn.src.neighbourhood.data.concept as ci  # TODO Needs renaming from concept to avoid confusion
 import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
@@ -114,7 +113,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
 
-        concept_infos = [ci.build_concept_info(concept) for concept in concepts]
+        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
 
         data_executor = data_ex.TraversalExecutor(self._tx)
 
