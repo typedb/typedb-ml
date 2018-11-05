@@ -90,7 +90,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
     def test_neighbour_traversal_check_depth(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
-            with self.subTest(sample_sizes=str(data)):
+            with self.subTest(sample_sizes=str(sample_sizes)):
                 self._concept_info_with_neighbourhood = self._neighbourhood_traverser_factory(sample_sizes)(
                     self._concept_info)
 

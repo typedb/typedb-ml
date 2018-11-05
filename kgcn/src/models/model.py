@@ -76,8 +76,8 @@ class KGCN:
         ################################################################################################################
         # Raw Array Building
         ################################################################################################################
-
-        raw_builder = raw.RawArrayBuilder(self._traversal_strategies['data'].neighbour_sample_sizes, len(concepts))
+        neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
+        raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes, len(concepts))
         raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
 
         ################################################################################################################
