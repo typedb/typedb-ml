@@ -6,6 +6,7 @@ import kgcn.src.neighbourhood.data.executor as ex
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
+import kgcn.src.neighbourhood.data.traversal_mocks as mocks
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):
@@ -32,15 +33,15 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
         self._executor = ex.TraversalExecutor(self._tx)
 
-    def _neighbourhood_sampler_factory(self, neighbour_sample_sizes):
+    def _neighbourhood_traverser_factory(self, neighbour_sample_sizes):
         sampling_method = ordered.ordered_sample
 
         samplers = []
         for sample_size in neighbour_sample_sizes:
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-        neighourhood_sampler = trv.NeighbourhoodTraverser(self._executor, samplers)
-        return neighourhood_sampler
+        neighourhood_traverser = trv.NeighbourhoodTraverser(self._executor, samplers)
+        return neighourhood_traverser
 
     def tearDown(self):
         self._tx.close()
@@ -82,7 +83,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_info_with_neighbourhood = self._neighbourhood_sampler_factory(sample_sizes)(
+                self._concept_info_with_neighbourhood = self._neighbourhood_traverser_factory(sample_sizes)(
                     self._concept_info)
                 self._assert_types_correct(self._concept_info_with_neighbourhood)
 
@@ -90,7 +91,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._concept_info_with_neighbourhood = self._neighbourhood_sampler_factory(sample_sizes)(
+                self._concept_info_with_neighbourhood = self._neighbourhood_traverser_factory(sample_sizes)(
                     self._concept_info)
 
                 collected_tree = trv.collect_to_tree(self._concept_info_with_neighbourhood)
@@ -104,7 +105,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             def to_test():
-                return trv.collect_to_tree(self._neighbourhood_sampler_factory(sample_sizes)(self._concept_info))
+                return trv.collect_to_tree(self._neighbourhood_traverser_factory(sample_sizes)(self._concept_info))
 
             with self.subTest(sample_sizes=str(data)):
                 concept_info_with_neighbourhood = to_test()
@@ -112,3 +113,38 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                 for i in range(10):
                     new_concept_info_with_neighbourhood = to_test()
                     self.assertEqual(new_concept_info_with_neighbourhood, concept_info_with_neighbourhood)
+
+    def test_input_output(self):
+
+        neighbour_sample_sizes = (2, 3)
+
+        samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
+
+        starting_concept = ex.ConceptInfo("0", "person", "entity")
+
+        neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
+
+        concept_with_neighbourhood = neighourhood_traverser(starting_concept)
+
+        a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
+        self.assertEqual(a, b)
+
+    def test_input_output_integration(self):
+        """
+        Runs using real samplers
+        :return:
+        """
+
+        sampling_method = ordered.ordered_sample
+
+        samplers = [samp.Sampler(2, sampling_method, limit=2), samp.Sampler(3, sampling_method, limit=1)]
+
+        starting_concept = ex.ConceptInfo("0", "person", "entity")
+
+        neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
+
+        concept_with_neighbourhood = neighourhood_traverser(starting_concept)
+
+        a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
+        self.assertEqual(a, b)
+

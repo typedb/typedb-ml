@@ -2,17 +2,17 @@ import itertools
 
 import collections
 
-import kgcn.src.neighbourhood.data.executor
 import kgcn.src.neighbourhood.data.executor as data_executor
+import kgcn.src.neighbourhood.data.utils as utils
 
 
-class ConceptInfoWithNeighbourhood:
-    def __init__(self, concept_info: kgcn.src.neighbourhood.data.executor.ConceptInfo, neighbourhood: collections.Generator):
+class ConceptInfoWithNeighbourhood(utils.PropertyComparable):
+    def __init__(self, concept_info: data_executor.ConceptInfo, neighbourhood: collections.Generator):
         self.concept_info = concept_info
         self.neighbourhood = neighbourhood  # An iterator of `NeighbourRole`s
 
 
-class NeighbourRole:
+class NeighbourRole(utils.PropertyComparable):
     def __init__(self, role_label: (str, None), role_direction: (int, None),
                  neighbour_info_with_neighbourhood: ConceptInfoWithNeighbourhood):
         self.role_label = role_label
@@ -32,11 +32,11 @@ class NeighbourhoodTraverser:
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 
-    def __call__(self, target_concept_info: kgcn.src.neighbourhood.data.executor.ConceptInfo):
+    def __call__(self, target_concept_info: data_executor.ConceptInfo):
         depth = len(self._depth_samplers)
         return self._traverse(target_concept_info, depth)
 
-    def _traverse(self, target_concept_info: kgcn.src.neighbourhood.data.executor.ConceptInfo, depth: int):
+    def _traverse(self, target_concept_info: data_executor.ConceptInfo, depth: int):
 
         def _empty():
             yield from ()

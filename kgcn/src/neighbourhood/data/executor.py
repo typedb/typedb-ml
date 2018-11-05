@@ -1,3 +1,5 @@
+import kgcn.src.neighbourhood.data.utils as utils
+
 UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
 UNKNOWN_ROLE_TARGET_PLAYS_LABEL = "UNKNOWN_ROLE_TARGET_PLAYS"
 
@@ -63,7 +65,7 @@ class TraversalExecutor:
             return _roles_iterator()
 
 
-class ConceptInfo:
+class ConceptInfo(utils.PropertyComparable):
     def __init__(self, id, type_label, base_type_label, data_type=None, value=None):
         self.id = id
         self.type_label = type_label
