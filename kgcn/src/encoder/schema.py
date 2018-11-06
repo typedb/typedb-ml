@@ -18,8 +18,8 @@ class MultiHotSchemaTypeEncoder:
     def __init__(self, schema_traversal, default_value=-1, dtype=tf.string):
 
         self._dtype = dtype
-        schema_concept_type_labels = tf.convert_to_tensor(list(schema_traversal.keys()), dtype=self._dtype)
-        self._lookup_table = tf.contrib.lookup.index_table_from_tensor(mapping=schema_concept_type_labels,
+        self._schema_concept_type_labels = tf.convert_to_tensor(list(schema_traversal.keys()), dtype=self._dtype)
+        self._lookup_table = tf.contrib.lookup.index_table_from_tensor(mapping=self._schema_concept_type_labels,
                                                                        num_oov_buckets=0, default_value=default_value,
                                                                        dtype=self._dtype)
         self._multi_hot_embeddings = _build_adjacency_matrix(schema_traversal)

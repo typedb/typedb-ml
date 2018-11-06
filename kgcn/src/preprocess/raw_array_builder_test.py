@@ -124,8 +124,8 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
     def test_array_values(self):
         with self.subTest('role_type not empty'):
             self.assertFalse('' in self._raw_arrays[0]['role_type'])
-        with self.subTest('thing_type not empty'):
-            self.assertFalse('' in self._raw_arrays[0]['thing_type'])
+        with self.subTest('neighbour_type not empty'):
+            self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
 
 
 class TestIntegrationsNeighbourTraversal(unittest.TestCase):
