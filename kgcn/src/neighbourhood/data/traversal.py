@@ -111,6 +111,25 @@ def collect_to_tree(concept_info_with_neighbourhood):
     return concept_info_with_neighbourhood
 
 
+def flatten_tree(neighbour_roles):
+    all_connections = []
+
+    for neighbour_role in neighbour_roles:
+        ci = neighbour_role.neighbour_info_with_neighbourhood.concept_info
+        all_connections.append(
+            (neighbour_role.role_label,
+             neighbour_role.role_direction,
+             ci.type_label,
+             ci.base_type_label,
+             ci.id,
+             ci.data_type,
+             ci.value
+             ))
+
+        all_connections += flatten_tree(neighbour_role.neighbour_info_with_neighbourhood.neighbourhood)  # List of neighbour roles
+    return all_connections
+
+
 def materialise_subordinate_neighbours(concept_info_with_neighbourhood):
     """
     Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one

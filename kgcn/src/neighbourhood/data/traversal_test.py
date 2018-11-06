@@ -114,6 +114,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                     new_concept_info_with_neighbourhood = to_test()
                     self.assertEqual(new_concept_info_with_neighbourhood, concept_info_with_neighbourhood)
 
+class TestIsolated(unittest.TestCase):
+
     def test_input_output(self):
 
         neighbour_sample_sizes = (2, 3)
@@ -148,3 +150,73 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
 
+
+class TestFlattenedTree(unittest.TestCase):
+    def test_role_label_not_absent(self):
+        role_label_absent = [f[0] in ['', None] for f in self._flattened[1:]]
+        self.assertFalse(any(role_label_absent))
+
+    def test_type_label_not_absent(self):
+        type_label_absent = [f[2] in ['', None] for f in self._flattened[1:]]
+        self.assertFalse(any(type_label_absent))
+
+    def test_attribute_values_not_none(self):
+        attribute_value_none = [f[3] == 'attribute' and f[-1] is None for f in self._flattened]
+        self.assertFalse(any(attribute_value_none))
+
+    def test_attribute_datatype_not_none(self):
+        attribute_value_none = [f[3] == 'attribute' and f[-2] is None for f in self._flattened]
+        self.assertFalse(any(attribute_value_none))
+
+
+class TestIntegrationFlattened(TestFlattenedTree):
+    def setUp(self):
+        entity_query = "match $x isa company, has name 'Google'; get;"
+        uri = "localhost:48555"
+        keyspace = "test_schema"
+        client = grakn.Grakn(uri=uri)
+        session = client.session(keyspace=keyspace)
+        self._tx = session.transaction(grakn.TxType.WRITE)
+
+        neighbour_sample_sizes = (4, 3)
+
+        sampling_method = ordered.ordered_sample
+
+        samplers = []
+        for sample_size in neighbour_sample_sizes:
+            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
+
+        concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
+
+        concept_infos = [ex.build_concept_info(concept) for concept in concepts]
+
+        data_executor = ex.TraversalExecutor(self._tx)
+
+        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
+
+        self._neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
+
+        self._neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(self._neighbourhood_depths)
+
+        self._flattened = trv.flatten_tree(self._neighbour_roles)
+
+
+class TestIsolatedFlattened(TestFlattenedTree):
+    def setUp(self):
+        neighbour_sample_sizes = (2, 3)
+
+        samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
+
+        starting_concept = ex.ConceptInfo("0", "person", "entity")
+        concept_infos = [starting_concept]
+
+        neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
+
+        self._neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
+
+        self._neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(self._neighbourhood_depths)
+
+        self._flattened = trv.flatten_tree(self._neighbour_roles)
+
+
+del TestFlattenedTree
