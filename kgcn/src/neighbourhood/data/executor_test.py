@@ -25,7 +25,11 @@ class BaseGraknIntegrationTests:
             self._concept = list(self._tx.query(self.query))[0].get(self.var)
 
         def test_role_is_in_neighbour_roles(self):
-            self.assertIn(self.role, [r['role_label'] for r in self._res])
+            for role in self.roles:
+                self.assertIn(role, [r['role_label'] for r in self._res])
+
+        def test_neighbour_type_in_found_neighbours(self):
+            self.assertIn(self.neighbour_type, [r['neighbour_info'].type_label for r in self._res])
 
         def test_num_results(self):
             self.assertEqual(len(self._res), self.num_results)
@@ -35,8 +39,9 @@ class TestTraversalExecutorFromEntity(BaseGraknIntegrationTests.GraknIntegration
 
     query = "match $x isa company, has name 'Google'; get;"
     var = 'x'
-    role = 'employer'
+    roles = ['employer', 'property', '@has-name-owner']
     num_results = 3
+    neighbour_type = 'employment'
 
     def setUp(self):
         super(TestTraversalExecutorFromEntity, self).setUp()
@@ -47,8 +52,9 @@ class TestTraversalExecutorFromRelationship(BaseGraknIntegrationTests.GraknInteg
 
     query = "match $x isa employment; get;"
     var = 'x'
-    role = 'employer'
+    roles = ['employer', 'employee']
     num_results = 2
+    neighbour_type = 'person'
 
     def setUp(self):
         super(TestTraversalExecutorFromRelationship, self).setUp()
