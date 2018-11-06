@@ -1,7 +1,5 @@
 import kgcn.src.neighbourhood.data.utils as utils
 
-UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL = "UNKNOWN_ROLE_NEIGHBOUR_PLAYS"
-UNKNOWN_ROLE_TARGET_PLAYS_LABEL = "UNKNOWN_ROLE_TARGET_PLAYS"
 
 TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this concept plays a role
 NEIGHBOUR_PLAYS = 1  # In this case the target
@@ -12,20 +10,20 @@ ROLEPLAYERS = 1
 
 class TraversalExecutor:
 
-    # TODO Changing queries due to bug
-    # query = "match $x id {}; $relationship($role: $x); get $relationship, $role;")
+    # RELATIONSHIP_VARIABLE = 'relationship'
+    # THING_VARIABLE = 'thing'
+
     ROLES_PLAYED_QUERY = {
-        'query': "match $x id {}; $relationship($role: $x); get $relationship, $role;",
-        'role_variable': 'role',
+        'query': "match $thing id {}; $relationship($thing); get $relationship, $thing;",
         'role_direction': TARGET_PLAYS,
+        'target_variable': 'thing',
         'neighbour_variable': 'relationship'}
 
-    # query = "match $relationship id {}; $relationship($role: $x) isa {}; get $x, $role;"
     ROLEPLAYERS_QUERY = {
-        'query': "match $relationship id {}; $relationship($role: $x); get $x, $role;",
-        'role_variable': 'role',
+        'query': "match $relationship id {}; $relationship($thing); get $thing, $relationship;",
         'role_direction': NEIGHBOUR_PLAYS,
-        'neighbour_variable': 'x'}
+        'target_variable': 'relationship',
+        'neighbour_variable': 'thing'}
 
     def __init__(self, grakn_tx, roles_played_query=ROLES_PLAYED_QUERY, roleplayers_query=ROLEPLAYERS_QUERY):
         self._grakn_tx = grakn_tx
@@ -42,25 +40,31 @@ class TraversalExecutor:
 
         if query_direction == ROLES_PLAYED:
             base_query = self.ROLES_PLAYED_QUERY
+            thing_variable = base_query['target_variable']
+            relationship_variable = base_query['neighbour_variable']
+
         elif query_direction == ROLEPLAYERS:
             base_query = self.ROLEPLAYERS_QUERY
+            thing_variable = base_query['neighbour_variable']
+            relationship_variable = base_query['target_variable']
         else:
             raise ValueError('query_direction isn\'t properly defined')
 
         query = base_query['query'].format(concept_id)
         print(query)
-        roles_iterator = self._grakn_tx.query(query)
+        connection_iterator = self._grakn_tx.query(query)
 
         def _roles_iterator():
-            for answer in roles_iterator:
-                # TODO See above, omitting due to bug
-                role_label = answer.get(base_query['role_variable']).label()
-                # role_label = UNKNOWN_ROLE_TARGET_PLAYS_LABEL
-                relationship_concept = answer.get(base_query['neighbour_variable'])
-                relationship_info = build_concept_info(relationship_concept)
+            for answer in connection_iterator:
+                relationship = answer.get(relationship_variable)
+                thing = answer.get(thing_variable)
+
+                role_label = find_shared_role_label(thing, relationship)
+                neighbour_concept = answer.get(base_query['neighbour_variable'])
+                neighbour_info = build_concept_info(neighbour_concept)
 
                 yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
-                       'neighbour_info': relationship_info}
+                       'neighbour_info': neighbour_info}
 
         return _roles_iterator()
 
