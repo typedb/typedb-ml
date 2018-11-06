@@ -80,12 +80,15 @@ def build_concept_info(concept):
 
     id = concept.id
     type_label = concept.type().label()
-    metatype_label = concept.base_type.lower()
+    base_type_label = concept.base_type.lower()
 
-    if metatype_label == 'ATTRIBUTE':
-        data_type = concept.data_type()
+    assert(base_type_label in ['entity', 'relationship', 'attribute'])
+
+    if base_type_label == 'attribute':
+        data_type = concept.type().data_type().name.lower()
+        assert data_type in ('long', 'double', 'boolean', 'date', 'string')
         value = concept.value()
 
-        return ConceptInfo(id, type_label, metatype_label, data_type, value)
+        return ConceptInfo(id, type_label, base_type_label, data_type, value)
 
-    return ConceptInfo(id, type_label, metatype_label)
+    return ConceptInfo(id, type_label, base_type_label)
