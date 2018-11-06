@@ -65,6 +65,20 @@ class TraversalExecutor:
         return _roles_iterator()
 
 
+def find_shared_role_label(thing_instance, relationship_instance):
+    """
+    Make use of the schema to see if there is a single role relates a thing to a relationship
+    :param thing_instance: instance of a thing that we believe plays a role in a relationship
+    :param relationship_instance: instance of a relationship we believe thing plays a role in
+    :return:
+    """
+    roles_thing_plays = set(map(lambda x: x.label(), thing_instance.type().playing()))
+    roles_relationship_relates = set(map(lambda x: x.label(), relationship_instance.type().roles()))
+    intersection = roles_thing_plays.intersection(roles_relationship_relates)
+    assert(len(intersection) == 1)
+    return intersection.pop()
+
+
 class ConceptInfo(utils.PropertyComparable):
     def __init__(self, id, type_label, base_type_label, data_type=None, value=None):
         self.id = id

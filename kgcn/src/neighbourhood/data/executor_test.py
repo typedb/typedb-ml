@@ -22,6 +22,13 @@ class BaseGraknIntegrationTests:
         def setUp(self):
             self._tx = self.session.transaction(grakn.TxType.WRITE)
             self._executor = ex.TraversalExecutor(self._tx)
+
+
+class BaseTestTraversalExecutor:
+    class TestTraversalExecutor(BaseGraknIntegrationTests.GraknIntegrationTest):
+        
+        def setUp(self):
+            super(BaseTestTraversalExecutor.TestTraversalExecutor, self).setUp()
             self._concept = list(self._tx.query(self.query))[0].get(self.var)
 
         def test_role_is_in_neighbour_roles(self):
@@ -35,7 +42,7 @@ class BaseGraknIntegrationTests:
             self.assertEqual(len(self._res), self.num_results)
 
 
-class TestTraversalExecutorFromEntity(BaseGraknIntegrationTests.GraknIntegrationTest):
+class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExecutor):
 
     query = "match $x isa company, has name 'Google'; get;"
     var = 'x'
@@ -48,7 +55,7 @@ class TestTraversalExecutorFromEntity(BaseGraknIntegrationTests.GraknIntegration
         self._res = list(self._executor(ex.TARGET_PLAYS, self._concept.id))
 
 
-class TestTraversalExecutorFromRelationship(BaseGraknIntegrationTests.GraknIntegrationTest):
+class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraversalExecutor):
 
     query = "match $x isa employment; get;"
     var = 'x'
@@ -59,6 +66,23 @@ class TestTraversalExecutorFromRelationship(BaseGraknIntegrationTests.GraknInteg
     def setUp(self):
         super(TestTraversalExecutorFromRelationship, self).setUp()
         self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
+
+
+class TestFindSharedRole(BaseGraknIntegrationTests.GraknIntegrationTest):
+
+    query = "match $x isa company; get;"
+    relationship_query = "match $x isa employment; get;"
+    var = 'x'
+    shared_role = 'employer'
+
+    def setUp(self):
+        super(TestFindSharedRole, self).setUp()
+        self._concept = list(self._tx.query(self.query))[0].get(self.var)
+        self._relationship = list(self._tx.query(self.relationship_query))[0].get(self.var)
+
+    def test_find_shared_role_label(self):
+        shared_role = ex.find_shared_role_label(self._concept, self._relationship)
+        self.assertEqual(self.shared_role, shared_role)
 
 
 class BaseTestBuildConceptInfo:
