@@ -35,18 +35,21 @@ class BaseTestTraversalExecutor:
             for role in self.roles:
                 self.assertIn(role, [r['role_label'] for r in self._res])
 
+        def test_role_sets_equal(self):
+            self.assertSetEqual(set(self.roles), {r['role_label'] for r in self._res})
+
         def test_neighbour_type_in_found_neighbours(self):
             self.assertIn(self.neighbour_type, [r['neighbour_info'].type_label for r in self._res])
 
         def test_num_results(self):
-            self.assertEqual(len(self._res), self.num_results)
+            self.assertEqual(self.num_results, len(self._res))
 
 
 class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExecutor):
 
     query = "match $x isa company, has name 'Google'; get;"
     var = 'x'
-    roles = ['employer', 'property', '@has-name-owner']
+    roles = ['employer', 'property', 'has']
     num_results = 3
     neighbour_type = 'employment'
 
@@ -59,8 +62,8 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
 
     query = "match $x isa employment; get;"
     var = 'x'
-    roles = ['employer', 'employee']
-    num_results = 2
+    roles = ['employer', 'employee', 'has']
+    num_results = 3
     neighbour_type = 'person'
 
     def setUp(self):

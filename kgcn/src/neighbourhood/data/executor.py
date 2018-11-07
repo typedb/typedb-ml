@@ -10,9 +10,21 @@ ROLEPLAYERS = 1
 
 class TraversalExecutor:
 
+    TARGET_QUERY = {
+        'query': 'match $target id {}; get;',
+        'variable': 'target'
+    }
+
+    ATTRIBUTE_QUERY = {
+        'query': 'match $thing id {} has attribute $attribute; get $attribute;',
+        'variable': 'attribute'
+    }
+
+    ATTRIBUTE_ROLE_LABEL = 'has'
+
     ROLE_QUERY = {
         'query': "match $thing id {}; $relationship id {}; $relationship($role: $thing); get $role;",
-        'var':'role'
+        'variable': 'role'
     }
 
     ROLES_PLAYED_QUERY = {
@@ -27,7 +39,9 @@ class TraversalExecutor:
         'target_variable': 'relationship',
         'neighbour_variable': 'thing'}
 
-    def __init__(self, grakn_tx, roles_played_query=ROLES_PLAYED_QUERY, roleplayers_query=ROLEPLAYERS_QUERY):
+    def __init__(self, grakn_tx, attributes_via_implicit_relationships=False,
+                 roles_played_query=ROLES_PLAYED_QUERY, roleplayers_query=ROLEPLAYERS_QUERY):
+        self._attributes_via_implicit_relationships = attributes_via_implicit_relationships
         self._grakn_tx = grakn_tx
         self.roles_played_query = roles_played_query
         self.roleplayers_query = roleplayers_query
@@ -57,27 +71,50 @@ class TraversalExecutor:
         connection_iterator = self._grakn_tx.query(query)
 
         def _roles_iterator():
+
+            # Direct connections to attributes
+            if not self._attributes_via_implicit_relationships:
+
+                target_query = self.TARGET_QUERY['query'].format(concept_id)
+                target_concept = next(self._grakn_tx.query(target_query)).get(self.TARGET_QUERY['variable'])
+
+                if target_concept.type().is_implicit():
+                    raise ValueError(
+                        "A target concept has been found to be implicit, but using implicit relationships has "
+                        "been optionally disabled")
+                attribute_query = self.ATTRIBUTE_QUERY['query'].format(concept_id)
+                attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._grakn_tx.query(attribute_query))
+
+                for attribute in attributes:
+                    neighbour_info = build_concept_info(attribute)
+                    yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': base_query['role_direction'],
+                           'neighbour_info': neighbour_info}
+
+            # Connections to entities, relationships and optionally implicit relationships
             for answer in connection_iterator:
                 relationship = answer.get(relationship_variable)
                 thing = answer.get(thing_variable)
+                if (relationship.type().is_implicit() or thing.type().is_implicit()) and not self._attributes_via_implicit_relationships:
+                    pass
+                else:
 
-                role_sups = self._find_roles(thing, relationship)
-                role = find_lowest_role_from_rols_sups(role_sups)
+                    role_sups = self._find_roles(thing, relationship)
+                    role = find_lowest_role_from_rols_sups(role_sups)
 
-                role_label = role.label()
+                    role_label = role.label()
 
-                neighbour_concept = answer.get(base_query['neighbour_variable'])
-                neighbour_info = build_concept_info(neighbour_concept)
+                    neighbour_concept = answer.get(base_query['neighbour_variable'])
+                    neighbour_info = build_concept_info(neighbour_concept)
 
-                yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
-                       'neighbour_info': neighbour_info}
+                    yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
+                           'neighbour_info': neighbour_info}
 
         return _roles_iterator()
 
     def _find_roles(self, thing, relationship):
         query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
         answers = self._grakn_tx.query(query_str)
-        role_sups = [answer.get(self.ROLE_QUERY['var']) for answer in answers]
+        role_sups = [answer.get(self.ROLE_QUERY['variable']) for answer in answers]
         return role_sups
 
 
