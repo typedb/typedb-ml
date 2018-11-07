@@ -10,8 +10,10 @@ ROLEPLAYERS = 1
 
 class TraversalExecutor:
 
-    # RELATIONSHIP_VARIABLE = 'relationship'
-    # THING_VARIABLE = 'thing'
+    ROLE_QUERY = {
+        'query': "match $thing id {}; $relationship id {}; $relationship($role: $thing); get $role;",
+        'var':'role'
+    }
 
     ROLES_PLAYED_QUERY = {
         'query': "match $thing id {}; $relationship($thing); get $relationship, $thing;",
@@ -59,7 +61,11 @@ class TraversalExecutor:
                 relationship = answer.get(relationship_variable)
                 thing = answer.get(thing_variable)
 
-                role_label = find_shared_role_label(thing, relationship)
+                role_sups = self._find_roles(thing, relationship)
+                role = find_lowest_role_from_rols_sups(role_sups)
+
+                role_label = role.label()
+
                 neighbour_concept = answer.get(base_query['neighbour_variable'])
                 neighbour_info = build_concept_info(neighbour_concept)
 
@@ -68,19 +74,31 @@ class TraversalExecutor:
 
         return _roles_iterator()
 
+    def _find_roles(self, thing, relationship):
+        query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
+        answers = self._grakn_tx.query(query_str)
+        role_sups = [answer.get(self.ROLE_QUERY['var']) for answer in answers]
+        return role_sups
 
-def find_shared_role_label(thing_instance, relationship_instance):
+
+def find_lowest_role_from_rols_sups(role_sups):
     """
-    Make use of the schema to see if there is a single role relates a thing to a relationship
-    :param thing_instance: instance of a thing that we believe plays a role in a relationship
-    :param relationship_instance: instance of a relationship we believe thing plays a role in
-    :return:
+    Take a list containing a hierarchy of role concepts (order not necessarily known), and find the 'lowest' role.
+    That is, the role without any of it's subtypes in the list.
+    :param role_sups: list of role supertypes
+    :return: role without subtypes present (lowest role)
     """
-    roles_thing_plays = set(map(lambda x: x.label(), thing_instance.type().playing()))
-    roles_relationship_relates = set(map(lambda x: x.label(), relationship_instance.type().roles()))
-    intersection = roles_thing_plays.intersection(roles_relationship_relates)
-    assert(len(intersection) == 1)
-    return intersection.pop()
+
+    role_sups_labels = [role.label() for role in role_sups]
+
+    while len(role_sups_labels) > 0:
+        label = role_sups_labels.pop(0)
+        role = role_sups.pop(0)
+        if len({s.label() for s in role.subs()}.intersection(set(role_sups_labels))) == 0:
+            break
+    else:
+        raise ValueError
+    return role
 
 
 class ConceptInfo(utils.PropertyComparable):

@@ -5,7 +5,7 @@ import grakn
 import kgcn.src.neighbourhood.data.executor as ex
 
 
-class BaseGraknIntegrationTests:
+class BaseGraknIntegrationTest:
     class GraknIntegrationTest(unittest.TestCase):
 
         session = None
@@ -25,7 +25,7 @@ class BaseGraknIntegrationTests:
 
 
 class BaseTestTraversalExecutor:
-    class TestTraversalExecutor(BaseGraknIntegrationTests.GraknIntegrationTest):
+    class TestTraversalExecutor(BaseGraknIntegrationTest.GraknIntegrationTest):
         
         def setUp(self):
             super(BaseTestTraversalExecutor.TestTraversalExecutor, self).setUp()
@@ -68,25 +68,32 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
         self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
 
 
-class TestFindSharedRole(BaseGraknIntegrationTests.GraknIntegrationTest):
-
-    query = "match $x isa company; get;"
-    relationship_query = "match $x isa employment; get;"
-    var = 'x'
-    shared_role = 'employer'
+class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):
+    relationship_query = "match $employment(employee: $roleplayer) isa employment; get;"
+    role_query = "match $employment id {}; $person id {}; $employment($role: $person); get $role;"
+    relationship_var = 'employment'
+    thing_var = 'roleplayer'
+    role_var = 'role'
 
     def setUp(self):
-        super(TestFindSharedRole, self).setUp()
-        self._concept = list(self._tx.query(self.query))[0].get(self.var)
-        self._relationship = list(self._tx.query(self.relationship_query))[0].get(self.var)
+        super(TestFindLowestRoleFromRoleSups, self).setUp()
+        ans = list(self._tx.query(self.relationship_query))[0]
+        self._thing = ans.get(self.thing_var)
+        self._relationship = ans.get(self.relationship_var)
+        role_query = self.role_query.format(self._relationship.id, self._thing.id)
+        self._role_sups = [r.get(self.role_var) for r in self._tx.query(role_query)]
 
-    def test_find_shared_role_label(self):
-        shared_role = ex.find_shared_role_label(self._concept, self._relationship)
-        self.assertEqual(self.shared_role, shared_role)
+    def test_role_matches(self):
+        role_found = ex.find_lowest_role_from_rols_sups(self._role_sups)
+        self.assertEqual('employee', role_found.label())
+
+    def test_reversed_matches(self):
+        role_found = ex.find_lowest_role_from_rols_sups(list(reversed(self._role_sups)))
+        self.assertEqual('employee', role_found.label())
 
 
 class BaseTestBuildConceptInfo:
-    class TestBuildConceptInfo(BaseGraknIntegrationTests.GraknIntegrationTest):
+    class TestBuildConceptInfo(BaseGraknIntegrationTest.GraknIntegrationTest):
         def setUp(self):
             super(BaseTestBuildConceptInfo.TestBuildConceptInfo, self).setUp()
 
