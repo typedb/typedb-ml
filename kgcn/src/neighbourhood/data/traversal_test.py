@@ -114,6 +114,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                     new_concept_info_with_neighbourhood = to_test()
                     self.assertEqual(new_concept_info_with_neighbourhood, concept_info_with_neighbourhood)
 
+
 class TestIsolated(unittest.TestCase):
 
     def test_input_output(self):
@@ -150,26 +151,26 @@ class TestIsolated(unittest.TestCase):
         a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
 
+class BaseTestFlattenedTree:
+    class TestFlattenedTree(unittest.TestCase):
+        def test_role_label_not_absent(self):
+            role_label_absent = [f[0] in ['', None] for f in self._flattened[1:]]
+            self.assertFalse(any(role_label_absent))
 
-class TestFlattenedTree(unittest.TestCase):
-    def test_role_label_not_absent(self):
-        role_label_absent = [f[0] in ['', None] for f in self._flattened[1:]]
-        self.assertFalse(any(role_label_absent))
+        def test_type_label_not_absent(self):
+            type_label_absent = [f[2] in ['', None] for f in self._flattened[1:]]
+            self.assertFalse(any(type_label_absent))
 
-    def test_type_label_not_absent(self):
-        type_label_absent = [f[2] in ['', None] for f in self._flattened[1:]]
-        self.assertFalse(any(type_label_absent))
+        def test_attribute_values_not_none(self):
+            attribute_value_none = [f[3] == 'attribute' and f[-1] is None for f in self._flattened]
+            self.assertFalse(any(attribute_value_none))
 
-    def test_attribute_values_not_none(self):
-        attribute_value_none = [f[3] == 'attribute' and f[-1] is None for f in self._flattened]
-        self.assertFalse(any(attribute_value_none))
-
-    def test_attribute_datatype_not_none(self):
-        attribute_value_none = [f[3] == 'attribute' and f[-2] is None for f in self._flattened]
-        self.assertFalse(any(attribute_value_none))
+        def test_attribute_datatype_not_none(self):
+            attribute_value_none = [f[3] == 'attribute' and f[-2] is None for f in self._flattened]
+            self.assertFalse(any(attribute_value_none))
 
 
-class TestIntegrationFlattened(TestFlattenedTree):
+class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
     def setUp(self):
         entity_query = "match $x isa company, has name 'Google'; get;"
         uri = "localhost:48555"
@@ -201,7 +202,7 @@ class TestIntegrationFlattened(TestFlattenedTree):
         self._flattened = trv.flatten_tree(self._neighbour_roles)
 
 
-class TestIsolatedFlattened(TestFlattenedTree):
+class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
     def setUp(self):
         neighbour_sample_sizes = (2, 3)
 
@@ -218,5 +219,3 @@ class TestIsolatedFlattened(TestFlattenedTree):
 
         self._flattened = trv.flatten_tree(self._neighbour_roles)
 
-
-del TestFlattenedTree

@@ -75,7 +75,7 @@ class NeighbourhoodTraverser:
 
         if target_concept_info.base_type_label == 'relationship':
             # Find its roleplayers
-            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, target_concept_info.id, target_concept_info.type_label)
+            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, target_concept_info.id)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             concept_info_with_neighbourhood.neighbourhood = itertools.chain(
