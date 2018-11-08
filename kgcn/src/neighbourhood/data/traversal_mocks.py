@@ -17,12 +17,6 @@ def mock_traversal_output():
                     trv.NeighbourRole("employer", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
                         ex.ConceptInfo("2", "company", "entity"), gen([])
                     )),
-                    trv.NeighbourRole("employer", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
-                        ex.ConceptInfo("2", "company", "entity"), gen([])
-                    )),
-                    trv.NeighbourRole("employer", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
-                        ex.ConceptInfo("2", "company", "entity"), gen([])
-                    ))
                 ])
             )),
             trv.NeighbourRole("@has-name-owner", ex.TARGET_PLAYS, trv.ConceptInfoWithNeighbourhood(
@@ -32,14 +26,6 @@ def mock_traversal_output():
                         ex.ConceptInfo("4", "name", "attribute", data_type='string', value="Employee Name"),
                         gen([])
                     )),
-                    trv.NeighbourRole("@has-name-value", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
-                        ex.ConceptInfo("4", "name", "attribute", data_type='string', value="Employee Name"),
-                        gen([])
-                    )),
-                    trv.NeighbourRole("@has-name-value", ex.NEIGHBOUR_PLAYS, trv.ConceptInfoWithNeighbourhood(
-                        ex.ConceptInfo("4", "name", "attribute", data_type='string', value="Employee Name"),
-                        gen([])
-                    ))
                 ])
             ))
 
@@ -78,7 +64,7 @@ def mock_executor(query_direction, *args):
     elif concept_id == "1":
 
         role_direction = ex.NEIGHBOUR_PLAYS
-        return _role_wrapper([_build_data("employer", role_direction, "2", "company", "entity")]*3,
+        return _role_wrapper([_build_data("employer", role_direction, "2", "company", "entity")],
                              role_direction,
                              query_direction)
 
@@ -86,7 +72,7 @@ def mock_executor(query_direction, *args):
 
         role_direction = ex.NEIGHBOUR_PLAYS
         return _role_wrapper([_build_data("@has-name-value", role_direction, "4", "name", "attribute",
-                                          data_type='string', value="Employee Name")] * 3,
+                                          data_type='string', value="Employee Name")],
                              role_direction,
                              query_direction)
     else:
