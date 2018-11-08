@@ -71,6 +71,19 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
         self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
 
 
+class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+
+    query = "match $x isa job-title; get;"
+    var = 'x'
+    roles = ['has']
+    num_results = 2
+    neighbour_type = 'employment'
+
+    def setUp(self):
+        super(TestTraversalExecutorFromAttribute, self).setUp()
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
+
+
 class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):
     relationship_query = "match $employment(employee: $roleplayer) isa employment; get;"
     role_query = "match $employment id {}; $person id {}; $employment($role: $person); get $role;"

@@ -20,6 +20,11 @@ class TraversalExecutor:
         'variable': 'attribute'
     }
 
+    ATTRIBUTE_OWNER_QUERY = {
+        'query': 'match $attribute-owner has {} "{}"; get;',
+        'variable': 'attribute-owner'
+    }
+
     ATTRIBUTE_ROLE_LABEL = 'has'
 
     ROLE_QUERY = {
@@ -39,8 +44,9 @@ class TraversalExecutor:
         'target_variable': 'relationship',
         'neighbour_variable': 'thing'}
 
-    def __init__(self, grakn_tx, attributes_via_implicit_relationships=False,
+    def __init__(self, grakn_tx, find_neighbours_from_attributes=True, attributes_via_implicit_relationships=False,
                  roles_played_query=ROLES_PLAYED_QUERY, roleplayers_query=ROLEPLAYERS_QUERY):
+        self._find_neighbours_from_attributes = find_neighbours_from_attributes
         self._attributes_via_implicit_relationships = attributes_via_implicit_relationships
         self._grakn_tx = grakn_tx
         self.roles_played_query = roles_played_query
@@ -87,8 +93,19 @@ class TraversalExecutor:
 
                 for attribute in attributes:
                     neighbour_info = build_concept_info(attribute)
-                    yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': base_query['role_direction'],
+                    yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
                            'neighbour_info': neighbour_info}
+
+                if target_concept.is_attribute() and self._find_neighbours_from_attributes:
+                    attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.type().label(),
+                                                                                        target_concept.value())
+                    neighbours = map(lambda x: x.get(self.ATTRIBUTE_OWNER_QUERY['variable']),
+                                     self._grakn_tx.query(attribute_owners_query))
+
+                    for neighbour in neighbours:
+                        neighbour_info = build_concept_info(neighbour)
+                        yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
+                               'neighbour_info': neighbour_info}
 
             # Connections to entities, relationships and optionally implicit relationships
             for answer in connection_iterator:
