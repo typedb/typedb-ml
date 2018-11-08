@@ -1,3 +1,4 @@
+# import itertools
 import typing as typ
 
 import collections
@@ -44,6 +45,18 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
         values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
 
     return values_to_put
+
+# def all_possible_indices(neighbourhood_sizes, n_starting_concepts):
+#     all_indices = []
+#     for k in range(len(neighbourhood_sizes) + 1):
+#         lists = [list(range(n_starting_concepts))] + [list(range(s)) for s in neighbourhood_sizes[:k]] + [[0]]
+#         all_indices += list(itertools.product(*lists))
+#
+#     return all_indices
+#
+#
+# if __name__ == '__main__':
+#     [print(i) for i in all_possible_indices(tuple(reversed((2, 3))), 1)]
 
 
 class RawArrayBuilder:
@@ -92,11 +105,23 @@ class RawArrayBuilder:
         depthwise_arrays = self._build_neighbour_roles(concept_infos_with_neighbourhoods,
                                                        depthwise_arrays,
                                                        tuple())
+        # try:
+        #     poss = all_possible_indices(self._neighbourhood_sizes, self._n_starting_concepts)
+        #     assert(set(self.indices_visited) == set(poss))
+        # except AssertionError:
+        #     raise AssertionError(
+        #         f'\nPossible indices: \n{poss}\n=====\nVisited indices\n{self.indices_visited}\n=====\nMising '
+        #         f'Indices\n{set(poss).difference(set(self.indices_visited))}')
         return depthwise_arrays
 
     def _build_neighbour_roles(self, neighbour_roles: typ.List[trv.NeighbourRole],
                                depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
                                indices: typ.Tuple):
+
+        # depth = len(self._neighbourhood_sizes) + 2 - (len(indices) + 1)
+
+        n = None
+        current_indices = None
 
         for n, neighbour_role in enumerate(neighbour_roles):
             if len(indices) == 0:
@@ -106,7 +131,6 @@ class RawArrayBuilder:
                 current_indices.insert(1, n)
                 current_indices = tuple(current_indices)
             self.indices_visited.append(current_indices)
-
             depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
             arrays_at_this_depth = depthwise_arrays[depth]
 
@@ -126,4 +150,43 @@ class RawArrayBuilder:
                 depthwise_arrays,
                 current_indices)
 
+        print(f'n = {n}, indices = {current_indices}')
+
+        # Duplicate the sections of the arrays already built so that they are padded to be complete
+        if n is not None and depth < len(self._neighbourhood_sizes):
+            expected_n = self._neighbourhood_sizes[depth] - 1
+            if n < expected_n:
+                boundary = n + 1
+                slice_to_repeat = list(current_indices)
+                slice_to_repeat[1] = slice(boundary)
+                slice_to_repeat.insert(1, ...)
+                slice_to_repeat = tuple(slice_to_repeat)
+
+                slice_to_replace = list(slice_to_repeat)
+                slice_to_replace[2] = slice(boundary, None)
+                slice_to_replace = tuple(slice_to_replace)
+
+                # For the current depth and deeper
+                for d in list(range(depth, -1, -1)):
+                    for array in list(depthwise_arrays[d].values()):
+                        fill_array_with_repeats(array, slice_to_repeat, slice_to_replace, d)
+
         return depthwise_arrays
+
+
+def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace, axis):
+    to_repeat = array[slice_to_repeat]
+    to_fill = array[slice_to_replace]
+
+    num_repeats = int(to_fill.shape[axis] / to_repeat.shape[axis]) + 1
+
+    tile_axes = [1] * len(array.shape)
+    tile_axes[axis] = num_repeats
+
+    filler_axes = [slice(None)] * len(array.shape)
+    filler_axes[axis] = slice(to_repeat.shape[axis])
+
+    filler = np.tile(to_repeat, tile_axes)
+    curtailed_filler = filler[filler_axes]
+
+    array[slice_to_replace] = curtailed_filler
