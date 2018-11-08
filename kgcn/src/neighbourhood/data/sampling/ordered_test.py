@@ -18,14 +18,10 @@ class TestOrderedSample(unittest.TestCase):
         population = _gen(self._p)
         n = 3
         first_n = ordered.ordered_sample(population, n)
-        self.assertListEqual(first_n, self._p[:n])
+        self.assertListEqual(list(first_n), self._p[:n])
 
     def test_when_sample_size_more_than_population(self):
         ns = [7, 10, 11, 15, 24]
-
-        expanded_population = []
-        for i in range(5):
-            expanded_population += self._p
 
         for n in ns:
             with self.subTest(f'population size = {len(self._p)}, n = {n}'):
@@ -33,11 +29,18 @@ class TestOrderedSample(unittest.TestCase):
 
                 first_n = ordered.ordered_sample(population, n)
 
-                self.assertListEqual(first_n, expanded_population[:n])
+                self.assertListEqual(list(first_n), list(_gen(self._p))[:n])
 
     def test_when_sample_size_is_zero(self):
 
         population = _gen(self._p)
         n = 0
         first_n = ordered.ordered_sample(population, n)
-        self.assertListEqual(first_n, [])
+        self.assertListEqual(list(first_n), [])
+
+    def test_when_population_size_is_zero(self):
+
+        population = _gen([])
+        n = 5
+        first_n = ordered.ordered_sample(population, n)
+        self.assertRaises(ValueError)

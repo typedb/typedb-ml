@@ -21,13 +21,4 @@ class Sampler:
         if self._limit is not None:
             population = itertools.islice(population, self._limit)
 
-        return sample_generator(population, self.sample_size, self._sampling_method)
-
-
-def sample_generator(population, sample_size, sampling_method):
-    """
-    Just a wrapper for `random_sample` to make a generator
-    """
-    samples = sampling_method(population, sample_size)
-    for sample in samples:
-        yield sample
+        return self._sampling_method(population, self.sample_size)
