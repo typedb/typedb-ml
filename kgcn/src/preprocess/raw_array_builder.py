@@ -25,6 +25,27 @@ def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_ty
     return depthwise_arrays
 
 
+def determine_values_to_put(role_label, role_direction, neighbour_type_label, neighbour_data_type,
+                            neighbour_value):
+    values_to_put = {}
+    if role_label is not None:
+        values_to_put['role_type'] = role_label
+    if role_direction is not None:
+        values_to_put['role_direction'] = role_direction
+
+    values_to_put['neighbour_type'] = neighbour_type_label
+
+    if neighbour_data_type is not None:
+        # Potentially confusing to create an index of these arrays, since role type and direction will be omitted
+        #  for the starting concepts
+        # values_to_put['neighbour_data_type'] = list(self._array_data_types.keys()).index(
+        #     'neighbour_value_' + neighbour_data_type)
+        values_to_put['neighbour_data_type'] = neighbour_data_type
+        values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
+
+    return values_to_put
+
+
 class RawArrayBuilder:
 
     def __init__(self, neighbourhood_sizes: typ.Tuple[int], n_starting_concepts: int):
@@ -62,7 +83,7 @@ class RawArrayBuilder:
         :param top_level_neighbour_roles:
         :return: a list of arrays, one for each depth, including one for the starting nodes of interest
         """
-
+        self.indices_visited = []
         depthwise_arrays = self._initialise_arrays()
 
         #####################################################
@@ -81,16 +102,18 @@ class RawArrayBuilder:
             if len(indices) == 0:
                 current_indices = (n, 0)
             else:
-                current_indices = tuple([indices[0], n] + list(indices[1:]))
+                current_indices = list(indices)
+                current_indices.insert(1, n)
+                current_indices = tuple(current_indices)
             self.indices_visited.append(current_indices)
 
             depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
             arrays_at_this_depth = depthwise_arrays[depth]
 
             concept_info = neighbour_role.neighbour_info_with_neighbourhood.concept_info
-            values_to_put = self._determine_values_to_put(neighbour_role.role_label, neighbour_role.role_direction,
-                                                          concept_info.type_label, concept_info.data_type,
-                                                          concept_info.value)
+            values_to_put = determine_values_to_put(neighbour_role.role_label, neighbour_role.role_direction,
+                                                    concept_info.type_label, concept_info.data_type,
+                                                    concept_info.value)
 
             for key, value in values_to_put.items():
                 # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
@@ -104,23 +127,3 @@ class RawArrayBuilder:
                 current_indices)
 
         return depthwise_arrays
-
-    def _determine_values_to_put(self, role_label, role_direction, neighbour_type_label, neighbour_data_type,
-                                 neighbour_value):
-        values_to_put = {}
-        if role_label is not None:
-            values_to_put['role_type'] = role_label
-        if role_direction is not None:
-            values_to_put['role_direction'] = role_direction
-
-        values_to_put['neighbour_type'] = neighbour_type_label
-
-        if neighbour_data_type is not None:
-            # Potentially confusing to create an index of these arrays, since role type and direction will be omitted
-            #  for the starting concepts
-            # values_to_put['neighbour_data_type'] = list(self._array_data_types.keys()).index(
-            #     'neighbour_value_' + neighbour_data_type)
-            values_to_put['neighbour_data_type'] = neighbour_data_type
-            values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
-
-        return values_to_put
