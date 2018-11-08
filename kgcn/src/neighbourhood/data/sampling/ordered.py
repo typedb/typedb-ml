@@ -10,8 +10,10 @@ def ordered_sample(population, sample_size):
 
     results = []
     stored_items = []
+    empty = False
 
     for i, item in enumerate(population):
+        empty = True
         if i >= sample_size:
             break
         if i <= sample_size and stored_items is not None:
@@ -21,6 +23,9 @@ def ordered_sample(population, sample_size):
             stored_items = None
 
         results.append(item)  # add first n items in order
+
+    if empty:
+        raise ValueError('Population is empty')
 
     if len(results) > 0:
         while len(results) < sample_size:
