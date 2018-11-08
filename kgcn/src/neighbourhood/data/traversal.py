@@ -111,6 +111,16 @@ def collect_to_tree(concept_info_with_neighbourhood):
     return concept_info_with_neighbourhood
 
 
+def materialise_subordinate_neighbours(concept_info_with_neighbourhood):
+    """
+    Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one
+    layer deeper in the neighbour graph
+    :param concept_info_with_neighbourhood:
+    :return:
+    """
+    return [neighbour_role for neighbour_role in concept_info_with_neighbourhood.neighbourhood]
+
+
 def flatten_tree(neighbour_roles):
     all_connections = []
 
@@ -128,16 +138,6 @@ def flatten_tree(neighbour_roles):
 
         all_connections += flatten_tree(neighbour_role.neighbour_info_with_neighbourhood.neighbourhood)  # List of neighbour roles
     return all_connections
-
-
-def materialise_subordinate_neighbours(concept_info_with_neighbourhood):
-    """
-    Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one
-    layer deeper in the neighbour graph
-    :param concept_info_with_neighbourhood:
-    :return:
-    """
-    return [neighbour_role for neighbour_role in concept_info_with_neighbourhood.neighbourhood]
 
 
 def get_max_depth(concept_info_with_neighbourhood):
