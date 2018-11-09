@@ -18,7 +18,7 @@ import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 
 def main():
-    tf.enable_eager_execution()
+    # tf.enable_eager_execution()
     # entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
     entity_query = "match $x isa company, has name 'Google'; get;"
     uri = "localhost:48555"
@@ -106,6 +106,7 @@ class KGCN:
 
         # ROLES
         role_schema_traversal = trav.traverse_schema(self._traversal_strategies['role'], schema_traversal_executor)
+        role_schema_traversal['has'] = ['has']
 
         ################################################################################################################
         # Encoders
