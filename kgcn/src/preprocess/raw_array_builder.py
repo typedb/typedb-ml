@@ -178,15 +178,23 @@ def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace, axis):
     to_repeat = array[slice_to_repeat]
     to_fill = array[slice_to_replace]
 
-    num_repeats = int(to_fill.shape[axis] / to_repeat.shape[axis]) + 1
+    if array.shape[-1] == 1:
+        if len(to_repeat.shape) == 1:
+            to_repeat = to_repeat[..., np.newaxis]
+        if len(to_fill.shape) == 1:
+            to_fill = to_fill[..., np.newaxis]
+
+    num_repeats = -(-to_fill.shape[0] // to_repeat.shape[0])
 
     tile_axes = [1] * len(array.shape)
-    tile_axes[axis] = num_repeats
-
-    filler_axes = [slice(None)] * len(array.shape)
-    filler_axes[axis] = slice(to_repeat.shape[axis])
+    tile_axes[axis] = num_repeats + 1
 
     filler = np.tile(to_repeat, tile_axes)
+
+    filler_axes = [slice(None)] * len(array.shape)
+    filler_axes[axis:axis + len(to_fill.shape)] = [slice(None, i) for i in to_fill.shape]
+    filler_axes = tuple(filler_axes)
+
     curtailed_filler = filler[filler_axes]
 
     array[slice_to_replace] = curtailed_filler

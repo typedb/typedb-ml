@@ -139,7 +139,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
             self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
 
 
-class TestIntegrationsNeighbourTraversal(unittest.TestCase):
+class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
     def setUp(self):
 
         self._neighbour_sample_sizes = (2, 3)
@@ -203,7 +203,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
         builders.fill_array_with_repeats(arr,
                                          (1, ..., slice(1), 0),
                                          (1, ..., slice(1, None), 0),
-                                         1)
+                                         2)
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -218,6 +218,50 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                                       [9]],
                                      [[11],
                                       [11]]]])
+        np.testing.assert_array_equal(expected_output, arr)
+
+    def test_repeat_top_neighbour_deep(self):
+        shape = (2, 2, 2, 2, 1)
+        arr = np.array([[[[[1],
+                           [2]],
+                          [[3],
+                           [4]]],
+                         [[[5],
+                           [6]],
+                          [[7],
+                           [8]]]],
+                        [[[[9],
+                           [10]],
+                          [[11],
+                           [12]]],
+                         [[[13],
+                           [14]],
+                          [[15],
+                           [16]]]]])
+        arr[1, :, :, 1:, 0] = 0
+
+        builders.fill_array_with_repeats(arr,
+                                         (1, ..., slice(1), 0),
+                                         (1, ..., slice(1, None), 0),
+                                         2)
+        print(arr)
+
+        expected_output = np.array([[[[[1],
+                                       [2]],
+                                      [[3],
+                                       [4]]],
+                                     [[[5],
+                                       [6]],
+                                      [[7],
+                                       [8]]]],
+                                    [[[[9],
+                                       [9]],
+                                      [[11],
+                                       [11]]],
+                                     [[[13],
+                                       [13]],
+                                      [[15],
+                                       [15]]]]])
         np.testing.assert_array_equal(expected_output, arr)
 
     def test_repeat_child_neighbour(self):
@@ -237,9 +281,9 @@ class TestFillArrayWithRepeats(unittest.TestCase):
         arr[1, 1:, 1, 0] = 0
 
         builders.fill_array_with_repeats(arr,
-                                         (1, ..., slice(1), 1, 0),
-                                         (1, ..., slice(1, None), 1, 0),
-                                         0)
+                                         ([1], ..., slice(1), [1], [0]),
+                                         ([1], ..., slice(1, None), [1], [0]),
+                                         1)
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -275,7 +319,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
         builders.fill_array_with_repeats(arr,
                                          (0, ..., slice(2), 0, 0),
                                          (0, ..., slice(2, None), 0, 0),
-                                         0)
+                                         1)
         print(arr)
 
         expected_output = np.array([[[[1],
