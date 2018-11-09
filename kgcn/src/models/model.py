@@ -103,6 +103,20 @@ class KGCN:
         raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes, len(concepts))
         raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
 
+        # with tf.name_scope('preprocessing') as scope:
+        # Preprocessors
+        preprocessors = {'role_type': lambda x: x,
+                         'role_direction': lambda x: x,
+                         'neighbour_type': lambda x: x,
+                         'neighbour_data_type': lambda x: x,
+                         'neighbour_value_long': lambda x: x,
+                         'neighbour_value_double': lambda x: x,
+                         'neighbour_value_boolean': lambda x: x,
+                         'neighbour_value_date': date.datetime_to_unixtime,
+                         'neighbour_value_string': lambda x: x}
+
+        raw_arrays = pp.preprocess_all(raw_arrays, preprocessors)
+
         ################################################################################################################
         # Placeholders
         ################################################################################################################
@@ -140,22 +154,23 @@ class KGCN:
                 feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
 
         ################################################################################################################
-        # Preprocessing
+        # Tensorising
         ################################################################################################################
 
-        with tf.name_scope('preprocessing') as scope:
-            # Preprocessors
-            preprocessors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                             'role_direction': lambda x: x,
-                             'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                             'neighbour_data_type': lambda x: x,
-                             'neighbour_value_long': lambda x: x,
-                             'neighbour_value_double': lambda x: x,
-                             'neighbour_value_boolean': lambda x: x,
-                             'neighbour_value_date': date.datetime_to_unixtime,
-                             'neighbour_value_string': lambda x: x}
+        # Any steps needed to get arrays ready for the rest of the pipeline
+        with tf.name_scope('tensorising') as scope:
+            # Tensorisors
+            tensorisors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                           'role_direction': lambda x: x,
+                           'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                           'neighbour_data_type': lambda x: x,
+                           'neighbour_value_long': lambda x: x,
+                           'neighbour_value_double': lambda x: x,
+                           'neighbour_value_boolean': lambda x: x,
+                           'neighbour_value_date': lambda x: x,
+                           'neighbour_value_string': lambda x: x}
 
-            preprocessed_arrays = pp.preprocess_all(raw_array_placeholders, preprocessors)
+            tensorised_arrays = pp.preprocess_all(raw_array_placeholders, tensorisors)
 
         ################################################################################################################
         # Schema Traversals
@@ -191,13 +206,13 @@ class KGCN:
                         'role_direction': lambda x: x,
                         'neighbour_type': thing_encoder,
                         'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
-                        'neighbour_value_long': lambda x: x,
+                        'neighbour_value_long': lambda x: tf.to_float(x),
                         'neighbour_value_double': lambda x: x,
                         'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
-                        'neighbour_value_date': lambda x: x,
+                        'neighbour_value_date': lambda x: tf.to_float(x),
                         'neighbour_value_string': string_encoder}
 
-            encoded_arrays = encode.encode_all(preprocessed_arrays, encoders)
+            encoded_arrays = encode.encode_all(tensorised_arrays, encoders)
 
         print('Encoded shapes')
         print([encoded_array.shape for encoded_array in encoded_arrays])
