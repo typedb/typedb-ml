@@ -4,6 +4,7 @@ import tensorflow as tf
 import kgcn.src.encoder.boolean as boolean
 import kgcn.src.encoder.encode as encode
 import kgcn.src.encoder.schema as schema
+import kgcn.src.encoder.tf_hub as tf_hub
 import kgcn.src.models.training as training
 import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
@@ -115,6 +116,9 @@ class KGCN:
         thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
         role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
 
+        # In case of issues https://github.com/tensorflow/hub/issues/61
+        string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
+
         encoders = {'role_type': role_encoder,
                     'role_direction': lambda x: x,
                     'neighbour_type': thing_encoder,
@@ -123,11 +127,11 @@ class KGCN:
                     'neighbour_value_double': lambda x: x,
                     'neighbour_value_boolean': lambda x: tf.cast(boolean.one_hot_boolean_encode(x), dtype=tf.float64),  # TODO Hacky, don't like it
                     'neighbour_value_date': lambda x: x,
-                    'neighbour_value_string': lambda x: x}  # TODO Add actual string encoder
+                    'neighbour_value_string': string_encoder}  # TODO Add actual string encoder
 
         encoded_arrays = encode.encode_all(preprocessed_arrays, encoders)
 
-        training.supervised_train(encoded_arrays, labels)
+        # training.supervised_train(encoded_arrays, labels)
 
 
 if __name__ == "__main__":
