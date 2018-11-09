@@ -1,14 +1,17 @@
 import collections
-
 import grakn
+import numpy as np
 import tensorflow as tf
+import tensorflow.contrib.layers as layers
 
 import kgcn.src.encoder.boolean as boolean
 import kgcn.src.encoder.encode as encode
 import kgcn.src.encoder.schema as schema
 import kgcn.src.encoder.tf_hub as tf_hub
+import kgcn.src.models.learners as base
 import kgcn.src.models.training as training
 import kgcn.src.neighbourhood.data.executor as data_ex
+import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
 import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.schema.executor as schema_ex
@@ -17,8 +20,6 @@ import kgcn.src.neighbourhood.schema.traversal as trav
 import kgcn.src.preprocess.date_to_unixtime as date
 import kgcn.src.preprocess.preprocess as pp
 import kgcn.src.preprocess.raw_array_builder as raw
-import kgcn.src.neighbourhood.data.sampling.ordered as ordered
-
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -70,7 +71,7 @@ def main():
 
     kgcn = KGCN(tx, traversal_strategies, samplers)
 
-    kgcn.model_fn(concepts, [[1, 0]])
+    kgcn.model_fn(tf.estimator.ModeKeys.TRAIN, concepts, np.array([[1, 0]], dtype=np.float32))
 
 
 class KGCN:
@@ -80,7 +81,7 @@ class KGCN:
         self._traversal_strategies = traversal_strategies
         self._traversal_samplers = traversal_samplers
 
-    def model_fn(self, concepts, labels=None):
+    def model_fn(self, mode, concepts, labels=None):
         """
         A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
         :return:
@@ -103,7 +104,6 @@ class KGCN:
         raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes, len(concepts))
         raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
 
-        # with tf.name_scope('preprocessing') as scope:
         # Preprocessors
         preprocessors = {'role_type': lambda x: x,
                          'role_direction': lambda x: x,
@@ -138,7 +138,7 @@ class KGCN:
         del all_feature_types[0]['role_direction']
 
         # Build the placeholders for the neighbourhood_depths for each feature type
-        raw_array_placeholders = training.build_array_placeholders(FLAGS.training_batch_size, NEIGHBOURHOOD_SIZES, 1,
+        raw_array_placeholders = training.build_array_placeholders(FLAGS.training_batch_size, neighbour_sample_sizes, 1,
                                                                    all_feature_types)
         # Build the placeholder for the labels
         labels_placeholder = training.build_labels_placeholder(FLAGS.training_batch_size, FLAGS.classes_length)
@@ -217,7 +217,32 @@ class KGCN:
         print('Encoded shapes')
         print([encoded_array.shape for encoded_array in encoded_arrays])
 
-        training.supervised_train(neighbour_sample_sizes, encoded_arrays, labels)
+        ################################################################################################################
+        # Learner
+        ################################################################################################################
+
+        # Create a session for running Ops on the Graph.
+        sess = tf.Session()
+
+        optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
+        learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length,
+                                                     FLAGS.aggregated_length,
+                                                     FLAGS.output_length, neighbour_sample_sizes, optimizer,
+                                                     sigmoid_loss=True,
+                                                     regularisation_weight=0.0, classification_dropout=0.3,
+                                                     classification_activation=tf.nn.relu,
+                                                     classification_regularizer=layers.l2_regularizer(scale=0.1),
+                                                     classification_kernel_initializer=
+                                                     tf.contrib.layers.xavier_initializer())
+
+        learning_manager = training.LearningManager(learner)
+        learning_manager(sess, encoded_arrays, labels)  # Build the graph
+
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            learning_manager.train(sess, feed_dict)
+
+        if mode == tf.estimator.ModeKeys.PREDICT:
+            learning_manager.predict(sess, feed_dict)
 
 
 if __name__ == "__main__":
