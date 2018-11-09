@@ -7,6 +7,8 @@ NEIGHBOUR_PLAYS = 1  # In this case the target
 ROLES_PLAYED = 0
 ROLEPLAYERS = 1
 
+DATA_TYPE_NAMES = ('long', 'double', 'boolean', 'date', 'string')
+
 
 class TraversalExecutor:
 
@@ -176,7 +178,7 @@ def build_concept_info(concept):
 
     if base_type_label == 'attribute':
         data_type = concept.type().data_type().name.lower()
-        assert data_type in ('long', 'double', 'boolean', 'date', 'string')
+        assert data_type in DATA_TYPE_NAMES
         value = concept.value()
 
         return ConceptInfo(id, type_label, base_type_label, data_type, value)

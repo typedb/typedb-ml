@@ -18,6 +18,9 @@ import kgcn.src.preprocess.raw_array_builder as raw
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 
+NO_DATA_TYPE = ''  # TODO Pass this to traversal/executor
+
+
 def main():
     # tf.enable_eager_execution()
     # entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
@@ -119,10 +122,17 @@ class KGCN:
         # In case of issues https://github.com/tensorflow/hub/issues/61
         string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
 
+        data_types = list(data_ex.DATA_TYPE_NAMES)
+        data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
+        data_types_traversal = {data_type: data_types for data_type in data_types}
+
+        # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
+        data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
+
         encoders = {'role_type': role_encoder,
                     'role_direction': lambda x: x,
                     'neighbour_type': thing_encoder,
-                    'neighbour_data_type': lambda x: x,
+                    'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
                     'neighbour_value_long': lambda x: x,
                     'neighbour_value_double': lambda x: x,
                     'neighbour_value_boolean': lambda x: tf.cast(boolean.one_hot_boolean_encode(x), dtype=tf.float64),  # TODO Hacky, don't like it
