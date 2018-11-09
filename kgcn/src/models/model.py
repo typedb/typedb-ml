@@ -135,9 +135,9 @@ class KGCN:
                     'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
                     'neighbour_value_long': lambda x: x,
                     'neighbour_value_double': lambda x: x,
-                    'neighbour_value_boolean': lambda x: tf.cast(boolean.one_hot_boolean_encode(x), dtype=tf.float64),  # TODO Hacky, don't like it
+                    'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
                     'neighbour_value_date': lambda x: x,
-                    'neighbour_value_string': string_encoder}  # TODO Add actual string encoder
+                    'neighbour_value_string': string_encoder}
 
         encoded_arrays = encode.encode_all(preprocessed_arrays, encoders)
 

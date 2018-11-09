@@ -11,7 +11,7 @@ def initialise_glorot_weights(shape, name=None):
     """
     with tf.name_scope(name, default_name="init_glorot_weights") as scope:
         init_range = np.sqrt(6.0/(shape[0]+shape[1]))
-        initial = tf.random_uniform(shape, minval=-init_range, maxval=init_range, dtype=tf.float64)
+        initial = tf.random_uniform(shape, minval=-init_range, maxval=init_range, dtype=tf.float32)
 
         if tf.executing_eagerly():
             return tf.contrib.eager.Variable(initial, name=name)

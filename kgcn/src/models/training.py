@@ -37,10 +37,10 @@ def supervised_train(neighbourhoods_depths, labels):
     neighbourhood_placeholders = []
     for i in range(len(NEIGHBOURHOOD_SIZES) + 1):
         shape = [FLAGS.training_batch_size] + list(NEIGHBOURHOOD_SIZES[i:]) + [FLAGS.features_length]
-        neighbourhood_placeholders.append(tf.placeholder(tf.float64, shape=shape))
+        neighbourhood_placeholders.append(tf.placeholder(tf.float32, shape=shape))
 
     # Build the placeholder for the labels
-    labels_placeholder = tf.placeholder(tf.float64, shape=(FLAGS.training_batch_size, FLAGS.classes_length))
+    labels_placeholder = tf.placeholder(tf.float32, shape=(FLAGS.training_batch_size, FLAGS.classes_length))
 
     # train_op, loss = learner.train(neighbourhood_placeholders, labels_placeholder)
     train_op, loss, class_predictions, precision, recall, f1_score = learner.train_and_evaluate(

@@ -5,7 +5,7 @@ import tensorflow as tf
 
 
 def _build_adjacency_matrix(schema_traversal):
-    adj = np.zeros((len(schema_traversal), len(schema_traversal)))
+    adj = np.zeros((len(schema_traversal), len(schema_traversal)), dtype=np.float32)
     schema_concepts = list(schema_traversal.keys())
     for schema_concept_index, (schema_concept, super_types) in enumerate(schema_traversal.items()):
         for super_type in super_types:

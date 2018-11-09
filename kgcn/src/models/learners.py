@@ -112,7 +112,7 @@ class SupervisedAccumulationLearner(AccumulationLearner):
 
 def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):
     # Get the losses from the various layers
-    loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float64)
+    loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
     # classification loss
     if sigmoid_loss:
         loss_fn = tf.nn.sigmoid_cross_entropy_with_logits
