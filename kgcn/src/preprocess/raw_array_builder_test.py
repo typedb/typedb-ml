@@ -200,10 +200,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, :, 1:, 0] = 0
 
-        builders.fill_array_with_repeats(arr,
-                                         (1, ..., slice(1), 0),
-                                         (1, ..., slice(1, None), 0),
-                                         2)
+        builders.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -240,10 +237,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                            [16]]]]])
         arr[1, :, :, 1:, 0] = 0
 
-        builders.fill_array_with_repeats(arr,
-                                         (1, ..., slice(1), 0),
-                                         (1, ..., slice(1, None), 0),
-                                         2)
+        builders.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[[1],
@@ -280,10 +274,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, 1:, 1, 0] = 0
 
-        builders.fill_array_with_repeats(arr,
-                                         ([1], ..., slice(1), [1], [0]),
-                                         ([1], ..., slice(1, None), [1], [0]),
-                                         1)
+        builders.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -316,10 +307,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[0, 2:, 0, 0] = 0
 
-        builders.fill_array_with_repeats(arr,
-                                         (0, ..., slice(2), 0, 0),
-                                         (0, ..., slice(2, None), 0, 0),
-                                         1)
+        builders.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
         print(arr)
 
         expected_output = np.array([[[[1],

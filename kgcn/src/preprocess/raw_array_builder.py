@@ -169,31 +169,23 @@ class RawArrayBuilder:
                 # For the current depth and deeper
                 for d in list(range(depth, -1, -1)):
                     for array in list(depthwise_arrays[d].values()):
-                        fill_array_with_repeats(array, slice_to_repeat, slice_to_replace, d)
+                        fill_array_with_repeats(array, slice_to_repeat, slice_to_replace)
 
         return depthwise_arrays
 
 
-def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace, axis):
+def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
     to_repeat = array[slice_to_repeat]
     to_fill = array[slice_to_replace]
 
-    if array.shape[-1] == 1:
-        if len(to_repeat.shape) == 1:
-            to_repeat = to_repeat[..., np.newaxis]
-        if len(to_fill.shape) == 1:
-            to_fill = to_fill[..., np.newaxis]
-
     num_repeats = -(-to_fill.shape[0] // to_repeat.shape[0])
 
-    tile_axes = [1] * len(array.shape)
-    tile_axes[axis] = num_repeats + 1
+    tile_axes = [1] * len(to_fill.shape)
+    tile_axes[0] = num_repeats + 1
 
     filler = np.tile(to_repeat, tile_axes)
 
-    filler_axes = [slice(None)] * len(array.shape)
-    filler_axes[axis:axis + len(to_fill.shape)] = [slice(None, i) for i in to_fill.shape]
-    filler_axes = tuple(filler_axes)
+    filler_axes = tuple(slice(None, i) for i in to_fill.shape)
 
     curtailed_filler = filler[filler_axes]
 
