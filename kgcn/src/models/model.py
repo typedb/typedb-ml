@@ -28,12 +28,12 @@ flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('training_batch_size', 1, 'Training batch size')
 
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
-flags.DEFINE_integer('features_length', 128+30, 'Number of features after encoding')
+flags.DEFINE_integer('features_length', 23, 'Number of features after encoding')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 1000, 'Max number of gradient steps to take during gradient descent')
 flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 NO_DATA_TYPE = ''  # TODO Pass this to traversal/executor

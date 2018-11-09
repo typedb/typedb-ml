@@ -52,6 +52,7 @@ class LearningManager:
         # Add the variable initializer Op.
         init_global = tf.global_variables_initializer()
         init_local = tf.local_variables_initializer()  # Added to initialise tf.metrics.recall
+        init_tables = tf.tables_initializer()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
         self.summary_writer = tf.summary.FileWriter(FLAGS.log_dir, sess.graph)
@@ -59,6 +60,7 @@ class LearningManager:
         # Run the Op to initialize the variables.
         sess.run(init_global)
         sess.run(init_local)
+        sess.run(init_tables)
 
     def train(self, sess, feed_dict):
         print("\n\n========= Training and Evaluation =========")
@@ -77,6 +79,7 @@ class LearningManager:
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
             else:
+                print(f'Step {step}: -')
                 _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
                 return _, loss_value
 

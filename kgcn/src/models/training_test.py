@@ -15,7 +15,7 @@ flags.DEFINE_integer('training_batch_size', 30, 'Training batch size')
 
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
 flags.DEFINE_integer('features_length', 8, 'Number of features after encoding')
-flags.DEFINE_integer('aggregated_length', 27, 'Length of aggregated representation of neighbours, a hidden dimension')
+flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
