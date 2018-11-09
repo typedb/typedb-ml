@@ -1,3 +1,5 @@
+import collections
+
 import grakn
 import tensorflow as tf
 
@@ -18,7 +20,25 @@ import kgcn.src.preprocess.raw_array_builder as raw
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 
 
+flags = tf.app.flags
+FLAGS = flags.FLAGS
+
+flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
+flags.DEFINE_integer('training_batch_size', 1, 'Training batch size')
+flags.DEFINE_integer('neighbourhood_size_depth_1', 3, 'Neighbourhood size for depth 1')
+flags.DEFINE_integer('neighbourhood_size_depth_2', 4, 'Neighbourhood size for depth 2')
+
+flags.DEFINE_integer('classes_length', 2, 'Number of classes')
+flags.DEFINE_integer('features_length', 128+30, 'Number of features after encoding')
+flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
+flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
+                                          'and the final length of the embeddings')
+
+flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
+
 NO_DATA_TYPE = ''  # TODO Pass this to traversal/executor
+NEIGHBOURHOOD_SIZES = (FLAGS.neighbourhood_size_depth_2, FLAGS.neighbourhood_size_depth_1)
 
 
 def main():
@@ -50,7 +70,7 @@ def main():
 
     kgcn = KGCN(tx, traversal_strategies, samplers)
 
-    kgcn.model_fn(concepts, [1, 0])
+    kgcn.model_fn(concepts, [[1, 0]])
 
 
 class KGCN:
@@ -84,27 +104,65 @@ class KGCN:
         raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
 
         ################################################################################################################
+        # Placeholders
+        ################################################################################################################
+
+        feature_types = collections.OrderedDict(
+            [('role_type', tf.string),
+             ('role_direction', tf.int64),
+             ('neighbour_type', tf.string),
+             ('neighbour_data_type', tf.string),
+             ('neighbour_value_long', tf.int64),
+             ('neighbour_value_double', tf.float32),
+             ('neighbour_value_boolean', tf.int64),
+             ('neighbour_value_date', tf.int64),
+             ('neighbour_value_string', tf.string)])
+
+        all_feature_types = [feature_types for _ in range(len(neighbour_sample_sizes) + 1)]
+        # Remove role placeholders for the starting concepts (there are no roles for them)
+        del all_feature_types[0]['role_type']
+        del all_feature_types[0]['role_direction']
+
+        # Build the placeholders for the neighbourhood_depths for each feature type
+        raw_array_placeholders = training.build_array_placeholders(FLAGS.training_batch_size, NEIGHBOURHOOD_SIZES, 1,
+                                                                   all_feature_types)
+        # Build the placeholder for the labels
+        labels_placeholder = training.build_labels_placeholder(FLAGS.training_batch_size, FLAGS.classes_length)
+
+        ################################################################################################################
+        # Feeding
+        ################################################################################################################
+
+        feed_dict = {labels_placeholder: labels}
+
+        for raw_array_placeholder, raw_array in zip(raw_array_placeholders, raw_arrays):
+            for feature_type_name in list(feature_types.keys()):
+                feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
+
+        ################################################################################################################
         # Preprocessing
         ################################################################################################################
 
-        # Preprocessors
-        preprocessors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                         'role_direction': lambda x: x,
-                         'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                         'neighbour_data_type': lambda x: x,
-                         'neighbour_value_long': lambda x: x,
-                         'neighbour_value_double': lambda x: x,
-                         'neighbour_value_boolean': lambda x: x,
-                         'neighbour_value_date': date.datetime_to_unixtime,
-                         'neighbour_value_string': lambda x: x}
+        with tf.name_scope('preprocessing') as scope:
+            # Preprocessors
+            preprocessors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                             'role_direction': lambda x: x,
+                             'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                             'neighbour_data_type': lambda x: x,
+                             'neighbour_value_long': lambda x: x,
+                             'neighbour_value_double': lambda x: x,
+                             'neighbour_value_boolean': lambda x: x,
+                             'neighbour_value_date': date.datetime_to_unixtime,
+                             'neighbour_value_string': lambda x: x}
 
-        preprocessed_arrays = pp.preprocess_all(raw_arrays, preprocessors)
+            preprocessed_arrays = pp.preprocess_all(raw_array_placeholders, preprocessors)
 
         ################################################################################################################
         # Schema Traversals
         ################################################################################################################
 
         schema_traversal_executor = schema_ex.TraversalExecutor(self._tx)
+
         # THINGS
         thing_schema_traversal = trav.traverse_schema(self._traversal_strategies['thing'], schema_traversal_executor)
 
@@ -115,33 +173,36 @@ class KGCN:
         ################################################################################################################
         # Encoders
         ################################################################################################################
+        with tf.name_scope('encoding') as scope:
+            thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
+            role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
 
-        thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
-        role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
+            # In case of issues https://github.com/tensorflow/hub/issues/61
+            string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
 
-        # In case of issues https://github.com/tensorflow/hub/issues/61
-        string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
+            data_types = list(data_ex.DATA_TYPE_NAMES)
+            data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
+            data_types_traversal = {data_type: data_types for data_type in data_types}
 
-        data_types = list(data_ex.DATA_TYPE_NAMES)
-        data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
-        data_types_traversal = {data_type: data_types for data_type in data_types}
+            # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
+            data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
 
-        # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
-        data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
+            encoders = {'role_type': role_encoder,
+                        'role_direction': lambda x: x,
+                        'neighbour_type': thing_encoder,
+                        'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
+                        'neighbour_value_long': lambda x: x,
+                        'neighbour_value_double': lambda x: x,
+                        'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
+                        'neighbour_value_date': lambda x: x,
+                        'neighbour_value_string': string_encoder}
 
-        encoders = {'role_type': role_encoder,
-                    'role_direction': lambda x: x,
-                    'neighbour_type': thing_encoder,
-                    'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
-                    'neighbour_value_long': lambda x: x,
-                    'neighbour_value_double': lambda x: x,
-                    'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
-                    'neighbour_value_date': lambda x: x,
-                    'neighbour_value_string': string_encoder}
+            encoded_arrays = encode.encode_all(preprocessed_arrays, encoders)
 
-        encoded_arrays = encode.encode_all(preprocessed_arrays, encoders)
+        print('Encoded shapes')
+        print([encoded_array.shape for encoded_array in encoded_arrays])
 
-        # training.supervised_train(encoded_arrays, labels)
+        training.supervised_train(neighbour_sample_sizes, encoded_arrays, labels)
 
 
 if __name__ == "__main__":
