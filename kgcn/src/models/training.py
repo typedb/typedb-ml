@@ -33,7 +33,7 @@ class LearningManager:
     def __init__(self, learner):
         self._learner = learner
 
-    def __call__(self, sess, neighbourhoods, labels):
+    def __call__(self, sess, neighbourhoods_input, labels_input):
 
         # Build the placeholders for the neighbourhood_depths
         # neighbourhood_placeholders = build_array_placeholders(FLAGS.training_batch_size, neighbourhood_sizes,
@@ -44,7 +44,7 @@ class LearningManager:
 
         # train_op, loss = learner.train(neighbourhood_placeholders, labels_placeholder)
         self.train_op, self.loss, self.class_predictions, self.precision, self.recall, self.f1_score = \
-            self._learner.train_and_evaluate(neighbourhoods, labels)
+            self._learner.train_and_evaluate(neighbourhoods_input, labels_input)
 
         # Build the summary Tensor based on the TF collection of Summaries.
         self.summary = tf.summary.merge_all()

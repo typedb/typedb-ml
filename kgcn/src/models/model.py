@@ -26,8 +26,6 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('training_batch_size', 1, 'Training batch size')
-flags.DEFINE_integer('neighbourhood_size_depth_1', 3, 'Neighbourhood size for depth 1')
-flags.DEFINE_integer('neighbourhood_size_depth_2', 4, 'Neighbourhood size for depth 2')
 
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
 flags.DEFINE_integer('features_length', 128+30, 'Number of features after encoding')
@@ -39,7 +37,6 @@ flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to
 flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 NO_DATA_TYPE = ''  # TODO Pass this to traversal/executor
-NEIGHBOURHOOD_SIZES = (FLAGS.neighbourhood_size_depth_2, FLAGS.neighbourhood_size_depth_1)
 
 
 def main():
