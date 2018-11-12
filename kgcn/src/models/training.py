@@ -79,9 +79,7 @@ class LearningManager:
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
             else:
-                print(f'Step {step}: -')
                 _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
-                return _, loss_value
 
     def predict(self, sess, feed_dict):
         print("\n\n========= Prediction =========")
