@@ -40,7 +40,7 @@ class TestTFHub(unittest.TestCase):
     def test_1D_array(self):
 
         with tf.Graph().as_default():
-            encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
+            encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1", 128)
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
                 sess.run(tf.tables_initializer())
@@ -55,7 +55,7 @@ class TestTFHub(unittest.TestCase):
         arr = np.reshape(self._arr, (3, 3, 2, 1))
 
         with tf.Graph().as_default():
-            encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
+            encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1", 128)
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
                 sess.run(tf.tables_initializer())

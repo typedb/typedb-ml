@@ -28,7 +28,7 @@ flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('training_batch_size', 1, 'Training batch size')
 
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
-flags.DEFINE_integer('features_length', 23, 'Number of features after encoding')
+flags.DEFINE_integer('features_length', 22+128, 'Number of features after encoding')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
@@ -190,7 +190,8 @@ class KGCN:
             role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
 
             # In case of issues https://github.com/tensorflow/hub/issues/61
-            string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1")
+            string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1",
+                                                         128)
 
             data_types = list(data_ex.DATA_TYPE_NAMES)
             data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
