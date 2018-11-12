@@ -11,8 +11,6 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
-flags.DEFINE_integer('training_batch_size', 30, 'Training batch size')
-
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
 flags.DEFINE_integer('features_length', 8, 'Number of features after encoding')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
@@ -35,12 +33,12 @@ def trial_data():
     label_value = [1, 0]
     raw_labels = [label_value for _ in range(num_samples)]
     labels = raw_labels
-    return neighbourhood_sizes, raw_neighbourhood_depths, labels
+    return num_samples, neighbourhood_sizes, raw_neighbourhood_depths, labels
 
 
 class TestLearningManager(unittest.TestCase):
     def test_train(self):
-        neighbourhood_sizes, neighbourhoods_depths, labels = trial_data()
+        num_samples, neighbourhood_sizes, neighbourhoods_depths, labels = trial_data()
 
         optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
         learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length,
@@ -57,10 +55,10 @@ class TestLearningManager(unittest.TestCase):
                                                     log_dir=FLAGS.log_dir)
 
         # Build the placeholders for the neighbourhood_depths for each feature type
-        raw_array_placeholders = training.build_array_placeholders(FLAGS.training_batch_size, neighbourhood_sizes,
+        raw_array_placeholders = training.build_array_placeholders(num_samples, neighbourhood_sizes,
                                                                    FLAGS.features_length, tf.float32)
         # Build the placeholder for the labels
-        labels_placeholder = training.build_labels_placeholder(FLAGS.training_batch_size, FLAGS.classes_length)
+        labels_placeholder = training.build_labels_placeholder(num_samples, FLAGS.classes_length)
 
         learning_manager(sess, raw_array_placeholders, labels_placeholder)
 

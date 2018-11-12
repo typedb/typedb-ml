@@ -25,8 +25,6 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
-flags.DEFINE_integer('training_batch_size', 1, 'Training batch size')
-
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
 flags.DEFINE_integer('features_length', 22+128, 'Number of features after encoding')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
@@ -134,10 +132,10 @@ class KGCN:
         del all_feature_types[0]['role_direction']
 
         # Build the placeholders for the neighbourhood_depths for each feature type
-        raw_array_placeholders = training.build_array_placeholders(FLAGS.training_batch_size, neighbour_sample_sizes, 1,
+        raw_array_placeholders = training.build_array_placeholders(len(concepts), neighbour_sample_sizes, 1,
                                                                    all_feature_types)
         # Build the placeholder for the labels
-        labels_placeholder = training.build_labels_placeholder(FLAGS.training_batch_size, FLAGS.classes_length)
+        labels_placeholder = training.build_labels_placeholder(len(concepts), FLAGS.classes_length)
 
         ################################################################################################################
         # Feeding
