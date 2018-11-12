@@ -44,7 +44,6 @@ class TestTFHub(unittest.TestCase):
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
                 sess.run(tf.tables_initializer())
-                # tf.initialize_all_tables(name='init_all_tables')
                 result = encoder(tf.convert_to_tensor(self._arr))
                 sess.run(result)
                 print(result.eval().shape)

@@ -40,7 +40,6 @@ NO_DATA_TYPE = ''  # TODO Pass this to traversal/executor
 
 
 def main():
-    # tf.enable_eager_execution()
     # entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
     entity_query = "match $x isa company, has name 'Google'; get;"
     uri = "localhost:48555"
