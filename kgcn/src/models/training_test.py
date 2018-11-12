@@ -53,7 +53,8 @@ class TestLearningManager(unittest.TestCase):
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())
         sess = tf.Session()
-        learning_manager = training.LearningManager(learner)
+        learning_manager = training.LearningManager(learner, max_training_steps=FLAGS.max_training_steps,
+                                                    log_dir=FLAGS.log_dir)
 
         # Build the placeholders for the neighbourhood_depths for each feature type
         raw_array_placeholders = training.build_array_placeholders(FLAGS.training_batch_size, neighbourhood_sizes,

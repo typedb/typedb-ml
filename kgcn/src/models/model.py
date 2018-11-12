@@ -232,7 +232,7 @@ class KGCN:
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())
 
-        learning_manager = training.LearningManager(learner)
+        learning_manager = training.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
         learning_manager(sess, encoded_arrays, labels)  # Build the graph
 
         if mode == tf.estimator.ModeKeys.TRAIN:

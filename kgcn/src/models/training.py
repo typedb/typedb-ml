@@ -3,9 +3,6 @@ import typing as typ
 
 import tensorflow as tf
 
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-
 
 # TODO Update and move now this isn't used here
 def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
@@ -30,8 +27,10 @@ def build_labels_placeholder(batch_size, classes_length):
 
 class LearningManager:
 
-    def __init__(self, learner):
+    def __init__(self, learner, max_training_steps, log_dir):
         self._learner = learner
+        self._max_training_steps = max_training_steps
+        self._log_dir = log_dir
 
     def __call__(self, sess, neighbourhoods_input, labels_input):
 
@@ -47,7 +46,7 @@ class LearningManager:
         init_tables = tf.tables_initializer()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        self.summary_writer = tf.summary.FileWriter(FLAGS.log_dir, sess.graph)
+        self.summary_writer = tf.summary.FileWriter(self._log_dir, sess.graph)
 
         # Run the Op to initialize the variables.
         sess.run(init_global)
@@ -56,10 +55,10 @@ class LearningManager:
 
     def train(self, sess, feed_dict):
         print("\n\n========= Training and Evaluation =========")
-        for step in range(FLAGS.max_training_steps):
+        for step in range(self._max_training_steps):
             start_time = time.time()
 
-            if step % int(FLAGS.max_training_steps / 20) == 0:
+            if step % int(self._max_training_steps / 20) == 0:
                 _, loss_value, precision_value, recall_value, f1_score_value = sess.run(
                     [self.train_op, self.loss, self.precision, self.recall, self.f1_score], feed_dict=feed_dict)
 
