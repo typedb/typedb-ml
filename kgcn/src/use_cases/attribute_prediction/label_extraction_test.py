@@ -71,7 +71,13 @@ class TestConceptLabelExtractor(unittest.TestCase):
         expected_output = [(self._person_mock, {'age_var': [66], 'gender_var': [0, 1]})]
         self.assertListEqual(expected_output, concepts_with_labels)
 
-    def test_get_called_for_each_attribute(self):
+    def test_get_called_for_each_attribute_variable(self):
         concept_label_extractor = label_extraction.ConceptLabelExtractor(self._query, self._vars_config)
         concept_label_extractor(self._grakn_tx, limit=None)
         self._answer_mock.get.assert_has_calls([mock.call('x'), mock.call('age_var'), mock.call('gender_var')])
+
+    def test_value_called_for_each_attribute(self):
+        concept_label_extractor = label_extraction.ConceptLabelExtractor(self._query, self._vars_config)
+        concept_label_extractor(self._grakn_tx, limit=None)
+        self._mock_age.value.assert_called_once()
+        self._mock_gender.value.assert_called_once()
