@@ -1,3 +1,5 @@
+import copy
+
 import collections
 import grakn
 import numpy as np
@@ -26,7 +28,10 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
-flags.DEFINE_integer('features_length', 22+128, 'Number of features after encoding')
+flags.DEFINE_integer('features_length', 13 + 22 + 128, 'Number of features after encoding')
+flags.DEFINE_integer('starting_concepts_features_length', 22 + 128,
+                     'Number of features after encoding for the nodes of interest, which excludes the features for '
+                     'role_type and role_direction')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
@@ -63,15 +68,15 @@ def main():
 
     concepts = [concept.get('x') for concept in list(tx.query(entity_query))]
 
-    kgcn = KGCN(tx, traversal_strategies, samplers)
+    kgcn = KGCN(traversal_strategies, samplers)
 
-    kgcn.model_fn(tf.estimator.ModeKeys.TRAIN, concepts, np.array([[1, 0]], dtype=np.float32))
+    kgcn.train(tx, concepts, np.array([[1, 0]], dtype=np.float32))
+    kgcn.predict(tx, concepts)
 
 
 class KGCN:
 
-    def __init__(self, tx, traversal_strategies, traversal_samplers):
-        self._tx = tx
+    def __init__(self, traversal_strategies, traversal_samplers):
         self._traversal_strategies = traversal_strategies
         self._traversal_samplers = traversal_samplers
 
@@ -80,8 +85,6 @@ class KGCN:
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
-        data_executor = data_ex.TraversalExecutor(self._tx)
-        self._neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
         self._neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
 
         ################################################################################################################
@@ -115,10 +118,10 @@ class KGCN:
              ('neighbour_value_date', tf.int64),
              ('neighbour_value_string', tf.string)])
 
-        self._all_feature_types = [self._feature_types for _ in range(len(self._neighbour_sample_sizes) + 1)]
+        self._all_feature_types = [copy.copy(self._feature_types) for _ in range(len(self._neighbour_sample_sizes) + 1)]
         # Remove role placeholders for the starting concepts (there are no roles for them)
-        del self._all_feature_types[0]['role_type']
-        del self._all_feature_types[0]['role_direction']
+        del self._all_feature_types[-1]['role_type']
+        del self._all_feature_types[-1]['role_direction']
 
         ################################################################################################################
         # Tensorising
@@ -136,45 +139,9 @@ class KGCN:
                              'neighbour_value_string': lambda x: x}
 
         ################################################################################################################
-        # Schema Traversals
+        # Encoding
         ################################################################################################################
-
-        schema_traversal_executor = schema_ex.TraversalExecutor(self._tx)
-
-        # THINGS
-        thing_schema_traversal = trav.traverse_schema(self._traversal_strategies['thing'], schema_traversal_executor)
-
-        # ROLES
-        role_schema_traversal = trav.traverse_schema(self._traversal_strategies['role'], schema_traversal_executor)
-        role_schema_traversal['has'] = ['has']
-
-        ################################################################################################################
-        # Encoders
-        ################################################################################################################
-        with tf.name_scope('encoding_init') as scope:
-            thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
-            role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
-
-            # In case of issues https://github.com/tensorflow/hub/issues/61
-            string_encoder = tf_hub.TensorFlowHubEncoder("https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1",
-                                                         128)
-
-            data_types = list(data_ex.DATA_TYPE_NAMES)
-            data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
-            data_types_traversal = {data_type: data_types for data_type in data_types}
-
-            # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
-            data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
-
-            self._encoders = {'role_type': role_encoder,
-                              'role_direction': lambda x: x,
-                              'neighbour_type': thing_encoder,
-                              'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
-                              'neighbour_value_long': lambda x: tf.to_float(x),
-                              'neighbour_value_double': lambda x: x,
-                              'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
-                              'neighbour_value_date': lambda x: tf.to_float(x),
-                              'neighbour_value_string': string_encoder}
+        self._encoders = {}
 
         ################################################################################################################
         # Learner
@@ -183,8 +150,12 @@ class KGCN:
         # Create a session for running Ops on the Graph.
         self._sess = tf.Session()
 
+        features_lengths = [FLAGS.features_length] * len(self._neighbour_sample_sizes)
+        features_lengths[-1] = FLAGS.starting_concepts_features_length
+        print(features_lengths)
+
         optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
-        learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length,
+        learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, features_lengths,
                                                      FLAGS.aggregated_length,
                                                      FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
                                                      sigmoid_loss=True,
@@ -196,16 +167,21 @@ class KGCN:
 
         self._learning_manager = training.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
 
-    def model_fn(self, mode, concepts, labels=None):
+    def model_fn(self, mode, tx, concepts, labels=None):
         """
         A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
+        :param tx:
         :return:
         """
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
         concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
-        neighbourhood_depths = [self._neighourhood_traverser(concept_info) for concept_info in concept_infos]
+
+        data_executor = data_ex.TraversalExecutor(tx)
+        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
+
+        neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
         neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
 
         ################################################################################################################
@@ -220,17 +196,22 @@ class KGCN:
 
         # Build the placeholders for the neighbourhood_depths for each feature type
         raw_array_placeholders = training.build_array_placeholders(len(concepts), self._neighbour_sample_sizes, 1,
-                                                                   self._all_feature_types)
+                                                                   self._all_feature_types, name='array_input')
+
+        # if labels is not None:
         # Build the placeholder for the labels
-        labels_placeholder = training.build_labels_placeholder(len(concepts), FLAGS.classes_length)
+        labels_placeholder = training.build_labels_placeholder(len(concepts), FLAGS.classes_length,
+                                                                   name='labels_input')
 
         ################################################################################################################
         # Feeding
         ################################################################################################################
-        feed_dict = {labels_placeholder: labels}
+        feed_dict = {}
+        # if labels is not None:
+        feed_dict[labels_placeholder] = labels
 
         for raw_array_placeholder, raw_array in zip(raw_array_placeholders, raw_arrays):
-            for feature_type_name in list(self._feature_types.keys()):
+            for feature_type_name in list(raw_array.keys()):
                 feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
 
         ################################################################################################################
@@ -242,7 +223,51 @@ class KGCN:
             tensorised_arrays = pp.preprocess_all(raw_array_placeholders, self._tensorisors)
 
         ################################################################################################################
-        # Encoders
+        # Schema Traversals
+        ################################################################################################################
+
+        # This depends upon the schema being the same for the keyspace used in training vs eval and predict
+        if mode == tf.estimator.ModeKeys.TRAIN:
+            schema_traversal_executor = schema_ex.TraversalExecutor(tx)
+
+            # THINGS
+            thing_schema_traversal = trav.traverse_schema(self._traversal_strategies['thing'], schema_traversal_executor)
+
+            # ROLES
+            role_schema_traversal = trav.traverse_schema(self._traversal_strategies['role'], schema_traversal_executor)
+            role_schema_traversal['has'] = ['has']
+
+            ############################################################################################################
+            # Encoders Initialisation
+            ############################################################################################################
+
+            with tf.name_scope('encoding_init') as scope:
+                thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
+                role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
+
+                # In case of issues https://github.com/tensorflow/hub/issues/61
+                string_encoder = tf_hub.TensorFlowHubEncoder(
+                    "https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1", 128)
+
+                data_types = list(data_ex.DATA_TYPE_NAMES)
+                data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
+                data_types_traversal = {data_type: data_types for data_type in data_types}
+
+                # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
+                data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
+
+                self._encoders = {'role_type': role_encoder,
+                                  'role_direction': lambda x: tf.to_float(x),
+                                  'neighbour_type': thing_encoder,
+                                  'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
+                                  'neighbour_value_long': lambda x: tf.to_float(x),
+                                  'neighbour_value_double': lambda x: x,
+                                  'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
+                                  'neighbour_value_date': lambda x: tf.to_float(x),
+                                  'neighbour_value_string': string_encoder}
+
+        ################################################################################################################
+        # Encoding
         ################################################################################################################
         with tf.name_scope('encoding') as scope:
             encoded_arrays = encode.encode_all(tensorised_arrays, self._encoders)
@@ -252,13 +277,18 @@ class KGCN:
         ################################################################################################################
         # Learner
         ################################################################################################################
-        self._learning_manager(self._sess, encoded_arrays, labels)  # Build the graph
-
         if mode == tf.estimator.ModeKeys.TRAIN:
+            self._learning_manager(self._sess, encoded_arrays, labels_placeholder)  # Build the graph
             self._learning_manager.train(self._sess, feed_dict)
 
         if mode == tf.estimator.ModeKeys.PREDICT:
             self._learning_manager.predict(self._sess, feed_dict)
+
+    def train(self, tx, concepts, labels):
+        self.model_fn(tf.estimator.ModeKeys.TRAIN, tx, concepts, labels)
+
+    def predict(self, tx, concepts):
+        self.model_fn(tf.estimator.ModeKeys.PREDICT, tx, concepts)
 
 
 if __name__ == "__main__":

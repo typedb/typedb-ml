@@ -4,25 +4,26 @@ import typing as typ
 import tensorflow as tf
 
 
-# TODO Update and move now this isn't used here
 def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
-                             feature_types: typ.Union[typ.List[typ.MutableMapping[str, tf.DType]], tf.DType]):
+                             feature_types: typ.Union[typ.List[typ.MutableMapping[str, tf.DType]], tf.DType],
+                             name=None):
     array_neighbourhood_sizes = list(reversed(neighbourhood_sizes))
     neighbourhood_placeholders = []
     for i in range(len(array_neighbourhood_sizes) + 1):
         shape = [batch_size] + list(array_neighbourhood_sizes[i:]) + [features_length]
 
         try:
-            phs = tf.placeholder(feature_types, shape=shape)
+            phs = tf.placeholder(feature_types, shape=shape, name=name)
         except:
-            phs = {name: tf.placeholder(type, shape=shape) for name, type in feature_types[i].items()}
+            phs = {name: tf.placeholder(type, shape=shape, name=name) for name, type in feature_types[i].items()}
 
         neighbourhood_placeholders.append(phs)
     return neighbourhood_placeholders
+# TODO Update and move now this isn't used here
 
 
-def build_labels_placeholder(batch_size, classes_length):
-    return tf.placeholder(tf.float32, shape=(batch_size, classes_length))
+def build_labels_placeholder(batch_size, classes_length, name=None):
+    return tf.placeholder(tf.float32, shape=(batch_size, classes_length), name=name)
 
 
 class LearningManager:

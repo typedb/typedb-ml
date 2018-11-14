@@ -8,14 +8,14 @@ import kgcn.src.models.initialise as init
 
 
 class AccumulationLearner:
-    def __init__(self, feature_length, aggregated_length, output_length, neighbourhood_sizes,
+    def __init__(self, feature_lengths, aggregated_length, output_length, neighbourhood_sizes,
                  normalisation=tf.nn.l2_normalize):
 
         self._neighbourhood_sizes = neighbourhood_sizes
         self._aggregated_length = aggregated_length
-        self._feature_length = feature_length
+        self._feature_lengths = feature_lengths
         self._output_length = output_length
-        self._combined_length = self._feature_length + self._aggregated_length
+        self._combined_lengths = [feature_length + self._aggregated_length for feature_length in self._feature_lengths]
         self._normalisation = normalisation
 
     def embedding(self, neighbourhoods):
@@ -26,7 +26,8 @@ class AccumulationLearner:
         combiners = []
         for i in range(len(self._neighbourhood_sizes)):
 
-            weights = init.initialise_glorot_weights((self._combined_length, self._output_length), name=f'weights_{i}')
+            weights = init.initialise_glorot_weights((self._combined_lengths[i], self._output_length),
+                                                     name=f'weights_{i}')
 
             if i + 1 == len(self._neighbourhood_sizes):
                 combiner = agg.Combine(weights, activation=lambda x: x, name=f'combine_{i}_linear')
@@ -47,11 +48,11 @@ class AccumulationLearner:
 
 class SupervisedAccumulationLearner(AccumulationLearner):
 
-    def __init__(self, labels_length, feature_length, aggregated_length, output_length, neighbourhood_sizes, optimizer,
+    def __init__(self, labels_length, feature_lengths, aggregated_length, output_length, neighbourhood_sizes, optimizer,
                  sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,
                  classification_activation=tf.nn.relu, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
-        super().__init__(feature_length, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
+        super().__init__(feature_lengths, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
         self._optimizer = optimizer
         self._regularisation_weight = regularisation_weight
         self._sigmoid_loss = sigmoid_loss

@@ -1,7 +1,5 @@
 import unittest
 
-import kgcn.src.models.model as model
-
 
 class TestKGCN(unittest.TestCase):
     """
@@ -31,7 +29,7 @@ class TestKGCN(unittest.TestCase):
     """
 
     def setUp(self):
-        self._kgcn = model.KGCN(model_params, traversal_strategies, traversal_samplers)
+        self._kgcn = KGCN(model_params, traversal_strategies, traversal_samplers)
 
     def test_train(self):
         self._kgcn.train(tx, concepts, labels)
