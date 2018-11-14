@@ -75,47 +75,36 @@ class KGCN:
         self._traversal_strategies = traversal_strategies
         self._traversal_samplers = traversal_samplers
 
-    def model_fn(self, mode, concepts, labels=None):
-        """
-        A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
-        :return:
-        """
+        # def initialise(self):
 
-        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
-
+        ################################################################################################################
+        # Neighbour Traversals
+        ################################################################################################################
         data_executor = data_ex.TraversalExecutor(self._tx)
-
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
-
-        neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
-
-        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+        self._neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
+        self._neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
 
         ################################################################################################################
         # Raw Array Building
         ################################################################################################################
-        neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
-        raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes, len(concepts))
-        raw_arrays = raw_builder.build_raw_arrays(neighbour_roles)
+        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes)
 
         # Preprocessors
-        preprocessors = {'role_type': lambda x: x,
-                         'role_direction': lambda x: x,
-                         'neighbour_type': lambda x: x,
-                         'neighbour_data_type': lambda x: x,
-                         'neighbour_value_long': lambda x: x,
-                         'neighbour_value_double': lambda x: x,
-                         'neighbour_value_boolean': lambda x: x,
-                         'neighbour_value_date': date.datetime_to_unixtime,
-                         'neighbour_value_string': lambda x: x}
-
-        raw_arrays = pp.preprocess_all(raw_arrays, preprocessors)
+        self._preprocessors = {'role_type': lambda x: x,
+                               'role_direction': lambda x: x,
+                               'neighbour_type': lambda x: x,
+                               'neighbour_data_type': lambda x: x,
+                               'neighbour_value_long': lambda x: x,
+                               'neighbour_value_double': lambda x: x,
+                               'neighbour_value_boolean': lambda x: x,
+                               'neighbour_value_date': date.datetime_to_unixtime,
+                               'neighbour_value_string': lambda x: x}
 
         ################################################################################################################
         # Placeholders
         ################################################################################################################
 
-        feature_types = collections.OrderedDict(
+        self._feature_types = collections.OrderedDict(
             [('role_type', tf.string),
              ('role_direction', tf.int64),
              ('neighbour_type', tf.string),
@@ -126,45 +115,25 @@ class KGCN:
              ('neighbour_value_date', tf.int64),
              ('neighbour_value_string', tf.string)])
 
-        all_feature_types = [feature_types for _ in range(len(neighbour_sample_sizes) + 1)]
+        self._all_feature_types = [self._feature_types for _ in range(len(self._neighbour_sample_sizes) + 1)]
         # Remove role placeholders for the starting concepts (there are no roles for them)
-        del all_feature_types[0]['role_type']
-        del all_feature_types[0]['role_direction']
-
-        # Build the placeholders for the neighbourhood_depths for each feature type
-        raw_array_placeholders = training.build_array_placeholders(len(concepts), neighbour_sample_sizes, 1,
-                                                                   all_feature_types)
-        # Build the placeholder for the labels
-        labels_placeholder = training.build_labels_placeholder(len(concepts), FLAGS.classes_length)
-
-        ################################################################################################################
-        # Feeding
-        ################################################################################################################
-
-        feed_dict = {labels_placeholder: labels}
-
-        for raw_array_placeholder, raw_array in zip(raw_array_placeholders, raw_arrays):
-            for feature_type_name in list(feature_types.keys()):
-                feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
+        del self._all_feature_types[0]['role_type']
+        del self._all_feature_types[0]['role_direction']
 
         ################################################################################################################
         # Tensorising
         ################################################################################################################
 
-        # Any steps needed to get arrays ready for the rest of the pipeline
-        with tf.name_scope('tensorising') as scope:
-            # Tensorisors
-            tensorisors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                           'role_direction': lambda x: x,
-                           'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                           'neighbour_data_type': lambda x: x,
-                           'neighbour_value_long': lambda x: x,
-                           'neighbour_value_double': lambda x: x,
-                           'neighbour_value_boolean': lambda x: x,
-                           'neighbour_value_date': lambda x: x,
-                           'neighbour_value_string': lambda x: x}
-
-            tensorised_arrays = pp.preprocess_all(raw_array_placeholders, tensorisors)
+        # Tensorisors
+        self._tensorisors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                             'role_direction': lambda x: x,
+                             'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                             'neighbour_data_type': lambda x: x,
+                             'neighbour_value_long': lambda x: x,
+                             'neighbour_value_double': lambda x: x,
+                             'neighbour_value_boolean': lambda x: x,
+                             'neighbour_value_date': lambda x: x,
+                             'neighbour_value_string': lambda x: x}
 
         ################################################################################################################
         # Schema Traversals
@@ -182,7 +151,7 @@ class KGCN:
         ################################################################################################################
         # Encoders
         ################################################################################################################
-        with tf.name_scope('encoding') as scope:
+        with tf.name_scope('encoding_init') as scope:
             thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
             role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
 
@@ -197,32 +166,27 @@ class KGCN:
             # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
             data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
 
-            encoders = {'role_type': role_encoder,
-                        'role_direction': lambda x: x,
-                        'neighbour_type': thing_encoder,
-                        'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
-                        'neighbour_value_long': lambda x: tf.to_float(x),
-                        'neighbour_value_double': lambda x: x,
-                        'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
-                        'neighbour_value_date': lambda x: tf.to_float(x),
-                        'neighbour_value_string': string_encoder}
-
-            encoded_arrays = encode.encode_all(tensorised_arrays, encoders)
-
-        print('Encoded shapes')
-        print([encoded_array.shape for encoded_array in encoded_arrays])
+            self._encoders = {'role_type': role_encoder,
+                              'role_direction': lambda x: x,
+                              'neighbour_type': thing_encoder,
+                              'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
+                              'neighbour_value_long': lambda x: tf.to_float(x),
+                              'neighbour_value_double': lambda x: x,
+                              'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
+                              'neighbour_value_date': lambda x: tf.to_float(x),
+                              'neighbour_value_string': string_encoder}
 
         ################################################################################################################
         # Learner
         ################################################################################################################
 
         # Create a session for running Ops on the Graph.
-        sess = tf.Session()
+        self._sess = tf.Session()
 
         optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
         learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, FLAGS.features_length,
                                                      FLAGS.aggregated_length,
-                                                     FLAGS.output_length, neighbour_sample_sizes, optimizer,
+                                                     FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
                                                      sigmoid_loss=True,
                                                      regularisation_weight=0.0, classification_dropout=0.3,
                                                      classification_activation=tf.nn.relu,
@@ -230,14 +194,71 @@ class KGCN:
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())
 
-        learning_manager = training.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
-        learning_manager(sess, encoded_arrays, labels)  # Build the graph
+        self._learning_manager = training.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
+
+    def model_fn(self, mode, concepts, labels=None):
+        """
+        A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
+        :return:
+        """
+        ################################################################################################################
+        # Neighbour Traversals
+        ################################################################################################################
+        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
+        neighbourhood_depths = [self._neighourhood_traverser(concept_info) for concept_info in concept_infos]
+        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+
+        ################################################################################################################
+        # Raw Array Building
+        ################################################################################################################
+        raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
+        raw_arrays = pp.preprocess_all(raw_arrays, self._preprocessors)
+
+        ################################################################################################################
+        # Placeholders
+        ################################################################################################################
+
+        # Build the placeholders for the neighbourhood_depths for each feature type
+        raw_array_placeholders = training.build_array_placeholders(len(concepts), self._neighbour_sample_sizes, 1,
+                                                                   self._all_feature_types)
+        # Build the placeholder for the labels
+        labels_placeholder = training.build_labels_placeholder(len(concepts), FLAGS.classes_length)
+
+        ################################################################################################################
+        # Feeding
+        ################################################################################################################
+        feed_dict = {labels_placeholder: labels}
+
+        for raw_array_placeholder, raw_array in zip(raw_array_placeholders, raw_arrays):
+            for feature_type_name in list(self._feature_types.keys()):
+                feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
+
+        ################################################################################################################
+        # Tensorising
+        ################################################################################################################
+
+        # Any steps needed to get arrays ready for the rest of the pipeline
+        with tf.name_scope('tensorising') as scope:
+            tensorised_arrays = pp.preprocess_all(raw_array_placeholders, self._tensorisors)
+
+        ################################################################################################################
+        # Encoders
+        ################################################################################################################
+        with tf.name_scope('encoding') as scope:
+            encoded_arrays = encode.encode_all(tensorised_arrays, self._encoders)
+        print('Encoded shapes')
+        print([encoded_array.shape for encoded_array in encoded_arrays])
+
+        ################################################################################################################
+        # Learner
+        ################################################################################################################
+        self._learning_manager(self._sess, encoded_arrays, labels)  # Build the graph
 
         if mode == tf.estimator.ModeKeys.TRAIN:
-            learning_manager.train(sess, feed_dict)
+            self._learning_manager.train(self._sess, feed_dict)
 
         if mode == tf.estimator.ModeKeys.PREDICT:
-            learning_manager.predict(sess, feed_dict)
+            self._learning_manager.predict(self._sess, feed_dict)
 
 
 if __name__ == "__main__":

@@ -61,14 +61,12 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
 
 class RawArrayBuilder:
 
-    def __init__(self, neighbourhood_sizes: typ.Tuple[int], n_starting_concepts: int):
+    def __init__(self, neighbourhood_sizes: typ.Tuple[int]):
         """
 
         :param neighbourhood_sizes: The number of neighbours sampled at each recursion
-        :param n_starting_concepts: number of concepts whose traversals are supplied
         """
         self._neighbourhood_sizes = tuple(reversed(neighbourhood_sizes))
-        self._n_starting_concepts = n_starting_concepts
 
         # Array types and default values
         self._array_data_types = collections.OrderedDict(
@@ -83,12 +81,12 @@ class RawArrayBuilder:
              ('neighbour_value_string', (np.dtype('U25'), ''))])
         self.indices_visited = []
 
-    def _initialise_arrays(self):
+    def _initialise_arrays(self, n_starting_concepts):
         #####################################################
         # Make the empty arrays to fill
         #####################################################
 
-        return build_default_arrays(self._neighbourhood_sizes, self._n_starting_concepts, self._array_data_types)
+        return build_default_arrays(self._neighbourhood_sizes, n_starting_concepts, self._array_data_types)
 
     def build_raw_arrays(self, concept_infos_with_neighbourhoods: typ.List[trv.NeighbourRole]):
         """
@@ -96,8 +94,10 @@ class RawArrayBuilder:
         :param top_level_neighbour_roles:
         :return: a list of arrays, one for each depth, including one for the starting nodes of interest
         """
+
+        n_starting_concepts = len(concept_infos_with_neighbourhoods)
         self.indices_visited = []
-        depthwise_arrays = self._initialise_arrays()
+        depthwise_arrays = self._initialise_arrays(n_starting_concepts)
 
         #####################################################
         # Populate the arrays from the neighbour traversals
@@ -106,7 +106,7 @@ class RawArrayBuilder:
                                                        depthwise_arrays,
                                                        tuple())
         # try:
-        #     poss = all_possible_indices(self._neighbourhood_sizes, self._n_starting_concepts)
+        #     poss = all_possible_indices(self._neighbourhood_sizes, n_starting_concepts)
         #     assert(set(self.indices_visited) == set(poss))
         # except AssertionError:
         #     raise AssertionError(

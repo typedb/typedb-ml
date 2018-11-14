@@ -49,7 +49,7 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
         self._neighbourhood_sizes = (2, 3)
         self._n_starting_concepts = 2
 
-        self._builder = builders.RawArrayBuilder(self._neighbourhood_sizes, self._n_starting_concepts)
+        self._builder = builders.RawArrayBuilder(self._neighbourhood_sizes)
 
         self._expected_dims = [self._n_starting_concepts] + list(reversed(self._neighbourhood_sizes)) + [1]
 
@@ -82,7 +82,7 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
 
     def test_initialised_array_sizes(self):
 
-        initialised_arrays = self._builder._initialise_arrays()
+        initialised_arrays = self._builder._initialise_arrays(self._n_starting_concepts)
         self._check_dims(initialised_arrays)
 
     def test_array_values(self):
@@ -129,7 +129,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         # Raw Array Building
         ################################################################################################################
 
-        self._raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes, len(concepts))
+        self._raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes)
         self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
 
     def test_array_values(self):
@@ -152,7 +152,7 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
         # Raw Array Building
         ################################################################################################################
 
-        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes, 1)
+        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes)
         self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
 
     def test_role_type_not_empty(self):
