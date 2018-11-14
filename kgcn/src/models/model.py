@@ -29,8 +29,8 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('classes_length', 2, 'Number of classes')
-flags.DEFINE_integer('features_length', 13 + 22 + 128, 'Number of features after encoding')
-flags.DEFINE_integer('starting_concepts_features_length', 22 + 128,
+flags.DEFINE_integer('features_length', 9 + 20 + 128, 'Number of features after encoding')
+flags.DEFINE_integer('starting_concepts_features_length', 20 + 128,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
                      'role_type and role_direction')
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
@@ -61,8 +61,8 @@ def main():
         samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
     # Strategies
-    role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
-    thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True, include_metatypes=False)
+    role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=False, include_metatypes=False)
+    thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=False, include_metatypes=False)
 
     traversal_strategies = {'role': role_schema_strategy,
                             'thing': thing_schema_strategy}

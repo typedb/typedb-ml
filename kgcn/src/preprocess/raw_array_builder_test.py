@@ -1,3 +1,4 @@
+import datetime
 import unittest
 
 import numpy as np
@@ -9,6 +10,7 @@ import kgcn.src.neighbourhood.data.traversal as trv
 import kgcn.src.neighbourhood.data.traversal_mocks as mock
 import kgcn.src.preprocess.raw_array_builder as builders
 import kgcn.src.preprocess.raw_array_builder as raw
+import kgcn.src.neighbourhood.data.executor as ex
 
 
 class TestDetermineValuesToPut(unittest.TestCase):
@@ -183,6 +185,18 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
             self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
 
 
+class TestAttributeTypes(unittest.TestCase):
+    def test_date(self):
+        neighbour_roles = [trv.NeighbourRole(None, None, trv.ConceptInfoWithNeighbourhood(
+            ex.ConceptInfo("1", "start-date", "attribute", data_type='date',
+                           value=datetime.datetime(day=1, month=1, year=2018)),
+            mock.gen([])
+        )), ]
+
+        self._raw_builder = raw.RawArrayBuilder((2, 3))
+        self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
+
+
 class TestFillArrayWithRepeats(unittest.TestCase):
     def test_repeat_top_neighbour(self):
         shape = (2, 3, 2, 1)
@@ -323,3 +337,5 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                                      [[11],
                                       [12]]]])
         np.testing.assert_array_equal(expected_output, arr)
+
+

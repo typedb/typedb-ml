@@ -77,7 +77,7 @@ class RawArrayBuilder:
              ('neighbour_value_long', (np.int, 0)),
              ('neighbour_value_double', (np.float, 0.0)),
              ('neighbour_value_boolean', (np.int, -1)),
-             ('neighbour_value_date', (np.datetime64, '')),
+             ('neighbour_value_date', ('datetime64[s]', '')),
              ('neighbour_value_string', (np.dtype('U25'), ''))])
         self.indices_visited = []
 

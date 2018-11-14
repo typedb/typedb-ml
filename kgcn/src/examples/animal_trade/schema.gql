@@ -1,0 +1,148 @@
+# More generic schema for trade
+
+define
+    # entities
+    party sub entity,
+        has name,
+        plays receiver,
+        plays provider;
+    item sub entity,
+        plays object,
+        plays target,
+        plays sized;
+
+    category sub entity, 
+        is-abstract,
+        has name,
+        plays explanation;
+    measure sub entity,
+        has quantity,
+        has unit,
+        plays measurement;
+
+
+    # relationships
+    exchange sub relationship,
+        relates receiver, 
+        relates provider, 
+        relates object,
+        has exch-date, # this lets one match up exchanges 
+        has appendix;
+    export sub exchange,
+        relates receiver, 
+        relates provider, 
+        relates object,
+        plays correspondence-export,
+        has exch-date,
+        has appendix;
+    import sub exchange, # note this redefinition of relates/plays/has  will in the future not be necssary
+        relates receiver, 
+        relates provider, 
+        relates object,
+        plays correspondence-import,
+        has exch-date,
+        has appendix;
+
+    correspondence sub relationship,
+        relates correspondence-import,
+        relates correspondence-export;
+
+    description sub relationship,
+        relates target, 
+        relates explanation;
+
+    sizing sub relationship,
+        relates sized,
+        relates measurement; # alt-names: sizing_result
+
+    # attributes
+    name sub attribute, datatype string;
+    quantity sub attribute, datatype double;
+    unit sub attribute, datatype string;
+    exch-date sub attribute, datatype date;  
+    appendix sub attribute, datatype long; 
+
+
+# Schema specialized for Animal Trade for CITIES treaty data
+ define 
+ 
+     country sub party,
+         has participates-CITIES,
+         has CITIES-entry-into-force-date,
+         has CITIES-participation-type,
+         has ISO-id,
+         plays origin,   # for species origin
+         plays containee; # for location hierarchy
+ 
+     # for country containers
+     region sub entity,
+         has name,
+         plays container; # for location hierarchy
+
+    taxonomy-class sub category,
+        plays ancestor;
+    taxonomy-order sub category,
+        plays ancestor,
+        plays descendant;
+    taxonomy-family sub category,
+        plays ancestor,
+        plays descendant;
+    taxonomy-genus sub category,
+        plays ancestor,
+        plays descendant;
+    taxonomy-taxon sub category,
+        plays originated-species,
+        plays descendant;
+
+    animal-item sub item,
+        has term,
+        has source,
+        has purpose;
+    
+    
+    # relationships for animal trade
+    hierarchy sub relationship,
+        relates upper, 
+        relates lower;
+
+    taxonomy-hierarchy sub hierarchy,
+        relates ancestor as upper,
+        relates descendant as lower;
+
+    location-hierarchy sub hierarchy,
+        relates container as upper,
+        relates containee as lower;
+
+    origination sub relationship,
+        relates origin,
+        relates originated-species;
+#
+    # attributes for animal trade
+    purpose sub attribute, datatype string;
+    term sub attribute, datatype string;
+    source sub attribute, datatype string;
+#    taxonomic-name sub attribute, datatype string;
+    participates-CITIES sub attribute, datatype boolean;
+    CITIES-entry-into-force-date sub attribute, datatype date;
+    CITIES-participation-type sub attribute, datatype string;
+    ISO-id sub attribute, datatype string;
+#
+#
+#
+    # transitive rules to build rest of hierarchy
+    transitive-taxonomy-hierarchy
+    when {
+        (ancestor: $up, descendant: $low) isa taxonomy-hierarchy;
+        (ancestor: $low, descendant:$lowest) isa taxonomy-hierarchy;
+    } 
+    then {
+        (ancestor: $up, descendant: $lowest) isa taxonomy-hierarchy;
+    };
+#
+#
+#
+#    
+#
+#    
+#
+match $x isa tdmieowc, has jfioerwm "jioemcoie"; limit 9; get $x;
