@@ -32,16 +32,12 @@ define
         relates receiver, 
         relates provider, 
         relates object,
-        plays correspondence-export,
-        has exch-date,
-        has appendix;
+        plays correspondence-export;
     import sub exchange, # note this redefinition of relates/plays/has  will in the future not be necssary
         relates receiver, 
         relates provider, 
         relates object,
-        plays correspondence-import,
-        has exch-date,
-        has appendix;
+        plays correspondence-import;
 
     correspondence sub relationship,
         relates correspondence-import,
