@@ -1,4 +1,5 @@
 import copy
+import typing as typ
 
 import collections
 import grakn
@@ -36,7 +37,7 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 1000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
 flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 NO_DATA_TYPE = ''  # TODO Pass this to traversal/executor
@@ -123,6 +124,16 @@ class KGCN:
         del self._all_feature_types[-1]['role_type']
         del self._all_feature_types[-1]['role_direction']
 
+        # Build the placeholders for the neighbourhood_depths for each feature type
+        batch_size = 1  # TODO remove
+        self._raw_array_placeholders = self.build_array_placeholders(batch_size, self._neighbour_sample_sizes, 1,
+                                                                   self._all_feature_types, name='array_input')
+
+        # if labels is not None:
+        # Build the placeholder for the labels
+        self._labels_placeholder = training.build_labels_placeholder(batch_size, FLAGS.classes_length,
+                                                                   name='labels_input')
+
         ################################################################################################################
         # Tensorising
         ################################################################################################################
@@ -167,6 +178,20 @@ class KGCN:
 
         self._learning_manager = training.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
 
+
+    def build_array_placeholders(self, batch_size, neighbourhood_sizes, features_length,
+                             feature_types: typ.Union[typ.List[typ.MutableMapping[str, tf.DType]], tf.DType],
+                             name=None):
+        array_neighbourhood_sizes = list(reversed(neighbourhood_sizes))
+        neighbourhood_placeholders = []
+        for i in range(len(array_neighbourhood_sizes) + 1):
+            shape = [batch_size] + list(array_neighbourhood_sizes[i:]) + [features_length]
+
+            phs = {name: tf.placeholder(type, shape=shape, name=name) for name, type in feature_types[i].items()}
+
+            neighbourhood_placeholders.append(phs)
+        return neighbourhood_placeholders
+
     def model_fn(self, mode, tx, concepts, labels=None):
         """
         A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
@@ -191,26 +216,13 @@ class KGCN:
         raw_arrays = pp.preprocess_all(raw_arrays, self._preprocessors)
 
         ################################################################################################################
-        # Placeholders
-        ################################################################################################################
-
-        # Build the placeholders for the neighbourhood_depths for each feature type
-        raw_array_placeholders = training.build_array_placeholders(len(concepts), self._neighbour_sample_sizes, 1,
-                                                                   self._all_feature_types, name='array_input')
-
-        # if labels is not None:
-        # Build the placeholder for the labels
-        labels_placeholder = training.build_labels_placeholder(len(concepts), FLAGS.classes_length,
-                                                                   name='labels_input')
-
-        ################################################################################################################
         # Feeding
         ################################################################################################################
         feed_dict = {}
-        # if labels is not None:
-        feed_dict[labels_placeholder] = labels
+        if labels is not None:
+            feed_dict[self._labels_placeholder] = labels
 
-        for raw_array_placeholder, raw_array in zip(raw_array_placeholders, raw_arrays):
+        for raw_array_placeholder, raw_array in zip(self._raw_array_placeholders, raw_arrays):
             for feature_type_name in list(raw_array.keys()):
                 feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
 
@@ -220,7 +232,7 @@ class KGCN:
 
         # Any steps needed to get arrays ready for the rest of the pipeline
         with tf.name_scope('tensorising') as scope:
-            tensorised_arrays = pp.preprocess_all(raw_array_placeholders, self._tensorisors)
+            tensorised_arrays = pp.preprocess_all(self._raw_array_placeholders, self._tensorisors)
 
         ################################################################################################################
         # Schema Traversals
@@ -278,7 +290,7 @@ class KGCN:
         # Learner
         ################################################################################################################
         if mode == tf.estimator.ModeKeys.TRAIN:
-            self._learning_manager(self._sess, encoded_arrays, labels_placeholder)  # Build the graph
+            self._learning_manager(self._sess, encoded_arrays, self._labels_placeholder)  # Build the graph
             self._learning_manager.train(self._sess, feed_dict)
 
         if mode == tf.estimator.ModeKeys.PREDICT:

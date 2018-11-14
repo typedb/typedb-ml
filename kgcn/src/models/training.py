@@ -19,6 +19,8 @@ def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
 
         neighbourhood_placeholders.append(phs)
     return neighbourhood_placeholders
+
+
 # TODO Update and move now this isn't used here
 
 
