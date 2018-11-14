@@ -39,7 +39,7 @@ def main():
 
     labels = np.array(labels, dtype=np.float32)
 
-    neighbour_sample_sizes = (4, 3)
+    neighbour_sample_sizes = (2, 1)
 
     sampling_method = ordered.ordered_sample
 

@@ -54,6 +54,10 @@ class TraversalExecutor:
         self.roles_played_query = roles_played_query
         self.roleplayers_query = roleplayers_query
 
+    def _query(self, query):
+        print(query)
+        return self._grakn_tx.query(query)
+
     def __call__(self, query_direction, concept_id):
         """
         Takes a query to execute and the variables to return
@@ -76,7 +80,7 @@ class TraversalExecutor:
 
         query = base_query['query'].format(concept_id)
         print(query)
-        connection_iterator = self._grakn_tx.query(query)
+        connection_iterator = self._query(query)
 
         def _roles_iterator():
 
@@ -84,14 +88,14 @@ class TraversalExecutor:
             if not self._attributes_via_implicit_relationships:
 
                 target_query = self.TARGET_QUERY['query'].format(concept_id)
-                target_concept = next(self._grakn_tx.query(target_query)).get(self.TARGET_QUERY['variable'])
+                target_concept = next(self._query(target_query)).get(self.TARGET_QUERY['variable'])
 
                 if target_concept.type().is_implicit():
                     raise ValueError(
                         "A target concept has been found to be implicit, but using implicit relationships has "
                         "been optionally disabled")
                 attribute_query = self.ATTRIBUTE_QUERY['query'].format(concept_id)
-                attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._grakn_tx.query(attribute_query))
+                attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._query(attribute_query))
 
                 for attribute in attributes:
                     neighbour_info = build_concept_info(attribute)
@@ -102,7 +106,7 @@ class TraversalExecutor:
                     attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.type().label(),
                                                                                         target_concept.value())
                     neighbours = map(lambda x: x.get(self.ATTRIBUTE_OWNER_QUERY['variable']),
-                                     self._grakn_tx.query(attribute_owners_query))
+                                     self._query(attribute_owners_query))
 
                     for neighbour in neighbours:
                         neighbour_info = build_concept_info(neighbour)
@@ -132,7 +136,7 @@ class TraversalExecutor:
 
     def _find_roles(self, thing, relationship):
         query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
-        answers = self._grakn_tx.query(query_str)
+        answers = self._query(query_str)
         role_sups = [answer.get(self.ROLE_QUERY['variable']) for answer in answers]
         return role_sups
 

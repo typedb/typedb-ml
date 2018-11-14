@@ -9,11 +9,12 @@ class BaseGraknIntegrationTest:
     class GraknIntegrationTest(unittest.TestCase):
 
         session = None
+        keyspace = "test_schema"
 
         @classmethod
         def setUpClass(cls):
             client = grakn.Grakn(uri="localhost:48555")
-            cls.session = client.session(keyspace="test_schema")
+            cls.session = client.session(keyspace=cls.keyspace)
 
         @classmethod
         def tearDownClass(cls):
@@ -81,6 +82,20 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 
     def setUp(self):
         super(TestTraversalExecutorFromAttribute, self).setUp()
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
+
+
+class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+
+    query = "match $attribute isa exch-date 2016-01-01T00:00:00; limit 1; get;"
+    var = 'attribute'
+    roles = ['has']
+    num_results = 2
+    neighbour_type = 'import'
+    keyspace = 'animaltrade_train'
+
+    def setUp(self):
+        super(TestTraversalExecutorFromDateAttribute, self).setUp()
         self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
 
 

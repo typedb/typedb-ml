@@ -219,3 +219,40 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._flattened = trv.flatten_tree(self._neighbour_roles)
 
+
+class AnimalTradeIntegrationTest(unittest.TestCase):
+    def test(self):
+
+        uri = "localhost:48555"
+        client = grakn.Grakn(uri=uri)
+        session = client.session(keyspace='animaltrade_train')
+        tx = session.transaction(grakn.TxType.WRITE)
+
+        neighbour_sample_sizes = (2, 1)
+        a = 1
+        query = target_concept_query = f"match $x isa exchange, has appendix $appendix; $appendix {a}; limit 1; get;"
+        response = tx.query(query)
+        concept = next(response).get('x')
+
+        starting_concept = ex.build_concept_info(concept)
+
+        sampling_method = ordered.ordered_sample
+
+        # def blank(iterable):
+        #     for item in iterable:
+        #         yield item
+
+        samplers = []
+        for sample_size in neighbour_sample_sizes:
+            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
+            # samplers.append(blank)
+
+        exe = ex.TraversalExecutor(tx)
+
+
+        neighourhood_traverser = trv.NeighbourhoodTraverser(exe, samplers)
+
+        concept_with_neighbourhood = neighourhood_traverser(starting_concept)
+
+        a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
+
