@@ -11,10 +11,11 @@ class TensorFlowHubEncoder:
 
     def __call__(self, features: tf.Tensor):
         with tf.name_scope(name=self._name) as scope:
-            shape = list(features.shape)
+            shape = features.shape.as_list()
             print(shape)
             flattened_features = tf.reshape(features, [-1])
             flat_embeddings = self._embed(flattened_features)
             shape[-1] = self._output_feature_length
+            shape = [-1 if s is None else s for s in shape]
             embeddings = tf.reshape(flat_embeddings, shape)
             return embeddings

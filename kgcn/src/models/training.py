@@ -10,7 +10,7 @@ def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
     array_neighbourhood_sizes = list(reversed(neighbourhood_sizes))
     neighbourhood_placeholders = []
     for i in range(len(array_neighbourhood_sizes) + 1):
-        shape = [batch_size] + list(array_neighbourhood_sizes[i:]) + [features_length]
+        shape = [None] + list(array_neighbourhood_sizes[i:]) + [features_length]
 
         try:
             phs = tf.placeholder(feature_types, shape=shape, name=name)

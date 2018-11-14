@@ -29,7 +29,7 @@ class TestKGCN(unittest.TestCase):
     """
 
     def setUp(self):
-        self._kgcn = KGCN(model_params, traversal_strategies, traversal_samplers)
+        self._kgcn = KGCN(schema_tx, model_params, traversal_strategies, traversal_samplers)
 
     def test_train(self):
         self._kgcn.train(tx, concepts, labels)
