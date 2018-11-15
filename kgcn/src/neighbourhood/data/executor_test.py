@@ -1,3 +1,4 @@
+import itertools
 import unittest
 
 import grakn
@@ -85,14 +86,27 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
         self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
 
 
-class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
-
+class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+    # Replicates the same issue as TestTraversalExecutorFromDateAttribute but using real animaltrede dataset
     query = "match $attribute isa exch-date 2016-01-01T00:00:00; limit 1; get;"
     var = 'attribute'
     roles = ['has']
     num_results = 2
     neighbour_type = 'import'
     keyspace = 'animaltrade_train'
+
+    def setUp(self):
+        super(IntegrationTestTraversalExecutorFromDateAttribute, self).setUp()
+        self._res = list(itertools.islice(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id), 2))
+
+
+class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+
+    query = "match $attribute isa date-started 2015-11-12T00:00; limit 1; get;"
+    var = 'attribute'
+    roles = ['has']
+    num_results = 1
+    neighbour_type = 'project'
 
     def setUp(self):
         super(TestTraversalExecutorFromDateAttribute, self).setUp()

@@ -23,7 +23,7 @@ class TraversalExecutor:
     }
 
     ATTRIBUTE_OWNER_QUERY = {
-        'query': 'match $attribute-owner has {} "{}"; get;',
+        'query': 'match $attribute-owner has attribute $a; $a id {}; get;',
         'variable': 'attribute-owner'
     }
 
@@ -103,8 +103,7 @@ class TraversalExecutor:
                            'neighbour_info': neighbour_info}
 
                 if target_concept.is_attribute() and self._find_neighbours_from_attributes:
-                    attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.type().label(),
-                                                                                        target_concept.value())
+                    attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.id)
                     neighbours = map(lambda x: x.get(self.ATTRIBUTE_OWNER_QUERY['variable']),
                                      self._query(attribute_owners_query))
 

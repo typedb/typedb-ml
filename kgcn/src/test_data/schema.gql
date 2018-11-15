@@ -2,6 +2,7 @@ define
 
 name sub attribute datatype string;
 job-title sub name;
+date-started sub attribute datatype date;
 
 ownership sub relationship,
     relates owner,
@@ -38,6 +39,10 @@ employment sub affiliation,
     relates employer as group,
     has job-title;
 
+project sub entity,
+    has date-started,
+    has name;
+
 
 insert
 $ceo isa person, has name "Sundar Pichai";
@@ -47,3 +52,5 @@ $alphabet isa company, has name "Alphabet Group";
 (property: $google, owner: $alphabet) isa ownership;
 $alphabet-ceo isa person, has name "Larry Page";
 (employee: $alphabet-ceo, employer: $alphabet) isa employment, has job-title "CEO";
+
+$tf isa project, has name "TensorFlow", has date-started 2015-11-12;
