@@ -74,9 +74,11 @@ class LearningManager:
                 self.summary_writer.flush()
             else:
                 _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
+        print("\n\n========= Training and Evaluation Complete =========\n\n")
 
     def predict(self, sess, feed_dict):
         print("\n\n========= Prediction =========")
         class_prediction_values = sess.run([self.class_predictions], feed_dict=feed_dict)
         print(f'predictions: \n{class_prediction_values}')
+        print("\n\n========= Prediction Complete =========\n\n")
 
