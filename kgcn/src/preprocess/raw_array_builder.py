@@ -70,15 +70,15 @@ class RawArrayBuilder:
 
         # Array types and default values
         self._array_data_types = collections.OrderedDict(
-            [('role_type', (np.dtype('U25'), '')),
+            [('role_type', (np.dtype('U50'), '')),
              ('role_direction', (np.int, 0)),
-             ('neighbour_type', (np.dtype('U25'), '')),
+             ('neighbour_type', (np.dtype('U50'), '')),
              ('neighbour_data_type', (np.dtype('U10'), '')),
              ('neighbour_value_long', (np.int, 0)),
              ('neighbour_value_double', (np.float, 0.0)),
              ('neighbour_value_boolean', (np.int, -1)),
              ('neighbour_value_date', ('datetime64[s]', '')),
-             ('neighbour_value_string', (np.dtype('U25'), ''))])
+             ('neighbour_value_string', (np.dtype('U50'), ''))])
         self.indices_visited = []
 
     def _initialise_arrays(self, n_starting_concepts):

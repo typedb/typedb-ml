@@ -38,7 +38,7 @@ class AccumulationLearner:
         normalisers = [agg.normalise for _ in range(len(self._neighbourhood_sizes))]
 
         full_representation = agg.chain_aggregate_combine(neighbourhoods, aggregators, combiners, normalisers)
-        full_representation = tf.nn.l2_normalize(full_representation, -1)
+        # full_representation = tf.nn.l2_normalize(full_representation, -1)
         return full_representation
 
     @abc.abstractmethod
@@ -106,19 +106,21 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         loss = self.loss(class_predictions, labels)
         precision, _ = tf.metrics.precision(labels, class_predictions)
         recall, _ = tf.metrics.recall(labels, class_predictions)
-        f1_score = (2 * precision * recall) / (precision + recall)
+        with tf.name_scope('f1_score') as scope:
+            f1_score = (2 * precision * recall) / (precision + recall)
 
         return self.optimise(loss), loss, self.predict(class_predictions), precision, recall, f1_score
 
 
 def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):
-    # Get the losses from the various layers
-    loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
-    # classification loss
-    if sigmoid_loss:
-        loss_fn = tf.nn.sigmoid_cross_entropy_with_logits
-    else:
-        loss_fn = tf.nn.softmax_cross_entropy_with_logits
+    with tf.name_scope('loss') as scope:
+        # Get the losses from the various layers
+        loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
+        # classification loss
+        if sigmoid_loss:
+            loss_fn = tf.nn.sigmoid_cross_entropy_with_logits
+        else:
+            loss_fn = tf.nn.softmax_cross_entropy_with_logits
 
-    loss += tf.reduce_mean(loss_fn(logits=predictions, labels=labels))
-    return loss
+        loss += tf.reduce_mean(loss_fn(logits=predictions, labels=labels))
+        return loss

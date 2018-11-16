@@ -12,6 +12,7 @@ import kgcn.src.use_cases.attribute_prediction.label_extraction as label_extract
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
+flags.DEFINE_boolean('debug', False, 'Enable debugging')
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('classes_length', 3, 'Number of classes')
 flags.DEFINE_integer('features_length', 192, 'Number of features after encoding')
@@ -22,7 +23,7 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 1000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
 flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 
@@ -55,7 +56,7 @@ def main():
 
     labels = np.array(labels, dtype=np.float32)
 
-    neighbour_sample_sizes = (2, 1)
+    neighbour_sample_sizes = (5, 5)
 
     sampling_method = ordered.ordered_sample
 

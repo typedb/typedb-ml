@@ -61,19 +61,19 @@ class LearningManager:
         for step in range(self._max_training_steps):
             start_time = time.time()
 
-            if step % int(self._max_training_steps / 20) == 0:
-                _, loss_value, precision_value, recall_value, f1_score_value = sess.run(
-                    [self.train_op, self.loss, self.precision, self.recall, self.f1_score], feed_dict=feed_dict)
+            # if step % int(self._max_training_steps / 20) == 0:
+            _, loss_value, precision_value, recall_value, f1_score_value = sess.run(
+                [self.train_op, self.loss, self.precision, self.recall, self.f1_score], feed_dict=feed_dict)
 
-                duration = time.time() - start_time
-                print(f'Step {step}: loss {loss_value:.2f}, precision {precision_value}, '
-                      f'recall {recall_value}, f1-score {f1_score_value}     ({duration:.3f} sec)')
+            duration = time.time() - start_time
+            print(f'Step {step}: loss {loss_value:.2f}, precision {precision_value}, '
+                  f'recall {recall_value}, f1-score {f1_score_value}     ({duration:.3f} sec)')
 
-                summary_str = sess.run(self.summary, feed_dict=feed_dict)
-                self.summary_writer.add_summary(summary_str, step)
-                self.summary_writer.flush()
-            else:
-                _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
+            summary_str = sess.run(self.summary, feed_dict=feed_dict)
+            self.summary_writer.add_summary(summary_str, step)
+            self.summary_writer.flush()
+            # else:
+            #     _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         print("\n\n========= Training and Evaluation Complete =========\n\n")
 
     def predict(self, sess, feed_dict):

@@ -6,6 +6,7 @@ import grakn
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
+from tensorflow.python import debug as tf_debug
 
 import kgcn.src.encoder.boolean as boolean
 import kgcn.src.encoder.encode as encode
@@ -136,7 +137,7 @@ class KGCN:
         # if labels is not None:
         # Build the placeholder for the labels
         self._labels_placeholder = training.build_labels_placeholder(None, FLAGS.classes_length,
-                                                                   name='labels_input')
+                                                                     name='labels_input')
 
         ################################################################################################################
         # Tensorising
@@ -179,8 +180,8 @@ class KGCN:
         ############################################################################################################
 
         with tf.name_scope('encoding_init') as scope:
-            thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
-            role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
+            thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal, name='thing_encoder')
+            role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal, name='role_encoder')
 
             # In case of issues https://github.com/tensorflow/hub/issues/61
             string_encoder = tf_hub.TensorFlowHubEncoder(
@@ -191,7 +192,7 @@ class KGCN:
             data_types_traversal = {data_type: data_types for data_type in data_types}
 
             # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
-            data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal)
+            data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal, name='data_type_encoder')
 
             self._encoders = {'role_type': role_encoder,
                               'role_direction': lambda x: tf.to_float(x),
@@ -217,6 +218,8 @@ class KGCN:
 
         # Create a session for running Ops on the Graph.
         self._sess = tf.Session()
+        if FLAGS.debug:
+            self._sess = tf_debug.LocalCLIDebugWrapperSession(self._sess)
 
         features_lengths = [FLAGS.features_length] * len(self._neighbour_sample_sizes)
         features_lengths[-1] = FLAGS.starting_concepts_features_length
