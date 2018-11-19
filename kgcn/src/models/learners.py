@@ -49,8 +49,8 @@ class AccumulationLearner:
 class SupervisedAccumulationLearner(AccumulationLearner):
 
     def __init__(self, labels_length, feature_lengths, aggregated_length, output_length, neighbourhood_sizes, optimizer,
-                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.3,
-                 classification_activation=tf.nn.relu, classification_regularizer=layers.l2_regularizer(scale=0.1),
+                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.1,
+                 classification_activation=tf.nn.tanh, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
         super().__init__(feature_lengths, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
         self._optimizer = optimizer
@@ -64,10 +64,16 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         self._class_predictions = None
 
     def inference(self, embeddings):
-        class_predictions = tf.layers.dense(embeddings, self._labels_length, activation=self._classification_activation,
-                                            use_bias=False, kernel_regularizer=self._classification_regularizer,
+        classification_layer = tf.layers.Dense(self._labels_length, activation=self._classification_activation,
+                                            use_bias=True, kernel_regularizer=self._classification_regularizer,
                                             kernel_initializer=self._classification_kernel_initializer,
                                             name='classification_dense_layer')
+
+        class_predictions = classification_layer(embeddings)
+        tf.summary.histogram('classification/dense/kernel', classification_layer.kernel)
+        tf.summary.histogram('classification/dense/bias', classification_layer.bias)
+        tf.summary.histogram('classification/dense/output', class_predictions)
+
         regularised_class_predictions = tf.nn.dropout(class_predictions, self._classification_dropout)
 
         self._class_predictions = regularised_class_predictions
@@ -83,44 +89,68 @@ class SupervisedAccumulationLearner(AccumulationLearner):
 
     def predict(self, prediction):
         if self._sigmoid_loss:
-            return tf.nn.sigmoid(prediction)
+            sigmoid_class_prediction = tf.nn.sigmoid(prediction)
+            tf.summary.histogram('sigmoid_class_prediction', sigmoid_class_prediction)
+            return sigmoid_class_prediction
         else:
-            return tf.nn.softmax(prediction)
+            softmax_class_prediction = tf.nn.softmax(prediction)
+            tf.summary.histogram('softmax_class_prediction', softmax_class_prediction)
+            return softmax_class_prediction
 
     def optimise(self, loss):
         grads_and_vars = self._optimizer.compute_gradients(loss)
-        clipped_grads_and_vars = [(tf.clip_by_value(grad, -5.0, 5.0) if grad is not None else None, var)
-                for grad, var in grads_and_vars]
-        grad, _ = clipped_grads_and_vars[0]
-        return self._optimizer.apply_gradients(clipped_grads_and_vars), loss
+        # clipped_grads_and_vars = [(tf.clip_by_value(grad, -5.0, 5.0) if grad is not None else None, var)
+        #         for grad, var in grads_and_vars]
+        # tf.summary.histogram('clipped_grads_and_vars', clipped_grads_and_vars[0])
+        # # grad, _ = clipped_grads_and_vars[0]
+        # opt_op = self._optimizer.apply_gradients(clipped_grads_and_vars), loss
+
+        for grad, var in grads_and_vars:
+            tf.summary.histogram('gradients/' + var.name, grad)
+
+        opt_op = self._optimizer.apply_gradients(grads_and_vars), loss
+
+        # opt_op = self._optimizer.minimize(loss)
+
+        return opt_op
 
     def train(self, neighbourhoods, labels):
         embeddings = self.embedding(neighbourhoods)
         class_predictions = self.inference(embeddings)
+
         loss = self.loss(class_predictions, labels)
         return self.optimise(loss)
 
     def train_and_evaluate(self, neighbourhoods, labels):
         embeddings = self.embedding(neighbourhoods)
+        tf.summary.histogram('evaluate/embeddings', embeddings)
         class_predictions = self.inference(embeddings)
+        tf.summary.histogram('evaluate/class_predictions', class_predictions)
         loss = self.loss(class_predictions, labels)
         precision, _ = tf.metrics.precision(labels, class_predictions)
         recall, _ = tf.metrics.recall(labels, class_predictions)
         with tf.name_scope('f1_score') as scope:
             f1_score = (2 * precision * recall) / (precision + recall)
 
+        tf.summary.scalar('evaluate/precision', precision)
+        tf.summary.scalar('evaluate/recall', recall)
+        tf.summary.scalar('evaluate/f1_score', f1_score)
+
         return self.optimise(loss), loss, self.predict(class_predictions), precision, recall, f1_score
 
 
-def supervised_loss(predictions, labels, regularisation_weight=0.0, sigmoid_loss=True):
+def supervised_loss(predictions, labels, regularisation_weight=0.5, sigmoid_loss=True):
     with tf.name_scope('loss') as scope:
         # Get the losses from the various layers
         loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
+        tf.summary.scalar('regularisation_loss', loss)
         # classification loss
         if sigmoid_loss:
             loss_fn = tf.nn.sigmoid_cross_entropy_with_logits
         else:
             loss_fn = tf.nn.softmax_cross_entropy_with_logits
 
-        loss += tf.reduce_mean(loss_fn(logits=predictions, labels=labels))
+        raw_loss = loss_fn(logits=predictions, labels=labels)
+        tf.summary.histogram('raw_loss', raw_loss)
+        loss += tf.reduce_mean(raw_loss)
         return loss

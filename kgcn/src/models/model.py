@@ -76,9 +76,17 @@ def main():
     kgcn.predict(tx, concepts)
 
 
+class KGCNFeature:
+    def __init__(self, raw_data_type, preprocessor, tensorisor, encoder):
+        self.raw_data_type = raw_data_type
+        self.preprocessor = preprocessor
+        self.tensorisor = tensorisor
+        self.encoder = encoder
+
+
 class KGCN:
 
-    def __init__(self, schema_tx, traversal_strategies, traversal_samplers):
+    def __init__(self, schema_tx, traversal_strategies, traversal_samplers, features_to_exclude=None):
         """
         A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
         :param schema_tx:
@@ -87,79 +95,10 @@ class KGCN:
         self._traversal_strategies = traversal_strategies
         self._traversal_samplers = traversal_samplers
 
-        # def initialise(self):
-
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
         self._neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
-
-        ################################################################################################################
-        # Raw Array Building
-        ################################################################################################################
-        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes)
-
-        # Preprocessors
-        self._preprocessors = {'role_type': lambda x: x,
-                               'role_direction': lambda x: x,
-                               'neighbour_type': lambda x: x,
-                               'neighbour_data_type': lambda x: x,
-                               'neighbour_value_long': lambda x: x,
-                               'neighbour_value_double': lambda x: x,
-                               'neighbour_value_boolean': lambda x: x,
-                               'neighbour_value_date': date.datetime_to_unixtime,
-                               'neighbour_value_string': lambda x: x}
-
-        ################################################################################################################
-        # Placeholders
-        ################################################################################################################
-
-        self._feature_types = collections.OrderedDict(
-            [('role_type', tf.string),
-             ('role_direction', tf.int64),
-             ('neighbour_type', tf.string),
-             ('neighbour_data_type', tf.string),
-             ('neighbour_value_long', tf.int64),
-             ('neighbour_value_double', tf.float32),
-             ('neighbour_value_boolean', tf.int64),
-             ('neighbour_value_date', tf.int64),
-             ('neighbour_value_string', tf.string)])
-
-        self._all_feature_types = [copy.copy(self._feature_types) for _ in range(len(self._neighbour_sample_sizes) + 1)]
-        # Remove role placeholders for the starting concepts (there are no roles for them)
-        del self._all_feature_types[-1]['role_type']
-        del self._all_feature_types[-1]['role_direction']
-
-        # Build the placeholders for the neighbourhood_depths for each feature type
-        self._raw_array_placeholders = build_array_placeholders(None, self._neighbour_sample_sizes, 1,
-                                                                self._all_feature_types, name='array_input')
-
-        # if labels is not None:
-        # Build the placeholder for the labels
-        self._labels_placeholder = training.build_labels_placeholder(None, FLAGS.classes_length,
-                                                                     name='labels_input')
-
-        ################################################################################################################
-        # Tensorising
-        ################################################################################################################
-
-        # Tensorisors
-        self._tensorisors = {'role_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                             'role_direction': lambda x: x,
-                             'neighbour_type': lambda x: tf.convert_to_tensor(x, dtype=tf.string),
-                             'neighbour_data_type': lambda x: x,
-                             'neighbour_value_long': lambda x: x,
-                             'neighbour_value_double': lambda x: x,
-                             'neighbour_value_boolean': lambda x: x,
-                             'neighbour_value_date': lambda x: x,
-                             'neighbour_value_string': lambda x: x}
-        ################################################################################################################
-        # Tensorising
-        ################################################################################################################
-
-        # Any steps needed to get arrays ready for the rest of the pipeline
-        with tf.name_scope('tensorising') as scope:
-            tensorised_arrays = pp.preprocess_all(self._raw_array_placeholders, self._tensorisors)
 
         ################################################################################################################
         # Schema Traversals
@@ -194,21 +133,78 @@ class KGCN:
             # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric
             data_type_encoder = schema.MultiHotSchemaTypeEncoder(data_types_traversal, name='data_type_encoder')
 
-            self._encoders = {'role_type': role_encoder,
-                              'role_direction': lambda x: tf.to_float(x),
-                              'neighbour_type': thing_encoder,
-                              'neighbour_data_type': lambda x: data_type_encoder(tf.convert_to_tensor(x)),
-                              'neighbour_value_long': lambda x: tf.to_float(x),
-                              'neighbour_value_double': lambda x: x,
-                              'neighbour_value_boolean': lambda x: tf.to_float(boolean.one_hot_boolean_encode(x)),
-                              'neighbour_value_date': lambda x: tf.to_float(x),
-                              'neighbour_value_string': string_encoder}
+        ################################################################################################################
+        # Features
+        ################################################################################################################
+        F = KGCNFeature
+        self._features = {
+            'role_type': F(tf.string, lambda x: x, lambda x: tf.convert_to_tensor(x, dtype=tf.string), role_encoder),
+            'role_direction': F(tf.int64, lambda x: x, lambda x: x, lambda x: tf.to_float(x, 'role_dir_to_float')),
+            'neighbour_type': F(tf.string, lambda x: x, lambda x: tf.convert_to_tensor(x, dtype=tf.string),
+                                thing_encoder),
+            'neighbour_data_type': F(tf.string, lambda x: x, lambda x: x,
+                                     lambda x: data_type_encoder(tf.convert_to_tensor(x))),
+            'neighbour_value_long': F(tf.int64, lambda x: x, lambda x: x,
+                                      lambda x: tf.to_float(x, name='long_to_float')),
+            'neighbour_value_double': F(tf.float32, lambda x: x, lambda x: x, lambda x: x),
+            'neighbour_value_boolean': F(tf.int64, lambda x: x, lambda x: x, lambda x: tf.to_float(
+                boolean.one_hot_boolean_encode(x, 'boolean_1_hot'), name='boolean_to_float')),
+            'neighbour_value_date': F(tf.int64, date.datetime_to_unixtime, lambda x: x,
+                                      lambda x: tf.nn.l2_normalize(tf.to_float(x, name='date_to_float'))),
+            'neighbour_value_string': F(tf.string, lambda x: x, lambda x: x, string_encoder)}
+
+        for feature_to_exclude in features_to_exclude:
+            del self._features[feature_to_exclude]
+
+        ################################################################################################################
+        # Raw Array Building
+        ################################################################################################################
+        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes)
+
+        # Preprocessors
+        self._preprocessors = {feature_name: feature.preprocessor for feature_name, feature in self._features.items()}
+
+        ################################################################################################################
+        # Placeholders
+        ################################################################################################################
+
+        self._feature_types = {feature_name: feature.raw_data_type for feature_name, feature in self._features.items()}
+
+        self._all_feature_types = [copy.copy(self._feature_types) for _ in range(len(self._neighbour_sample_sizes) + 1)]
+        # Remove role placeholders for the starting concepts (there are no roles for them)
+        del self._all_feature_types[-1]['role_type']
+        del self._all_feature_types[-1]['role_direction']
+
+        # Build the placeholders for the neighbourhood_depths for each feature type
+        self._raw_array_placeholders = build_array_placeholders(None, self._neighbour_sample_sizes, 1,
+                                                                self._all_feature_types, name='array_input')
+
+        # if labels is not None:
+        # Build the placeholder for the labels
+        self._labels_placeholder = training.build_labels_placeholder(None, FLAGS.classes_length,
+                                                                     name='labels_input')
+        tf.summary.histogram('labels_input', self._labels_placeholder)
+
+        ################################################################################################################
+        # Tensorising
+        ################################################################################################################
+
+        # Tensorisors
+        self._tensorisors = {feature_name: feature.tensorisor for feature_name, feature in self._features.items()}
+
+        ################################################################################################################
+        # Tensorising
+        ################################################################################################################
+
+        # Any steps needed to get arrays ready for the rest of the pipeline
+        with tf.name_scope('tensorising') as scope:
+            tensorised_arrays = pp.preprocess_all(self._raw_array_placeholders, self._tensorisors)
 
         ################################################################################################################
         # Encoding
         ################################################################################################################
-        with tf.name_scope('encoding') as scope:
-            encoded_arrays = encode.encode_all(tensorised_arrays, self._encoders)
+        self._encoders = {feature_name: feature.encoder for feature_name, feature in self._features.items()}
+        encoded_arrays = encode.encode_all(tensorised_arrays, self._encoders)
         print('Encoded shapes')
         print([encoded_array.shape for encoded_array in encoded_arrays])
 
@@ -225,12 +221,13 @@ class KGCN:
         features_lengths[-1] = FLAGS.starting_concepts_features_length
         print(features_lengths)
 
-        optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
+        # optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
         learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, features_lengths,
                                                      FLAGS.aggregated_length,
                                                      FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
                                                      sigmoid_loss=True,
-                                                     regularisation_weight=0.0, classification_dropout=0.3,
+                                                     regularisation_weight=0.0, classification_dropout=0.1,
                                                      classification_activation=tf.nn.relu,
                                                      classification_regularizer=layers.l2_regularizer(scale=0.1),
                                                      classification_kernel_initializer=
@@ -254,8 +251,8 @@ class KGCN:
         ################################################################################################################
         # Raw Array Building
         ################################################################################################################
-        raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
-        raw_arrays = pp.preprocess_all(raw_arrays, self._preprocessors)
+        raw_array_depths = self._raw_builder.build_raw_arrays(neighbour_roles)
+        raw_array_depths = pp.preprocess_all(raw_array_depths, self._preprocessors)
 
         ################################################################################################################
         # Feeding
@@ -264,9 +261,11 @@ class KGCN:
         if labels is not None:
             feed_dict[self._labels_placeholder] = labels
 
-        for raw_array_placeholder, raw_array in zip(self._raw_array_placeholders, raw_arrays):
-            for feature_type_name in list(raw_array.keys()):
-                feed_dict[raw_array_placeholder[feature_type_name]] = raw_array[feature_type_name]
+        for raw_array_placeholder, raw_arrays_dict in zip(self._raw_array_placeholders, raw_array_depths):
+
+            # for feature_type_name in set(self._features_to_include).intersection(set(raw_arrays_dict.keys())):
+            for feature_type_name in set(self._features).intersection(set(raw_arrays_dict.keys())):
+                feed_dict[raw_array_placeholder[feature_type_name]] = raw_arrays_dict[feature_type_name]
 
         return feed_dict
 
@@ -295,10 +294,17 @@ def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
                              name=None):
     array_neighbourhood_sizes = list(reversed(neighbourhood_sizes))
     neighbourhood_placeholders = []
+
+    histogram_allowed_dtypes = [tf.float32, tf.float64, tf.int32, tf.uint8, tf.int16, tf.int8, tf.int64, tf.bfloat16,
+                                tf.uint16, tf.float16, tf.uint32, tf.uint64]
+
     for i in range(len(array_neighbourhood_sizes) + 1):
         shape = [batch_size] + list(array_neighbourhood_sizes[i:]) + [features_length]
-
-        phs = {name: tf.placeholder(type, shape=shape, name=name) for name, type in feature_types[i].items()}
+        phs = {}
+        for name, data_type in feature_types[i].items():
+            phs[name] = tf.placeholder(data_type, shape=shape, name=name)
+            if data_type in histogram_allowed_dtypes:
+                tf.summary.histogram('input/' + name, phs[name])
 
         neighbourhood_placeholders.append(phs)
     return neighbourhood_placeholders

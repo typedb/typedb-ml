@@ -9,7 +9,10 @@ def preprocess_all(raw_arrays, preprocessors):
     for raw_array in raw_arrays:
         preprocessed_features = {}
         for key, features_array in raw_array.items():
-            preprocessed_features[key] = preprocessors[key](features_array)
+            try:
+                preprocessed_features[key] = preprocessors[key](features_array)
+            except KeyError:
+                print(f'Skipping key {key}')
         preprocessed_raw_arrays.append(preprocessed_features)
 
     return preprocessed_raw_arrays

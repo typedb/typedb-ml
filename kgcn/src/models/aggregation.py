@@ -3,7 +3,7 @@ import tensorflow.contrib.layers as layers
 
 
 class Aggregate:
-    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.3,
+    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.1,
                  initializer=tf.contrib.layers.xavier_initializer(), regularizer=layers.l2_regularizer(scale=0.1),
                  name=None):
         """
@@ -33,17 +33,28 @@ class Aggregate:
         """
 
         with tf.name_scope(self._name, default_name="aggregate") as scope:
-            dense_output = tf.layers.dense(neighbour_features, self._aggregated_length, self._activation,
-                                           use_bias=False, kernel_initializer=self._initializer,
-                                           kernel_regularizer=self._regularizer, name=f'dense_layer_{self._name}')
+
+            dense_layer = tf.layers.Dense(units=self._aggregated_length, activation=self._activation, use_bias=True,
+                                          kernel_initializer=self._initializer, kernel_regularizer=self._regularizer,
+                                          name=f'dense_layer_{self._name}')
+
+            dense_output = dense_layer(neighbour_features)
+
+            # tf.summary.histogram(self._name + '/dense/weights', dense_layer.weights)
+            tf.summary.histogram(self._name + '/dense/bias', dense_layer.bias)
+            tf.summary.histogram(self._name + '/dense/kernel', dense_layer.kernel)
+
+            tf.summary.histogram(self._name + '/dense_output', dense_output)
 
             # Use dropout on output from the dense layer to prevent overfitting
             regularised_output = tf.nn.dropout(dense_output, self._dropout)
+            tf.summary.histogram(self._name + '/regularised_output', regularised_output)
 
             # Use max-pooling (or similar) to aggregate the results for each neighbour. This is an important operation
             # since the order of the neighbours isn't considered, which is a property we need Note that this is reducing
             # not pooling, which is equivalent to having a pool size of num_neighbours
             reduced_output = self._reduction(regularised_output, axis=1)
+            tf.summary.histogram(self._name + '/reduced_output', reduced_output)
 
             # If reducing reduced rank to 1, then add a dimension so that we continue to deal with matrices not vectors
             rank = tf.rank(reduced_output)
@@ -82,15 +93,22 @@ class Combine:
         :return: full representations of target nodes
         """
         with tf.name_scope(self._name, default_name="combine") as scope:
+            tf.summary.histogram(self._name + '/combine_weights', self._weights)
             concatenated_features = tf.concat([target_features, neighbour_representations], axis=-1)
 
             weighted_output = tf.tensordot(concatenated_features, self._weights, (-1, 0), name='apply_weights')
+            tf.summary.histogram(self._name + '/combine_weighted_output', weighted_output)
 
-            return self._activation(weighted_output)
+            activated_output = self._activation(weighted_output)
+            tf.summary.histogram(self._name + '/activated_output', activated_output)
+
+            return activated_output
 
 
 def normalise(features, normalise_op=tf.nn.l2_normalize):
-    return normalise_op(features, axis=-1)
+    normalised = normalise_op(features, axis=-1)
+    tf.summary.histogram('normalised', normalised)
+    return normalised
 
 
 def chain_aggregate_combine(neighbourhoods, aggregators, combiners, normalisers, name=None):
