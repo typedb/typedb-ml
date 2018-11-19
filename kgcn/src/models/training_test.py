@@ -45,7 +45,7 @@ class TestLearningManager(unittest.TestCase):
                                                      FLAGS.aggregated_length,
                                                      FLAGS.output_length, neighbourhood_sizes, optimizer,
                                                      sigmoid_loss=True,
-                                                     regularisation_weight=0.0, classification_dropout=0.3,
+                                                     regularisation_weight=0.0, classification_dropout_keep_prob=1.0,
                                                      classification_activation=tf.nn.relu,
                                                      classification_regularizer=layers.l2_regularizer(scale=0.1),
                                                      classification_kernel_initializer=

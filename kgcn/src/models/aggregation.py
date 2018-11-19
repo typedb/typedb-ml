@@ -3,7 +3,7 @@ import tensorflow.contrib.layers as layers
 
 
 class Aggregate:
-    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.1,
+    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=1.0,
                  initializer=tf.contrib.layers.xavier_initializer(), regularizer=layers.l2_regularizer(scale=0.1),
                  name=None):
         """

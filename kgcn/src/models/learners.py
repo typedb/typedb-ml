@@ -49,14 +49,14 @@ class AccumulationLearner:
 class SupervisedAccumulationLearner(AccumulationLearner):
 
     def __init__(self, labels_length, feature_lengths, aggregated_length, output_length, neighbourhood_sizes, optimizer,
-                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout=0.1,
+                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout_keep_prob=1.0,
                  classification_activation=tf.nn.tanh, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
         super().__init__(feature_lengths, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
         self._optimizer = optimizer
         self._regularisation_weight = regularisation_weight
         self._sigmoid_loss = sigmoid_loss
-        self._classification_dropout = classification_dropout
+        self._classification_dropout_keep_prob = classification_dropout_keep_prob
         self._labels_length = labels_length
         self._classification_activation = classification_activation
         self._classification_regularizer = classification_regularizer
@@ -65,16 +65,17 @@ class SupervisedAccumulationLearner(AccumulationLearner):
 
     def inference(self, embeddings):
         classification_layer = tf.layers.Dense(self._labels_length, activation=self._classification_activation,
-                                            use_bias=True, kernel_regularizer=self._classification_regularizer,
-                                            kernel_initializer=self._classification_kernel_initializer,
-                                            name='classification_dense_layer')
+                                               use_bias=True, kernel_regularizer=self._classification_regularizer,
+                                               kernel_initializer=self._classification_kernel_initializer,
+                                               name='classification_dense_layer')
 
         class_predictions = classification_layer(embeddings)
         tf.summary.histogram('classification/dense/kernel', classification_layer.kernel)
         tf.summary.histogram('classification/dense/bias', classification_layer.bias)
         tf.summary.histogram('classification/dense/output', class_predictions)
 
-        regularised_class_predictions = tf.nn.dropout(class_predictions, self._classification_dropout)
+        regularised_class_predictions = tf.nn.dropout(class_predictions, self._classification_dropout_keep_prob,
+                                                      name='classification_dropout')
 
         self._class_predictions = regularised_class_predictions
 
