@@ -11,17 +11,17 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 flags.DEFINE_boolean('debug', False, 'Enable debugging')
-flags.DEFINE_float('learning_rate', 0.02, 'Learning rate')
+flags.DEFINE_float('learning_rate', 0.05, 'Learning rate')
 flags.DEFINE_integer('classes_length', 3, 'Number of classes')
 flags.DEFINE_integer('features_length', 192, 'Number of features after encoding')
 flags.DEFINE_integer('starting_concepts_features_length', 4,  ## 143,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
                      'role_type and role_direction')
-flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
-flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
+flags.DEFINE_integer('aggregated_length', 4, 'Length of aggregated representation of neighbours, a hidden dimension')
+flags.DEFINE_integer('output_length', 4, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 1500, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 2500, 'Max number of gradient steps to take during gradient descent')
 flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
 
 

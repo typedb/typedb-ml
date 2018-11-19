@@ -221,6 +221,7 @@ class KGCN:
         features_lengths[-1] = FLAGS.starting_concepts_features_length
         print(features_lengths)
 
+        # optimizer = tf.train.AdagradOptimizer(learning_rate=FLAGS.learning_rate)
         # optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
         learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, features_lengths,
@@ -228,7 +229,11 @@ class KGCN:
                                                      FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
                                                      sigmoid_loss=True,
                                                      regularisation_weight=0.0, classification_dropout_keep_prob=1.0,
-                                                     classification_activation=tf.nn.relu,
+                                                     classification_activation=lambda x: x,
+                                                     # classification_activation=tf.nn.tanh,
+                                                     # Moves to nn.math.tanh in r1.12
+                                                     # classification_activation=tf.nn.sigmoid,
+                                                     # classification_activation=tf.nn.softsign,
                                                      classification_regularizer=layers.l2_regularizer(scale=0.1),
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())

@@ -71,7 +71,7 @@ class SupervisedAccumulationLearner(AccumulationLearner):
 
         class_predictions = classification_layer(embeddings)
         tf.summary.histogram('classification/dense/kernel', classification_layer.kernel)
-        tf.summary.histogram('classification/dense/bias', classification_layer.bias)
+        # tf.summary.histogram('classification/dense/bias', classification_layer.bias)
         tf.summary.histogram('classification/dense/output', class_predictions)
 
         regularised_class_predictions = tf.nn.dropout(class_predictions, self._classification_dropout_keep_prob,
@@ -81,14 +81,16 @@ class SupervisedAccumulationLearner(AccumulationLearner):
 
         return regularised_class_predictions
 
-    def loss(self, predictions, labels=None):
+    def loss(self, logits, labels=None):
 
-        loss = supervised_loss(predictions, labels, regularisation_weight=self._regularisation_weight,
+        loss = supervised_loss(logits, labels, regularisation_weight=self._regularisation_weight,
                                sigmoid_loss=self._sigmoid_loss)
-        tf.summary.scalar('loss', loss)
+        tf.summary.scalar('loss/final_loss', loss)
         return loss
 
     def predict(self, prediction):
+        # prediction = tf.Print(prediction, [prediction], name='print_class_predictions',
+        #                       message='Class predictions: ', summarize=15 * 3)
         if self._sigmoid_loss:
             sigmoid_class_prediction = tf.nn.sigmoid(prediction)
             tf.summary.histogram('sigmoid_class_prediction', sigmoid_class_prediction)
@@ -126,6 +128,7 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         embeddings = self.embedding(neighbourhoods)
         tf.summary.histogram('evaluate/embeddings', embeddings)
         class_predictions = self.inference(embeddings)
+
         tf.summary.histogram('evaluate/class_predictions', class_predictions)
         loss = self.loss(class_predictions, labels)
         precision, _ = tf.metrics.precision(labels, class_predictions)
@@ -140,7 +143,7 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         return self.optimise(loss), loss, self.predict(class_predictions), precision, recall, f1_score
 
 
-def supervised_loss(predictions, labels, regularisation_weight=0.5, sigmoid_loss=True):
+def supervised_loss(logits, labels, regularisation_weight=0.5, sigmoid_loss=True):
     with tf.name_scope('loss') as scope:
         # Get the losses from the various layers
         loss = tf.cast(regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
@@ -151,7 +154,11 @@ def supervised_loss(predictions, labels, regularisation_weight=0.5, sigmoid_loss
         else:
             loss_fn = tf.nn.softmax_cross_entropy_with_logits
 
-        raw_loss = loss_fn(logits=predictions, labels=labels)
-        tf.summary.histogram('raw_loss', raw_loss)
-        loss += tf.reduce_mean(raw_loss)
+        raw_loss = loss_fn(logits=logits, labels=labels)
+        # raw_loss = tf.Print(raw_loss, [raw_loss], name='raw_loss',
+        #                       message='Raw loss: ', summarize=15 * 3)  # Print deprecated in r1.12
+        tf.summary.histogram('loss/raw_loss', raw_loss)
+        class_summed_loss = tf.reduce_sum(raw_loss, axis=1)
+        tf.summary.histogram('loss/class_summed_loss', class_summed_loss)
+        loss += tf.reduce_mean(class_summed_loss)
         return loss
