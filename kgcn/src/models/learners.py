@@ -158,7 +158,9 @@ def supervised_loss(logits, labels, regularisation_weight=0.5, sigmoid_loss=True
         # raw_loss = tf.Print(raw_loss, [raw_loss], name='raw_loss',
         #                       message='Raw loss: ', summarize=15 * 3)  # Print deprecated in r1.12
         tf.summary.histogram('loss/raw_loss', raw_loss)
-        class_summed_loss = tf.reduce_sum(raw_loss, axis=1)
-        tf.summary.histogram('loss/class_summed_loss', class_summed_loss)
-        loss += tf.reduce_mean(class_summed_loss)
+        if sigmoid_loss:
+            class_summed_loss = tf.reduce_sum(raw_loss, axis=1)
+            tf.summary.histogram('loss/class_summed_loss', class_summed_loss)
+            raw_loss = class_summed_loss
+        loss += tf.reduce_mean(raw_loss)
         return loss

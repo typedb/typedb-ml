@@ -227,7 +227,7 @@ class KGCN:
         learner = base.SupervisedAccumulationLearner(FLAGS.classes_length, features_lengths,
                                                      FLAGS.aggregated_length,
                                                      FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
-                                                     sigmoid_loss=True,
+                                                     sigmoid_loss=False,
                                                      regularisation_weight=0.0, classification_dropout_keep_prob=1.0,
                                                      classification_activation=lambda x: x,
                                                      # classification_activation=tf.nn.tanh,
