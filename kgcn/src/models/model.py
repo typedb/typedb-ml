@@ -86,7 +86,7 @@ class KGCNFeature:
 
 class KGCN:
 
-    def __init__(self, schema_tx, traversal_strategies, traversal_samplers, features_to_exclude=None):
+    def __init__(self, schema_tx, traversal_strategies, traversal_samplers, features_to_exclude=()):
         """
         A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
         :param schema_tx:

@@ -1,8 +1,11 @@
+import time
+
 import collections
 import grakn
 import numpy as np
 import tensorflow as tf
 
+import kgcn.src.examples.animal_trade.persistence as persistence
 import kgcn.src.models.model as model
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
@@ -23,8 +26,48 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 100, 'Max number of gradient steps to take during gradient descent')
-flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
+flags.DEFINE_integer('max_training_steps', 5000, 'Max number of gradient steps to take during gradient descent')
+
+TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
+flags.DEFINE_string('log_dir', './out/out_' + TIMESTAMP, 'directory to use to store data from training')
+
+
+def query_for_labelled_examples(tx):
+    appendix_vals = [1, 2, 3]
+
+    concepts = []
+    labels = []
+    num_each_class = 15
+
+    for a in appendix_vals:
+        target_concept_query = f'match $x isa exchange, has appendix $appendix; $appendix {a}; limit ' \
+                               f'{num_each_class}; get;'
+
+        extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
+                                                           ('x', collections.OrderedDict([('appendix', appendix_vals)]))
+                                                           )
+        concepts_with_labels = extractor(tx)
+
+        concepts += [concepts_with_label[0] for concepts_with_label in concepts_with_labels]
+        labels += [concepts_with_label[1]['appendix'] for concepts_with_label in concepts_with_labels]
+
+    labels = np.array(labels, dtype=np.float32)
+    return concepts, labels
+
+
+def retrieve_persisted_labelled_examples(tx, file_path):
+
+    concept_ids, labels = persistence.load_variable(file_path)
+    print('==============================')
+    print('Loaded concept IDs with labels')
+    [print(concept_id, label) for concept_id, label in zip(concept_ids, labels)]
+    concepts = []
+    for concept_id in concept_ids:
+        query = f'match $x id {concept_id}; get;'
+        concept = next(tx.query(query)).get('x')
+        concepts.append(concept)
+
+    return concepts, labels
 
 
 def main():
@@ -38,43 +81,44 @@ def main():
     train_session = client.session(keyspace=keyspaces['train'])
     txs['train'] = train_session.transaction(grakn.TxType.WRITE)
 
-    appendix_vals = [1, 2, 3]
+    file_path = 'labels/labels_train.p'
 
-    concepts = []
-    labels = []
+    find_and_save = False
+    # delete_all_labels_from_keyspace = True
 
-    for a in appendix_vals:
-        target_concept_query = f"match $x isa exchange, has appendix $appendix; $appendix {a}; limit 2; get;"
+    if find_and_save:
+        concepts, labels = query_for_labelled_examples(txs['train'])
+        persistence.save_variable(([concept.id for concept in concepts], labels), file_path)
 
-        extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
-                                                           ('x', collections.OrderedDict([('appendix', appendix_vals)]))
-                                                           )
-        concepts_with_labels = extractor(txs['train'])
+        # Once this is done, then the labels stored in Grakn can be deleted so that we are certain that they aren't
+        # being used during training
 
-        concepts += [concepts_with_label[0] for concepts_with_label in concepts_with_labels]
-        labels += [concepts_with_label[1]['appendix'] for concepts_with_label in concepts_with_labels]
+        # TODO The following didn't work, but performing from the console did
+        # if delete_all_labels_from_keyspace:
+        #     txs['train'].query(f'match $x isa appendix; delete $x;')
 
-    labels = np.array(labels, dtype=np.float32)
+    else:
+        concepts, labels = retrieve_persisted_labelled_examples(txs['train'], file_path)
 
-    neighbour_sample_sizes = (5, 5)
+        neighbour_sample_sizes = (5, 5)
 
-    sampling_method = ordered.ordered_sample
+        sampling_method = ordered.ordered_sample
 
-    samplers = []
-    for sample_size in neighbour_sample_sizes:
-        samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size + 1))
+        samplers = []
+        for sample_size in neighbour_sample_sizes:
+            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size + 1))
 
-    # Strategies
-    role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=False, include_metatypes=False)
-    thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=False, include_metatypes=False)
+        # Strategies
+        role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=False, include_metatypes=False)
+        thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=False, include_metatypes=False)
 
-    traversal_strategies = {'role': role_schema_strategy,
-                            'thing': thing_schema_strategy}
+        traversal_strategies = {'role': role_schema_strategy,
+                                'thing': thing_schema_strategy}
 
-    kgcn = model.KGCN(txs['train'], traversal_strategies, samplers)
+        kgcn = model.KGCN(txs['train'], traversal_strategies, samplers)
 
-    kgcn.train(txs['train'], concepts, labels)
-    kgcn.predict(txs['train'], concepts)
+        kgcn.train(txs['train'], concepts, labels)
+        # kgcn.predict(txs['train'], concepts)
 
 
 if __name__ == "__main__":
