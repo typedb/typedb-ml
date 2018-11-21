@@ -73,33 +73,45 @@ def retrieve_persisted_labelled_examples(tx, file_path):
 def main():
     keyspaces = {'train': "animaltrade_train",
                  'eval': "animaltrade_test",
-                 'predict': "animaltrade_test"}
+                 # 'predict': "animaltrade_test"
+                 }
     uri = "localhost:48555"
+    sessions = {}
     txs = {}
 
     client = grakn.Grakn(uri=uri)
-    train_session = client.session(keyspace=keyspaces['train'])
-    txs['train'] = train_session.transaction(grakn.TxType.WRITE)
 
-    file_path = 'labels/labels_train.p'
+    file_root = 'labels/labels_{}.p'
 
-    find_and_save = False
-    # delete_all_labels_from_keyspace = True
+    # find_and_save = ['train', 'eval']
+    find_and_save = []
+    run = True
+    delete_all_labels_from_keyspace = True
 
-    if find_and_save:
-        concepts, labels = query_for_labelled_examples(txs['train'])
-        persistence.save_variable(([concept.id for concept in concepts], labels), file_path)
+    concepts_and_labels = {}
 
-        # Once this is done, then the labels stored in Grakn can be deleted so that we are certain that they aren't
-        # being used during training
+    for keyspace_name in list(keyspaces.keys()):
+        print(f'Concepts and labels for keyspace {keyspace_name}')
+        sessions[keyspace_name] = client.session(keyspace=keyspaces[keyspace_name])
+        txs[keyspace_name] = sessions[keyspace_name].transaction(grakn.TxType.WRITE)
 
-        # TODO The following didn't work, but performing from the console did
-        # if delete_all_labels_from_keyspace:
-        #     txs['train'].query(f'match $x isa appendix; delete $x;')
+        if keyspace_name in find_and_save:
+            concepts_and_labels[keyspace_name] = query_for_labelled_examples(txs[keyspace_name])
+            concepts, labels = concepts_and_labels[keyspace_name]
+            persistence.save_variable(([concept.id for concept in concepts], labels), file_root.format(keyspace_name))
 
-    else:
-        concepts, labels = retrieve_persisted_labelled_examples(txs['train'], file_path)
+            if delete_all_labels_from_keyspace:
+                # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
+                # that we are certain that they aren't being used by the learner
+                print('Deleting concepts to avoid pollution')
+                txs[keyspace_name].query(f'match $x isa appendix; delete $x;')
+                txs[keyspace_name].commit()
 
+        else:
+            concepts_and_labels[keyspace_name] = retrieve_persisted_labelled_examples(txs[keyspace_name],
+                                                                                      file_root.format(keyspace_name))
+
+    if (not find_and_save) and run:
         neighbour_sample_sizes = (5, 5)
 
         sampling_method = ordered.ordered_sample
@@ -117,7 +129,14 @@ def main():
 
         kgcn = model.KGCN(txs['train'], traversal_strategies, samplers)
 
-        kgcn.train(txs['train'], concepts, labels)
+        # Train
+        train_concepts, train_labels = concepts_and_labels['train']
+        kgcn.train(txs['train'], train_concepts, train_labels)
+
+        # Evaluate
+        eval_concepts, eval_labels = concepts_and_labels['eval']
+        kgcn.evaluate(txs['eval'], eval_concepts, eval_labels)
+
         # kgcn.predict(txs['train'], concepts)
 
 
