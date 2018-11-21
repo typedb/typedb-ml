@@ -83,6 +83,25 @@ class LearningManager:
                 _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         print("\n\n========= Training and Evaluation Complete =========\n\n")
 
+    def evaluate(self, sess, feed_dict):
+        micro_precision_values, _, micro_recall_values, _, f1_score_value, _, confusion_matrix_value, \
+        class_prediction_values = sess.run(
+            [self.micro_precisions, self.micro_precisions_update,
+             self.micro_recalls, self.micro_recalls_update, self.f1_score,
+             self.update_f1_score, self.confusion_matrix, self.class_predictions],
+            feed_dict=feed_dict)
+
+        print("\n\n========= Evaluation =========")
+
+        print(f'Micro precision {micro_precision_values:.2f},\n'
+              f'Micro recall {micro_recall_values:.2f},\n'
+              f'Micro f1-score {f1_score_value:.2f}\n'
+              f'Confusion matrix:\n'
+              f'{confusion_matrix_value}')
+        print(f'Class assignments: \n{class_prediction_values}')
+
+        print("\n\n========= Evaluation Complete =========")
+
     def predict(self, sess, feed_dict):
         print("\n\n========= Prediction =========")
         class_prediction_values = sess.run([self.class_predictions], feed_dict=feed_dict)

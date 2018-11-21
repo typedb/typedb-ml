@@ -284,11 +284,17 @@ class KGCN:
         if mode == tf.estimator.ModeKeys.TRAIN:
             self._learning_manager.train(self._sess, feed_dict)
 
+        if mode == tf.estimator.ModeKeys.EVAL:
+            self._learning_manager.evaluate(self._sess, feed_dict)
+
         if mode == tf.estimator.ModeKeys.PREDICT:
             self._learning_manager.predict(self._sess, feed_dict)
 
     def train(self, tx, concepts, labels):
         self.model_fn(tf.estimator.ModeKeys.TRAIN, tx, concepts, labels)
+
+    def evaluate(self, tx, concepts, labels):
+        self.model_fn(tf.estimator.ModeKeys.EVAL, tx, concepts, labels)
 
     def predict(self, tx, concepts):
         self.model_fn(tf.estimator.ModeKeys.PREDICT, tx, concepts)

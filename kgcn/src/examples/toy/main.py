@@ -1,3 +1,5 @@
+import time
+
 import grakn
 import numpy as np
 import tensorflow as tf
@@ -22,7 +24,9 @@ flags.DEFINE_integer('output_length', 4, 'Length of the output of "combine" oper
                                           'and the final length of the embeddings')
 
 flags.DEFINE_integer('max_training_steps', 2500, 'Max number of gradient steps to take during gradient descent')
-flags.DEFINE_string('log_dir', './out', 'directory to use to store data from training')
+
+TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
+flags.DEFINE_string('log_dir', './out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 
 def main():
@@ -76,7 +80,8 @@ def main():
                                                                                'neighbour_value_string'])
 
     kgcn.train(tx, concepts, labels)
-    kgcn.predict(tx, concepts)
+    kgcn.evaluate(tx, concepts, labels)
+    # kgcn.predict(tx, concepts)
 
 
 if __name__ == "__main__":

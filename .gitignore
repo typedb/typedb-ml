@@ -36,3 +36,6 @@ __init__.py
 
 # Model outputs
 out/
+
+# Labels that have been saved to disk
+labels/
