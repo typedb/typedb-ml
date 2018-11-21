@@ -1,3 +1,4 @@
+import collections
 import time
 import typing as typ
 
@@ -36,9 +37,10 @@ class LearningManager:
         self._log_dir = log_dir
 
     def __call__(self, sess, neighbourhoods_input, labels_input):
-
-        self.train_op, self.loss, self.class_predictions, self.precision, self.recall, self.f1_score = \
-            self._learner.train_and_evaluate(neighbourhoods_input, labels_input)
+        self.train_op, self.loss, self.class_predictions, self.micro_precisions, self.micro_precisions_update, \
+        self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score, \
+        self.confusion_matrix = self._learner.train_and_evaluate(
+            neighbourhoods_input, labels_input)
 
         # Build the summary Tensor based on the TF collection of Summaries.
         self.summary = tf.summary.merge_all()
@@ -61,19 +63,24 @@ class LearningManager:
         for step in range(self._max_training_steps):
             start_time = time.time()
 
-            # if step % int(self._max_training_steps / 20) == 0:
-            _, loss_value, precision_value, recall_value, f1_score_value = sess.run(
-                [self.train_op, self.loss, self.precision, self.recall, self.f1_score], feed_dict=feed_dict)
+            if step % int(self._max_training_steps / 20) == 0:
+                _, loss_value, micro_precision_values, _, micro_recall_values, _, f1_score_value, _, confusion_matrix_value = \
+                    sess.run([self.train_op, self.loss, self.micro_precisions, self.micro_precisions_update,
+                              self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score,
+                              self.confusion_matrix], feed_dict=feed_dict)
 
-            duration = time.time() - start_time
-            print(f'Step {step}: loss {loss_value:.2f}, precision {precision_value}, '
-                  f'recall {recall_value}, f1-score {f1_score_value}     ({duration:.3f} sec)')
+                duration = time.time() - start_time
+                print(f'Step {step}: loss {loss_value:.2f}, micro precision {micro_precision_values:.2f}, '
+                      f'micro recall {micro_recall_values:.2f}, micro f1-score {f1_score_value:.2f}'
+                      f'     ({duration:.3f} sec)\n'
+                      f'Confusion matrix:\n'
+                      f'{confusion_matrix_value}')
 
-            summary_str = sess.run(self.summary, feed_dict=feed_dict)
-            self.summary_writer.add_summary(summary_str, step)
-            self.summary_writer.flush()
-            # else:
-            #     _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
+                summary_str = sess.run(self.summary, feed_dict=feed_dict)
+                self.summary_writer.add_summary(summary_str, step)
+                self.summary_writer.flush()
+            else:
+                _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
         print("\n\n========= Training and Evaluation Complete =========\n\n")
 
     def predict(self, sess, feed_dict):
@@ -81,4 +88,3 @@ class LearningManager:
         class_prediction_values = sess.run([self.class_predictions], feed_dict=feed_dict)
         print(f'predictions: \n{class_prediction_values}')
         print("\n\n========= Prediction Complete =========\n\n")
-

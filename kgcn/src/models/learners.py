@@ -5,6 +5,7 @@ import tensorflow.contrib.layers as layers
 
 import kgcn.src.models.aggregation as agg
 import kgcn.src.models.initialise as init
+import tf_metrics
 
 
 class AccumulationLearner:
@@ -98,7 +99,7 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         else:
             softmax_class_prediction = tf.nn.softmax(prediction)
             tf.summary.histogram('softmax_class_prediction', softmax_class_prediction)
-            return softmax_class_prediction
+            return tf.cast(tf.round(softmax_class_prediction), dtype=tf.int32)
 
     def optimise(self, loss):
         grads_and_vars = self._optimizer.compute_gradients(loss)
@@ -124,6 +125,12 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         loss = self.loss(class_predictions, labels)
         return self.optimise(loss)
 
+    def discretise_class_predictions(self, class_predictions):
+        if self._sigmoid_loss:
+            return class_predictions
+        else:
+            return tf.cast(tf.round(class_predictions), dtype=tf.int32)
+
     def train_and_evaluate(self, neighbourhoods, labels):
         embeddings = self.embedding(neighbourhoods)
         tf.summary.histogram('evaluate/embeddings', embeddings)
@@ -131,16 +138,52 @@ class SupervisedAccumulationLearner(AccumulationLearner):
 
         tf.summary.histogram('evaluate/class_predictions', class_predictions)
         loss = self.loss(class_predictions, labels)
-        precision, _ = tf.metrics.precision(labels, class_predictions)
-        recall, _ = tf.metrics.recall(labels, class_predictions)
-        with tf.name_scope('f1_score') as scope:
-            f1_score = (2 * precision * recall) / (precision + recall)
 
-        tf.summary.scalar('evaluate/precision', precision)
-        tf.summary.scalar('evaluate/recall', recall)
-        tf.summary.scalar('evaluate/f1_score', f1_score)
+        discrete_class_predictions = self.discretise_class_predictions(class_predictions)
 
-        return self.optimise(loss), loss, self.predict(class_predictions), precision, recall, f1_score
+        # class_precisions = []
+        # class_recalls = []
+        # class_f1_scores = []
+        # print(f'predictions shape: {discrete_class_predictions.shape}')
+        # print(f'labels shape: {discrete_class_predictions.shape}')
+        # for i in range(self._labels_length):
+        #     class_precision, update_class_precision = tf.metrics.precision(labels[..., i], discrete_class_predictions[..., i])
+        #     class_precisions.append((class_precision, update_class_precision))
+        #
+        #     class_recall, update_class_recall = tf.metrics.recall(labels[..., i], discrete_class_predictions[..., i])
+        #     class_recalls.append((class_recall, update_class_recall))
+        #
+        #     with tf.name_scope('f1_score') as scope:
+        #         class_f1_score = (2 * class_precision * class_recall) / (class_precision + class_recall)
+        #         class_f1_scores.append(class_f1_score)
+        #
+        #     tf.summary.scalar(f'evaluate/class_{i}_precision', class_precision)
+        #     tf.summary.scalar(f'evaluate/class_{i}_recall', class_recall)
+        #     tf.summary.scalar(f'evaluate/class_{i}_f1_score', class_f1_score)
+
+        average = 'micro'
+
+        winning_labels = tf.argmax(labels, -1)
+        winning_discrete_class_predictions = tf.argmax(discrete_class_predictions, -1)
+
+        micro_precision, update_precision = tf_metrics.precision(winning_labels, winning_discrete_class_predictions,
+                                                                       self._labels_length, average=average)
+        micro_recall, update_recall = tf_metrics.recall(winning_labels, winning_discrete_class_predictions, self._labels_length,
+                                                              average=average)
+        micro_f1_score, update_f1_score = tf_metrics.recall(winning_labels, winning_discrete_class_predictions, self._labels_length,
+                                                              average=average)
+
+        tf.summary.scalar('evaluate/micro_precision', micro_precision)
+        tf.summary.scalar('evaluate/micro_recall', micro_recall)
+        tf.summary.scalar('evaluate/micro_f1_score', micro_f1_score)
+
+        return self.optimise(loss), loss, self.predict(class_predictions), update_precision, \
+               micro_precision, micro_recall, update_recall, micro_f1_score, update_f1_score, \
+               tf.confusion_matrix(cm_prep(labels), cm_prep(discrete_class_predictions))
+
+
+def cm_prep(labels):
+    return tf.argmax(labels, -1)
 
 
 def supervised_loss(logits, labels, regularisation_weight=0.5, sigmoid_loss=True):
