@@ -29,7 +29,9 @@ flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" ope
 flags.DEFINE_integer('max_training_steps', 5000, 'Max number of gradient steps to take during gradient descent')
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
-flags.DEFINE_string('log_dir', './out/out_' + TIMESTAMP, 'directory to use to store data from training')
+
+BASE_PATH = 'data/15_concepts/'
+flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 
 def query_for_labelled_examples(tx):
@@ -81,7 +83,7 @@ def main():
 
     client = grakn.Grakn(uri=uri)
 
-    file_root = 'labels/labels_{}.p'
+    labels_file_root = BASE_PATH + 'labels/labels_{}.p'
 
     # find_and_save = ['train', 'eval']
     find_and_save = []
@@ -89,6 +91,8 @@ def main():
     delete_all_labels_from_keyspace = True
 
     concepts_and_labels = {}
+
+    save_data = False
 
     for keyspace_name in list(keyspaces.keys()):
         print(f'Concepts and labels for keyspace {keyspace_name}')
@@ -98,7 +102,7 @@ def main():
         if keyspace_name in find_and_save:
             concepts_and_labels[keyspace_name] = query_for_labelled_examples(txs[keyspace_name])
             concepts, labels = concepts_and_labels[keyspace_name]
-            persistence.save_variable(([concept.id for concept in concepts], labels), file_root.format(keyspace_name))
+            persistence.save_variable(([concept.id for concept in concepts], labels), labels_file_root.format(keyspace_name))
 
             if delete_all_labels_from_keyspace:
                 # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
@@ -109,7 +113,7 @@ def main():
 
         else:
             concepts_and_labels[keyspace_name] = retrieve_persisted_labelled_examples(txs[keyspace_name],
-                                                                                      file_root.format(keyspace_name))
+                                                                                      labels_file_root.format(keyspace_name))
 
     if (not find_and_save) and run:
         neighbour_sample_sizes = (5, 5)
@@ -127,17 +131,30 @@ def main():
         traversal_strategies = {'role': role_schema_strategy,
                                 'thing': thing_schema_strategy}
 
-        kgcn = model.KGCN(txs['train'], traversal_strategies, samplers)
+        kgcn = model.KGCN(txs['train'], traversal_strategies, samplers, storage_path=BASE_PATH+'input/')
 
-        # Train
-        train_concepts, train_labels = concepts_and_labels['train']
-        kgcn.train(txs['train'], train_concepts, train_labels)
+        if save_data:
+            # Training data
+            train_concepts, train_labels = concepts_and_labels['train']
+            kgcn.get_feed_dict(tf.estimator.ModeKeys.TRAIN, txs['train'], train_concepts, train_labels, save=True,
+                               load=False)
 
-        # Evaluate
-        eval_concepts, eval_labels = concepts_and_labels['eval']
-        kgcn.evaluate(txs['eval'], eval_concepts, eval_labels)
+            # Evaluation data
+            eval_concepts, eval_labels = concepts_and_labels['eval']
+            kgcn.get_feed_dict(tf.estimator.ModeKeys.EVAL, txs['eval'], eval_concepts, eval_labels, save=True,
+                               load=False)
+        else:
+            # Train
+            # train_concepts, train_labels = concepts_and_labels['train']
+            # kgcn.train(txs['train'], train_concepts, train_labels)
+            kgcn.train_from_file()
 
-        # kgcn.predict(txs['train'], concepts)
+            # Evaluate
+            # eval_concepts, eval_labels = concepts_and_labels['eval']
+            # kgcn.evaluate(txs['eval'], eval_concepts, eval_labels)
+            kgcn.evaluate_from_file()
+
+            # kgcn.predict(txs['train'], predict_concepts)
 
 
 if __name__ == "__main__":

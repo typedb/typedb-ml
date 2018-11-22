@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 import kgcn.src.models.learners as base
-import kgcn.src.models.training as training
+import kgcn.src.models.manager as manager
 import tensorflow.contrib.layers as layers
 
 flags = tf.app.flags
@@ -51,14 +51,14 @@ class TestLearningManager(unittest.TestCase):
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())
         sess = tf.Session()
-        learning_manager = training.LearningManager(learner, max_training_steps=FLAGS.max_training_steps,
-                                                    log_dir=FLAGS.log_dir)
+        learning_manager = manager.LearningManager(learner, max_training_steps=FLAGS.max_training_steps,
+                                                   log_dir=FLAGS.log_dir)
 
         # Build the placeholders for the neighbourhood_depths for each feature type
-        raw_array_placeholders = training.build_array_placeholders(num_samples, neighbourhood_sizes,
-                                                                   FLAGS.features_length, tf.float32)
+        raw_array_placeholders = manager.build_array_placeholders(num_samples, neighbourhood_sizes,
+                                                                  FLAGS.features_length, tf.float32)
         # Build the placeholder for the labels
-        labels_placeholder = training.build_labels_placeholder(num_samples, FLAGS.classes_length)
+        labels_placeholder = manager.build_labels_placeholder(num_samples, FLAGS.classes_length)
 
         learning_manager(sess, raw_array_placeholders, labels_placeholder)
 

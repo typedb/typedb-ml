@@ -12,8 +12,9 @@ import kgcn.src.encoder.boolean as boolean
 import kgcn.src.encoder.encode as encode
 import kgcn.src.encoder.schema as schema
 import kgcn.src.encoder.tf_hub as tf_hub
+import kgcn.src.examples.animal_trade.persistence as persistence
 import kgcn.src.models.learners as base
-import kgcn.src.models.training as training
+import kgcn.src.models.manager as manager
 import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
@@ -86,7 +87,7 @@ class KGCNFeature:
 
 class KGCN:
 
-    def __init__(self, schema_tx, traversal_strategies, traversal_samplers, features_to_exclude=()):
+    def __init__(self, schema_tx, traversal_strategies, traversal_samplers, features_to_exclude=(), storage_path=None):
         """
         A full Knowledge Graph Convolutional Network, running with TensorFlow and Grakn
         :param schema_tx:
@@ -181,9 +182,12 @@ class KGCN:
 
         # if labels is not None:
         # Build the placeholder for the labels
-        self._labels_placeholder = training.build_labels_placeholder(None, FLAGS.classes_length,
-                                                                     name='labels_input')
+        self._labels_placeholder = manager.build_labels_placeholder(None, FLAGS.classes_length,
+                                                                    name='labels_input')
         tf.summary.histogram('labels_input', self._labels_placeholder)
+
+        # Saving of input values
+        self._input_saver = tf.train.Saver()
 
         ################################################################################################################
         # Tensorising
@@ -214,6 +218,7 @@ class KGCN:
 
         # Create a session for running Ops on the Graph.
         self._sess = tf.Session()
+        self._graph = tf.get_default_graph()
         if FLAGS.debug:
             self._sess = tf_debug.LocalCLIDebugWrapperSession(self._sess)
 
@@ -238,10 +243,20 @@ class KGCN:
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())
 
-        self._learning_manager = training.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
+        self._learning_manager = manager.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
         self._learning_manager(self._sess, encoded_arrays, self._labels_placeholder)  # Build the graph
 
-    def get_feed_dict(self, tx, concepts, labels=None):
+        ################################################################################################################
+        # Calls to the Learning manager
+        ################################################################################################################
+        self._storage_path = storage_path
+        self._mode_params = {
+            tf.estimator.ModeKeys.TRAIN: KGCN.ModeParams(self._learning_manager.train, 'train.p'),
+            tf.estimator.ModeKeys.EVAL: KGCN.ModeParams(self._learning_manager.evaluate, 'eval.p'),
+            tf.estimator.ModeKeys.PREDICT: KGCN.ModeParams(self._learning_manager.predict, 'predict.p'),
+        }
+
+    def _build_feed_dict(self, tx, concepts, labels=None):
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
@@ -274,30 +289,72 @@ class KGCN:
 
         return feed_dict
 
-    def model_fn(self, mode, tx, concepts, labels=None):
+    class ModeParams:
+        def __init__(self, func, file_suffix):
+            self.func = func
+            self.file_suffix = file_suffix
 
-        feed_dict = self.get_feed_dict(tx, concepts, labels=labels)
+    def _pack_feed_dict(self, feed_dict):
+        feed_dict_placeholder_names_as_keys = {}
 
-        ################################################################################################################
-        # Learner
-        ################################################################################################################
-        if mode == tf.estimator.ModeKeys.TRAIN:
-            self._learning_manager.train(self._sess, feed_dict)
+        for placeholder, value in feed_dict.items():
+            feed_dict_placeholder_names_as_keys[placeholder.name] = value
 
-        if mode == tf.estimator.ModeKeys.EVAL:
-            self._learning_manager.evaluate(self._sess, feed_dict)
+        return feed_dict_placeholder_names_as_keys
 
-        if mode == tf.estimator.ModeKeys.PREDICT:
-            self._learning_manager.predict(self._sess, feed_dict)
+    def _unpack_feed_dict(self, packed_feed_dict):
+
+        print('Unpacking')
+        unpacked_feed_dict = {}
+        for placeholder_name, value in packed_feed_dict.items():
+            unpacked_feed_dict[self._graph.get_tensor_by_name(placeholder_name)] = value
+
+        return unpacked_feed_dict
+
+    def get_feed_dict(self, mode, tx=None, concepts=None, labels=None, load=False, save=True):
+
+        file_path = self._storage_path + self._mode_params[mode].file_suffix
+
+        if load:
+            feed_dict = self._unpack_feed_dict(persistence.load_variable(file_path))
+        else:
+            feed_dict = self._build_feed_dict(tx, concepts, labels=labels)
+
+            if save:
+                if self._storage_path is None:
+                    raise ValueError('Cannot save data without a path to save to')
+
+                persistence.save_variable(self._pack_feed_dict(feed_dict), file_path)
+
+                # self._savers[mode] = tf.train.Saver(feed_dict)
+                # saver = tf.train.Saver(feed_dict)
+                # saver.save(self._sess, file_path)
+                # self._savers[mode].save(self._sess, file_path)
+
+        return feed_dict
+
+    def model_fn(self, mode, tx=None, concepts=None, labels=None, load=False, save=True):
+
+        feed_dict = self.get_feed_dict(mode, tx, concepts, labels=labels, load=load, save=save)
+        self._mode_params[mode].func(self._sess, feed_dict)
 
     def train(self, tx, concepts, labels):
-        self.model_fn(tf.estimator.ModeKeys.TRAIN, tx, concepts, labels)
+        self.model_fn(tf.estimator.ModeKeys.TRAIN, tx, concepts, labels, save=True)
 
     def evaluate(self, tx, concepts, labels):
-        self.model_fn(tf.estimator.ModeKeys.EVAL, tx, concepts, labels)
+        self.model_fn(tf.estimator.ModeKeys.EVAL, tx, concepts, labels, save=True)
 
     def predict(self, tx, concepts):
         self.model_fn(tf.estimator.ModeKeys.PREDICT, tx, concepts)
+
+    def train_from_file(self):
+        self.model_fn(tf.estimator.ModeKeys.TRAIN, load=True)
+
+    def evaluate_from_file(self):
+        self.model_fn(tf.estimator.ModeKeys.EVAL, load=True)
+
+    def predict_from_file(self):
+        self.model_fn(tf.estimator.ModeKeys.PREDICT, load=True)
 
 
 def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
