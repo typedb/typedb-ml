@@ -1,144 +1,134 @@
-# More generic schema for trade
-
 define
-    # entities
-    party sub entity,
-        has name,
-        plays receiver,
-        plays provider;
-    item sub entity,
-        plays object,
-        plays target,
-        plays sized;
-
-    category sub entity, 
-        is-abstract,
-        has name,
-        plays explanation;
-    measure sub entity,
-        has quantity,
-        has unit,
-        plays measurement;
-
-
-    # relationships
-    exchange sub relationship,
-        relates receiver, 
-        relates provider, 
-        relates object,
-        has exch-date, # this lets one match up exchanges 
-        has appendix;
-    export sub exchange,
-        relates receiver, 
-        relates provider, 
-        relates object,
-        plays correspondence-export;
-    import sub exchange, # note this redefinition of relates/plays/has  will in the future not be necssary
-        relates receiver, 
-        relates provider, 
-        relates object,
-        plays correspondence-import;
-
-    correspondence sub relationship,
-        relates correspondence-import,
-        relates correspondence-export;
-
-    description sub relationship,
-        relates target, 
-        relates explanation;
-
-    sizing sub relationship,
-        relates sized,
-        relates measurement; # alt-names: sizing_result
-
-    # attributes
     name sub attribute, datatype string;
-    quantity sub attribute, datatype double;
-    unit sub attribute, datatype string;
-    exch-date sub attribute, datatype date;  
-    appendix sub attribute, datatype long; 
-
-
-# Schema specialized for Animal Trade for CITIES treaty data
- define 
- 
-     country sub party,
-         has participates-CITIES,
-         has CITIES-entry-into-force-date,
-         has CITIES-participation-type,
-         has ISO-id,
-         plays origin,   # for species origin
-         plays containee; # for location hierarchy
- 
-     # for country containers
-     region sub entity,
-         has name,
-         plays container; # for location hierarchy
-
-    taxonomy-class sub category,
-        plays ancestor;
-    taxonomy-order sub category,
-        plays ancestor,
-        plays descendant;
-    taxonomy-family sub category,
-        plays ancestor,
-        plays descendant;
-    taxonomy-genus sub category,
-        plays ancestor,
-        plays descendant;
-    taxonomy-taxon sub category,
-        plays originated-species,
-        plays descendant;
-
-    animal-item sub item,
-        has term,
-        has source,
-        has purpose;
-    
-    
-    # relationships for animal trade
-    hierarchy sub relationship,
-        relates upper, 
-        relates lower;
-
-    taxonomy-hierarchy sub hierarchy,
-        relates ancestor as upper,
-        relates descendant as lower;
-
-    location-hierarchy sub hierarchy,
-        relates container as upper,
-        relates containee as lower;
-
-    origination sub relationship,
-        relates origin,
-        relates originated-species;
-#
-    # attributes for animal trade
-    purpose sub attribute, datatype string;
-    term sub attribute, datatype string;
-    source sub attribute, datatype string;
-#    taxonomic-name sub attribute, datatype string;
-    participates-CITIES sub attribute, datatype boolean;
-    CITIES-entry-into-force-date sub attribute, datatype date;
-    CITIES-participation-type sub attribute, datatype string;
+    measured-quantity sub attribute, datatype double;
+    unit-of-measurement sub attribute, datatype string;
+    exchange-date sub attribute, datatype date;
+    appendix sub attribute, datatype long;
+    item-purpose sub attribute, datatype string;
+    item-type sub attribute, datatype string;
+    item-source sub attribute, datatype string;
+    CITES-participation sub attribute, datatype boolean;
+    CITES-participation-type sub attribute, datatype string;
+    CITES-entry-into-force-date sub attribute, datatype date;
     ISO-id sub attribute, datatype string;
-#
-#
-#
-    # transitive rules to build rest of hierarchy
-    transitive-taxonomy-hierarchy
-    when {
-        (ancestor: $up, descendant: $low) isa taxonomy-hierarchy;
-        (ancestor: $low, descendant:$lowest) isa taxonomy-hierarchy;
-    } 
-    then {
-        (ancestor: $up, descendant: $lowest) isa taxonomy-hierarchy;
-    };
-#
-#
-#
-#    
-#
-#    
-#
-match $x isa tdmieowc, has jfioerwm "jioemcoie"; limit 9; get $x;
+
+    country sub entity,
+        has name,
+        has CITES-participation,
+        has CITES-entry-into-force-date,
+        has CITES-participation-type,
+        has ISO-id,
+        plays receiving-country,
+        plays providing-country,
+        plays originating-country,
+        plays contained-country;
+
+    continent sub entity,
+        has name,
+        plays containing-continent;
+    
+    traded-item sub entity,
+        plays exchanged-item,
+        plays imported-item,
+        plays exported-item,
+        plays member-item,
+        plays measurement-subject,
+        has item-type,
+        has item-source,
+        has item-purpose;
+
+    measurement sub entity,
+        has measured-quantity,
+        has unit-of-measurement,
+        plays quantification-measurement;
+
+    exchange sub relationship,
+        relates receiving-country,
+        relates providing-country,
+        relates exchanged-item,
+        has exchange-date,
+        has appendix;
+
+    export sub exchange,
+        relates receiving-country,
+        relates providing-country,
+        relates exported-item as exchanged-item,
+        plays corresponding-export;
+
+    import sub exchange,
+        relates receiving-country,
+        relates providing-country,
+        relates imported-item as exchanged-item,
+        plays corresponding-import;
+
+    import-export-correspondence sub relationship,
+        relates corresponding-import,
+        relates corresponding-export;
+
+    membership sub relationship,
+        relates mamber,
+        relates group;
+
+    taxon-membership sub membership,
+        relates member-item as member,
+        relates taxononomic-group as group;
+
+    quantification sub relationship,
+        relates quantified-subject,
+        relates quantification-measurement;
+
+    taxon sub entity,
+        has name,
+        plays taxononomic-group;
+
+    class sub taxon,
+        plays super-taxon;
+
+    order sub taxon,
+        plays super-taxon,
+        plays sub-taxon;
+
+    family sub taxon,
+        plays super-taxon,
+        plays sub-taxon;
+
+    genus sub taxon,
+        plays super-taxon,
+        plays sub-taxon;
+
+    species sub taxon,
+        plays originated-species,
+        plays sub-taxon;
+
+    hierarchy sub relationship,
+        relates superior,
+        relates subordinate;
+
+    categorisation-hierarchy sub hierarchy,
+        relates superior-category sub superior,
+        relates subordinate-category sub subordinate;
+
+    taxonomic-hierarchy sub categorisation-hierarchy,
+        relates super-taxon as superior-category,
+        relates sub-taxon as subordinate-category;
+
+    containment sub hierarchy,
+        relates container as superior,
+        relates containee as subordinate;
+
+    continent-contry-containment sub containment,
+        relates containing-continent as container,
+        relates contained-contry as containee;
+
+    species-origination sub relationship,
+        relates originating-country,
+        relates originated-species;
+
+    taxonomic-ranking sub rule,
+        when {
+            (super-taxon: $a, sub-taxon: $b) isa taxonomic-hierarchy;
+            (super-taxon: $b, sub-taxon: $c) isa taxonomic-hierarchy;
+        }
+        then {
+            (super-taxon: $a, sub-taxon: $c) isa taxonomic-hierarchy;
+        };
