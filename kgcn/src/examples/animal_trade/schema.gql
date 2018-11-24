@@ -26,13 +26,13 @@ define
     continent sub entity,
         has name,
         plays containing-continent;
-    
+
     traded-item sub entity,
         plays exchanged-item,
         plays imported-item,
         plays exported-item,
         plays member-item,
-        plays measurement-subject,
+        plays quantified-subject,
         has item-type,
         has item-source,
         has item-purpose;
@@ -65,38 +65,30 @@ define
         relates corresponding-import,
         relates corresponding-export;
 
-    membership sub relationship,
-        relates mamber,
-        relates group;
-
-    taxon-membership sub membership,
-        relates member-item as member,
-        relates taxononomic-group as group;
-
     quantification sub relationship,
         relates quantified-subject,
         relates quantification-measurement;
 
     taxon sub entity,
         has name,
-        plays taxononomic-group;
+        plays taxonomic-group;
 
-    class sub taxon,
+    taxonomic-class sub taxon,
         plays super-taxon;
 
-    order sub taxon,
+    taxonomic-order sub taxon,
         plays super-taxon,
         plays sub-taxon;
 
-    family sub taxon,
+    taxonomic-family sub taxon,
         plays super-taxon,
         plays sub-taxon;
 
-    genus sub taxon,
+    taxonomic-genus sub taxon,
         plays super-taxon,
         plays sub-taxon;
 
-    species sub taxon,
+    taxonomic-species sub taxon,
         plays originated-species,
         plays sub-taxon;
 
@@ -105,8 +97,8 @@ define
         relates subordinate;
 
     categorisation-hierarchy sub hierarchy,
-        relates superior-category sub superior,
-        relates subordinate-category sub subordinate;
+        relates superior-category as superior,
+        relates subordinate-category as subordinate;
 
     taxonomic-hierarchy sub categorisation-hierarchy,
         relates super-taxon as superior-category,
@@ -116,13 +108,17 @@ define
         relates container as superior,
         relates containee as subordinate;
 
-    continent-contry-containment sub containment,
+    continent-country-containment sub containment,
         relates containing-continent as container,
-        relates contained-contry as containee;
+        relates contained-country as containee;
 
     species-origination sub relationship,
         relates originating-country,
         relates originated-species;
+
+    taxon-membership sub relationship,
+            relates member-item,
+            relates taxonomic-group;
 
     taxonomic-ranking sub rule,
         when {
@@ -131,4 +127,13 @@ define
         }
         then {
             (super-taxon: $a, sub-taxon: $c) isa taxonomic-hierarchy;
+        };
+
+    transitive-taxonomic-membership sub rule,
+        when {
+            (member-item: $a, taxonomic-group: $taxon) isa taxon-membership;
+            (sub-taxon: $taxon, super-taxon: $super) isa taxonomic-hierarchy;
+        }
+        then {
+            (member-item: $a, taxonomic-group: $super) isa taxon-membership;
         };
