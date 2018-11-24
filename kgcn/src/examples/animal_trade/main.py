@@ -26,11 +26,12 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 5000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-BASE_PATH = 'data/15_concepts/'
+NUM_PER_CLASS = 45
+BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 
@@ -39,11 +40,10 @@ def query_for_labelled_examples(tx):
 
     concepts = []
     labels = []
-    num_each_class = 15
 
     for a in appendix_vals:
         target_concept_query = f'match $x isa exchange, has appendix $appendix; $appendix {a}; limit ' \
-                               f'{num_each_class}; get;'
+                               f'{NUM_PER_CLASS}; get;'
 
         extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
                                                            ('x', collections.OrderedDict([('appendix', appendix_vals)]))
@@ -92,7 +92,10 @@ def main():
 
     concepts_and_labels = {}
 
-    save_data = False
+    save_data = {
+        # 'train': tf.estimator.ModeKeys.TRAIN,
+        # 'eval': tf.estimator.ModeKeys.EVAL
+    }
 
     for keyspace_name in list(keyspaces.keys()):
         print(f'Concepts and labels for keyspace {keyspace_name}')
@@ -133,16 +136,11 @@ def main():
 
         kgcn = model.KGCN(txs['train'], traversal_strategies, samplers, storage_path=BASE_PATH+'input/')
 
-        if save_data:
-            # Training data
-            train_concepts, train_labels = concepts_and_labels['train']
-            kgcn.get_feed_dict(tf.estimator.ModeKeys.TRAIN, txs['train'], train_concepts, train_labels, save=True,
-                               load=False)
-
-            # Evaluation data
-            eval_concepts, eval_labels = concepts_and_labels['eval']
-            kgcn.get_feed_dict(tf.estimator.ModeKeys.EVAL, txs['eval'], eval_concepts, eval_labels, save=True,
-                               load=False)
+        if len(save_data) > 0:
+            for mode_name, mode in save_data.items():
+                # Training data
+                concepts, labels = concepts_and_labels[mode_name]
+                kgcn.get_feed_dict(mode, txs[mode_name], concepts, labels, save=True, load=False)
         else:
             # Train
             # train_concepts, train_labels = concepts_and_labels['train']

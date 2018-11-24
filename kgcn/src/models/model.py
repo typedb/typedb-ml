@@ -295,18 +295,21 @@ class KGCN:
             self.file_suffix = file_suffix
 
     def _pack_feed_dict(self, feed_dict):
+        print('Packing...')
         feed_dict_placeholder_names_as_keys = {}
 
         for placeholder, value in feed_dict.items():
+            print('    ' + placeholder.name)
             feed_dict_placeholder_names_as_keys[placeholder.name] = value
 
         return feed_dict_placeholder_names_as_keys
 
     def _unpack_feed_dict(self, packed_feed_dict):
 
-        print('Unpacking')
+        print('Unpacking...')
         unpacked_feed_dict = {}
         for placeholder_name, value in packed_feed_dict.items():
+            print('    ' + placeholder_name)
             unpacked_feed_dict[self._graph.get_tensor_by_name(placeholder_name)] = value
 
         return unpacked_feed_dict
