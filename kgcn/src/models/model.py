@@ -205,10 +205,44 @@ class KGCN:
             tensorised_arrays = pp.preprocess_all(self._raw_array_placeholders, self._tensorisors)
 
         ################################################################################################################
+        # Shuffling
+        ################################################################################################################
+        # Building the dataset using a generator became unnecessarily complex
+        # https://stackoverflow.com/questions/51136862/creating-a-tensorflow-dataset-that-outputs-a-dict
+        array_datasets = []
+        for tensorised_array in tensorised_arrays:
+            array_dataset = {}
+            for key, tensor in tensorised_array.items():
+                array_dataset[key] = tf.data.Dataset.from_tensor_slices(tensor)
+            array_datasets.append(array_dataset)
+
+        arrays_dataset = tf.data.Dataset.zip(tuple(array_datasets))
+
+        labels_dataset = tf.data.Dataset.from_tensor_slices(self._labels_placeholder)
+
+        dataset = tf.data.Dataset.zip((arrays_dataset, labels_dataset))
+
+        num_samples = tf.shape(tensorised_arrays[0]['neighbour_type'])[0]
+
+        buffer_size = batch_size = tf.cast(num_samples, tf.int64)
+        dataset = dataset.shuffle(buffer_size=buffer_size, seed=5, reshuffle_each_iteration=True)
+        dataset = dataset.batch(batch_size=batch_size).repeat()
+
+        dataset_iterator = dataset.make_initializable_iterator()
+        self._dataset_initializer = dataset_iterator.initializer
+
+        shuffled_batch_arrays, labels = dataset_iterator.get_next()
+
+        print('shuffled_batch_arrays.shape')
+        print(shuffled_batch_arrays[0]['neighbour_type'].shape)
+        print('labels.shape')
+        print(labels.shape)
+
+        ################################################################################################################
         # Encoding
         ################################################################################################################
         self._encoders = {feature_name: feature.encoder for feature_name, feature in self._features.items()}
-        encoded_arrays = encode.encode_all(tensorised_arrays, self._encoders)
+        encoded_arrays = encode.encode_all(shuffled_batch_arrays, self._encoders)
         print('Encoded shapes')
         print([encoded_array.shape for encoded_array in encoded_arrays])
 
@@ -243,8 +277,8 @@ class KGCN:
                                                      classification_kernel_initializer=
                                                      tf.contrib.layers.xavier_initializer())
 
-        self._learning_manager = manager.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir)
-        self._learning_manager(self._sess, encoded_arrays, self._labels_placeholder)  # Build the graph
+        self._learning_manager = manager.LearningManager(learner, FLAGS.max_training_steps, FLAGS.log_dir, self._dataset_initializer)
+        self._learning_manager(self._sess, encoded_arrays, labels)  # Build the graph
 
         ################################################################################################################
         # Calls to the Learning manager

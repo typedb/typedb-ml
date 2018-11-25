@@ -85,8 +85,10 @@ def main():
 
     labels_file_root = BASE_PATH + 'labels/labels_{}.p'
 
-    # find_and_save = ['train', 'eval']
-    find_and_save = []
+    find_and_save = [
+        # 'train',
+        # 'eval'
+    ]
     run = True
     delete_all_labels_from_keyspace = True
 

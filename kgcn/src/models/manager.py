@@ -31,10 +31,11 @@ def build_labels_placeholder(batch_size, classes_length, name=None):
 
 class LearningManager:
 
-    def __init__(self, learner, max_training_steps, log_dir):
+    def __init__(self, learner, max_training_steps, log_dir, dataset_initializer):
         self._learner = learner
         self._max_training_steps = max_training_steps
         self._log_dir = log_dir
+        self._dataset_initializer = dataset_initializer
 
     def __call__(self, sess, neighbourhoods_input, labels_input):
         self.train_op, self.loss, self.class_predictions, self.micro_precisions, self.micro_precisions_update, \
@@ -62,12 +63,14 @@ class LearningManager:
         print("\n\n========= Training and Evaluation =========")
         for step in range(self._max_training_steps):
             start_time = time.time()
+            _ = sess.run(self._dataset_initializer, feed_dict=feed_dict)
 
             if step % int(self._max_training_steps / 20) == 0:
+
                 _, loss_value, micro_precision_values, _, micro_recall_values, _, f1_score_value, _, confusion_matrix_value = \
                     sess.run([self.train_op, self.loss, self.micro_precisions, self.micro_precisions_update,
                               self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score,
-                              self.confusion_matrix], feed_dict=feed_dict)
+                              self.confusion_matrix])
 
                 duration = time.time() - start_time
                 print(f'Step {step}: loss {loss_value:.2f}, micro precision {micro_precision_values:.2f}, '
@@ -80,16 +83,16 @@ class LearningManager:
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
             else:
-                _, loss_value = sess.run([self.train_op, self.loss], feed_dict=feed_dict)
+                _, loss_value = sess.run([self.train_op, self.loss])
         print("\n\n========= Training and Evaluation Complete =========\n\n")
 
     def evaluate(self, sess, feed_dict):
+        _ = sess.run(self._dataset_initializer, feed_dict=feed_dict)
         micro_precision_values, _, micro_recall_values, _, f1_score_value, _, confusion_matrix_value, \
         class_prediction_values = sess.run(
             [self.micro_precisions, self.micro_precisions_update,
              self.micro_recalls, self.micro_recalls_update, self.f1_score,
-             self.update_f1_score, self.confusion_matrix, self.class_predictions],
-            feed_dict=feed_dict)
+             self.update_f1_score, self.confusion_matrix, self.class_predictions])
 
         print("\n\n========= Evaluation =========")
 
