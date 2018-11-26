@@ -26,7 +26,7 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 15000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 30000, 'Max number of gradient steps to take during gradient descent')
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 

@@ -76,6 +76,7 @@ class LearningManager:
                               self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score,
                               self.confusion_matrix, self.class_predictions, self.labels_input])
                 print(f'Step {step}    -------------')
+                print(f'Loss: {loss_value}')
                 metrics.report_multiclass_metrics(np.argmax(labels, axis=-1),
                                                   np.argmax(class_prediction_values, axis=-1))
 

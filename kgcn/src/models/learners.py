@@ -50,7 +50,7 @@ class AccumulationLearner:
 class SupervisedAccumulationLearner(AccumulationLearner):
 
     def __init__(self, labels_length, feature_lengths, aggregated_length, output_length, neighbourhood_sizes, optimizer,
-                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout_keep_prob=0.9,
+                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout_keep_prob=0.7,
                  classification_activation=tf.nn.tanh, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
         super().__init__(feature_lengths, aggregated_length, output_length, neighbourhood_sizes, **kwargs)
@@ -134,13 +134,13 @@ class SupervisedAccumulationLearner(AccumulationLearner):
     def train_and_evaluate(self, neighbourhoods, labels):
         embeddings = self.embedding(neighbourhoods)
         tf.summary.histogram('evaluate/embeddings', embeddings)
-        class_predictions = self.inference(embeddings)
+        class_scores = self.inference(embeddings)
 
-        tf.summary.histogram('evaluate/class_predictions', class_predictions)
-        loss = self.loss(class_predictions, labels)
+        tf.summary.histogram('evaluate/class_scores', class_scores)
+        loss = self.loss(class_scores, labels)
 
         with tf.name_scope('metrics'):
-            discrete_class_predictions = self.discretise_class_predictions(class_predictions)
+            discrete_class_predictions = self.discretise_class_predictions(class_scores)
 
             # class_precisions = []
             # class_recalls = []
@@ -178,7 +178,7 @@ class SupervisedAccumulationLearner(AccumulationLearner):
             tf.summary.scalar('evaluate/micro_recall', micro_recall)
             tf.summary.scalar('evaluate/micro_f1_score', micro_f1_score)
 
-        return self.optimise(loss), loss, self.predict(class_predictions), update_precision, \
+        return self.optimise(loss), loss, self.predict(class_scores), update_precision, \
                micro_precision, micro_recall, update_recall, micro_f1_score, update_f1_score, \
                tf.confusion_matrix(cm_prep(labels), cm_prep(discrete_class_predictions))
 

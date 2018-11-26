@@ -269,7 +269,7 @@ class KGCN:
                                                      FLAGS.aggregated_length,
                                                      FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
                                                      sigmoid_loss=False,
-                                                     regularisation_weight=0.0, classification_dropout_keep_prob=0.9,
+                                                     regularisation_weight=0.0, classification_dropout_keep_prob=0.7,
                                                      classification_activation=lambda x: x,
                                                      # classification_activation=tf.nn.tanh,
                                                      # Moves to nn.math.tanh in r1.12
