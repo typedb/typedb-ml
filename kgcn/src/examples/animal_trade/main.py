@@ -26,27 +26,27 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 30000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 1000, 'Max number of gradient steps to take during gradient descent')
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-NUM_PER_CLASS = 100
-BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
+NUM_PER_CLASS = 10
+BASE_PATH = f'traded_item_data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 
-def query_for_labelled_examples(tx):
+def query_for_labelled_examples(tx, offset):
     appendix_vals = [1, 2, 3]
 
     concepts = []
     labels = []
 
     for a in appendix_vals:
-        target_concept_query = f'match $x isa exchange, has appendix $appendix; $appendix {a}; limit ' \
-                               f'{NUM_PER_CLASS}; get;'
+        target_concept_query = f'match $e(exchanged-item: $t) isa exchange, has appendix $appendix; $appendix {a}; ' \
+                               f'offset {offset}; limit {NUM_PER_CLASS}; get;'
 
         extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
-                                                           ('x', collections.OrderedDict([('appendix', appendix_vals)]))
+                                                           ('t', collections.OrderedDict([('appendix', appendix_vals)]))
                                                            )
         concepts_with_labels = extractor(tx)
         if len(concepts_with_labels) == 0:
@@ -76,8 +76,8 @@ def retrieve_persisted_labelled_examples(tx, file_path):
 
 def main():
     keyspaces = {'train': "animaltrade_train",
-                 'eval': "animaltrade_test",
-                 # 'predict': "animaltrade_test"
+                 'eval': "animaltrade_train",
+                 'predict': "animaltrade_test"
                  }
     uri = "localhost:48555"
     sessions = {}
@@ -89,16 +89,23 @@ def main():
 
     find_and_save = [
         # 'train',
-        # 'eval'
+        # 'eval',
+        # 'predict'
     ]
-    run = True
-    delete_all_labels_from_keyspace = True
+    run = False
+    delete_all_labels_from_keyspace = False
 
     concepts_and_labels = {}
 
     save_input_data = {
-        # 'train': tf.estimator.ModeKeys.TRAIN,
-        # 'eval': tf.estimator.ModeKeys.EVAL
+        'train': tf.estimator.ModeKeys.TRAIN,
+        'eval': tf.estimator.ModeKeys.EVAL,
+        'predict': tf.estimator.ModeKeys.EVAL
+    }
+    offsets = {
+        'train': 0,
+        'eval': NUM_PER_CLASS*2,
+        'predict': 0
     }
 
     for keyspace_name in list(keyspaces.keys()):
@@ -107,23 +114,23 @@ def main():
         txs[keyspace_name] = sessions[keyspace_name].transaction(grakn.TxType.WRITE)
 
         if keyspace_name in find_and_save:
-            concepts_and_labels[keyspace_name] = query_for_labelled_examples(txs[keyspace_name])
+            concepts_and_labels[keyspace_name] = query_for_labelled_examples(txs[keyspace_name], offsets[keyspace_name])
             concepts, labels = concepts_and_labels[keyspace_name]
             persistence.save_variable(([concept.id for concept in concepts], labels), labels_file_root.format(keyspace_name))
 
-            if delete_all_labels_from_keyspace:
-                # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
-                # that we are certain that they aren't being used by the learner
-                print('Deleting concepts to avoid pollution')
-                txs[keyspace_name].query(f'match $x isa appendix; delete $x;')
-                txs[keyspace_name].commit()
+            # if delete_all_labels_from_keyspace:
+            #     # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
+            #     # that we are certain that they aren't being used by the learner
+            #     print('Deleting concepts to avoid pollution')
+            #     txs[keyspace_name].query(f'match $x isa appendix; delete $x;')
+            #     txs[keyspace_name].commit()
 
         else:
             concepts_and_labels[keyspace_name] = retrieve_persisted_labelled_examples(txs[keyspace_name],
                                                                                       labels_file_root.format(keyspace_name))
 
     if (not find_and_save) and run:
-        neighbour_sample_sizes = (5, 5)
+        neighbour_sample_sizes = (8, 2, 4)
 
         sampling_method = ordered.ordered_sample
 
@@ -157,6 +164,7 @@ def main():
             kgcn.evaluate_from_file()
 
             # kgcn.predict(sessions['train'], predict_concepts)
+            kgcn.predict_from_file()
 
     for keyspace_name in list(keyspaces.keys()):
         # Close all transactions to clean up
