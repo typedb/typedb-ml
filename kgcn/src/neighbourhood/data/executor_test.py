@@ -23,7 +23,7 @@ class BaseGraknIntegrationTest:
 
         def setUp(self):
             self._tx = self.session.transaction(grakn.TxType.WRITE)
-            self._executor = ex.TraversalExecutor(self._tx)
+            self._executor = ex.TraversalExecutor()
 
 
 class BaseTestTraversalExecutor:
@@ -88,7 +88,7 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 
 class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
     # Replicates the same issue as TestTraversalExecutorFromDateAttribute but using real animaltrede dataset
-    query = "match $attribute isa exch-date 2016-01-01T00:00:00; limit 1; get;"
+    query = "match $attribute isa exchange-date 2016-01-01T00:00:00; limit 1; get;"
     var = 'attribute'
     roles = ['has']
     num_results = 2

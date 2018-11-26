@@ -116,7 +116,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
 
-        data_executor = data_ex.TraversalExecutor(self._tx)
+        data_executor = data_ex.TraversalExecutor()
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
 

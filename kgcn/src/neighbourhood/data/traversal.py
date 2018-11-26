@@ -32,11 +32,12 @@ class NeighbourhoodTraverser:
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 
-    def __call__(self, target_concept_info: data_executor.ConceptInfo):
+    def __call__(self, target_concept_info: data_executor.ConceptInfo, tx):
         depth = len(self._depth_samplers)
-        return self._traverse(target_concept_info, depth)
+        # self._query_executor.refresh_transaction()
+        return self._traverse(target_concept_info, depth, tx)
 
-    def _traverse(self, target_concept_info: data_executor.ConceptInfo, depth: int):
+    def _traverse(self, target_concept_info: data_executor.ConceptInfo, depth: int, tx):
 
         def _empty():
             yield from ()
@@ -54,9 +55,9 @@ class NeighbourhoodTraverser:
         # Any concept could play a role in a relationship if the schema permits it
 
         # Distinguish the concepts found as roles-played
-        roles_played = self._query_executor(data_executor.ROLES_PLAYED, target_concept_info.id)
+        roles_played = self._query_executor(data_executor.ROLES_PLAYED, target_concept_info.id, tx)
 
-        neighbourhood = self._get_neighbour_role(roles_played, next_depth)
+        neighbourhood = self._get_neighbour_role(roles_played, next_depth, tx)
 
         concept_info_with_neighbourhood = ConceptInfoWithNeighbourhood(concept_info=target_concept_info,
                                                                        neighbourhood=neighbourhood)
@@ -75,22 +76,22 @@ class NeighbourhoodTraverser:
 
         if target_concept_info.base_type_label == 'relationship':
             # Find its roleplayers
-            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, target_concept_info.id)
+            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, target_concept_info.id, tx)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             concept_info_with_neighbourhood.neighbourhood = itertools.chain(
                 concept_info_with_neighbourhood.neighbourhood,
-                self._get_neighbour_role(roleplayers, next_depth))
+                self._get_neighbour_role(roleplayers, next_depth, tx))
 
         # Randomly sample the neighbourhood
         concept_info_with_neighbourhood.neighbourhood = sampler(concept_info_with_neighbourhood.neighbourhood)
 
         return concept_info_with_neighbourhood
 
-    def _get_neighbour_role(self, role_and_concept_info_iterator, depth):
+    def _get_neighbour_role(self, role_and_concept_info_iterator, depth, tx):
 
         for connection in role_and_concept_info_iterator:
-            neighbour_info_with_neighbourhood = self._traverse(connection['neighbour_info'], depth)
+            neighbour_info_with_neighbourhood = self._traverse(connection['neighbour_info'], depth, tx)
 
             yield NeighbourRole(role_label=connection['role_label'], role_direction=connection['role_direction'],
                                 neighbour_info_with_neighbourhood=neighbour_info_with_neighbourhood)

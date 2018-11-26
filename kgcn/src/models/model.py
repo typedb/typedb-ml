@@ -71,10 +71,10 @@ def main():
 
     concepts = [concept.get('x') for concept in list(tx.query(entity_query))]
 
-    kgcn = KGCN(tx, traversal_strategies, samplers)
+    kgcn = KGCN(session, traversal_strategies, samplers)
 
-    kgcn.train(tx, concepts, np.array([[1, 0]], dtype=np.float32))
-    kgcn.predict(tx, concepts)
+    kgcn.train(session, concepts, np.array([[1, 0]], dtype=np.float32))
+    kgcn.predict(session, concepts)
 
 
 class KGCNFeature:
@@ -290,16 +290,24 @@ class KGCN:
             tf.estimator.ModeKeys.PREDICT: KGCN.ModeParams(self._learning_manager.predict, 'predict.p'),
         }
 
-    def _build_feed_dict(self, tx, concepts, labels=None):
+    def _build_feed_dict(self, session, concepts, labels=None):
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
         concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
 
-        data_executor = data_ex.TraversalExecutor(tx)
+        data_executor = data_ex.TraversalExecutor()
         neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
 
-        neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
+        neighbourhood_depths = []
+        for concept_info in concept_infos:
+            tx = session.transaction(grakn.TxType.WRITE)
+            print(f'Opening transaction {tx}')
+            depths = neighourhood_traverser(concept_info, tx)
+            trv.collect_to_tree(depths)
+            neighbourhood_depths.append(depths)
+            print(f'closing transaction {tx}')
+            tx.close()
         neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
 
         ################################################################################################################
@@ -348,14 +356,14 @@ class KGCN:
 
         return unpacked_feed_dict
 
-    def get_feed_dict(self, mode, tx=None, concepts=None, labels=None, load=False, save=True):
+    def get_feed_dict(self, mode, session=None, concepts=None, labels=None, load=False, save=True):
 
         file_path = self._storage_path + self._mode_params[mode].file_suffix
 
         if load:
             feed_dict = self._unpack_feed_dict(persistence.load_variable(file_path))
         else:
-            feed_dict = self._build_feed_dict(tx, concepts, labels=labels)
+            feed_dict = self._build_feed_dict(session, concepts, labels=labels)
 
             if save:
                 if self._storage_path is None:
@@ -370,19 +378,19 @@ class KGCN:
 
         return feed_dict
 
-    def model_fn(self, mode, tx=None, concepts=None, labels=None, load=False, save=True):
+    def model_fn(self, mode, session=None, concepts=None, labels=None, load=False, save=True):
 
-        feed_dict = self.get_feed_dict(mode, tx, concepts, labels=labels, load=load, save=save)
+        feed_dict = self.get_feed_dict(mode, session, concepts, labels=labels, load=load, save=save)
         self._mode_params[mode].func(self._sess, feed_dict)
 
-    def train(self, tx, concepts, labels):
-        self.model_fn(tf.estimator.ModeKeys.TRAIN, tx, concepts, labels, save=True)
+    def train(self, session, concepts, labels):
+        self.model_fn(tf.estimator.ModeKeys.TRAIN, session, concepts, labels, save=True)
 
-    def evaluate(self, tx, concepts, labels):
-        self.model_fn(tf.estimator.ModeKeys.EVAL, tx, concepts, labels, save=True)
+    def evaluate(self, session, concepts, labels):
+        self.model_fn(tf.estimator.ModeKeys.EVAL, session, concepts, labels, save=True)
 
-    def predict(self, tx, concepts):
-        self.model_fn(tf.estimator.ModeKeys.PREDICT, tx, concepts)
+    def predict(self, session, concepts):
+        self.model_fn(tf.estimator.ModeKeys.PREDICT, session, concepts)
 
     def train_from_file(self):
         self.model_fn(tf.estimator.ModeKeys.TRAIN, load=True)

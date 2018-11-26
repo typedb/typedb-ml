@@ -18,7 +18,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_boolean('debug', False, 'Enable debugging')
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('classes_length', 3, 'Number of classes')
-flags.DEFINE_integer('features_length', 192, 'Number of features after encoding')
+flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
 flags.DEFINE_integer('starting_concepts_features_length', 173,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
                      'role_type and role_direction')
@@ -30,7 +30,7 @@ flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps 
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-NUM_PER_CLASS = 45
+NUM_PER_CLASS = 5
 BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
@@ -49,6 +49,8 @@ def query_for_labelled_examples(tx):
                                                            ('x', collections.OrderedDict([('appendix', appendix_vals)]))
                                                            )
         concepts_with_labels = extractor(tx)
+        if len(concepts_with_labels) == 0:
+            raise RuntimeError(f'Couldn\'t find any concepts to match target query "{target_concept_query}"')
 
         concepts += [concepts_with_label[0] for concepts_with_label in concepts_with_labels]
         labels += [concepts_with_label[1]['appendix'] for concepts_with_label in concepts_with_labels]
@@ -94,7 +96,7 @@ def main():
 
     concepts_and_labels = {}
 
-    save_data = {
+    save_input_data = {
         # 'train': tf.estimator.ModeKeys.TRAIN,
         # 'eval': tf.estimator.ModeKeys.EVAL
     }
@@ -138,23 +140,27 @@ def main():
 
         kgcn = model.KGCN(txs['train'], traversal_strategies, samplers, storage_path=BASE_PATH+'input/')
 
-        if len(save_data) > 0:
-            for mode_name, mode in save_data.items():
+        if len(save_input_data) > 0:
+            for mode_name, mode in save_input_data.items():
                 # Training data
                 concepts, labels = concepts_and_labels[mode_name]
-                kgcn.get_feed_dict(mode, txs[mode_name], concepts, labels, save=True, load=False)
+                kgcn.get_feed_dict(mode, sessions[mode_name], concepts, labels, save=True, load=False)
         else:
             # Train
             # train_concepts, train_labels = concepts_and_labels['train']
-            # kgcn.train(txs['train'], train_concepts, train_labels)
+            # kgcn.train(sessions['train'], train_concepts, train_labels)
             kgcn.train_from_file()
 
             # Evaluate
             # eval_concepts, eval_labels = concepts_and_labels['eval']
-            # kgcn.evaluate(txs['eval'], eval_concepts, eval_labels)
+            # kgcn.evaluate(sessions['eval'], eval_concepts, eval_labels)
             kgcn.evaluate_from_file()
 
-            # kgcn.predict(txs['train'], predict_concepts)
+            # kgcn.predict(sessions['train'], predict_concepts)
+
+    for keyspace_name in list(keyspaces.keys()):
+        # Close all transactions to clean up
+        txs[keyspace_name].close()
 
 
 if __name__ == "__main__":

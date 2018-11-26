@@ -31,7 +31,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
         self._concept_info = ex.build_concept_info(list(self._tx.query(entity_query))[0].get('x'))
 
-        self._executor = ex.TraversalExecutor(self._tx)
+        self._executor = ex.TraversalExecutor()
 
     def _neighbourhood_traverser_factory(self, neighbour_sample_sizes):
         sampling_method = ordered.ordered_sample
@@ -191,7 +191,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         concept_infos = [ex.build_concept_info(concept) for concept in concepts]
 
-        data_executor = ex.TraversalExecutor(self._tx)
+        data_executor = ex.TraversalExecutor()
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
 
@@ -247,7 +247,7 @@ class AnimalTradeIntegrationTest(unittest.TestCase):
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
             # samplers.append(blank)
 
-        exe = ex.TraversalExecutor(tx)
+        exe = ex.TraversalExecutor()
 
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(exe, samplers)
