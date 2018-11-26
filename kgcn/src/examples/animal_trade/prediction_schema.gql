@@ -1,0 +1,14 @@
+define
+kgcn-model-version sub attribute datatype double;
+prediction-score sub attribute datatype double;
+
+appendix plays predicted-value;
+
+value-prediction sub relationship,
+    has prediction-score,
+    relates predicted-value,
+    relates predicting-kgcn-model;
+
+kgcn-model sub entity,
+    has kgcn-model-version,
+    plays predicting-kgcn-model;
