@@ -26,11 +26,11 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 15000, 'Max number of gradient steps to take during gradient descent')
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-NUM_PER_CLASS = 5
+NUM_PER_CLASS = 100
 BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
@@ -161,6 +161,7 @@ def main():
     for keyspace_name in list(keyspaces.keys()):
         # Close all transactions to clean up
         txs[keyspace_name].close()
+        sessions[keyspace_name].close()
 
 
 if __name__ == "__main__":

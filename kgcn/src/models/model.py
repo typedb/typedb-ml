@@ -15,6 +15,7 @@ import kgcn.src.encoder.tf_hub as tf_hub
 import kgcn.src.examples.animal_trade.persistence as persistence
 import kgcn.src.models.learners as base
 import kgcn.src.models.manager as manager
+import kgcn.src.models.metrics
 import kgcn.src.neighbourhood.data.executor as data_ex
 import kgcn.src.neighbourhood.data.sampling.ordered as ordered
 import kgcn.src.neighbourhood.data.sampling.sampler as samp
@@ -25,6 +26,7 @@ import kgcn.src.neighbourhood.schema.traversal as trav
 import kgcn.src.preprocess.date_to_unixtime as date
 import kgcn.src.preprocess.preprocess as pp
 import kgcn.src.preprocess.raw_array_builder as raw
+import sklearn.metrics as metrics
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -267,7 +269,7 @@ class KGCN:
                                                      FLAGS.aggregated_length,
                                                      FLAGS.output_length, self._neighbour_sample_sizes, optimizer,
                                                      sigmoid_loss=False,
-                                                     regularisation_weight=0.0, classification_dropout_keep_prob=1.0,
+                                                     regularisation_weight=0.0, classification_dropout_keep_prob=0.9,
                                                      classification_activation=lambda x: x,
                                                      # classification_activation=tf.nn.tanh,
                                                      # Moves to nn.math.tanh in r1.12
@@ -371,7 +373,7 @@ class KGCN:
 
                 persistence.save_variable(self._pack_feed_dict(feed_dict), file_path)
 
-                # self._savers[mode] = tf.train.Saver(feed_dict)
+                # self._savers[mode] = tf.tra§in.Saver(feed_dict)
                 # saver = tf.train.Saver(feed_dict)
                 # saver.save(self._sess, file_path)
                 # self._savers[mode].save(self._sess, file_path)

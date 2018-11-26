@@ -50,7 +50,7 @@ class AccumulationLearner:
 class SupervisedAccumulationLearner(AccumulationLearner):
 
     def __init__(self, labels_length, feature_lengths, aggregated_length, output_length, neighbourhood_sizes, optimizer,
-                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout_keep_prob=1.0,
+                 sigmoid_loss=True, regularisation_weight=0.0, classification_dropout_keep_prob=0.9,
                  classification_activation=tf.nn.tanh, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer(), **kwargs):
         super().__init__(feature_lengths, aggregated_length, output_length, neighbourhood_sizes, **kwargs)

@@ -1,8 +1,10 @@
-import collections
 import time
 import typing as typ
 
+import numpy as np
 import tensorflow as tf
+
+import kgcn.src.models.metrics as metrics
 
 
 def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
@@ -38,6 +40,7 @@ class LearningManager:
         self._dataset_initializer = dataset_initializer
 
     def __call__(self, sess, neighbourhoods_input, labels_input):
+        self.labels_input = labels_input
         self.train_op, self.loss, self.class_predictions, self.micro_precisions, self.micro_precisions_update, \
         self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score, \
         self.confusion_matrix = self._learner.train_and_evaluate(
@@ -61,49 +64,46 @@ class LearningManager:
 
     def train(self, sess, feed_dict):
         print("\n\n========= Training and Evaluation =========")
+        start_time = time.time()
         for step in range(self._max_training_steps):
-            start_time = time.time()
             _ = sess.run(self._dataset_initializer, feed_dict=feed_dict)
 
             if step % int(self._max_training_steps / 20) == 0:
 
-                _, loss_value, micro_precision_values, _, micro_recall_values, _, f1_score_value, _, confusion_matrix_value = \
+                _, loss_value, micro_precision_values, _, micro_recall_values, _, f1_score_value, _, \
+                confusion_matrix_value, class_prediction_values, labels = \
                     sess.run([self.train_op, self.loss, self.micro_precisions, self.micro_precisions_update,
                               self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score,
-                              self.confusion_matrix])
-
-                duration = time.time() - start_time
-                print(f'Step {step}: loss {loss_value:.2f}, micro precision {micro_precision_values:.2f}, '
-                      f'micro recall {micro_recall_values:.2f}, micro f1-score {f1_score_value:.2f}'
-                      f'     ({duration:.3f} sec)\n'
-                      f'Confusion matrix:\n'
-                      f'{confusion_matrix_value}')
+                              self.confusion_matrix, self.class_predictions, self.labels_input])
+                print(f'Step {step}    -------------')
+                metrics.report_multiclass_metrics(np.argmax(labels, axis=-1),
+                                                  np.argmax(class_prediction_values, axis=-1))
 
                 summary_str = sess.run(self.summary, feed_dict=feed_dict)
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
             else:
                 _, loss_value = sess.run([self.train_op, self.loss])
+
+        duration = time.time() - start_time
+        print(f'Time taken:    {duration}')
         print("\n\n========= Training and Evaluation Complete =========\n\n")
 
     def evaluate(self, sess, feed_dict):
         _ = sess.run(self._dataset_initializer, feed_dict=feed_dict)
         micro_precision_values, _, micro_recall_values, _, f1_score_value, _, confusion_matrix_value, \
-        class_prediction_values = sess.run(
+        class_prediction_values, labels = sess.run(
             [self.micro_precisions, self.micro_precisions_update,
              self.micro_recalls, self.micro_recalls_update, self.f1_score,
-             self.update_f1_score, self.confusion_matrix, self.class_predictions])
+             self.update_f1_score, self.confusion_matrix, self.class_predictions, self.labels_input])
 
         print("\n\n========= Evaluation =========")
 
-        print(f'Micro precision {micro_precision_values:.2f},\n'
-              f'Micro recall {micro_recall_values:.2f},\n'
-              f'Micro f1-score {f1_score_value:.2f}\n'
-              f'Confusion matrix:\n'
-              f'{confusion_matrix_value}')
-        print(f'Class assignments: \n{class_prediction_values}')
-
+        metrics.report_multiclass_metrics(np.argmax(labels, axis=-1),
+                                          np.argmax(class_prediction_values, axis=-1))
         print("\n\n========= Evaluation Complete =========")
+
+        return confusion_matrix_value, class_prediction_values
 
     def predict(self, sess, feed_dict):
         print("\n\n========= Prediction =========")
