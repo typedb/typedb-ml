@@ -26,11 +26,11 @@ flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representati
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
 
-flags.DEFINE_integer('max_training_steps', 1000, 'Max number of gradient steps to take during gradient descent')
+flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-NUM_PER_CLASS = 10
+NUM_PER_CLASS = 30
 BASE_PATH = f'traded_item_data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
@@ -92,15 +92,15 @@ def main():
         # 'eval',
         # 'predict'
     ]
-    run = False
+    run = True
     delete_all_labels_from_keyspace = False
 
     concepts_and_labels = {}
 
     save_input_data = {
-        'train': tf.estimator.ModeKeys.TRAIN,
-        'eval': tf.estimator.ModeKeys.EVAL,
-        'predict': tf.estimator.ModeKeys.EVAL
+        # 'train': tf.estimator.ModeKeys.TRAIN,
+        # 'eval': tf.estimator.ModeKeys.EVAL,
+        # 'predict': tf.estimator.ModeKeys.PREDICT
     }
     offsets = {
         'train': 0,
@@ -164,6 +164,7 @@ def main():
             kgcn.evaluate_from_file()
 
             # kgcn.predict(sessions['train'], predict_concepts)
+            print('Evaluation on test set')
             kgcn.predict_from_file()
 
     for keyspace_name in list(keyspaces.keys()):

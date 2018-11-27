@@ -76,7 +76,7 @@ class LearningManager:
                               self.micro_recalls, self.micro_recalls_update, self.f1_score, self.update_f1_score,
                               self.confusion_matrix, self.class_predictions, self.labels_input])
                 print(f'Step {step}    -------------')
-                print(f'Loss: {loss_value}')
+                print(f'Loss: {loss_value:.2f}')
                 metrics.report_multiclass_metrics(np.argmax(labels, axis=-1),
                                                   np.argmax(class_prediction_values, axis=-1))
 
@@ -87,7 +87,7 @@ class LearningManager:
                 _, loss_value = sess.run([self.train_op, self.loss])
 
         duration = time.time() - start_time
-        print(f'Time taken:    {duration}')
+        print(f'Time taken:    {duration:.2f}')
         print("\n\n========= Training and Evaluation Complete =========\n\n")
 
     def evaluate(self, sess, feed_dict):
@@ -106,8 +106,12 @@ class LearningManager:
 
         return confusion_matrix_value, class_prediction_values
 
+    # TODO Made predict do the exact same as evaluate to use as test, change back
     def predict(self, sess, feed_dict):
-        print("\n\n========= Prediction =========")
-        class_prediction_values = sess.run([self.class_predictions], feed_dict=feed_dict)
-        print(f'predictions: \n{class_prediction_values}')
-        print("\n\n========= Prediction Complete =========\n\n")
+        return self.evaluate(sess, feed_dict)
+
+    # def predict(self, sess, feed_dict):
+    #     print("\n\n========= Prediction =========")
+    #     class_prediction_values = sess.run([self.class_predictions], feed_dict=feed_dict)
+    #     print(f'predictions: \n{class_prediction_values}')
+    #     print("\n\n========= Prediction Complete =========\n\n")
