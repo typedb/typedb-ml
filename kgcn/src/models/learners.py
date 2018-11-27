@@ -99,7 +99,8 @@ class SupervisedAccumulationLearner(AccumulationLearner):
         else:
             softmax_class_prediction = tf.nn.softmax(prediction)
             tf.summary.histogram('softmax_class_prediction', softmax_class_prediction)
-            return tf.cast(tf.round(softmax_class_prediction), dtype=tf.int32)
+            # return tf.cast(tf.round(softmax_class_prediction), dtype=tf.int32)
+            return softmax_class_prediction
 
     def optimise(self, loss):
         grads_and_vars = self._optimizer.compute_gradients(loss)

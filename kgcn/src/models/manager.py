@@ -4,6 +4,7 @@ import typing as typ
 import numpy as np
 import tensorflow as tf
 
+import kgcn.src.examples.animal_trade.persistence
 import kgcn.src.models.metrics as metrics
 
 
@@ -102,7 +103,13 @@ class LearningManager:
 
         metrics.report_multiclass_metrics(np.argmax(labels, axis=-1),
                                           np.argmax(class_prediction_values, axis=-1))
+
         print("\n\n========= Evaluation Complete =========")
+
+        print('\n\nClass scores')
+        print(class_prediction_values)
+        kgcn.src.examples.animal_trade.persistence.save_variable(class_prediction_values,
+                                                                 self._log_dir + '/class_scores.p')
 
         return confusion_matrix_value, class_prediction_values
 
