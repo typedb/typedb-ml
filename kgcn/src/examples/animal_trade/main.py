@@ -31,7 +31,7 @@ flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
 NUM_PER_CLASS = 30
-BASE_PATH = f'traded_item_data/{NUM_PER_CLASS}_concepts/'
+BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 
