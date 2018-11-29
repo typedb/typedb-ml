@@ -1,8 +1,10 @@
+
 define
+endangerment-level sub attribute datatype long;
 kgcn-model-version sub attribute datatype double;
 prediction-score sub attribute datatype double;
 
-appendix plays predicted-value;
+traded-item has endangerment-level;
 
 value-prediction sub relationship,
     has prediction-score,
@@ -12,3 +14,34 @@ value-prediction sub relationship,
 kgcn-model sub entity,
     has kgcn-model-version,
     plays predicting-kgcn-model;
+
+define
+@has-endangerment-level plays predicted-value;
+
+insert
+$kgcn isa kgcn-model has kgcn-model-version 0.1;
+
+$t1 id V630904, has endangerment-level $el1 via $r1; $el1 1; (predicted-value: $r1, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score 0.87;
+$t2 id V704688, has endangerment-level $el2 via $r2; $el2 1; (predicted-value: $r2, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score 0.71;
+
+
+match $t1 isa traded-item, has endangerment-level $el1 via $r1; $el1 1; $vp1(predicted-value: $r1, predicting-kgcn-model: $kgcn) isa value-prediction, has prediction-score $s1; get;
+
+define
+
+suspicious-activity-detection sub relationship,
+    relates suspicious-activity,
+    relates cause-of-suspicion;
+
+exchange plays suspicious-activity;
+item-type plays cause-of-suspicion;
+endangerment-level plays cause-of-suspicion;
+
+engangered-meat sub rule,
+when {
+    $ti isa traded-item, has endangerment-level $el; $el 1;
+    $ti has item-type $type; $type "meat";
+    $e(exchanged-item: $ti) isa exchange;
+} then {
+    (suspicious-activity: $e, cause-of-suspicion: $type, cause-of-suspicion: $el) isa suspicious-activity-detection;
+};
