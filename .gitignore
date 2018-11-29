@@ -39,3 +39,6 @@ out/
 
 # Labels that have been saved to disk
 labels/
+
+# Data input/output directories
+data/
