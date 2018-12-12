@@ -73,7 +73,7 @@ class SupervisedKGCNClassifier:
         tf.summary.histogram('classification/dense/class_scores', class_scores)
 
         regularised_class_scores = tf.nn.dropout(class_scores, self._classification_dropout_keep_prob,
-                                                      name='classification_dropout')
+                                                 name='classification_dropout')
 
         tf.summary.histogram('evaluate/regularised_class_scores', regularised_class_scores)
 
@@ -131,17 +131,19 @@ class SupervisedKGCNClassifier:
 
         return opt_op
 
-    def train(self, session, concepts, labels):
+    # def train(self, session, concepts, labels):
+    #
+    #     feed_dict = self.get_feed_dict(session, concepts, labels=labels)
+    #     self.train_from_feed_dict(feed_dict)
 
+    # def train_from_feed_dict(self, feed_dict):
+    def train(self, feed_dict):
         print("\n\n========= Training =========")
-        feed_dict = self._run(session, concepts, labels=labels)
+        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         for step in range(self._max_training_steps):
             if step % int(self._max_training_steps / 20) == 0:
-                # _, loss_value, summary_str, confusion_matrix = self.tf_session.run([self._train_op, self._loss_op,
-                #                                                                     self.summary,
-                #                                                                     self._confusion_matrix])
                 _, loss_value, confusion_matrix = self.tf_session.run([self._train_op, self._loss_op,
-                                                                                    self._confusion_matrix])
+                                                                       self._confusion_matrix])
                 summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
@@ -154,18 +156,23 @@ class SupervisedKGCNClassifier:
                 _, loss_value = self.tf_session.run([self._train_op, self._loss_op])
         print("\n\n========= Training Complete =========")
 
-    def eval(self, session, concepts, labels):
-        pass
+    def eval(self, feed_dict):
+        print("\n\n========= Evaluation =========")
+        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
+        loss_value, confusion_matrix = self.tf_session.run([self._loss_op, self._confusion_matrix])
+        print(f'Loss: {loss_value:.2f}')
+        print(f'Confusion Matrix:')
+        print(confusion_matrix)
+        print("\n\n========= Evaluation Complete =========")
 
     def predict(self, session, concepts):
         pass
 
-    def _run(self, session, concepts, labels=None):
+    def get_feed_dict(self, session, concepts, labels=None):
 
         # Possibly save/load raw arrays here instead
         raw_arrays = self._kgcn.input_fn(session, concepts)
 
         feed_dict = preprocess.build_feed_dict(self.array_placeholders, raw_arrays,
                                                labels_placeholder=self.labels_placeholder, labels=labels)
-        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         return feed_dict

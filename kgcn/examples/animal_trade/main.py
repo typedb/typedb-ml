@@ -5,7 +5,7 @@ import grakn
 import numpy as np
 import tensorflow as tf
 
-import kgcn.examples.animal_trade.persistence as persistence
+import kgcn.preprocess.persistence as persistence
 import kgcn.models.downstream as downstream
 import kgcn.models.model as model
 import kgcn.use_cases.attribute_prediction.label_extraction as label_extraction
@@ -31,6 +31,10 @@ TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 NUM_PER_CLASS = 2
 BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
+
+TRAIN = 'train'
+EVAL = 'eval'
+PREDICT = 'predict'
 
 
 def query_for_labelled_examples(tx, offset):
@@ -73,9 +77,9 @@ def retrieve_persisted_labelled_examples(tx, file_path):
 
 
 def main():
-    keyspaces = {'train': "animaltrade_train",
-                 'eval': "animaltrade_train",
-                 'predict': "animaltrade_test"
+    keyspaces = {TRAIN: "animaltrade_train",
+                 EVAL: "animaltrade_train",
+                 PREDICT: "animaltrade_test"
                  }
     uri = "localhost:48555"
     sessions = {}
@@ -86,24 +90,21 @@ def main():
     labels_file_root = BASE_PATH + 'labels/labels_{}.p'
 
     find_and_save = [
-        # 'train',
-        # 'eval',
-        # 'predict'
+        # TRAIN,
+        # EVAL,
+        # PREDICT
     ]
     run = True
     delete_all_labels_from_keyspace = False
 
     concepts_and_labels = {}
 
-    save_input_data = {
-        # 'train': tf.estimator.ModeKeys.TRAIN,
-        # 'eval': tf.estimator.ModeKeys.EVAL,
-        # 'predict': tf.estimator.ModeKeys.PREDICT
-    }
+    save_input_data = True  # Overwrites any saved data
+
     offsets = {
-        'train': 0,
-        'eval': NUM_PER_CLASS*2,
-        'predict': 0
+        TRAIN: 0,
+        EVAL: NUM_PER_CLASS*2,
+        PREDICT: 0
     }
 
     for keyspace_name in list(keyspaces.keys()):
@@ -127,6 +128,8 @@ def main():
             concepts_and_labels[keyspace_name] = retrieve_persisted_labelled_examples(txs[keyspace_name],
                                                                                       labels_file_root.format(keyspace_name))
 
+    feed_dict_storer = persistence.FeedDictStorer(BASE_PATH+'input/')
+
     if (not find_and_save) and run:
         # neighbour_sample_sizes = (8, 2, 4)
         neighbour_sample_sizes = (2, 2)
@@ -139,36 +142,35 @@ def main():
                           FLAGS.starting_concepts_features_length,
                           FLAGS.aggregated_length,
                           FLAGS.output_length,
-                          txs['train'],
+                          txs[TRAIN],
                           batch_size,
                           buffer_size)
 
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
         classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
                                                          max_training_steps=FLAGS.max_training_steps)
-        # Train
-        train_concepts, train_labels = concepts_and_labels['train']
-        classifier.train(sessions['train'], train_concepts, train_labels)
 
-        # if len(save_input_data) > 0:
-        #     for mode_name, mode in save_input_data.items():
-        #         # Training data
-        #         concepts, labels = concepts_and_labels[mode_name]
-        #         kgcn.get_feed_dict(mode, sessions[mode_name], concepts, labels, save=True, load=False)
-        # else:
-        #     # Train
-        #     # train_concepts, train_labels = concepts_and_labels['train']
-        #     # kgcn.train(sessions['train'], train_concepts, train_labels)
-        #     kgcn.train_from_file()
-        #
-        #     # Evaluate
-        #     # eval_concepts, eval_labels = concepts_and_labels['eval']
-        #     # kgcn.evaluate(sessions['eval'], eval_concepts, eval_labels)
-        #     kgcn.evaluate_from_file()
-        #
-        #     # kgcn.predict(sessions['train'], predict_concepts)
-        #     print('Evaluation on test set')
-        #     kgcn.predict_from_file()
+        feed_dict = {}
+
+        if save_input_data:
+
+            train_concepts, train_labels = concepts_and_labels[TRAIN]
+            feed_dict[TRAIN] = classifier.get_feed_dict(sessions[TRAIN], train_concepts, labels=train_labels)
+            feed_dict_storer.store_feed_dict(TRAIN, feed_dict[TRAIN])
+
+            eval_concepts, eval_labels = concepts_and_labels[EVAL]
+            feed_dict[EVAL] = classifier.get_feed_dict(sessions[EVAL], eval_concepts, labels=eval_labels)
+            feed_dict_storer.store_feed_dict(EVAL, feed_dict[EVAL])
+
+        else:
+            feed_dict[TRAIN] = feed_dict_storer.retrieve_feed_dict(TRAIN)
+            feed_dict[EVAL] = feed_dict_storer.retrieve_feed_dict(EVAL)
+
+        # Train
+        classifier.train(feed_dict[TRAIN])
+
+        # Eval
+        classifier.eval(feed_dict[EVAL])
 
     for keyspace_name in list(keyspaces.keys()):
         # Close all transactions to clean up
