@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from kgcn.encoder import schema as schema, tf_hub as tf_hub, boolean as boolean
-from kgcn.neighbourhood.data import executor as data_ex
+import kgcn.neighbourhood.data.executor as data_ex
+from kgcn.encoder import schema, tf_hub, boolean
 from kgcn.neighbourhood.schema import executor as schema_ex, traversal as trav
 
 GET_THING_TYPES_QUERY = "match $x sub thing; get;"

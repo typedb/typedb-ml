@@ -1,7 +1,6 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
-import kgcn.encoder.encode as encode
 import kgcn.models.embedding as learners
 import kgcn.models.model
 import kgcn.preprocess.preprocess as preprocess

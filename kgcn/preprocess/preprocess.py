@@ -4,7 +4,7 @@ import typing as typ
 import grakn
 import tensorflow as tf
 
-from kgcn.neighbourhood.data import executor as data_ex
+import kgcn.neighbourhood.data.executor as data_ex
 import kgcn.neighbourhood.data.traversal as trv
 import kgcn.preprocess.raw_array_builder as raw
 

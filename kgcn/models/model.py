@@ -5,7 +5,6 @@ import kgcn.models.embedding as learners
 import kgcn.neighbourhood.data.sampling.ordered as ordered
 import kgcn.neighbourhood.data.sampling.sampler as samp
 import kgcn.neighbourhood.data.traversal
-import kgcn.preprocess.preprocess
 import kgcn.preprocess.preprocess as preprocess
 
 
