@@ -1,14 +1,14 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
-import kgcn.src.encoder.encode as encode
-import kgcn.src.models.embedding as learners
-import kgcn.src.models.model
-import kgcn.src.preprocess.preprocess as preprocess
+import kgcn.encoder.encode as encode
+import kgcn.models.embedding as learners
+import kgcn.models.model
+import kgcn.preprocess.preprocess as preprocess
 
 
 # class KGCNLearner:
-#     def __init__(self, kgcn: kgcn.src.models.model2.KGCN, optimizer):
+#     def __init__(self, kgcn: kgcn.models.model2.KGCN, optimizer):
 #         """
 #         Custom usage of a KGCN instance
 #         :param kgcn:
@@ -34,7 +34,7 @@ import kgcn.src.preprocess.preprocess as preprocess
 
 class SupervisedKGCNClassifier:
 
-    def __init__(self, kgcn: kgcn.src.models.model.KGCN, optimizer, num_classes, log_dir, max_training_steps=10000,
+    def __init__(self, kgcn: kgcn.models.model.KGCN, optimizer, num_classes, log_dir, max_training_steps=10000,
                  regularisation_weight=0.0, classification_dropout_keep_prob=0.7, use_bias=True,
                  classification_activation=lambda x: x, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer()):

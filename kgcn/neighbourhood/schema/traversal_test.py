@@ -2,9 +2,9 @@ import unittest
 
 import grakn
 
-import kgcn.src.neighbourhood.schema.executor as ex
-import kgcn.src.neighbourhood.schema.strategy as strat
-import kgcn.src.neighbourhood.schema.traversal as trv
+import kgcn.neighbourhood.schema.executor as ex
+import kgcn.neighbourhood.schema.strategy as strat
+import kgcn.neighbourhood.schema.traversal as trv
 
 
 class TestGetSchemaConceptTypes(unittest.TestCase):

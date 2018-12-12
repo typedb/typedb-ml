@@ -1,12 +1,12 @@
 import tensorflow as tf
 
-import kgcn.src.encoder.encode as encode
-import kgcn.src.models.embedding as learners
-import kgcn.src.neighbourhood.data.sampling.ordered as ordered
-import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.data.traversal
-import kgcn.src.preprocess.preprocess
-import kgcn.src.preprocess.preprocess as preprocess
+import kgcn.encoder.encode as encode
+import kgcn.models.embedding as learners
+import kgcn.neighbourhood.data.sampling.ordered as ordered
+import kgcn.neighbourhood.data.sampling.sampler as samp
+import kgcn.neighbourhood.data.traversal
+import kgcn.preprocess.preprocess
+import kgcn.preprocess.preprocess as preprocess
 
 
 class KGCN:
@@ -51,7 +51,7 @@ class KGCN:
             traversal_samplers.append(
                 samp.Sampler(sample_size, sampling_method, limit=int(sample_size * sampling_limit_factor)))
 
-        self._traverser = kgcn.src.preprocess.preprocess.Traverser(traversal_samplers)
+        self._traverser = kgcn.preprocess.preprocess.Traverser(traversal_samplers)
 
     def input_fn(self, session, concepts):
         raw_array_depths = self._traverser(session, concepts)

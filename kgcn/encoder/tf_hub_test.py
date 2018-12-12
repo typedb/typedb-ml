@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-import kgcn.src.encoder.tf_hub as tf_hub
+import kgcn.encoder.tf_hub as tf_hub
 import tensorflow as tf
 
 

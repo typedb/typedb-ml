@@ -3,14 +3,14 @@ import unittest
 
 import numpy as np
 
-import kgcn.src.neighbourhood.data.executor as data_ex
-import kgcn.src.neighbourhood.data.sampling.ordered as ordered
-import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.data.traversal as trv
-import kgcn.src.neighbourhood.data.traversal_mocks as mock
-import kgcn.src.preprocess.raw_array_builder as builders
-import kgcn.src.preprocess.raw_array_builder as raw
-import kgcn.src.neighbourhood.data.executor as ex
+import kgcn.neighbourhood.data.executor as data_ex
+import kgcn.neighbourhood.data.sampling.ordered as ordered
+import kgcn.neighbourhood.data.sampling.sampler as samp
+import kgcn.neighbourhood.data.traversal as trv
+import kgcn.neighbourhood.data.traversal_mocks as mock
+import kgcn.preprocess.raw_array_builder as builders
+import kgcn.preprocess.raw_array_builder as raw
+import kgcn.neighbourhood.data.executor as ex
 
 
 class TestDetermineValuesToPut(unittest.TestCase):

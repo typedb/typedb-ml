@@ -1,4 +1,4 @@
-import kgcn.src.neighbourhood.schema.traversal as trav
+import kgcn.neighbourhood.schema.traversal as trav
 
 
 class TraversalExecutor:

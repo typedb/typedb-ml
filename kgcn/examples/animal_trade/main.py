@@ -5,10 +5,10 @@ import grakn
 import numpy as np
 import tensorflow as tf
 
-import kgcn.src.examples.animal_trade.persistence as persistence
-import kgcn.src.models.downstream as downstream
-import kgcn.src.models.model as model
-import kgcn.src.use_cases.attribute_prediction.label_extraction as label_extraction
+import kgcn.examples.animal_trade.persistence as persistence
+import kgcn.models.downstream as downstream
+import kgcn.models.model as model
+import kgcn.use_cases.attribute_prediction.label_extraction as label_extraction
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS

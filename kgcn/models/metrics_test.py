@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-import kgcn.src.models.metrics as metrics
+import kgcn.models.metrics as metrics
 
 
 class TestMetricsReport(unittest.TestCase):

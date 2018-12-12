@@ -4,9 +4,9 @@ import typing as typ
 import grakn
 import tensorflow as tf
 
-from kgcn.src.neighbourhood.data import executor as data_ex
-import kgcn.src.neighbourhood.data.traversal as trv
-import kgcn.src.preprocess.raw_array_builder as raw
+from kgcn.neighbourhood.data import executor as data_ex
+import kgcn.neighbourhood.data.traversal as trv
+import kgcn.preprocess.raw_array_builder as raw
 
 
 def datetime_to_unixtime(datetime_array):

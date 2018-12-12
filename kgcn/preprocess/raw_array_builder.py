@@ -3,7 +3,7 @@ import typing as typ
 import collections
 import numpy as np
 
-import kgcn.src.neighbourhood.data.traversal as trv
+import kgcn.neighbourhood.data.traversal as trv
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_types):

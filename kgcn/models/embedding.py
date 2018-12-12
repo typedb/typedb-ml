@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 
-import kgcn.src.models.aggregation as agg
+import kgcn.models.aggregation as agg
 
 
 class Embedder:

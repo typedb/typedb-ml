@@ -5,15 +5,15 @@ import grakn
 import numpy as np
 import tensorflow as tf
 
-import kgcn.src.neighbourhood.schema.executor as ex
-import kgcn.src.neighbourhood.schema.strategy as schema_strat
-import kgcn.src.neighbourhood.schema.traversal as trav
-import kgcn.src.encoder.boolean as boolean
-import kgcn.src.encoder.encode as encode
-import kgcn.src.encoder.schema as schema
-import kgcn.src.preprocess.preprocess as pp
-import kgcn.src.preprocess.raw_array_builder as raw
-import kgcn.src.preprocess.date_to_unixtime as date
+import kgcn.neighbourhood.schema.executor as ex
+import kgcn.neighbourhood.schema.strategy as schema_strat
+import kgcn.neighbourhood.schema.traversal as trav
+import kgcn.encoder.boolean as boolean
+import kgcn.encoder.encode as encode
+import kgcn.encoder.schema as schema
+import kgcn.preprocess.preprocess as pp
+import kgcn.preprocess.raw_array_builder as raw
+import kgcn.preprocess.date_to_unixtime as date
 
 tf.enable_eager_execution()
 

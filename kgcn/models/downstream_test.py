@@ -2,7 +2,7 @@ import unittest
 
 import tensorflow as tf
 
-import kgcn.src.models.downstream as downstream
+import kgcn.models.downstream as downstream
 
 tf.enable_eager_execution()
 

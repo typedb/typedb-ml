@@ -4,10 +4,10 @@ import grakn
 import numpy as np
 import tensorflow as tf
 
-import kgcn.src.models.model as model
-import kgcn.src.neighbourhood.data.sampling.ordered as ordered
-import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.schema.strategy as schema_strat
+import kgcn.models.model as model
+import kgcn.neighbourhood.data.sampling.ordered as ordered
+import kgcn.neighbourhood.data.sampling.sampler as samp
+import kgcn.neighbourhood.schema.strategy as schema_strat
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
