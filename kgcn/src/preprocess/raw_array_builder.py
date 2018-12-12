@@ -1,4 +1,3 @@
-# import itertools
 import typing as typ
 
 import collections

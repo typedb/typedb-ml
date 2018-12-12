@@ -2,7 +2,7 @@ import unittest
 
 import tensorflow as tf
 
-import kgcn.src.models.learners as base
+import kgcn.src.models.downstream as downstream
 
 tf.enable_eager_execution()
 
@@ -21,7 +21,7 @@ class TestSupervisedLoss(unittest.TestCase):
                 labels = tf.convert_to_tensor(raw_labels, dtype=tf.float32)
                 predictions = tf.convert_to_tensor(raw_labels, dtype=tf.float32)
 
-                loss = base.supervised_loss(predictions, labels, 0.0, True)
+                loss = downstream.supervised_loss(predictions, labels, 0.0, True)
                 print(loss)
 
                 self.assertEqual(loss.shape, ())

@@ -10,13 +10,13 @@ tf.enable_eager_execution()
 
 class TestOneHotBooleanEncoding(unittest.TestCase):
     def test_input_output(self):
-        input = np.full((2, 3, 1), -1, dtype=np.int64)
+        input_data = np.full((2, 3, 1), -1, dtype=np.int64)
 
-        input[1, 1] = 0
-        input[1, 0] = 1
-        input[0, 2] = 1
+        input_data[1, 1] = 0
+        input_data[1, 0] = 1
+        input_data[0, 2] = 1
 
-        print(f'Input:\n{input}')
+        print(f'Input:\n{input_data}')
         expected_output = np.full((2, 3, 2), 0, dtype=np.int64)
         expected_output[1, 1, 0] = 1
         expected_output[1, 0, 1] = 1
@@ -24,7 +24,7 @@ class TestOneHotBooleanEncoding(unittest.TestCase):
 
         print(f'\nExpected output\n{expected_output}')
 
-        output = bool_enc.one_hot_boolean_encode(tf.convert_to_tensor(input, dtype=tf.int64))
+        output = bool_enc.one_hot_boolean_encode(tf.convert_to_tensor(input_data, dtype=tf.int64))
 
         print(f'output:\n{output.numpy()}')
         with self.subTest('Correctness'):

@@ -6,10 +6,8 @@ import numpy as np
 import tensorflow as tf
 
 import kgcn.src.examples.animal_trade.persistence as persistence
+import kgcn.src.models.downstream as downstream
 import kgcn.src.models.model as model
-import kgcn.src.neighbourhood.data.sampling.ordered as ordered
-import kgcn.src.neighbourhood.data.sampling.sampler as samp
-import kgcn.src.neighbourhood.schema.strategy as schema_strat
 import kgcn.src.use_cases.attribute_prediction.label_extraction as label_extraction
 
 flags = tf.app.flags
@@ -17,7 +15,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_boolean('debug', False, 'Enable debugging')
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
-flags.DEFINE_integer('classes_length', 3, 'Number of classes')
+flags.DEFINE_integer('num_classes', 3, 'Number of classes')
 flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
 flags.DEFINE_integer('starting_concepts_features_length', 173,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
@@ -30,7 +28,7 @@ flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps 
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-NUM_PER_CLASS = 30
+NUM_PER_CLASS = 2
 BASE_PATH = f'data/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
@@ -130,42 +128,47 @@ def main():
                                                                                       labels_file_root.format(keyspace_name))
 
     if (not find_and_save) and run:
-        neighbour_sample_sizes = (8, 2, 4)
+        # neighbour_sample_sizes = (8, 2, 4)
+        neighbour_sample_sizes = (2, 2)
 
-        sampling_method = ordered.ordered_sample
+        # storage_path=BASE_PATH+'input/'
 
-        samplers = []
-        for sample_size in neighbour_sample_sizes:
-            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size + 1))
+        batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
+        kgcn = model.KGCN(neighbour_sample_sizes,
+                          FLAGS.features_length,
+                          FLAGS.starting_concepts_features_length,
+                          FLAGS.aggregated_length,
+                          FLAGS.output_length,
+                          txs['train'],
+                          batch_size,
+                          buffer_size)
 
-        # Strategies
-        role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=False, include_metatypes=False)
-        thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=False, include_metatypes=False)
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
+        classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
+                                                         max_training_steps=FLAGS.max_training_steps)
+        # Train
+        train_concepts, train_labels = concepts_and_labels['train']
+        classifier.train(sessions['train'], train_concepts, train_labels)
 
-        traversal_strategies = {'role': role_schema_strategy,
-                                'thing': thing_schema_strategy}
-
-        kgcn = model.KGCN(txs['train'], traversal_strategies, samplers, storage_path=BASE_PATH+'input/')
-
-        if len(save_input_data) > 0:
-            for mode_name, mode in save_input_data.items():
-                # Training data
-                concepts, labels = concepts_and_labels[mode_name]
-                kgcn.get_feed_dict(mode, sessions[mode_name], concepts, labels, save=True, load=False)
-        else:
-            # Train
-            # train_concepts, train_labels = concepts_and_labels['train']
-            # kgcn.train(sessions['train'], train_concepts, train_labels)
-            kgcn.train_from_file()
-
-            # Evaluate
-            # eval_concepts, eval_labels = concepts_and_labels['eval']
-            # kgcn.evaluate(sessions['eval'], eval_concepts, eval_labels)
-            kgcn.evaluate_from_file()
-
-            # kgcn.predict(sessions['train'], predict_concepts)
-            print('Evaluation on test set')
-            kgcn.predict_from_file()
+        # if len(save_input_data) > 0:
+        #     for mode_name, mode in save_input_data.items():
+        #         # Training data
+        #         concepts, labels = concepts_and_labels[mode_name]
+        #         kgcn.get_feed_dict(mode, sessions[mode_name], concepts, labels, save=True, load=False)
+        # else:
+        #     # Train
+        #     # train_concepts, train_labels = concepts_and_labels['train']
+        #     # kgcn.train(sessions['train'], train_concepts, train_labels)
+        #     kgcn.train_from_file()
+        #
+        #     # Evaluate
+        #     # eval_concepts, eval_labels = concepts_and_labels['eval']
+        #     # kgcn.evaluate(sessions['eval'], eval_concepts, eval_labels)
+        #     kgcn.evaluate_from_file()
+        #
+        #     # kgcn.predict(sessions['train'], predict_concepts)
+        #     print('Evaluation on test set')
+        #     kgcn.predict_from_file()
 
     for keyspace_name in list(keyspaces.keys()):
         # Close all transactions to clean up

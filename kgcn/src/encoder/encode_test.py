@@ -28,12 +28,12 @@ def build_encoders(keyspace, uri="localhost:48555"):
     thing_schema_strategy = schema_strat.SchemaThingTraversalStrategy(include_implicit=True,
                                                                       include_metatypes=False)
 
-    thing_schema_traversal = trav.traverse_schema(thing_schema_strategy, traversal_executor)
+    thing_schema_traversal = trav.traverse_schema(traversal_executor, query, include_implicit, include_metatypes)
     thing_encoder = schema.MultiHotSchemaTypeEncoder(thing_schema_traversal)
 
     # ================ ROLES ======================
     role_schema_strategy = schema_strat.SchemaRoleTraversalStrategy(include_implicit=True, include_metatypes=False)
-    role_schema_traversal = trav.traverse_schema(role_schema_strategy, traversal_executor)
+    role_schema_traversal = trav.traverse_schema(traversal_executor, query, include_implicit, include_metatypes)
     role_encoder = schema.MultiHotSchemaTypeEncoder(role_schema_traversal)
 
     encoders = {'role_type': role_encoder,
@@ -73,5 +73,5 @@ class TestEncode(unittest.TestCase):
                          'neighbour_value_date': date.datetime_to_unixtime,
                          'neighbour_value_string': lambda x: x}
 
-        preprocessed_example_arrays = pp.preprocess_all(example_arrays, preprocessors)
+        preprocessed_example_arrays = pp.apply_operations(example_arrays, preprocessors)
         print(encode.encode_all(preprocessed_example_arrays, encoders))
