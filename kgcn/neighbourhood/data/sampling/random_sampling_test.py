@@ -28,7 +28,6 @@ class TestRandomSample(unittest.TestCase):
                 population = _gen(self._p)
 
                 rnd_samples = rnd.random_sample(population, n)
-                print(rnd_samples)
                 self.assertEqual(min(n, len(self._p)), len(rnd_samples))
                 self.assertTrue(set(rnd_samples).issubset(set(self._p)))
 

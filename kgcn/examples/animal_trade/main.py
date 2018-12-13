@@ -5,15 +5,15 @@ import grakn
 import numpy as np
 import tensorflow as tf
 
-import kgcn.preprocess.persistence as persistence
 import kgcn.models.downstream as downstream
 import kgcn.models.model as model
+import kgcn.neighbourhood.data.sampling.random_sampling as random
+import kgcn.preprocess.persistence as persistence
 import kgcn.use_cases.attribute_prediction.label_extraction as label_extraction
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
-flags.DEFINE_boolean('debug', False, 'Enable debugging')
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('num_classes', 3, 'Number of classes')
 flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
@@ -28,7 +28,8 @@ flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps 
 
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
-NUM_PER_CLASS = 2
+NUM_PER_CLASS = 3
+POPULATION_SIZE_PER_CLASS = 1000
 BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
@@ -37,7 +38,7 @@ EVAL = 'eval'
 PREDICT = 'predict'
 
 
-def query_for_labelled_examples(tx, offset):
+def query_for_labelled_examples(tx, sample_size, offset):
     appendix_vals = [1, 2, 3]
 
     concepts = []
@@ -45,12 +46,13 @@ def query_for_labelled_examples(tx, offset):
 
     for a in appendix_vals:
         target_concept_query = f'match $e(exchanged-item: $t) isa exchange, has appendix $appendix; $appendix {a}; ' \
-                               f'offset {offset}; limit {NUM_PER_CLASS}; get;'
+                               f'offset {offset}; limit {POPULATION_SIZE_PER_CLASS}; get;'
 
         extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
-                                                           ('t', collections.OrderedDict([('appendix', appendix_vals)]))
+                                                           ('t', collections.OrderedDict([('appendix', appendix_vals)])),
+                                                           sampling_method=random.random_sample
                                                            )
-        concepts_with_labels = extractor(tx)
+        concepts_with_labels = extractor(tx, sample_size)
         if len(concepts_with_labels) == 0:
             raise RuntimeError(f'Couldn\'t find any concepts to match target query "{target_concept_query}"')
 
@@ -76,6 +78,12 @@ def retrieve_persisted_labelled_examples(tx, file_path):
     return concepts, labels
 
 
+def check_concepts_are_unique(concepts):
+    concept_ids = [concept.id for concept in concepts]
+    diff = len(set(concept_ids)) != len(concept_ids)
+    if diff != 0:
+        raise ValueError(f'There are {diff} duplicate concepts present')
+
 def main():
     keyspaces = {TRAIN: "animaltrade_train",
                  EVAL: "animaltrade_train",
@@ -89,48 +97,56 @@ def main():
 
     labels_file_root = BASE_PATH + 'labels/labels_{}.p'
 
-    find_and_save = [
-        # TRAIN,
-        # EVAL,
-        # PREDICT
-    ]
+    find_labelled_concepts = False
     run = True
     delete_all_labels_from_keyspace = False
 
-    concepts_and_labels = {}
+    concepts = {}
+    labels = {}
 
     save_input_data = True  # Overwrites any saved data
 
-    offsets = {
-        TRAIN: 0,
-        EVAL: NUM_PER_CLASS*2,
-        PREDICT: 0
-    }
+    for keyspace_key in list(keyspaces.keys()):
+        sessions[keyspace_key] = client.session(keyspace=keyspaces[keyspace_key])
+        txs[keyspace_key] = sessions[keyspace_key].transaction(grakn.TxType.WRITE)
 
-    for keyspace_name in list(keyspaces.keys()):
-        print(f'Concepts and labels for keyspace {keyspace_name}')
-        sessions[keyspace_name] = client.session(keyspace=keyspaces[keyspace_name])
-        txs[keyspace_name] = sessions[keyspace_name].transaction(grakn.TxType.WRITE)
+    if find_labelled_concepts:
+        print(f'Finding concepts and labels')
+        print('    for training and evaluation')
+        # concepts_train_and_eval, labels_train_and_eval = query_for_labelled_examples(txs[TRAIN], NUM_PER_CLASS * 2, 0)
+        # concepts[TRAIN], labels[TRAIN] = concepts_train_and_eval[:NUM_PER_CLASS], labels_train_and_eval[:NUM_PER_CLASS]
+        # concepts[EVAL], labels[EVAL] = concepts_train_and_eval[NUM_PER_CLASS:], labels_train_and_eval[NUM_PER_CLASS:]
+        concepts[TRAIN], labels[TRAIN] = query_for_labelled_examples(txs[TRAIN], NUM_PER_CLASS, 0)
+        concepts[EVAL], labels[EVAL] = query_for_labelled_examples(txs[EVAL], NUM_PER_CLASS, 0)
 
-        if keyspace_name in find_and_save:
-            concepts_and_labels[keyspace_name] = query_for_labelled_examples(txs[keyspace_name], offsets[keyspace_name])
-            concepts, labels = concepts_and_labels[keyspace_name]
-            persistence.save_variable(([concept.id for concept in concepts], labels), labels_file_root.format(keyspace_name))
+        all_concepts = []
+        all_concepts.extend(concepts[TRAIN])
+        all_concepts.extend(concepts[EVAL])
+        check_concepts_are_unique(all_concepts)
 
-            # if delete_all_labels_from_keyspace:
-            #     # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
-            #     # that we are certain that they aren't being used by the learner
-            #     print('Deleting concepts to avoid pollution')
-            #     txs[keyspace_name].query(f'match $x isa appendix; delete $x;')
-            #     txs[keyspace_name].commit()
+        print('    for prediction')
+        concepts[PREDICT], labels[PREDICT] = query_for_labelled_examples(txs[PREDICT], NUM_PER_CLASS, 0)
 
-        else:
-            concepts_and_labels[keyspace_name] = retrieve_persisted_labelled_examples(txs[keyspace_name],
-                                                                                      labels_file_root.format(keyspace_name))
+        for keyspace_key in list(keyspaces.keys()):
+            persistence.save_variable(([concept.id for concept in concepts[keyspace_key]], labels[keyspace_key]),
+                                      labels_file_root.format(keyspace_key))
+
+        # if delete_all_labels_from_keyspace:
+        #     # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
+        #     # that we are certain that they aren't being used by the learner
+        #     print('Deleting concepts to avoid pollution')
+        #     txs[keyspace_key].query(f'match $x isa appendix; delete $x;')
+        #     txs[keyspace_key].commit()
+
+    else:
+        for keyspace_key in list(keyspaces.keys()):
+            concepts[keyspace_key], labels[keyspace_key] = retrieve_persisted_labelled_examples(txs[keyspace_key],
+                                                                                                labels_file_root.format(
+                                                                                                    keyspace_key))
 
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH+'input/')
 
-    if (not find_and_save) and run:
+    if (not find_labelled_concepts) and run:
         # neighbour_sample_sizes = (8, 2, 4)
         neighbour_sample_sizes = (2, 2)
 
@@ -154,12 +170,10 @@ def main():
 
         if save_input_data:
 
-            train_concepts, train_labels = concepts_and_labels[TRAIN]
-            feed_dict[TRAIN] = classifier.get_feed_dict(sessions[TRAIN], train_concepts, labels=train_labels)
+            feed_dict[TRAIN] = classifier.get_feed_dict(sessions[TRAIN], concepts[TRAIN], labels=labels[TRAIN])
             feed_dict_storer.store_feed_dict(TRAIN, feed_dict[TRAIN])
 
-            eval_concepts, eval_labels = concepts_and_labels[EVAL]
-            feed_dict[EVAL] = classifier.get_feed_dict(sessions[EVAL], eval_concepts, labels=eval_labels)
+            feed_dict[EVAL] = classifier.get_feed_dict(sessions[EVAL], concepts[EVAL], labels=labels[EVAL])
             feed_dict_storer.store_feed_dict(EVAL, feed_dict[EVAL])
 
         else:
@@ -172,10 +186,10 @@ def main():
         # Eval
         classifier.eval(feed_dict[EVAL])
 
-    for keyspace_name in list(keyspaces.keys()):
+    for keyspace_key in list(keyspaces.keys()):
         # Close all transactions to clean up
-        txs[keyspace_name].close()
-        sessions[keyspace_name].close()
+        txs[keyspace_key].close()
+        sessions[keyspace_key].close()
 
 
 if __name__ == "__main__":
