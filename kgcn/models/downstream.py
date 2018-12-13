@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
 import kgcn.models.embedding as learners
+import kgcn.models.metrics as metrics
 import kgcn.models.model
 import kgcn.preprocess.preprocess as preprocess
 
@@ -79,9 +80,10 @@ class SupervisedKGCNClassifier:
 
         self._class_scores = regularised_class_scores
 
-        labels_winners = tf.argmax(self.labels, -1)
-        class_scores_winners = tf.argmax(self.labels, -1)
-        self._confusion_matrix = tf.confusion_matrix(labels_winners, class_scores_winners, num_classes=self._num_classes)
+        self._labels_winners = tf.argmax(self.labels, -1)
+        self._predictions_class_winners = tf.argmax(self._class_scores, -1)
+        self._confusion_matrix = tf.confusion_matrix(self._labels_winners, self._predictions_class_winners,
+                                                     num_classes=self._num_classes)
 
         self._loss_op = self.loss(class_scores, self.labels)
         self._train_op = self.optimise(self._loss_op)
@@ -142,8 +144,13 @@ class SupervisedKGCNClassifier:
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         for step in range(self._max_training_steps):
             if step % int(self._max_training_steps / 20) == 0:
-                _, loss_value, confusion_matrix = self.tf_session.run([self._train_op, self._loss_op,
-                                                                       self._confusion_matrix])
+                # Retrieve values from the computation graph
+
+                _, loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, \
+                labels_winners_values = self.tf_session.run(
+                    [self._train_op, self._loss_op, self._confusion_matrix, self._class_scores,
+                     self._predictions_class_winners, self._labels_winners])
+
                 summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
@@ -152,6 +159,7 @@ class SupervisedKGCNClassifier:
                 print(f'Loss: {loss_value:.2f}')
                 print(f'Confusion Matrix:')
                 print(confusion_matrix)
+                metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
             else:
                 _, loss_value = self.tf_session.run([self._train_op, self._loss_op])
         print("\n\n========= Training Complete =========")
@@ -159,10 +167,16 @@ class SupervisedKGCNClassifier:
     def eval(self, feed_dict):
         print("\n\n========= Evaluation =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
-        loss_value, confusion_matrix = self.tf_session.run([self._loss_op, self._confusion_matrix])
+
+        loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, labels_winners_values = \
+            self.tf_session.run(
+                [self._loss_op, self._confusion_matrix, self._class_scores, self._predictions_class_winners,
+                 self._labels_winners])
+
         print(f'Loss: {loss_value:.2f}')
         print(f'Confusion Matrix:')
         print(confusion_matrix)
+        metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
         print("\n\n========= Evaluation Complete =========")
 
     def predict(self, session, concepts):

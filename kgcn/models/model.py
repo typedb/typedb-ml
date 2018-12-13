@@ -82,7 +82,7 @@ class KGCN:
         return embedder(encoded_arrays)
 
     def embed_with_labels(self, num_classes):
-        labels_placeholder = tf.placeholder(tf.float32, shape=(self.batch_size, num_classes), name='labels_input')
+        labels_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='labels_input')
         labels_dataset = tf.data.Dataset.from_tensor_slices(labels_placeholder)
 
         # Pipeline
