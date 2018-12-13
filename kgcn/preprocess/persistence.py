@@ -1,6 +1,9 @@
 import os
 import pickle
 
+import tensorflow as tf
+
+
 def save_variable(variable, file_path):
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     pickle.dump(variable, open(file_path, "wb"))
@@ -11,7 +14,8 @@ def load_variable(file_path):
 
 
 class FeedDictStorer:
-    def __init__(self, storage_path, file_suffix='.p'):
+    def __init__(self, storage_path, file_suffix='.p', tf_graph=tf.get_default_graph()):
+        self._tf_graph = tf_graph
         self._storage_path = storage_path
         self._file_suffix = file_suffix
 
@@ -31,7 +35,7 @@ class FeedDictStorer:
         unpacked_feed_dict = {}
         for placeholder_name, value in packed_feed_dict.items():
             print('    ' + placeholder_name)
-            unpacked_feed_dict[self._graph.get_tensor_by_name(placeholder_name)] = value
+            unpacked_feed_dict[self._tf_graph.get_tensor_by_name(placeholder_name)] = value
 
         return unpacked_feed_dict
 

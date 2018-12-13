@@ -104,7 +104,7 @@ def main():
     concepts = {}
     labels = {}
 
-    save_input_data = True  # Overwrites any saved data
+    save_input_data = False  # Overwrites any saved data
 
     for keyspace_key in list(keyspaces.keys()):
         sessions[keyspace_key] = client.session(keyspace=keyspaces[keyspace_key])
