@@ -143,25 +143,26 @@ class SupervisedKGCNClassifier:
         print("\n\n========= Training =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         for step in range(self._max_training_steps):
-            if step % int(self._max_training_steps / 20) == 0:
+            # if step % int(self._max_training_steps / 20) == 0:
                 # Retrieve values from the computation graph
 
-                _, loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, \
-                labels_winners_values = self.tf_session.run(
-                    [self._train_op, self._loss_op, self._confusion_matrix, self._class_scores,
-                     self._predictions_class_winners, self._labels_winners])
+            _, loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, \
+            labels_winners_values = self.tf_session.run(
+                [self._train_op, self._loss_op, self._confusion_matrix, self._class_scores,
+                 self._predictions_class_winners, self._labels_winners])
 
-                summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
-                self.summary_writer.add_summary(summary_str, step)
-                self.summary_writer.flush()
+            summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
+            self.summary_writer.add_summary(summary_str, step)
+            self.summary_writer.flush()
+            if step % int(self._max_training_steps / 20) == 0:
                 print(f'\n-----')
                 print(f'Step {step}')
                 print(f'Loss: {loss_value:.2f}')
                 print(f'Confusion Matrix:')
                 print(confusion_matrix)
                 metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
-            else:
-                _, loss_value = self.tf_session.run([self._train_op, self._loss_op])
+            # else:
+            #     _, loss_value = self.tf_session.run([self._train_op, self._loss_op])
         print("\n\n========= Training Complete =========")
 
     def eval(self, feed_dict):

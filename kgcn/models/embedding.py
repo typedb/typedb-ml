@@ -24,13 +24,14 @@ class Embedder:
         combiners = []
         for i in range(len(self._neighbourhood_sizes)):
 
-            weights = initialise_glorot_weights((self._combined_lengths[i], self._output_length),
-                                                name=f'weights_{i}')
+            # weights = initialise_glorot_weights((self._combined_lengths[i], self._output_length),
+            #                                     name=f'weights_{i}')
 
             if i + 1 == len(self._neighbourhood_sizes):
-                combiner = agg.Combine(weights, activation=lambda x: x, name=f'combine_{i}_linear')
+                # combiner = agg.Combine(weights, activation=lambda x: x, name=f'combine_{i}_linear')
+                combiner = agg.DenseCombine(self._output_length, activation=lambda x: x, name=f'combine_{i}_linear')
             else:
-                combiner = agg.Combine(weights, activation=tf.nn.relu, name=f'combine_{i}_relu')
+                combiner = agg.DenseCombine(self._output_length, activation=tf.nn.relu, name=f'combine_{i}_relu')
             combiners.append(combiner)
 
         normalisers = [agg.normalise for _ in range(len(self._neighbourhood_sizes))]

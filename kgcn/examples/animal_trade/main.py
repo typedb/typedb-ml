@@ -33,7 +33,8 @@ TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
 NUM_PER_CLASS = 30
 POPULATION_SIZE_PER_CLASS = 1000
-BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
+# BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
+BASE_PATH = 'dataset/30_concepts_ordered_7x2x2_without_attributes_with_rules/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 TRAIN = 'train'
@@ -134,7 +135,7 @@ def main():
     find_labelled_concepts = False
     delete_all_labels_from_keyspace = False
     run = True
-    save_input_data = True  # Overwrites any saved data
+    save_input_data = False  # Overwrites any saved data
 
     concepts = {}
     labels = {}
@@ -187,7 +188,7 @@ def main():
 
     if (not find_labelled_concepts) and run:
         # neighbour_sample_sizes = (8, 2, 4)
-        neighbour_sample_sizes = (7, 2, 2)
+        neighbour_sample_sizes = (7, 2, 2)  # TODO (7, 2, 2) Throws an error without rules
 
         # storage_path=BASE_PATH+'input/'
 

@@ -105,6 +105,46 @@ class Combine:
             return activated_output
 
 
+class DenseCombine:
+    def __init__(self, output_length, activation=tf.nn.relu, initializer=tf.contrib.layers.xavier_initializer(),
+                 regularizer=layers.l2_regularizer(scale=0.1), use_bias=True, name=None):
+        """
+        :param activation: activation function performed on the
+        :param name: Name for the operation (optional).
+        """
+        self._use_bias = use_bias
+        self._regularizer = regularizer
+        self._initializer = initializer
+        self._output_length = output_length
+        self._activation = activation
+        self._name = name
+
+    def __call__(self, target_features, neighbour_representations):
+        """
+        Combine the results of neighbour aggregation with the features of target nodes. Combine using concatenation,
+        multiplication with a weight matrix (GCN approach) and process with some activation function
+        :param target_features: the features of the target nodes
+        :param neighbour_representations: the representations of the neighbours of the target nodes, one representation
+        for each target
+        :return: full representations of target nodes
+        """
+        with tf.name_scope(self._name, default_name="combine") as scope:
+            concatenated_features = tf.concat([target_features, neighbour_representations], axis=-1)
+
+            dense_layer = tf.layers.Dense(units=self._output_length, activation=self._activation, use_bias=False,
+                                          kernel_initializer=self._initializer, kernel_regularizer=self._regularizer,
+                                          name=f'dense_layer_{self._name}')
+
+            # tf.summary.histogram(self._name + '/dense/bias', dense_layer.bias)
+            # tf.summary.histogram(self._name + '/dense/kernel', dense_layer.kernel)
+
+            dense_output = dense_layer(concatenated_features)
+
+            tf.summary.histogram(self._name + '/dense_output', dense_output)
+
+            return dense_output
+
+
 def normalise(features, normalise_op=tf.nn.l2_normalize):
     normalised = normalise_op(features, axis=-1)
     tf.summary.histogram('normalised', normalised)
