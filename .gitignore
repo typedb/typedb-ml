@@ -1,3 +1,6 @@
+# Bazel files
+bazel-*
+
 # Compiled class file
 *.class
 
