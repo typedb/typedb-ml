@@ -1,6 +1,6 @@
 import unittest
 
-import kgcn.src.neighbourhood.data.sampling.random as rnd
+import kgcn.src.neighbourhood.data.sampling.random_sampling as rnd
 
 
 def generator(iterable):

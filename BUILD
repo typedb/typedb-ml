@@ -16,7 +16,16 @@ py_test(
     deps = [
         "kgcn"
     ]
+)
 
+py_test(
+    name = "random_test",
+    srcs = [
+        "kgcn/src/neighbourhood/data/sampling/random_test.py"
+    ],
+    deps = [
+        "kgcn",
+    ]
 )
 
 py_library(
