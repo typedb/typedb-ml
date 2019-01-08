@@ -1,0 +1,39 @@
+define
+example sub relationship,
+    relates label-a,
+    relates label-b,
+    relates label-c;
+
+A sub entity,
+    plays label-a;
+
+B sub entity,
+    plays label-b;
+
+C sub entity,
+    plays label-c;
+
+insert
+$e1(label-a: $a) isa example; $a isa A;
+$e2(label-b: $b) isa example; $b isa B;
+$e3(label-c: $c) isa example; $c isa C;
+
+insert
+$e1(label-a: $a) isa example; $a isa A;
+$e2(label-b: $b) isa example; $b isa B;
+$e3(label-c: $c) isa example; $c isa C;
+
+insert
+$e1(label-a: $a) isa example; $a isa A;
+$e2(label-b: $b) isa example; $b isa B;
+$e3(label-c: $c) isa example; $c isa C;
+
+insert
+$e1(label-a: $a) isa example; $a isa A;
+$e2(label-b: $b) isa example; $b isa B;
+$e3(label-c: $c) isa example; $c isa C;
+
+insert
+$e1(label-a: $a) isa example; $a isa A;
+$e2(label-b: $b) isa example; $b isa B;
+$e3(label-c: $c) isa example; $c isa C;

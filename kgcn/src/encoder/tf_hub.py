@@ -1,0 +1,21 @@
+import tensorflow_hub as hub
+import tensorflow as tf
+
+
+class TensorFlowHubEncoder:
+
+    def __init__(self, module_url, output_feature_length, name='tf_hub_encoder'):
+        self._embed = hub.Module(module_url)
+        self._name = name
+        self._output_feature_length = output_feature_length
+
+    def __call__(self, features: tf.Tensor):
+        with tf.name_scope(name=self._name) as scope:
+            shape = features.shape.as_list()
+            print(shape)
+            flattened_features = tf.reshape(features, [-1])
+            flat_embeddings = self._embed(flattened_features)
+            shape[-1] = self._output_feature_length
+            shape = [-1 if s is None else s for s in shape]
+            embeddings = tf.reshape(flat_embeddings, shape)
+            return embeddings

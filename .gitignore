@@ -21,3 +21,24 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# Temporary source files
+tmp/
+
+# Pycharm config
+.idea
+
+# Python cache files
+__pycache__/
+
+# Python init files
+__init__.py
+
+# Model outputs
+out/
+
+# Labels that have been saved to disk
+labels/
+
+# Data input/output directories
+data/
