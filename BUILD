@@ -7,3 +7,20 @@ py_test(
     ]
 
 )
+
+py_test(
+    name = "ordered_test",
+    srcs = [
+        "kgcn/src/neighbourhood/data/sampling/ordered_test.py"
+    ],
+    deps = [
+        "kgcn"
+    ]
+
+)
+
+py_library(
+    name = "kgcn",
+    srcs = glob(['**/*.py'])
+
+)
