@@ -26,7 +26,10 @@ hs_err_pid*
 tmp/
 
 # Pycharm config
-.idea
+.idea/
+
+# Virtualenvs
+venv/
 
 # Python cache files
 __pycache__/
