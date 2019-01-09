@@ -12,7 +12,7 @@ py_test(
 py_test(
     name = "ordered_test",
     srcs = [
-        "kgcn/src/neighbourhood/data/sampling/ordered_test.py"
+        "kgcn/neighbourhood/data/sampling/ordered_test.py"
     ],
     deps = [
         "kgcn"
@@ -20,9 +20,9 @@ py_test(
 )
 
 py_test(
-    name = "random_test",
+    name = "random_sampling_test",
     srcs = [
-        "kgcn/src/neighbourhood/data/sampling/random_test.py"
+        "kgcn/neighbourhood/data/sampling/random_sampling_test.py"
     ],
     deps = [
         "kgcn",
@@ -33,7 +33,7 @@ py_test(
 py_test(
     name = "label_extraction_test",
     srcs = [
-        "kgcn/src/use_cases/attribute_prediction/label_extraction_test.py"
+        "kgcn/use_cases/attribute_prediction/label_extraction_test.py"
     ],
     deps = [
         "kgcn",
@@ -43,7 +43,7 @@ py_test(
 py_test(
     name = "metrics_test",
     srcs = [
-        "kgcn/src/models/metrics_test.py"
+        "kgcn/models/metrics_test.py"
     ],
     deps = [
         "kgcn",
@@ -53,7 +53,7 @@ py_test(
 py_test(
     name = "tf_hub_test",
     srcs = [
-        "kgcn/src/encoder/tf_hub_test.py"
+        "kgcn/encoder/tf_hub_test.py"
     ],
     deps = [
         "kgcn",
@@ -63,7 +63,7 @@ py_test(
 py_test(
     name = "schema_test",
     srcs = [
-        "kgcn/src/encoder/schema_test.py"
+        "kgcn/encoder/schema_test.py"
     ],
     deps = [
         "kgcn",
@@ -74,7 +74,7 @@ py_test(
 py_test(
     name = "encode_test",
     srcs = [
-        "kgcn/src/encoder/encode_test.py"
+        "kgcn/encoder/encode_test.py"
     ],
     deps = [
         "kgcn",
@@ -86,7 +86,7 @@ py_test(
     name = "data_traversal_test",
     main = "traversal_test.py",
     srcs = [
-        "kgcn/src/neighbourhood/data/traversal_test.py"
+        "kgcn/neighbourhood/data/traversal_test.py"
     ],
     deps = [
         "kgcn",
@@ -98,7 +98,7 @@ py_test(
     name = "data_executor_test",
     main = "executor_test.py",
     srcs = [
-        "kgcn/src/neighbourhood/data/executor_test.py"
+        "kgcn/neighbourhood/data/executor_test.py"
     ],
     deps = [
         "kgcn",
@@ -110,7 +110,7 @@ py_test(
     name = "schema_traversal_test",
     main = "traversal_test.py",
     srcs = [
-        "kgcn/src/neighbourhood/schema/traversal_test.py"
+        "kgcn/neighbourhood/schema/traversal_test.py"
     ],
     deps = [
         "kgcn",
@@ -121,7 +121,7 @@ py_test(
 py_test(
     name = "raw_array_builder_test",
     srcs = [
-        "kgcn/src/preprocess/raw_array_builder_test.py"
+        "kgcn/preprocess/raw_array_builder_test.py"
     ],
     deps = [
         "kgcn",
