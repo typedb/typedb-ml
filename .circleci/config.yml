@@ -12,7 +12,8 @@ jobs:
            chmod +x bazel-0.20.0-installer-linux-x86_64.sh
            sudo ./bazel-0.20.0-installer-linux-x86_64.sh
       - run: echo "Bazel installed"
-      - run: sudo apt-get install python3.6
+      - run: sudo apt update
+      - run: sudo apt install python3.6
       - run: bazel test //:ordered_test --test_output=streamed
 
 workflows:
