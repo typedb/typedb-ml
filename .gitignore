@@ -44,4 +44,4 @@ out/
 labels/
 
 # Data input/output directories
-data/
+dataset/
