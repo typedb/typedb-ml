@@ -81,3 +81,7 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
         super_types = trv.get_sups_labels_per_type(schema_concept_types, include_self=True, include_metatypes=False)
         print("==== super types ====")
         [print(type, super_types) for type, super_types in super_types.items()]
+
+
+if __name__ == "__main__":
+    unittest.main()

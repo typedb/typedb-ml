@@ -87,3 +87,7 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         tf.enable_eager_execution()
         encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)
         embeddings = encoder(tf.convert_to_tensor(example, tf.string))
+
+
+if __name__ == "__main__":
+    unittest.main()

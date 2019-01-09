@@ -75,3 +75,7 @@ class TestEncode(unittest.TestCase):
 
         preprocessed_example_arrays = pp.preprocess_all(example_arrays, preprocessors)
         print(encode.encode_all(preprocessed_example_arrays, encoders))
+
+
+if __name__ == "__main__":
+    unittest.main()

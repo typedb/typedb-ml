@@ -198,3 +198,7 @@ class TestBuildConceptInfoForStringAttribute(BaseTestBuildConceptInfoForAttribut
     base_type = 'attribute'
     data_type = 'string'
     value = 'CEO'
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -256,3 +256,6 @@ class AnimalTradeIntegrationTest(unittest.TestCase):
 
         a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
 
+
+if __name__ == "__main__":
+    unittest.main()

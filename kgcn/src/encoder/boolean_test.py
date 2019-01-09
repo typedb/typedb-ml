@@ -29,3 +29,7 @@ class TestOneHotBooleanEncoding(unittest.TestCase):
         print(f'output:\n{output.numpy()}')
         with self.subTest('Correctness'):
             np.testing.assert_array_equal(output.numpy(), expected_output)
+
+
+if __name__ == "__main__":
+    unittest.main()

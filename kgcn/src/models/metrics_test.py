@@ -11,3 +11,7 @@ class TestMetricsReport(unittest.TestCase):
         y_pred = y_true
         # expected_confusion_matrix = np.array([[2, 0, 0], [0, 1, 0], [0, 0, 1]])
         metrics.report_multiclass_metrics(y_true, y_pred)
+
+
+if __name__ == "__main__":
+    unittest.main()

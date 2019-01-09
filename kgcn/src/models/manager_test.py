@@ -67,3 +67,7 @@ class TestLearningManager(unittest.TestCase):
                 feed_dict[raw_array_placeholder] = raw_array
 
         learning_manager.train(sess, feed_dict)
+
+
+if __name__ == "__main__":
+    unittest.main()

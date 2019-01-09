@@ -63,3 +63,6 @@ class TestTFHub(unittest.TestCase):
                 print(result.eval().shape)
                 check_shape(self, arr, result.eval(), 128)
 
+
+if __name__ == "__main__":
+    unittest.main()

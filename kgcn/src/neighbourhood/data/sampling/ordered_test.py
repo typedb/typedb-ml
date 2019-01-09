@@ -44,3 +44,7 @@ class TestOrderedSample(unittest.TestCase):
         n = 5
         first_n = ordered.ordered_sample(population, n)
         self.assertRaises(ValueError)
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -39,3 +39,7 @@ class TestKGCN(unittest.TestCase):
 
     def test_predict(self):
         predicted_labels = self._kgcn.predict(tx, concepts)
+
+
+if __name__ == "__main__":
+    unittest.main()

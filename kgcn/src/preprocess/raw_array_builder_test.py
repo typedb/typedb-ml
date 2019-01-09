@@ -339,3 +339,5 @@ class TestFillArrayWithRepeats(unittest.TestCase):
         np.testing.assert_array_equal(expected_output, arr)
 
 
+if __name__ == "__main__":
+    unittest.main()

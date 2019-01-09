@@ -25,3 +25,7 @@ class TestSupervisedLoss(unittest.TestCase):
                 print(loss)
 
                 self.assertEqual(loss.shape, ())
+
+
+if __name__ == "__main__":
+    unittest.main()

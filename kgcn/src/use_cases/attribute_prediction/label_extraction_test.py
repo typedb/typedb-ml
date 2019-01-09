@@ -81,3 +81,7 @@ class TestConceptLabelExtractor(unittest.TestCase):
         concept_label_extractor(self._grakn_tx, limit=None)
         self._mock_age.value.assert_called_once()
         self._mock_gender.value.assert_called_once()
+
+
+if __name__ == "__main__":
+    unittest.main()

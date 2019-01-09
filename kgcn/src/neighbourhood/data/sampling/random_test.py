@@ -60,3 +60,7 @@ class TestRandomSample(unittest.TestCase):
         population = generator([])
         samples = rnd.random_sample(population, sample_size)
         self.assertEqual([], samples)
+
+
+if __name__ == "__main__":
+    unittest.main()
