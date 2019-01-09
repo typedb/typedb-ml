@@ -12,7 +12,7 @@ jobs:
            chmod +x bazel-0.20.0-installer-linux-x86_64.sh
            sudo ./bazel-0.20.0-installer-linux-x86_64.sh
       - run: echo "Bazel installed"
-      - run: bazel test //:ordered_test
+      - run: bazel test //:ordered_test --test_output=streamed
 
 workflows:
   version: 2

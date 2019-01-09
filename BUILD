@@ -1,13 +1,13 @@
 
 
-#py_test(
-#    name = "my_test",
-#    srcs = [
-#        "kgcn/my_test.py"
-#    ],
-#    deps = [
-#    ]
-#)
+py_test(
+    name = "my_test",
+    srcs = [
+        "kgcn/my_test.py"
+    ],
+    deps = [
+    ]
+)
 
 py_test(
     name = "ordered_test",
