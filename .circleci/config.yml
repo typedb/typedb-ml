@@ -1,0 +1,8 @@
+version: 2.1
+jobs:
+    test:
+        machine: true
+        working_directory: ~/kglib
+        steps:
+          - checkout
+          - run: echo "Hello"
