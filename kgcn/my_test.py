@@ -1,13 +1,15 @@
 
 import unittest
 
+import tensorflow as tf
+
 
 class MyTest(unittest.TestCase):
     def test_something(self):
-        raise ValueError
+        pass
 
     def test_something_else(self):
-        raise ValueError
+        pass
 
 
 if __name__ == "__main__":

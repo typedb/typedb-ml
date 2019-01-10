@@ -1,13 +1,32 @@
+exports_files(["requirements.txt"])
 
+load("@io_bazel_rules_python//python:python.bzl", "py_library", "py_test")
+load("@pypi_dependencies//:requirements.bzl", "requirement")
+#load("@graknlabs_rules_deployment//pip:rules.bzl", "deploy_pip")
 
-py_test(
-    name = "my_test",
-    srcs = [
-        "kgcn/my_test.py"
-    ],
-    deps = [
-    ]
-)
+## works for sklearn imported in my_test.py
+#py_test(
+#    name = "my_test",
+#    srcs = [
+#        "kgcn/my_test.py"
+#    ],
+#    deps = [
+#        requirement('scikit-learn'),
+#        requirement('numpy'),
+#        requirement('scipy'),
+#    ]
+#)
+
+## not working for tensorflow
+  ##py_test(
+  ##    name = "my_test",
+  ##    srcs = [
+  ##        "kgcn/my_test.py"
+  ##    ],
+  ##    deps = [
+  ##        requirement('tensorflow')
+  ##    ]
+  ##)
 
 py_test(
     name = "ordered_test",
@@ -16,7 +35,7 @@ py_test(
     ],
     deps = [
         "kgcn"
-    ]
+    ],
 )
 
 py_test(
@@ -46,6 +65,7 @@ py_test(
     ],
     deps = [
         "kgcn",
+        requirement('numpy'),
     ]
 )
 
@@ -56,6 +76,8 @@ py_test(
     ],
     deps = [
         "kgcn",
+#        requirement('numpy'),
+#        requirement('tensorflow'),
     ]
 )
 
@@ -66,6 +88,8 @@ py_test(
     ],
     deps = [
         "kgcn",
+        requirement('numpy'),
+        requirement('tensorflow'),
     ]
 )
 
@@ -124,5 +148,12 @@ py_test(
 
 py_library(
     name = "kgcn",
-    srcs = glob(['kgcn/**/*.py'])
+    srcs = glob(['kgcn/**/*.py']),
+    deps = [
+        requirement('numpy'),
+        requirement('scikit-learn'),
+        requirement('scipy'),
+        requirement('tensorflow'),
+        requirement('tensorflow-hub'),
+    ]
 )
