@@ -11,11 +11,10 @@ jobs:
            curl -OL https://github.com/bazelbuild/bazel/releases/download/0.20.0/bazel-0.20.0-installer-linux-x86_64.sh
            chmod +x bazel-0.20.0-installer-linux-x86_64.sh
            sudo ./bazel-0.20.0-installer-linux-x86_64.sh
-      - run: echo "Bazel installed"
-#      - run: sudo add-apt-repository ppa:jonathonf/python-3.6 -y
       - run: sudo apt-get update
-#      - run: sudo apt-get install python3.6
-#      - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python3.6)
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
 
 workflows:
   version: 2
