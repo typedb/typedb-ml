@@ -1,7 +1,11 @@
 
 import unittest
 
-import tensorflow as tf
+import tensorflow
+import numpy
+
+print(tensorflow)
+print(numpy)
 
 
 class MyTest(unittest.TestCase):
