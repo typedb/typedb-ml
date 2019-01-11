@@ -17,16 +17,16 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 #    ]
 #)
 
-## not working for tensorflow
-  ##py_test(
-  ##    name = "my_test",
-  ##    srcs = [
-  ##        "kgcn/my_test.py"
-  ##    ],
-  ##    deps = [
-  ##        requirement('tensorflow')
-  ##    ]
-  ##)
+# not working for tensorflow
+py_test(
+  name = "my_test",
+  srcs = [
+      "kgcn/my_test.py"
+  ],
+  deps = [
+      requirement('tensorflow')
+  ]
+)
 
 py_test(
     name = "ordered_test",
