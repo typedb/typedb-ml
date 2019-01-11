@@ -4,20 +4,6 @@ load("@io_bazel_rules_python//python:python.bzl", "py_library", "py_test")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
 #load("@graknlabs_rules_deployment//pip:rules.bzl", "deploy_pip")
 
-## works for sklearn imported in my_test.py
-#py_test(
-#    name = "my_test",
-#    srcs = [
-#        "kgcn/my_test.py"
-#    ],
-#    deps = [
-#        requirement('scikit-learn'),
-#        requirement('numpy'),
-#        requirement('scipy'),
-#    ]
-#)
-
-# not working for tensorflow
 py_test(
   name = "my_test",
   srcs = [
@@ -65,7 +51,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('numpy'),
     ]
 )
 
@@ -76,8 +61,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-#        requirement('numpy'),
-#        requirement('tensorflow'),
     ]
 )
 
@@ -88,8 +71,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('numpy'),
-        requirement('tensorflow'),
     ]
 )
 
