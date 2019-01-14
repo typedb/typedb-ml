@@ -67,4 +67,4 @@ workflows:
             - deploy-git
       - deploy-pip:
           requires:
-            - approve-deploy-all
+            - approve-deploy-pip
