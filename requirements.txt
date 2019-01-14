@@ -19,8 +19,7 @@ tensorflow==1.11.0
 tensorflow-hub==0.1.1
 termcolor==1.1.0
 Werkzeug==0.14.1
-twine
+twine==1.12.1
 setuptools
 wheel
-requests
-enum34
+requests==2.21.0

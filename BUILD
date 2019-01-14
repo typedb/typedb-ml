@@ -29,7 +29,7 @@ deploy_pip(
                       'Markdown==3.0.1', 'networkx==2.2', 'numpy==1.15.2', 'protobuf==3.6.1', 'scikit-learn==0.20.1',
                       'scipy==1.1.0', 'six==1.11.0', 'tensorboard==1.11.0', 'tensorflow==1.11.0',
                       'tensorflow-hub==0.1.1', 'termcolor==1.1.0', 'Werkzeug==0.14.1',
-                      'grpcio==1.16.0', 'protobuf==3.6.1', 'six==1.11.0', 'enum34==1.1.6'],
+                      'grpcio==1.16.0', 'protobuf==3.6.1', 'six==1.11.0', 'enum34==1.1.6', 'twine==1.12.1', 'requests==2.21.0'],
     keywords = ["grakn", "database", "graph", "knowledgebase", "knowledge-engineering"],  # TODO Update
     deployment_properties = "//:deployment.properties",
     description = "A Machine Learning Library for the Grakn knowledge graph.",
@@ -170,11 +170,7 @@ py_library(
         requirement('tensorflow'),
         requirement('tensorflow-hub'),
 
-        requirement("protobuf"),
-        requirement("grpcio"),
-        requirement("six"),
-        requirement("enum34"),
-
+        # Only needed for deployment
         requirement("twine"),
         requirement("setuptools"),
         requirement("wheel"),

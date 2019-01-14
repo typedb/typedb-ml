@@ -15,6 +15,7 @@ git_repository(
     name="graknlabs_rules_deployment",
     remote="https://github.com/graknlabs/deployment",
     commit="8d68b4f13fe063ed7ccd04c29ab5f91e81fba052"
+
 )
 
 ## Only needed for PIP support:
