@@ -16,8 +16,55 @@ jobs:
       - run: pyenv global 3.6.3
       - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
 
+  build-and-deploy:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - run: echo build-and-deploy
+
+  approve-deploy-git:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - run: echo approve-deploy-git
+
+  deploy-git:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - run: echo deploy-git
+
+  approve-deploy-pip:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - run: echo approve-deploy-pip
+
+  deploy-pip:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - run: echo deploy-pip
+
 workflows:
   version: 2
   kglib:
     jobs:
       - test
+      - build-and-deploy:
+          requires:
+            - test
+      - approve-deploy-git:
+          type: approval
+          requires:
+            - build-and-deploy
+      - deploy-git:
+          requires:
+            - approve-deploy-git
+      - approve-deploy-pip:
+          type: approval
+          requires:
+            - deploy-git
+      - deploy-pip:
+          requires:
+            -approve-deploy-all
