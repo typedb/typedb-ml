@@ -8,7 +8,7 @@ git_repository(
     name = "io_bazel_rules_python",
     # Grakn python rules
     remote = "https://github.com/graknlabs/rules_python.git",
-    commit = "1bf541580b873c89f2de0214880e185d1696b4c5",
+    commit = "4443fa25feac79b0e4c7c63ca84f87a1d6032f49",
 )
 
 ## Only needed for PIP support:
