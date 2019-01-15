@@ -67,6 +67,11 @@ py_test(
     ],
     deps = [
         "kgcn",
+        requirement('protobuf'),
+        requirement('six'),
+        requirement('absl-py'),
+        requirement('keras_applications'),
+        requirement('keras_preprocessing')
     ]
 )
 
