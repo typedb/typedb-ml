@@ -38,15 +38,15 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - checkout
       - run: echo deploy-git
       - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
       - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
-      - checkout
-      - run: CIRCLE_TAG="v"$(cat "VERSION")
+      - run: VERSION_TAG="v"$(cat "VERSION")
       - run:
          name: "Publish Draft Release on GitHub"
          command: |
-           ghr_v0.12.0_linux_386/ghr -t ${GITHUB_DEPLOYMENT_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -delete -draft ${CIRCLE_TAG} ./artifacts
+           ghr_v0.12.0_linux_386/ghr -t ${GITHUB_DEPLOYMENT_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -draft ${VERSION_TAG} ./VERSION
 
   approve-deploy-pip:
     machine: true
