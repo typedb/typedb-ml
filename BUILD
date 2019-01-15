@@ -10,7 +10,13 @@ py_test(
       "kgcn/my_test.py"
   ],
   deps = [
-      requirement('tensorflow')
+      requirement('tensorflow'),
+      requirement('numpy'),
+      requirement('protobuf'),
+      requirement('six'),
+      requirement('absl-py'),
+      requirement('keras_applications'),
+      requirement('keras_preprocessing')
   ]
 )
 
