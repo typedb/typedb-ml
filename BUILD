@@ -43,13 +43,7 @@ py_test(
       "kgcn/my_test.py"
   ],
   deps = [
-      requirement('tensorflow'),
-      requirement('numpy'),
-      requirement('protobuf'),
-      requirement('six'),
-      requirement('absl-py'),
-      requirement('keras_applications'),
-      requirement('keras_preprocessing')
+      "kgcn"
   ]
 )
 
@@ -80,7 +74,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('grakn')
     ]
 )
 
@@ -101,11 +94,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('protobuf'),
-        requirement('six'),
-        requirement('absl-py'),
-        requirement('keras_applications'),
-        requirement('keras_preprocessing')
     ]
 )
 
@@ -116,11 +104,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('protobuf'),
-        requirement('six'),
-        requirement('absl-py'),
-        requirement('keras_applications'),
-        requirement('keras_preprocessing'),
         requirement('gast'),
         requirement('astor'),
         requirement('termcolor')
@@ -177,7 +160,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('numpy')
     ]
 )
 
@@ -185,12 +167,22 @@ py_library(
     name = "kgcn",
     srcs = glob(['kgcn/**/*.py']),
     deps = [
+        # Grakn deps
         requirement('grakn'),
+        requirement('grpcio'),
+
+        # TensorFlow deps
+        requirement('tensorflow'),
         requirement('numpy'),
+        requirement('protobuf'),
+        requirement('six'),
+        requirement('absl-py'),
+        requirement('keras_applications'),
+        requirement('keras_preprocessing'),
+
+        requirement('tensorflow-hub'),
         requirement('scikit-learn'),
         requirement('scipy'),
-        requirement('tensorflow'),
-        requirement('tensorflow-hub'),
 
         # Only needed for deployment
         requirement("twine"),
