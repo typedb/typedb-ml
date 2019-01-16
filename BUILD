@@ -128,16 +128,16 @@ py_test(
     ]
 )
 
-#py_test(
-#    name = "data_executor_test",
-#    main = "executor_test.py",
-#    srcs = [
-#        "kgcn/neighbourhood/data/executor_test.py"
-#    ],
-#    deps = [
-#        "kgcn",
-#    ]
-#)
+py_test(
+    name = "data_executor_test",
+    main = "executor_test.py",
+    srcs = [
+        "kgcn/neighbourhood/data/executor_test.py"
+    ],
+    deps = [
+        "kgcn",
+    ]
+)
 
 #py_test(
 #    name = "schema_traversal_test",

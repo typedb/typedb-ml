@@ -57,7 +57,7 @@ class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExe
 
     def setUp(self):
         super(TestTraversalExecutorFromEntity, self).setUp()
-        self._res = list(self._executor(ex.TARGET_PLAYS, self._concept.id))
+        self._res = list(self._executor(ex.TARGET_PLAYS, self._concept.id, self._tx))
 
 
 class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -70,7 +70,7 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
 
     def setUp(self):
         super(TestTraversalExecutorFromRelationship, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx))
 
 
 class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -83,21 +83,21 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 
     def setUp(self):
         super(TestTraversalExecutorFromAttribute, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx))
 
 
-class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
-    # Replicates the same issue as TestTraversalExecutorFromDateAttribute but using real animaltrede dataset
-    query = "match $attribute isa exchange-date 2016-01-01T00:00:00; limit 1; get;"
-    var = 'attribute'
-    roles = ['has']
-    num_results = 2
-    neighbour_type = 'import'
-    keyspace = 'animaltrade_train'
-
-    def setUp(self):
-        super(IntegrationTestTraversalExecutorFromDateAttribute, self).setUp()
-        self._res = list(itertools.islice(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id), 2))
+# class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+#     # Replicates the same issue as TestTraversalExecutorFromDateAttribute but using real animaltrede dataset
+#     query = "match $attribute isa exchange-date 2016-01-01T00:00:00; limit 1; get;"
+#     var = 'attribute'
+#     roles = ['has']
+#     num_results = 2
+#     neighbour_type = 'import'
+#     keyspace = 'animaltrade_train'
+#
+#     def setUp(self):
+#         super(IntegrationTestTraversalExecutorFromDateAttribute, self).setUp()
+#         self._res = list(itertools.islice(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx), 2))
 
 
 class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -110,7 +110,7 @@ class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTrave
 
     def setUp(self):
         super(TestTraversalExecutorFromDateAttribute, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id))
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx))
 
 
 class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):
