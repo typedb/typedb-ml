@@ -80,7 +80,7 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('grakn'),
+        requirement('grakn')
     ]
 )
 
@@ -170,15 +170,16 @@ py_test(
 #    ]
 #)
 
-#py_test(
-#    name = "raw_array_builder_test",
-#    srcs = [
-#        "kgcn/preprocess/raw_array_builder_test.py"
-#    ],
-#    deps = [
-#        "kgcn",
-#    ]
-#)
+py_test(
+    name = "raw_array_builder_test",
+    srcs = [
+        "kgcn/preprocess/raw_array_builder_test.py"
+    ],
+    deps = [
+        "kgcn",
+        requirement('numpy')
+    ]
+)
 
 py_library(
     name = "kgcn",
@@ -195,7 +196,6 @@ py_library(
         requirement("twine"),
         requirement("setuptools"),
         requirement("wheel"),
-        requirement("requests"),
-
+        requirement("requests")
     ]
 )

@@ -120,7 +120,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
 
-        neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
+        neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
         neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
 
