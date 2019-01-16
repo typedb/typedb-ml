@@ -127,15 +127,15 @@ py_test(
     ]
 )
 
-#py_test(
-#    name = "encode_test",
-#    srcs = [
-#        "kgcn/encoder/encode_test.py"
-#    ],
-#    deps = [
-#        "kgcn",
-#    ]
-#)
+py_test(
+    name = "encode_test",
+    srcs = [
+        "kgcn/encoder/encode_test.py"
+    ],
+    deps = [
+        "kgcn",
+    ]
+)
 
 #py_test(
 #    name = "data_traversal_test",

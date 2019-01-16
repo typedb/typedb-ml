@@ -45,18 +45,6 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
 
     return values_to_put
 
-# def all_possible_indices(neighbourhood_sizes, n_starting_concepts):
-#     all_indices = []
-#     for k in range(len(neighbourhood_sizes) + 1):
-#         lists = [list(range(n_starting_concepts))] + [list(range(s)) for s in neighbourhood_sizes[:k]] + [[0]]
-#         all_indices += list(itertools.product(*lists))
-#
-#     return all_indices
-#
-#
-# if __name__ == '__main__':
-#     [print(i) for i in all_possible_indices(tuple(reversed((2, 3))), 1)]
-
 
 class RawArrayBuilder:
 
