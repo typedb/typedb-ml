@@ -73,15 +73,16 @@ py_test(
     ]
 )
 
-#py_test(
-#    name = "label_extraction_test",
-#    srcs = [
-#        "kgcn/use_cases/attribute_prediction/label_extraction_test.py"
-#    ],
-#    deps = [
-#        "kgcn",
-#    ]
-#)
+py_test(
+    name = "label_extraction_test",
+    srcs = [
+        "kgcn/use_cases/attribute_prediction/label_extraction_test.py"
+    ],
+    deps = [
+        "kgcn",
+        requirement('grakn'),
+    ]
+)
 
 py_test(
     name = "metrics_test",
@@ -183,6 +184,7 @@ py_library(
     name = "kgcn",
     srcs = glob(['kgcn/**/*.py']),
     deps = [
+        requirement('grakn'),
         requirement('numpy'),
         requirement('scikit-learn'),
         requirement('scipy'),
@@ -194,5 +196,6 @@ py_library(
         requirement("setuptools"),
         requirement("wheel"),
         requirement("requests"),
+
     ]
 )
