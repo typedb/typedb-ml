@@ -55,10 +55,10 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         self.assertIsInstance(concept_info_with_neighbourhood, trv.ConceptInfoWithNeighbourhood)
         self.assertIsInstance(concept_info_with_neighbourhood.concept_info,
                               ex.ConceptInfo)
-        self.assertIn(type(concept_info_with_neighbourhood.neighbourhood).__name__, ('generator', 'chain'))
+        self.assertIn(type(concept_info_with_neighbourhood.neighbourhood).__name__, ('list',))
 
         try:
-            neighbour_role = next(concept_info_with_neighbourhood.neighbourhood)
+            neighbour_role = concept_info_with_neighbourhood.neighbourhood[0]
 
             self.assertIsInstance(neighbour_role, trv.NeighbourRole)
 
@@ -69,7 +69,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
             self.assertIn(neighbour_role.role_direction, [ex.TARGET_PLAYS,
                                                           ex.NEIGHBOUR_PLAYS])
             self.assertTrue(self._assert_types_correct(neighbour_role.neighbour_info_with_neighbourhood))
-        except StopIteration:
+        except IndexError:
             pass
 
         return True
@@ -84,7 +84,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
                 self._concept_info_with_neighbourhood = self._neighbourhood_traverser_factory(sample_sizes)(
-                    self._concept_info)
+                    self._concept_info, self._tx)
                 self._assert_types_correct(self._concept_info_with_neighbourhood)
 
     def test_neighbour_traversal_check_depth(self):
@@ -92,7 +92,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(sample_sizes)):
                 self._concept_info_with_neighbourhood = self._neighbourhood_traverser_factory(sample_sizes)(
-                    self._concept_info)
+                    self._concept_info, self._tx)
 
                 collected_tree = trv.collect_to_tree(self._concept_info_with_neighbourhood)
 
@@ -105,7 +105,8 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             def to_test():
-                return trv.collect_to_tree(self._neighbourhood_traverser_factory(sample_sizes)(self._concept_info))
+                return trv.collect_to_tree(
+                    self._neighbourhood_traverser_factory(sample_sizes)(self._concept_info, self._tx))
 
             with self.subTest(sample_sizes=str(data)):
                 concept_info_with_neighbourhood = to_test()
@@ -116,6 +117,22 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
 
 class TestIsolated(unittest.TestCase):
+    session = None
+
+    @classmethod
+    def setUpClass(cls):
+        client = grakn.Grakn(uri="localhost:48555")
+        cls.session = client.session(keyspace="test_schema")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.session.close()
+
+    def setUp(self):
+        self._tx = self.session.transaction(grakn.TxType.WRITE)
+
+    def tearDown(self):
+        self._tx.close()
 
     def test_input_output(self):
 
@@ -127,7 +144,7 @@ class TestIsolated(unittest.TestCase):
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
 
-        concept_with_neighbourhood = neighourhood_traverser(starting_concept)
+        concept_with_neighbourhood = neighourhood_traverser(starting_concept, self._tx)
 
         a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
@@ -146,10 +163,11 @@ class TestIsolated(unittest.TestCase):
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
 
-        concept_with_neighbourhood = neighourhood_traverser(starting_concept)
+        concept_with_neighbourhood = neighourhood_traverser(starting_concept, self._tx)
 
         a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
+
 
 class BaseTestFlattenedTree:
     class TestFlattenedTree(unittest.TestCase):
@@ -195,7 +213,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
 
-        self._neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
+        self._neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
         self._neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(self._neighbourhood_depths)
 
@@ -203,7 +221,23 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
 
 class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
+
+    session = None
+
+    @classmethod
+    def setUpClass(cls):
+        client = grakn.Grakn(uri="localhost:48555")
+        cls.session = client.session(keyspace="test_schema")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.session.close()
+
+    def tearDown(self):
+        self._tx.close()
+
     def setUp(self):
+        self._tx = self.session.transaction(grakn.TxType.WRITE)
         neighbour_sample_sizes = (2, 3)
 
         samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
@@ -213,48 +247,11 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
 
-        self._neighbourhood_depths = [neighourhood_traverser(concept_info) for concept_info in concept_infos]
+        self._neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
         self._neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(self._neighbourhood_depths)
 
         self._flattened = trv.flatten_tree(self._neighbour_roles)
-
-
-class AnimalTradeIntegrationTest(unittest.TestCase):
-    def test(self):
-
-        uri = "localhost:48555"
-        client = grakn.Grakn(uri=uri)
-        session = client.session(keyspace='animaltrade_train')
-        tx = session.transaction(grakn.TxType.WRITE)
-
-        neighbour_sample_sizes = (2, 1)
-        a = 1
-        query = target_concept_query = f"match $x isa exchange, has appendix $appendix; $appendix {a}; limit 1; get;"
-        response = tx.query(query)
-        concept = next(response).get('x')
-
-        starting_concept = ex.build_concept_info(concept)
-
-        sampling_method = ordered.ordered_sample
-
-        # def blank(iterable):
-        #     for item in iterable:
-        #         yield item
-
-        samplers = []
-        for sample_size in neighbour_sample_sizes:
-            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
-            # samplers.append(blank)
-
-        exe = ex.TraversalExecutor()
-
-
-        neighourhood_traverser = trv.NeighbourhoodTraverser(exe, samplers)
-
-        concept_with_neighbourhood = neighourhood_traverser(starting_concept)
-
-        a, b = trv.collect_to_tree(concept_with_neighbourhood), trv.collect_to_tree(mocks.mock_traversal_output())
 
 
 if __name__ == "__main__":

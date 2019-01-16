@@ -117,16 +117,16 @@ py_test(
     ]
 )
 
-#py_test(
-#    name = "data_traversal_test",
-#    main = "traversal_test.py",
-#    srcs = [
-#        "kgcn/neighbourhood/data/traversal_test.py"
-#    ],
-#    deps = [
-#        "kgcn",
-#    ]
-#)
+py_test(
+    name = "data_traversal_test",
+    main = "traversal_test.py",
+    srcs = [
+        "kgcn/neighbourhood/data/traversal_test.py"
+    ],
+    deps = [
+        "kgcn",
+    ]
+)
 
 #py_test(
 #    name = "data_executor_test",

@@ -39,12 +39,9 @@ class NeighbourhoodTraverser:
 
     def _traverse(self, target_concept_info: data_executor.ConceptInfo, depth: int, tx):
 
-        def _empty():
-            yield from ()
-
         if depth == 0:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return ConceptInfoWithNeighbourhood(concept_info=target_concept_info, neighbourhood=_empty())
+            return ConceptInfoWithNeighbourhood(concept_info=target_concept_info, neighbourhood=[])
 
         sampler = self._depth_samplers[-depth]
         next_depth = depth - 1
