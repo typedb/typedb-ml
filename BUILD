@@ -139,16 +139,16 @@ py_test(
     ]
 )
 
-#py_test(
-#    name = "schema_traversal_test",
-#    main = "traversal_test.py",
-#    srcs = [
-#        "kgcn/neighbourhood/schema/traversal_test.py"
-#    ],
-#    deps = [
-#        "kgcn",
-#    ]
-#)
+py_test(
+    name = "schema_traversal_test",
+    main = "traversal_test.py",
+    srcs = [
+        "kgcn/neighbourhood/schema/traversal_test.py"
+    ],
+    deps = [
+        "kgcn",
+    ]
+)
 
 py_test(
     name = "raw_array_builder_test",
