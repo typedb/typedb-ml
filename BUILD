@@ -104,9 +104,6 @@ py_test(
     ],
     deps = [
         "kgcn",
-        requirement('gast'),
-        requirement('astor'),
-        requirement('termcolor')
     ]
 )
 
@@ -179,6 +176,9 @@ py_library(
         requirement('absl-py'),
         requirement('keras_applications'),
         requirement('keras_preprocessing'),
+        requirement('gast'),
+        requirement('astor'),
+        requirement('termcolor'),
 
         requirement('tensorflow-hub'),
         requirement('scikit-learn'),
