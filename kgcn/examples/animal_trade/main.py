@@ -1,18 +1,14 @@
-import os
 import sys
 import time
 
-import collections
 import grakn
-import numpy as np
 import tensorflow as tf
 
 import kgcn.models.downstream as downstream
 import kgcn.models.model as model
-import kgcn.neighbourhood.data.sampling.random_sampling as random
 import kgcn.preprocess.persistence as persistence
-import kgcn.use_cases.attribute_prediction.label_extraction as label_extraction
-import kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
+import kgcn.utils as utils
+from kgcn.utils import retrieve_persisted_labelled_concepts, query_for_random_examples_with_attribute
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -41,30 +37,7 @@ TRAIN = 'train'
 EVAL = 'eval'
 PREDICT = 'predict'
 
-
-def query_for_labelled_examples(tx, sample_size, population_size, offset):
-    appendix_vals = [1, 2, 3]
-
-    concepts = {}
-    labels = {}
-
-    for a in appendix_vals:
-        target_concept_query = f'match $e(exchanged-item: $t) isa exchange, has appendix $appendix; $appendix {a}; ' \
-                               f'offset {offset}; limit {population_size}; get;'
-
-        extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
-                                                           ('t', collections.OrderedDict([('appendix', appendix_vals)])),
-                                                           sampling_method=random.random_sample
-                                                           )
-        concepts_with_labels = extractor(tx, sample_size)
-        if len(concepts_with_labels) == 0:
-            raise RuntimeError(f'Couldn\'t find any concepts to match target query "{target_concept_query}"')
-
-        concepts[a] = [concepts_with_label[0] for concepts_with_label in concepts_with_labels]
-        # TODO Should this be an array not a list?
-        labels[a] = np.array([concepts_with_label[1]['appendix'] for concepts_with_label in concepts_with_labels], dtype=np.float32)
-
-    return concepts, labels
+sys.stdout = utils.Logger(FLAGS.log_dir + '/output.log')
 
 
 def combine_labelled_examples(concepts_dict, labels_dict):
@@ -76,49 +49,6 @@ def combine_labelled_examples(concepts_dict, labels_dict):
     return concepts, labels
 
 
-def retrieve_persisted_labelled_examples(tx, file_path):
-
-    concept_ids, labels = persistence.load_variable(file_path)
-    print('==============================')
-    print('Loaded concept IDs with labels')
-    [print(concept_id, label) for concept_id, label in zip(concept_ids, labels)]
-    concepts = []
-    for concept_id in concept_ids:
-        query = f'match $x id {concept_id}; get;'
-        concept = next(tx.query(query)).get('x')
-        concepts.append(concept)
-
-    return concepts, labels
-
-
-def check_concepts_are_unique(concepts):
-    concept_ids = [concept.id for concept in concepts]
-    print(concept_ids)
-    diff = len(concept_ids) - len(set(concept_ids))
-    if diff != 0:
-        raise ValueError(f'There are {diff} duplicate concepts present')
-
-
-class Logger(object):
-    def __init__(self, filename):
-        self.terminal = sys.stdout
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        self.log = open(filename, "a")
-
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
-
-    def flush(self):
-        #this flush method is needed for python 3 compatibility.
-        #this handles the flush command by doing nothing.
-        #you might want to specify some extra behavior here.
-        pass
-
-
-sys.stdout = Logger(FLAGS.log_dir + '/output.log')
-
-
 def main():
     keyspaces = {TRAIN: "animaltrade_train",
                  EVAL: "animaltrade_train",
@@ -127,6 +57,9 @@ def main():
     uri = "localhost:48555"
     sessions = {}
     txs = {}
+
+    examples_query = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
+                     'limit {}; get;'
 
     client = grakn.Grakn(uri=uri)
 
@@ -147,7 +80,10 @@ def main():
     if find_labelled_concepts:
         print(f'Finding concepts and labels')
         print('    for training and evaluation')
-        concepts_dicts, labels_dicts = query_for_labelled_examples(txs[TRAIN], NUM_PER_CLASS * 2, POPULATION_SIZE_PER_CLASS*2, 0)
+        concepts_dicts, labels_dicts = query_for_random_examples_with_attribute(txs[TRAIN], examples_query,
+                                                                                'traded-item', 'appendix', [1, 2, 3],
+                                                                                NUM_PER_CLASS * 2,
+                                                                                POPULATION_SIZE_PER_CLASS * 2)
 
         half = NUM_PER_CLASS
         # Iterate over the classes
@@ -162,8 +98,12 @@ def main():
             labels[EVAL].extend(labels_dicts[key][half:])
 
         print('    for prediction')
-        concepts_dicts_predict, labels_dicts_predict = query_for_labelled_examples(txs[PREDICT], NUM_PER_CLASS,
-                                                                                   POPULATION_SIZE_PER_CLASS, 0)
+        concepts_dicts_predict, labels_dicts_predict = query_for_random_examples_with_attribute(txs[TRAIN],
+                                                                                                examples_query,
+                                                                                                'traded-item',
+                                                                                                'appendix', [1, 2, 3],
+                                                                                                NUM_PER_CLASS,
+                                                                                                POPULATION_SIZE_PER_CLASS)
         concepts[PREDICT], labels[PREDICT] = combine_labelled_examples(concepts_dicts_predict, labels_dicts_predict)
 
         for keyspace_key in list(keyspaces.keys()):
@@ -180,7 +120,7 @@ def main():
     else:
         for keyspace_key in list(keyspaces.keys()):
             print(f'Loading concepts and labels for {keyspace_key}')
-            concepts[keyspace_key], labels[keyspace_key] = retrieve_persisted_labelled_examples(txs[keyspace_key],
+            concepts[keyspace_key], labels[keyspace_key] = retrieve_persisted_labelled_concepts(txs[keyspace_key],
                                                                                                 labels_file_root.format(
                                                                                                     keyspace_key))
 
