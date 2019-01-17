@@ -7,31 +7,6 @@ import kgcn.models.model
 import kgcn.preprocess.preprocess as preprocess
 
 
-# class KGCNLearner:
-#     def __init__(self, kgcn: kgcn.models.model2.KGCN, optimizer):
-#         """
-#         Custom usage of a KGCN instance
-#         :param kgcn:
-#         :param optimizer:
-#         """
-#         self._kgcn = kgcn
-#         self._optimizer = optimizer
-#
-#         # General pipeline
-#         arrays_dataset, self._placeholders = self._kgcn.build_dataset()
-#
-#         combined_dataset = tf.data.Dataset.zip((arrays_dataset, labels_dataset))
-#
-#         self._dataset_initializer, dataset_iterator = self._kgcn.batch_dataset(combined_dataset)
-#
-#         # TODO This should be called in a loop when using more than one batch
-#         batch_arrays, labels = dataset_iterator.get_next()
-#
-#         encoded_arrays = self._kgcn.encode(batch_arrays)
-#
-#         self._kgcn_embedding = self._kgcn.embed(encoded_arrays)
-
-
 class SupervisedKGCNClassifier:
 
     def __init__(self, kgcn: kgcn.models.model.KGCN, optimizer, num_classes, log_dir, max_training_steps=10000,
@@ -67,7 +42,8 @@ class SupervisedKGCNClassifier:
                                                kernel_initializer=self._classification_kernel_initializer,
                                                name='classification_dense_layer')
 
-        # tf.summary.histogram('classification/dense/kernel', classification_layer.kernel)  # TODO figure out why this is throwing an error
+        # tf.summary.histogram('classification/dense/kernel', classification_layer.kernel)  # TODO figure out why
+        #  this is throwing an error
         # tf.summary.histogram('classification/dense/bias', classification_layer.bias)
 
         class_scores = classification_layer(self.embeddings)
@@ -92,7 +68,6 @@ class SupervisedKGCNClassifier:
         # Graph initialisation tasks - run after the whole graph has been built
         ################################################################################################################
         self.tf_session = tf.Session()
-        # self.summary = tf.summary.merge_all()
         # Add the variable initializer Op.
         init_global = tf.global_variables_initializer()
         init_local = tf.local_variables_initializer()  # Added to initialise tf.metrics.recall
@@ -133,19 +108,10 @@ class SupervisedKGCNClassifier:
 
         return opt_op
 
-    # def train(self, session, concepts, labels):
-    #
-    #     feed_dict = self.get_feed_dict(session, concepts, labels=labels)
-    #     self.train_from_feed_dict(feed_dict)
-
-    # def train_from_feed_dict(self, feed_dict):
     def train(self, feed_dict):
         print("\n\n========= Training =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         for step in range(self._max_training_steps):
-            # if step % int(self._max_training_steps / 20) == 0:
-                # Retrieve values from the computation graph
-
             _, loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, \
             labels_winners_values = self.tf_session.run(
                 [self._train_op, self._loss_op, self._confusion_matrix, self._class_scores,
@@ -161,8 +127,6 @@ class SupervisedKGCNClassifier:
                 print(f'Confusion Matrix:')
                 print(confusion_matrix)
                 metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
-            # else:
-            #     _, loss_value = self.tf_session.run([self._train_op, self._loss_op])
         print("\n\n========= Training Complete =========")
 
     def eval(self, feed_dict):
@@ -181,7 +145,7 @@ class SupervisedKGCNClassifier:
         print("\n\n========= Evaluation Complete =========")
 
     def predict(self, session, concepts):
-        pass
+        raise NotImplementedError('')
 
     def get_feed_dict(self, session, concepts, labels=None):
 
