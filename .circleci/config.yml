@@ -29,7 +29,7 @@ jobs:
       - run: grakn-core-1.4.3/graql console -k test_schema -f  kgcn/test_data/schema.gql
       - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
 
-  test-deploy:
+  test-deploy-pip:
     machine: true
     working_directory: ~/kglib
     steps:
@@ -41,7 +41,6 @@ jobs:
       - run: pyenv global 3.6.3
       - run: date +%s > VERSION
       - run: bazel run //:deploy-pip -- test PYPI_TEST_SERVER_USERNAME PYPI_TEST_SERVER_PASSWORD
-      - run: echo test-deploy
 
   deploy-git:
     machine: true
@@ -68,13 +67,13 @@ workflows:
   kglib:
     jobs:
       - test
-      - test-deploy:
+      - test-deploy-pip:
           requires:
             - test
       - approve-deploy-git:
           type: approval
           requires:
-            - test-deploy
+            - test-deploy-pip
       - deploy-git:
           requires:
             - approve-deploy-git

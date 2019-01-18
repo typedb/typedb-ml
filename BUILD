@@ -4,7 +4,7 @@ load("@io_bazel_rules_python//python:python.bzl", "py_library", "py_test")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 
-load("@graknlabs_rules_deployment//pip:rules.bzl", "deploy_pip")
+load("@graknlabs_bazel_distribution//pip:rules.bzl", "deploy_pip")
 
 deploy_pip(
     name = "deploy-pip",
