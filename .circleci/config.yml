@@ -22,7 +22,7 @@ jobs:
       - run: wget https://github.com/graknlabs/grakn/releases/download/v1.4.3/grakn-core-1.4.3.zip
       - run: unzip grakn-core-1.4.3.zip
       - run: nohup grakn-core-1.4.3/grakn server start
-      - run: grakn-core-1.4.3/graql console -k test_schema -f  kgcn/test_data/schema.gql
+      - run: grakn-core-1.4.3/graql console -k test_schema -f  kglib/kgcn/test_data/schema.gql
       - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
 
   test-deploy-pip:
