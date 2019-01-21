@@ -133,6 +133,16 @@ py_test(
 )
 
 py_test(
+    name = "boolean_test",
+    srcs = [
+        "kglib/kgcn/encoder/boolean_test.py"
+    ],
+    deps = [
+        "kglib",
+    ]
+)
+
+py_test(
     name = "data_traversal_test",
     main = "traversal_test.py",
     srcs = [
