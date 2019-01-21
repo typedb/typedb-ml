@@ -37,9 +37,6 @@ venv/
 # Python cache files
 __pycache__/
 
-# Python init files
-__init__.py
-
 # Model outputs
 out/
 
