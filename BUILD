@@ -57,16 +57,6 @@ deploy_pip(
 )
 
 py_test(
-  name = "my_test",
-  srcs = [
-      "kgcn/my_test.py"
-  ],
-  deps = [
-      "kgcn"
-  ]
-)
-
-py_test(
     name = "ordered_test",
     srcs = [
         "kgcn/neighbourhood/data/sampling/ordered_test.py"
