@@ -8,7 +8,7 @@ load("@graknlabs_bazel_distribution//pip:rules.bzl", "deploy_pip")
 
 deploy_pip(
     name = "deploy-pip",
-    package_name = "kgcn",
+    package_name = "grakn-kglib",
     version_file = "//:VERSION",
     classifiers = [
         "Programming Language :: Python",
@@ -59,7 +59,7 @@ deploy_pip(
         deployment_requirement("webencodings"),
         deployment_requirement("six"),
     ],
-    target = ":kgcn"  # TODO
+    target = ":kglib"
 )
 
 py_test(
@@ -68,7 +68,7 @@ py_test(
         "kgcn/neighbourhood/data/sampling/ordered_test.py"
     ],
     deps = [
-        "kgcn"
+        "kglib"
     ],
 )
 
@@ -78,7 +78,7 @@ py_test(
         "kgcn/neighbourhood/data/sampling/random_sampling_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -88,7 +88,7 @@ py_test(
         "kgcn/use_cases/attribute_prediction/label_extraction_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -98,7 +98,7 @@ py_test(
         "kgcn/models/metrics_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -108,7 +108,7 @@ py_test(
         "kgcn/encoder/tf_hub_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -118,7 +118,7 @@ py_test(
         "kgcn/encoder/schema_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -128,7 +128,7 @@ py_test(
         "kgcn/encoder/encode_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -139,7 +139,7 @@ py_test(
         "kgcn/neighbourhood/data/traversal_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -150,7 +150,7 @@ py_test(
         "kgcn/neighbourhood/data/executor_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -161,7 +161,7 @@ py_test(
         "kgcn/neighbourhood/schema/traversal_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
@@ -171,12 +171,12 @@ py_test(
         "kgcn/preprocess/raw_array_builder_test.py"
     ],
     deps = [
-        "kgcn",
+        "kglib",
     ]
 )
 
 py_library(
-    name = "kgcn",
+    name = "kglib",
     srcs = glob(['kgcn/**/*.py']),
     deps = [
         # Grakn deps
