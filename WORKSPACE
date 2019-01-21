@@ -1,5 +1,5 @@
 workspace(
-    name = "kgcn"
+    name = "kglib"
 )
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
@@ -12,10 +12,9 @@ git_repository(
 )
 
 git_repository(
-    name="graknlabs_rules_deployment",
-    remote="https://github.com/graknlabs/deployment",
-    commit="8d68b4f13fe063ed7ccd04c29ab5f91e81fba052"
-
+    name="graknlabs_bazel_distribution",
+    remote="https://github.com/graknlabs/bazel-distribution",
+    commit="2e932a2555d1e43f75c8ee676c926399bd12f240"
 )
 
 ## Only needed for PIP support:
@@ -27,5 +26,13 @@ pip3_import(
     name = "pypi_dependencies",
     requirements = "//:requirements.txt",
 )
+
 load("@pypi_dependencies//:requirements.bzl", "pip_install")
+pip_install()
+
+pip3_import(
+    name = "pypi_deployment_dependencies",
+    requirements = "//:deployment/requirements.txt",
+)
+load("@pypi_deployment_dependencies//:requirements.bzl", "pip_install")
 pip_install()

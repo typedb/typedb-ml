@@ -25,18 +25,19 @@ jobs:
       - run: grakn-core-1.4.3/graql console -k test_schema -f  kgcn/test_data/schema.gql
       - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
 
-  build-and-deploy:
+  test-deploy-pip:
     machine: true
     working_directory: ~/kglib
     steps:
-#      - run: bazel run //:deploy-pip -- test <username> <password>
-      - run: echo build-and-deploy
-
-  approve-deploy-git:
-    machine: true
-    working_directory: ~/kglib
-    steps:
-      - run: echo approve-deploy-git
+      - checkout
+      - bazel_install
+      - run: sudo apt-get update
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: date +%s > VERSION
+      - run: cat VERSION
+      - run: bazel run //:deploy-pip -- test $PYPI_TEST_SERVER_USERNAME $PYPI_TEST_SERVER_PASSWORD
+      - run: pip install --extra-index-url https://test.pypi.org/simple/ kglib
 
   deploy-git:
     machine: true
@@ -52,12 +53,6 @@ jobs:
            VERSION_TAG="v"$(cat "VERSION")
            ghr_v0.12.0_linux_386/ghr -t ${GITHUB_DEPLOYMENT_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -draft ${VERSION_TAG} ./VERSION
 
-  approve-deploy-pip:
-    machine: true
-    working_directory: ~/kglib
-    steps:
-      - run: echo approve-deploy-pip
-
   deploy-pip:
     machine: true
     working_directory: ~/kglib
@@ -69,13 +64,13 @@ workflows:
   kglib:
     jobs:
       - test
-      - build-and-deploy:
+      - test-deploy-pip:
           requires:
             - test
       - approve-deploy-git:
           type: approval
           requires:
-            - build-and-deploy
+            - test-deploy-pip
       - deploy-git:
           requires:
             - approve-deploy-git
