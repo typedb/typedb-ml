@@ -18,7 +18,12 @@ deploy_pip(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
-        "Intended Audience :: Science/Research",  # TODO Update
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules"
     ],
     url = "https://github.com/graknlabs/kglib",
     author = "Grakn Labs",
@@ -30,7 +35,8 @@ deploy_pip(
                       'scipy==1.1.0', 'six==1.11.0', 'tensorboard==1.11.0', 'tensorflow==1.11.0',
                       'tensorflow-hub==0.1.1', 'termcolor==1.1.0', 'Werkzeug==0.14.1',
                       'grpcio==1.16.0', 'protobuf==3.6.1', 'six==1.11.0', 'enum34==1.1.6', 'twine==1.12.1', 'requests==2.21.0'],
-    keywords = ["grakn", "database", "graph", "knowledgebase", "knowledge-engineering"],  # TODO Update
+    keywords = ["machine learning", "logical reasoning", "knowledege graph", "grakn", "database", "graph",
+                "knowledgebase", "knowledge-engineering"],
     deployment_properties = "//:deployment.properties",
     description = "A Machine Learning Library for the Grakn knowledge graph.",
     long_description_file = "//:README.md",
