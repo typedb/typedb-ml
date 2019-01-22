@@ -187,7 +187,7 @@ py_test(
 
 py_library(
     name = "kglib",
-    srcs = glob(['kglib/kgcn/**/*.py']),
+    srcs = glob(['kglib/__init__.py', 'kglib/kgcn/**/*.py']),
     deps = [
         # Grakn deps
         requirement('grakn'),
