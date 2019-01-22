@@ -26,7 +26,7 @@ import tensorflow as tf
 import kglib.kgcn.models.downstream as downstream
 import kglib.kgcn.models.model as model
 import kglib.kgcn.preprocess.persistence as persistence
-import kglib.kgcn.utils as utils
+import kglib.kgcn.utils.utils as utils
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -47,9 +47,15 @@ TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 
 NUM_PER_CLASS = 30
 POPULATION_SIZE_PER_CLASS = 1000
+
+EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
+                 'limit {}; get;'
+
 # BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
 BASE_PATH = 'dataset/30_concepts_ordered_7x2x2_without_attributes_with_rules/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
+
+SAVED_LABELS_PATH = BASE_PATH + 'labels/labels_{}.p'
 
 TRAIN = 'train'
 EVAL = 'eval'
@@ -115,12 +121,25 @@ def find_and_save_labelled_concepts(examples_query, transactions, saved_labels_p
     return concepts, labels
 
 
-def delete_all_labels_from_keyspace(tx):
-    # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
-    # that we are certain that they aren't being used by the learner
-    print('Deleting concepts to avoid data pollution')
-    tx.query(f'match $x isa appendix; delete $x;')
-    tx.commit()
+def delete_all_labels_from_keyspaces(keyspaces_transactions, attribute_type):
+    # Warn the use this will delete concepts
+    while True:
+        ans = input(
+            f'This operation will delete all concepts of type {attribute_type} in the given keyspaces. Proceed? y/n')
+
+        if ans not in ['y', 'Y', 'n', 'N']:
+            print('please enter y or n.')
+            continue
+        if ans == 'y' or ans == 'Y':
+            for tx in keyspaces_transactions:
+                # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
+                # that we are certain that they aren't being used by the learner
+                print('Deleting concepts to avoid data pollution')
+                tx.query(f'match $x isa {attribute_type}; delete $x;')
+                tx.commit()
+            break
+        if ans == 'n' or ans == 'N':
+            return False
 
 
 def load_saved_labelled_concepts(transactions, saved_labels_path):
@@ -133,84 +152,81 @@ def load_saved_labelled_concepts(transactions, saved_labels_path):
     return concepts, labels
 
 
-def get_sessions():
-    for keyspace_key in list(KEYSPACES.keys()):
+def get_sessions(client, keyspace_keys):
+    sessions = {}
+    for keyspace_key in keyspace_keys:
         sessions[keyspace_key] = client.session(keyspace=KEYSPACES[keyspace_key])
-        transactions[keyspace_key] = sessions[keyspace_key].transaction(grakn.TxType.WRITE)
+    return sessions
+
+
+def get_transactions(sessions):
+    transactions = {}
+    for keyspace_key, session in sessions.items():
+        transactions[keyspace_key] = session.transaction(grakn.TxType.WRITE)
+    return transactions
+
+
+def close(to_close: dict):
+    for val in to_close.values():
+        val.close()
 
 
 def main():
 
-    sessions = {}
-    transactions = {}
-
-    examples_query = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
-                     'limit {}; get;'
-
     client = grakn.Grakn(uri=URI)
+    keyspace_keys = list(KEYSPACES.keys())
+    sessions = get_sessions(client, keyspace_keys)
+    transactions = get_transactions(sessions)
 
-    saved_labels_path = BASE_PATH + 'labels/labels_{}.p'
+    batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
+    kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
+                      FLAGS.features_length,
+                      FLAGS.starting_concepts_features_length,
+                      FLAGS.aggregated_length,
+                      FLAGS.output_length,
+                      transactions[TRAIN],
+                      batch_size,
+                      buffer_size,
+                      # sampling_method=random_sampling.random_sample,
+                      # sampling_limit_factor=4
+                      )
 
-    find_labelled_concepts = False
-    delete_all_labels_from_keyspace = False
-    run = True
-    save_input_data = False  # Overwrites any saved data
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
+    classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
+                                                     max_training_steps=FLAGS.max_training_steps)
 
-    # Check if saved concepts and labels exist, and act accordingly
-    if concepts_saved:
-        # In this case any params to describe how to pick examples become invalid
-        concepts, labels = load_saved_labelled_concepts()
-    else:
-        concepts, labels = find_and_save_labelled_concepts()
-        delete_all_labels_from_keyspace()
-
+    feed_dict = {}
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH + 'input/')
+    build_feed_dict = False  # Overwrites any saved data
 
-    if (not find_labelled_concepts) and run:
+    if build_feed_dict:
 
-        # storage_path=BASE_PATH+'input/'
-
-        batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
-        kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
-                          FLAGS.features_length,
-                          FLAGS.starting_concepts_features_length,
-                          FLAGS.aggregated_length,
-                          FLAGS.output_length,
-                          transactions[TRAIN],
-                          batch_size,
-                          buffer_size,
-                          # sampling_method=random_sampling.random_sample,
-                          # sampling_limit_factor=4
-                          )
-
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-        classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
-                                                         max_training_steps=FLAGS.max_training_steps)
-
-        feed_dict = {}
-
-        if save_input_data:
-
-            feed_dict[TRAIN] = classifier.get_feed_dict(sessions[TRAIN], concepts[TRAIN], labels=labels[TRAIN])
-            feed_dict_storer.store_feed_dict(TRAIN, feed_dict[TRAIN])
-
-            feed_dict[EVAL] = classifier.get_feed_dict(sessions[EVAL], concepts[EVAL], labels=labels[EVAL])
-            feed_dict_storer.store_feed_dict(EVAL, feed_dict[EVAL])
-
+        # Check if saved concepts and labels exist, and act accordingly
+        if check_concepts_saved():
+            # In this case any params to describe how to pick examples become invalid
+            concepts, labels = load_saved_labelled_concepts()
         else:
-            feed_dict[TRAIN] = feed_dict_storer.retrieve_feed_dict(TRAIN)
-            feed_dict[EVAL] = feed_dict_storer.retrieve_feed_dict(EVAL)
+            concepts, labels = find_and_save_labelled_concepts()
+            delete_all_labels_from_keyspaces(transactions, 'appendix')
 
-        # Train
-        classifier.train(feed_dict[TRAIN])
+        feed_dict[TRAIN] = classifier.get_feed_dict(sessions[TRAIN], concepts[TRAIN], labels=labels[TRAIN])
+        feed_dict_storer.store_feed_dict(TRAIN, feed_dict[TRAIN])
 
-        # Eval
-        classifier.eval(feed_dict[EVAL])
+        feed_dict[EVAL] = classifier.get_feed_dict(sessions[EVAL], concepts[EVAL], labels=labels[EVAL])
+        feed_dict_storer.store_feed_dict(EVAL, feed_dict[EVAL])
 
-    for keyspace_key in list(KEYSPACES.keys()):
-        # Close all transactions to clean up
-        transactions[keyspace_key].close()
-        sessions[keyspace_key].close()
+    else:
+        feed_dict[TRAIN] = feed_dict_storer.retrieve_feed_dict(TRAIN)
+        feed_dict[EVAL] = feed_dict_storer.retrieve_feed_dict(EVAL)
+
+    # Train
+    classifier.train(feed_dict[TRAIN])
+
+    # Eval
+    classifier.eval(feed_dict[EVAL])
+
+    close(sessions)
+    close(transactions)
 
 
 if __name__ == "__main__":
