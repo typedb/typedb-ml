@@ -22,7 +22,7 @@ jobs:
       - run: wget https://github.com/graknlabs/grakn/releases/download/v1.4.3/grakn-core-1.4.3.zip
       - run: unzip grakn-core-1.4.3.zip
       - run: nohup grakn-core-1.4.3/grakn server start
-      - run: grakn-core-1.4.3/graql console -k test_schema -f  kgcn/test_data/schema.gql
+      - run: grakn-core-1.4.3/graql console -k test_schema -f  kglib/kgcn/test_data/schema.gql
       - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
 
   test-deploy-pip:
@@ -37,14 +37,13 @@ jobs:
       - run: date +%s > VERSION
       - run: cat VERSION
       - run: bazel run //:deploy-pip -- test $PYPI_TEST_SERVER_USERNAME $PYPI_TEST_SERVER_PASSWORD
-      - run: pip install --extra-index-url https://test.pypi.org/simple/ kglib
+      - run: pip install --extra-index-url https://test.pypi.org/simple/ grakn-kglib
 
   deploy-git:
     machine: true
     working_directory: ~/kglib
     steps:
       - checkout
-      - run: echo deploy-git
       - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
       - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
       - run:
@@ -57,7 +56,9 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
-      - run: echo deploy-pip
+      - checkout
+      - bazel_install
+      - run: bazel run //:deploy-pip -- test $PYPI_TEST_SERVER_USERNAME $PYPI_TEST_SERVER_PASSWORD
 
 workflows:
   version: 2
