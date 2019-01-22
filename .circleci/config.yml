@@ -1,0 +1,87 @@
+version: 2.1
+commands:
+  bazel_install:
+    steps:
+      - run:
+          name: Bazel - Install
+          command: |
+            curl -OL https://github.com/bazelbuild/bazel/releases/download/0.20.0/bazel-0.20.0-installer-linux-x86_64.sh
+            chmod +x bazel-0.20.0-installer-linux-x86_64.sh
+            sudo ./bazel-0.20.0-installer-linux-x86_64.sh
+
+jobs:
+  test:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: sudo apt-get update
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: wget https://github.com/graknlabs/grakn/releases/download/v1.4.3/grakn-core-1.4.3.zip
+      - run: unzip grakn-core-1.4.3.zip
+      - run: nohup grakn-core-1.4.3/grakn server start
+      - run: grakn-core-1.4.3/graql console -k test_schema -f  kglib/kgcn/test_data/schema.gql
+      - run: bazel test //... --test_output=streamed --force_python PY3 --python_path $(which python)
+
+  test-deploy-pip:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: sudo apt-get update
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: date +%s > VERSION
+      - run: cat VERSION
+      - run: bazel run //:deploy-pip -- test $PYPI_TEST_SERVER_USERNAME $PYPI_TEST_SERVER_PASSWORD
+      - run: pip install --extra-index-url https://test.pypi.org/simple/ grakn-kglib
+
+  deploy-git:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
+      - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
+      - run:
+         name: "Publish Draft Release on GitHub"
+         command: |
+           VERSION_TAG="v"$(cat "VERSION")
+           curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"Draft\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
+
+  deploy-pip:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: sudo apt-get update
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: bazel run //:deploy-pip -- test $PYPI_TEST_SERVER_USERNAME $PYPI_TEST_SERVER_PASSWORD
+
+workflows:
+  version: 2
+  kglib:
+    jobs:
+      - test
+      - test-deploy-pip:
+          requires:
+            - test
+      - approve-deploy-git:
+          type: approval
+          requires:
+            - test-deploy-pip
+      - deploy-git:
+          requires:
+            - approve-deploy-git
+      - approve-deploy-pip:
+          type: approval
+          requires:
+            - deploy-git
+      - deploy-pip:
+          requires:
+            - approve-deploy-pip

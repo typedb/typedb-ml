@@ -1,0 +1,158 @@
+#
+#  Licensed to the Apache Software Foundation (ASF) under one
+#  or more contributor license agreements.  See the NOTICE file
+#  distributed with this work for additional information
+#  regarding copyright ownership.  The ASF licenses this file
+#  to you under the Apache License, Version 2.0 (the
+#  "License"); you may not use this file except in compliance
+#  with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an
+#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+#  specific language governing permissions and limitations
+#  under the License.
+#
+
+define
+    name sub attribute, datatype string;
+    measured-quantity sub attribute, datatype double;
+    unit-of-measurement sub attribute, datatype string;
+    exchange-date sub attribute, datatype date;
+    appendix sub attribute, datatype long;
+    item-purpose sub attribute, datatype string;
+    item-type sub attribute, datatype string;
+    item-source sub attribute, datatype string;
+    CITES-participation sub attribute, datatype boolean;
+    CITES-participation-type sub attribute, datatype string;
+    CITES-entry-into-force-date sub attribute, datatype date;
+    ISO-id sub attribute, datatype string;
+
+    country sub entity,
+        has name,
+        has CITES-participation,
+        has CITES-entry-into-force-date,
+        has CITES-participation-type,
+        has ISO-id,
+        plays receiving-country,
+        plays providing-country,
+        plays originating-country,
+        plays contained-country;
+
+    continent sub entity,
+        has name,
+        plays containing-continent;
+
+    traded-item sub entity,
+        plays exchanged-item,
+        plays imported-item,
+        plays exported-item,
+        plays member-item,
+        plays quantified-subject,
+        has item-type,
+        has item-source,
+        has item-purpose;
+
+    measurement sub entity,
+        has measured-quantity,
+        has unit-of-measurement,
+        plays quantification-measurement;
+
+    exchange sub relationship,
+        relates receiving-country,
+        relates providing-country,
+        relates exchanged-item,
+        has exchange-date,
+        has appendix;
+
+    export sub exchange,
+        relates receiving-country,
+        relates providing-country,
+        relates exported-item as exchanged-item,
+        plays corresponding-export;
+
+    import sub exchange,
+        relates receiving-country,
+        relates providing-country,
+        relates imported-item as exchanged-item,
+        plays corresponding-import;
+
+    import-export-correspondence sub relationship,
+        relates corresponding-import,
+        relates corresponding-export;
+
+    quantification sub relationship,
+        relates quantified-subject,
+        relates quantification-measurement;
+
+    taxon sub entity,
+        has name,
+        plays taxonomic-group;
+
+    taxonomic-class sub taxon,
+        plays super-taxon;
+
+    taxonomic-order sub taxon,
+        plays super-taxon,
+        plays sub-taxon;
+
+    taxonomic-family sub taxon,
+        plays super-taxon,
+        plays sub-taxon;
+
+    taxonomic-genus sub taxon,
+        plays super-taxon,
+        plays sub-taxon;
+
+    taxonomic-species sub taxon,
+        plays originated-species,
+        plays sub-taxon;
+
+    hierarchy sub relationship,
+        relates superior,
+        relates subordinate;
+
+    categorisation-hierarchy sub hierarchy,
+        relates superior-category as superior,
+        relates subordinate-category as subordinate;
+
+    taxonomic-hierarchy sub categorisation-hierarchy,
+        relates super-taxon as superior-category,
+        relates sub-taxon as subordinate-category;
+
+    containment sub hierarchy,
+        relates container as superior,
+        relates containee as subordinate;
+
+    continent-country-containment sub containment,
+        relates containing-continent as container,
+        relates contained-country as containee;
+
+    species-origination sub relationship,
+        relates originating-country,
+        relates originated-species;
+
+    taxon-membership sub relationship,
+            relates member-item,
+            relates taxonomic-group;
+
+    taxonomic-ranking sub rule,
+        when {
+            (super-taxon: $a, sub-taxon: $b) isa taxonomic-hierarchy;
+            (super-taxon: $b, sub-taxon: $c) isa taxonomic-hierarchy;
+        }
+        then {
+            (super-taxon: $a, sub-taxon: $c) isa taxonomic-hierarchy;
+        };
+
+    transitive-taxonomic-membership sub rule,
+        when {
+            (member-item: $a, taxonomic-group: $taxon) isa taxon-membership;
+            (sub-taxon: $taxon, super-taxon: $super) isa taxonomic-hierarchy;
+        }
+        then {
+            (member-item: $a, taxonomic-group: $super) isa taxon-membership;
+        };
