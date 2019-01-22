@@ -50,7 +50,7 @@ jobs:
          name: "Publish Draft Release on GitHub"
          command: |
            VERSION_TAG="v"$(cat "VERSION")
-           curl -X POST --data '{"tag_name": ${VERSION_TAG},"target_commitish": ${CIRCLE_SHA1},"name": ${VERSION_TAG},"body": "","draft": true,"prerelease": false}' https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=:${GITHUB_DEPLOYMENT_TOKEN}
+           curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"Draft\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
 
   deploy-pip:
     machine: true
