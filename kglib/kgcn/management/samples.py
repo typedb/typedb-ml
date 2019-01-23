@@ -21,7 +21,6 @@ import collections
 
 import numpy as np
 
-from kglib.kgcn.examples.animal_trade.main import NUM_PER_CLASS
 from kglib.kgcn.neighbourhood.data.sampling import random_sampling as random
 from kglib.kgcn.use_cases.attribute_prediction import label_extraction as label_extraction
 
@@ -86,15 +85,15 @@ def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_nam
                                                 sampling_params['predict']['sample_size'],
                                                 sampling_params['predict']['population_size'])
 
-    half = NUM_PER_CLASS
+    division = sampling_params['train']['sample_size']
     # Iterate over the classes
     concepts = {'train': [], 'eval': [], 'predict': []}
     labels = {'train': [], 'eval': [], 'predict': []}
     for label_value in concepts_dicts.keys():
-        concepts['train'].extend(concepts_dicts[label_value][:half])
-        concepts['eval'].extend(concepts_dicts[label_value][half:])
-        labels['train'].extend(labels_dicts[label_value][:half])
-        labels['eval'].extend(labels_dicts[label_value][half:])
+        concepts['train'].extend(concepts_dicts[label_value][:division])
+        concepts['eval'].extend(concepts_dicts[label_value][division:])
+        labels['train'].extend(labels_dicts[label_value][:division])
+        labels['eval'].extend(labels_dicts[label_value][division:])
 
         concepts['predict'].extend(concepts_dicts_predict[label_value])
         labels['predict'].extend(labels_dicts_predict[label_value])

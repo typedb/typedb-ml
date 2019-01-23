@@ -68,7 +68,7 @@ class KGCN:
             traversal_samplers.append(
                 samp.Sampler(sample_size, sampling_method, limit=int(sample_size * sampling_limit_factor)))
 
-        self._traverser = kglib.kgcn.preprocess.preprocess.Traverser(traversal_samplers)
+        self._traverser = preprocess.preprocess.Traverser(traversal_samplers)
 
     def input_fn(self, session, concepts):
         raw_array_depths = self._traverser(session, concepts)

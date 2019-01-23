@@ -26,11 +26,15 @@ import tensorflow as tf
 import kglib.kgcn.models.downstream as downstream
 import kglib.kgcn.models.model as model
 import kglib.kgcn.preprocess.persistence as persistence
-import kglib.kgcn.utils.utils as utils
+import kglib.kgcn.management.logging as logging
+import kglib.kgcn.management.persistence as prs
+import kglib.kgcn.management.samples as samp_mgmt
+import kglib.kgcn.management.grakn as grakn_mgmt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
+# Learning params
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('num_classes', 3, 'Number of classes')
 flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
@@ -40,19 +44,19 @@ flags.DEFINE_integer('starting_concepts_features_length', 173,
 flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
                                           'and the final length of the embeddings')
-
 flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
 
-TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
-
-NUM_PER_CLASS = 30
-POPULATION_SIZE_PER_CLASS = 1000
-
+# Sample selection params
 EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
                  'limit {}; get;'
 LABEL_ATTRIBUTE_TYPE = 'appendix'
 EXAMPLE_CONCEPT_TYPE = 'traded-item'
 
+NUM_PER_CLASS = 30
+POPULATION_SIZE_PER_CLASS = 1000
+
+# Params for persisting to files
+TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
 # BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
 BASE_PATH = 'dataset/30_concepts_ordered_7x2x2_without_attributes_with_rules/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
@@ -73,17 +77,17 @@ URI = "localhost:48555"
 
 NEIGHBOUR_SAMPLE_SIZES = (7, 2, 2)  # TODO (7, 2, 2) Throws an error without rules
 
-sys.stdout = utils.Logger(FLAGS.log_dir + '/output.log')
+sys.stdout = logging.Logger(FLAGS.log_dir + '/output.log')
 
 
-def main(modes=(TRAIN, EVAL, PREDICT), rebuild_feed_dicts=False):
+def main(modes=(TRAIN, EVAL, PREDICT)):
     # if TRAIN not in modes:
     #     raise ValueError("Model is not persisted, so training must be performed") # TODO is this true?
     # TODO if TRAIN isn't in the modes, then create a new directory, otherwise use the last one (how to determine that?)
 
     client = grakn.Grakn(uri=URI)
-    sessions = utils.get_sessions(client, KEYSPACES)
-    transactions = utils.get_transactions(sessions)
+    sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
+    transactions = grakn_mgmt.get_transactions(sessions)
 
     batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
     kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
@@ -104,35 +108,35 @@ def main(modes=(TRAIN, EVAL, PREDICT), rebuild_feed_dicts=False):
 
     feed_dicts = {}
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH + 'input/')
-    # Overwrites any saved data
 
-    if rebuild_feed_dicts or not feed_dicts_saved():
+    # Overwrites any saved data
+    try:
+        for mode in modes:
+            feed_dicts[mode] = feed_dict_storer.retrieve_feed_dict(mode)
+
+    except FileNotFoundError:
 
         # Check if saved concepts and labels exist, and act accordingly
-        if utils.check_for_saved_labelled_concepts(SAVED_LABELS_PATH, modes):
-            # In this case any params to describe how to pick samples become invalid
-            concepts, labels = utils.load_saved_labelled_concepts(KEYSPACES, transactions, SAVED_LABELS_PATH)
-        else:
+        # if check_for_saved_labelled_concepts(SAVED_LABELS_PATH, modes):
+        try:
+            concepts, labels = prs.load_saved_labelled_concepts(KEYSPACES, transactions, SAVED_LABELS_PATH)
+        except FileNotFoundError:
             sampling_params = {
                 TRAIN: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
                 EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
                 PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
             }
-            concepts, labels = utils.compile_labelled_concepts(EXAMPLES_QUERY, transactions[TRAIN],
-                                                               transactions[PREDICT],
-                                                               EXAMPLE_CONCEPT_TYPE, LABEL_ATTRIBUTE_TYPE,
-                                                               sampling_params)
-            utils.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
+            concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, transactions[TRAIN],
+                                                                   transactions[PREDICT],
+                                                                   EXAMPLE_CONCEPT_TYPE, LABEL_ATTRIBUTE_TYPE,
+                                                                   sampling_params)
+            prs.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
 
-            utils.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
+            samp_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
 
         for mode in modes:
             feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=labels[mode])
             feed_dict_storer.store_feed_dict(mode, feed_dicts[mode])
-
-    else:
-        for mode in modes:
-            feed_dicts[mode] = feed_dict_storer.retrieve_feed_dict(mode)
 
     # Train
     if TRAIN in modes:
@@ -146,8 +150,8 @@ def main(modes=(TRAIN, EVAL, PREDICT), rebuild_feed_dicts=False):
     if PREDICT in modes:
         classifier.eval(feed_dicts[PREDICT])
 
-    utils.close(sessions)
-    utils.close(transactions)
+    grakn_mgmt.close(sessions)
+    grakn_mgmt.close(transactions)
 
 
 if __name__ == "__main__":

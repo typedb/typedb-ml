@@ -29,7 +29,7 @@ def get_transactions(sessions):
 
 def get_sessions(client, keyspaces):
     sessions = {}
-    for keyspace_key, keyspace_name in keyspaces:
+    for keyspace_key, keyspace_name in keyspaces.items():
         sessions[keyspace_key] = client.session(keyspace=keyspace_name)
     return sessions
 
