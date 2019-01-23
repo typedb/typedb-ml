@@ -50,6 +50,8 @@ POPULATION_SIZE_PER_CLASS = 1000
 
 EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
                  'limit {}; get;'
+LABEL_ATTRIBUTE_TYPE = 'appendix'
+EXAMPLE_CONCEPT_TYPE = 'traded-item'
 
 # BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
 BASE_PATH = 'dataset/30_concepts_ordered_7x2x2_without_attributes_with_rules/'
@@ -74,109 +76,14 @@ NEIGHBOUR_SAMPLE_SIZES = (7, 2, 2)  # TODO (7, 2, 2) Throws an error without rul
 sys.stdout = utils.Logger(FLAGS.log_dir + '/output.log')
 
 
-def combine_labelled_examples(concepts_dict, labels_dict):
-    concepts = []
-    labels = []
-    for key in concepts_dict.keys():
-        concepts.extend(concepts_dict[key])
-        labels.extend(labels_dict[key])
-    return concepts, labels
-
-
-def find_and_save_labelled_concepts(examples_query, transactions, saved_labels_path):
-    concepts = {}
-    labels = {}
-
-    print(f'Finding concepts and labels')
-    print('    for training and evaluation')
-    concepts_dicts, labels_dicts = utils.query_for_random_examples_with_attribute(transactions[TRAIN], examples_query,
-                                                                                  'traded-item', 'appendix', [1, 2, 3],
-                                                                                  NUM_PER_CLASS * 2,
-                                                                                  POPULATION_SIZE_PER_CLASS * 2)
-
-    half = NUM_PER_CLASS
-    # Iterate over the classes
-    concepts[TRAIN] = []
-    concepts[EVAL] = []
-    labels[TRAIN] = []
-    labels[EVAL] = []
-    for key in concepts_dicts.keys():
-        concepts[TRAIN].extend(concepts_dicts[key][:half])
-        concepts[EVAL].extend(concepts_dicts[key][half:])
-        labels[TRAIN].extend(labels_dicts[key][:half])
-        labels[EVAL].extend(labels_dicts[key][half:])
-
-    print('    for prediction')
-    concepts_dicts_predict, labels_dicts_predict = utils.query_for_random_examples_with_attribute(transactions[TRAIN],
-                                                                                                  examples_query,
-                                                                                                  'traded-item',
-                                                                                                  'appendix', [1, 2, 3],
-                                                                                                  NUM_PER_CLASS,
-                                                                                                  POPULATION_SIZE_PER_CLASS)
-    concepts[PREDICT], labels[PREDICT] = combine_labelled_examples(concepts_dicts_predict, labels_dicts_predict)
-
-    for keyspace_key in list(KEYSPACES.keys()):
-        persistence.save_variable(([concept.id for concept in concepts[keyspace_key]], labels[keyspace_key]),
-                                  saved_labels_path.format(keyspace_key))
-    return concepts, labels
-
-
-def delete_all_labels_from_keyspaces(keyspaces_transactions, attribute_type):
-    # Warn the use this will delete concepts
-    while True:
-        ans = input(
-            f'This operation will delete all concepts of type {attribute_type} in the given keyspaces. Proceed? y/n')
-
-        if ans not in ['y', 'Y', 'n', 'N']:
-            print('please enter y or n.')
-            continue
-        if ans == 'y' or ans == 'Y':
-            for tx in keyspaces_transactions:
-                # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
-                # that we are certain that they aren't being used by the learner
-                print('Deleting concepts to avoid data pollution')
-                tx.query(f'match $x isa {attribute_type}; delete $x;')
-                tx.commit()
-            break
-        if ans == 'n' or ans == 'N':
-            return False
-
-
-def load_saved_labelled_concepts(transactions, saved_labels_path):
-    concepts = {}
-    labels = {}
-    for keyspace_key in list(KEYSPACES.keys()):
-        print(f'Loading concepts and labels for {keyspace_key}')
-        concepts[keyspace_key], labels[keyspace_key] = utils.retrieve_persisted_labelled_concepts(
-            transactions[keyspace_key], saved_labels_path.format(keyspace_key))
-    return concepts, labels
-
-
-def get_sessions(client, keyspace_keys):
-    sessions = {}
-    for keyspace_key in keyspace_keys:
-        sessions[keyspace_key] = client.session(keyspace=KEYSPACES[keyspace_key])
-    return sessions
-
-
-def get_transactions(sessions):
-    transactions = {}
-    for keyspace_key, session in sessions.items():
-        transactions[keyspace_key] = session.transaction(grakn.TxType.WRITE)
-    return transactions
-
-
-def close(to_close: dict):
-    for val in to_close.values():
-        val.close()
-
-
-def main():
+def main(modes=(TRAIN, EVAL, PREDICT), rebuild_feed_dicts=False):
+    # if TRAIN not in modes:
+    #     raise ValueError("Model is not persisted, so training must be performed") # TODO is this true?
+    # TODO if TRAIN isn't in the modes, then create a new directory, otherwise use the last one (how to determine that?)
 
     client = grakn.Grakn(uri=URI)
-    keyspace_keys = list(KEYSPACES.keys())
-    sessions = get_sessions(client, keyspace_keys)
-    transactions = get_transactions(sessions)
+    sessions = utils.get_sessions(client, KEYSPACES)
+    transactions = utils.get_transactions(sessions)
 
     batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
     kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
@@ -195,38 +102,52 @@ def main():
     classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
                                                      max_training_steps=FLAGS.max_training_steps)
 
-    feed_dict = {}
+    feed_dicts = {}
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH + 'input/')
-    build_feed_dict = False  # Overwrites any saved data
+    # Overwrites any saved data
 
-    if build_feed_dict:
+    if rebuild_feed_dicts or not feed_dicts_saved():
 
         # Check if saved concepts and labels exist, and act accordingly
-        if check_concepts_saved():
+        if utils.check_for_saved_labelled_concepts(SAVED_LABELS_PATH, modes):
             # In this case any params to describe how to pick examples become invalid
-            concepts, labels = load_saved_labelled_concepts()
+            concepts, labels = utils.load_saved_labelled_concepts(KEYSPACES, transactions, SAVED_LABELS_PATH)
         else:
-            concepts, labels = find_and_save_labelled_concepts()
-            delete_all_labels_from_keyspaces(transactions, 'appendix')
+            sampling_params = {
+                TRAIN: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
+                EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
+                PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
+            }
+            concepts, labels = utils.compile_labelled_concepts(EXAMPLES_QUERY, transactions[TRAIN],
+                                                               transactions[PREDICT],
+                                                               EXAMPLE_CONCEPT_TYPE, LABEL_ATTRIBUTE_TYPE,
+                                                               sampling_params)
+            utils.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
 
-        feed_dict[TRAIN] = classifier.get_feed_dict(sessions[TRAIN], concepts[TRAIN], labels=labels[TRAIN])
-        feed_dict_storer.store_feed_dict(TRAIN, feed_dict[TRAIN])
+            utils.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
 
-        feed_dict[EVAL] = classifier.get_feed_dict(sessions[EVAL], concepts[EVAL], labels=labels[EVAL])
-        feed_dict_storer.store_feed_dict(EVAL, feed_dict[EVAL])
+        for mode in modes:
+            feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=labels[mode])
+            feed_dict_storer.store_feed_dict(mode, feed_dicts[mode])
 
     else:
-        feed_dict[TRAIN] = feed_dict_storer.retrieve_feed_dict(TRAIN)
-        feed_dict[EVAL] = feed_dict_storer.retrieve_feed_dict(EVAL)
+        for mode in modes:
+            feed_dicts[mode] = feed_dict_storer.retrieve_feed_dict(mode)
 
     # Train
-    classifier.train(feed_dict[TRAIN])
+    if TRAIN in modes:
+        classifier.train(feed_dicts[TRAIN])
 
     # Eval
-    classifier.eval(feed_dict[EVAL])
+    if EVAL in modes:
+        classifier.eval(feed_dicts[EVAL])
 
-    close(sessions)
-    close(transactions)
+    # Predict
+    if PREDICT in modes:
+        classifier.eval(feed_dicts[PREDICT])
+
+    utils.close(sessions)
+    utils.close(transactions)
 
 
 if __name__ == "__main__":
