@@ -110,7 +110,7 @@ def main(modes=(TRAIN, EVAL, PREDICT), rebuild_feed_dicts=False):
 
         # Check if saved concepts and labels exist, and act accordingly
         if utils.check_for_saved_labelled_concepts(SAVED_LABELS_PATH, modes):
-            # In this case any params to describe how to pick examples become invalid
+            # In this case any params to describe how to pick samples become invalid
             concepts, labels = utils.load_saved_labelled_concepts(KEYSPACES, transactions, SAVED_LABELS_PATH)
         else:
             sampling_params = {
