@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import os
 import sys
 import time
 
@@ -57,8 +57,9 @@ NUM_PER_CLASS = 30
 POPULATION_SIZE_PER_CLASS = 1000
 
 # Params for persisting to files
+DIR = os.path.dirname(os.path.realpath(__file__))
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
-BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
+BASE_PATH = f'{DIR}/dataset/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 SAVED_LABELS_PATH = BASE_PATH + 'labels/labels_{}.p'
@@ -141,18 +142,18 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
 
     # Train
     if TRAIN in modes:
-        print("********** TRAIN Keyspace **********")
+        print("\n\n********** TRAIN Keyspace **********")
         classifier.train(feed_dicts[TRAIN])
 
     # Eval
     if EVAL in modes:
-        print("********** EVAL Keyspace **********")
+        print("\n\n********** EVAL Keyspace **********")
         # Presently, eval keyspace is the same as the TRAIN keyspace
         classifier.eval(feed_dicts[EVAL])
 
     # Predict
     if PREDICT in modes:
-        print("********** PREDICT Keyspace **********")
+        print("\n\n********** PREDICT Keyspace **********")
         # We're using unseen data, but since we have labels we can use classifier.eval rather than classifier.predict
         classifier.eval(feed_dicts[PREDICT])
 
