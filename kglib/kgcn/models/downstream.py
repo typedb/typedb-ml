@@ -127,7 +127,7 @@ class SupervisedKGCNClassifier:
         return opt_op
 
     def train(self, feed_dict):
-        print("\n\n========= Training =========")
+        print("========= Training =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         for step in range(self._max_training_steps):
             _, loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, \
@@ -145,10 +145,10 @@ class SupervisedKGCNClassifier:
                 print(f'Confusion Matrix:')
                 print(confusion_matrix)
                 metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
-        print("\n\n========= Training Complete =========")
+        print("========= Training Complete =========\n\n")
 
     def eval(self, feed_dict):
-        print("\n\n========= Evaluation =========")
+        print("========= Evaluation =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
 
         loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, labels_winners_values = \
@@ -160,10 +160,17 @@ class SupervisedKGCNClassifier:
         print(f'Confusion Matrix:')
         print(confusion_matrix)
         metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
-        print("\n\n========= Evaluation Complete =========")
+        print("========= Evaluation Complete =========\n\n")
 
-    def predict(self, session, concepts):
-        raise NotImplementedError('')
+    def predict(self, feed_dict):
+        print("========= Evaluation =========")
+        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
+
+        loss_value, class_scores_values, predictions_class_winners_values = \
+            self.tf_session.run([self._loss_op, self._class_scores, self._predictions_class_winners])
+        print(class_scores_values)
+        print(f'Loss: {loss_value:.2f}')
+        print("========= Evaluation Complete =========\n\n")
 
     def get_feed_dict(self, session, concepts, labels=None):
 

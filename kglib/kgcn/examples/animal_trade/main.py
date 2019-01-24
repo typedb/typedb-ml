@@ -23,13 +23,14 @@ import time
 import grakn
 import tensorflow as tf
 
-import kglib.kgcn.models.downstream as downstream
-import kglib.kgcn.models.model as model
-import kglib.kgcn.preprocess.persistence as persistence
+import kglib.kgcn.management.grakn as grakn_mgmt
 import kglib.kgcn.management.logging as logging
 import kglib.kgcn.management.persistence as prs
 import kglib.kgcn.management.samples as samp_mgmt
-import kglib.kgcn.management.grakn as grakn_mgmt
+import kglib.kgcn.models.downstream as downstream
+import kglib.kgcn.models.model as model
+import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
+import kglib.kgcn.preprocess.persistence as persistence
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -57,8 +58,7 @@ POPULATION_SIZE_PER_CLASS = 1000
 
 # Params for persisting to files
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
-# BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
-BASE_PATH = 'dataset/30_concepts_ordered_7x2x2_without_attributes_with_rules/'
+BASE_PATH = f'dataset/{NUM_PER_CLASS}_concepts/'
 flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
 
 SAVED_LABELS_PATH = BASE_PATH + 'labels/labels_{}.p'
@@ -75,15 +75,12 @@ KEYSPACES = {
 
 URI = "localhost:48555"
 
-NEIGHBOUR_SAMPLE_SIZES = (7, 2, 2)  # TODO (7, 2, 2) Throws an error without rules
+NEIGHBOUR_SAMPLE_SIZES = (7, 2, 2)
 
 sys.stdout = logging.Logger(FLAGS.log_dir + '/output.log')
 
 
 def main(modes=(TRAIN, EVAL, PREDICT)):
-    # if TRAIN not in modes:
-    #     raise ValueError("Model is not persisted, so training must be performed") # TODO is this true?
-    # TODO if TRAIN isn't in the modes, then create a new directory, otherwise use the last one (how to determine that?)
 
     client = grakn.Grakn(uri=URI)
     sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
@@ -98,8 +95,8 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                       transactions[TRAIN],
                       batch_size,
                       buffer_size,
-                      # sampling_method=random_sampling.random_sample,
-                      # sampling_limit_factor=4
+                      sampling_method=random_sampling.random_sample,
+                      sampling_limit_factor=4
                       )
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
@@ -126,13 +123,17 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                 EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
                 PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
             }
-            concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, transactions[TRAIN],
-                                                                   transactions[PREDICT],
-                                                                   EXAMPLE_CONCEPT_TYPE, LABEL_ATTRIBUTE_TYPE,
-                                                                   sampling_params)
+            concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
+                                                                   LABEL_ATTRIBUTE_TYPE, transactions[TRAIN],
+                                                                   transactions[PREDICT], sampling_params)
             prs.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
 
             samp_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
+
+            # Get new transactions since deleting labels requires committing and therefore closes transactions
+            transactions = grakn_mgmt.get_transactions(sessions)
+            # We need to re-fetch the sample concepts, since we need live transactions where the labels are removed
+            concepts, labels = prs.load_saved_labelled_concepts(KEYSPACES, transactions, SAVED_LABELS_PATH)
 
         for mode in modes:
             feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=labels[mode])
@@ -140,14 +141,19 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
 
     # Train
     if TRAIN in modes:
+        print("********** TRAIN Keyspace **********")
         classifier.train(feed_dicts[TRAIN])
 
     # Eval
     if EVAL in modes:
+        print("********** EVAL Keyspace **********")
+        # Presently, eval keyspace is the same as the TRAIN keyspace
         classifier.eval(feed_dicts[EVAL])
 
     # Predict
     if PREDICT in modes:
+        print("********** PREDICT Keyspace **********")
+        # We're using unseen data, but since we have labels we can use classifier.eval rather than classifier.predict
         classifier.eval(feed_dicts[PREDICT])
 
     grakn_mgmt.close(sessions)

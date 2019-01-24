@@ -103,23 +103,14 @@ def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_nam
 
 def delete_all_labels_from_keyspaces(keyspaces_transactions, attribute_type):
     # Warn the use this will delete concepts
-    while True:
-        ans = input(
-            f'This operation will delete all concepts of type {attribute_type} in the given keyspaces. Proceed? y/n')
-
-        if ans not in ['y', 'Y', 'n', 'N']:
-            print('please enter y or n.')
-            continue
-        if ans == 'y' or ans == 'Y':
-            for tx in keyspaces_transactions:
-                # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
-                # that we are certain that they aren't being used by the learner
-                print('Deleting concepts to avoid data pollution')
-                tx.query(f'match $x isa {attribute_type}; delete $x;')
-                tx.commit()
-            break
-        if ans == 'n' or ans == 'N':
-            return False
+    for keyspace_key, tx in keyspaces_transactions.items():
+        # Once concept ids have been stored with labels, then the labels stored in Grakn can be deleted so
+        # that we are certain that they aren't being used by the learner
+        print(f'Deleting concepts from keyspace {keyspace_key} to avoid data pollution')
+        delete_query = f'match $x isa {attribute_type}; delete $x;'
+        print(delete_query)
+        tx.query(delete_query)
+        tx.commit()
 
 
 def check_concepts_are_unique(concepts):

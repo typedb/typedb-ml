@@ -55,9 +55,10 @@ class KGCN:
         print(f'feature lengths: {self.feature_lengths}')
 
         self._schema_transaction = schema_transaction
-
         self.include_metatypes = include_metatypes
         self.include_implicit = include_implicit
+        self._encoder = encode.Encoder(self._schema_transaction, self.include_implicit, self.include_metatypes)
+
         self.batch_size = batch_size
         self._buffer_size = buffer_size
         self._formatters = formatters
@@ -68,7 +69,7 @@ class KGCN:
             traversal_samplers.append(
                 samp.Sampler(sample_size, sampling_method, limit=int(sample_size * sampling_limit_factor)))
 
-        self._traverser = preprocess.preprocess.Traverser(traversal_samplers)
+        self._traverser = preprocess.Traverser(traversal_samplers)
 
     def input_fn(self, session, concepts):
         raw_array_depths = self._traverser(session, concepts)
@@ -91,8 +92,7 @@ class KGCN:
         return dataset_initializer, dataset_iterator
 
     def encode(self, arrays):
-        encoder = encode.Encoder(self._schema_transaction, self.include_implicit, self.include_metatypes)
-        return encoder(arrays)
+        return self._encoder(arrays)
 
     def embed(self, encoded_arrays):
         embedder = learners.Embedder(self.feature_lengths, self.aggregated_length, self.output_length,
