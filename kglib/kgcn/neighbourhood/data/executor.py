@@ -37,7 +37,7 @@ class TraversalExecutor:
     }
 
     ATTRIBUTE_QUERY = {
-        'query': 'match $thing id {} has attribute $attribute; get $attribute;',
+        'query': 'match $thing id {}, has attribute $attribute; get $attribute;',
         'variable': 'attribute'
     }
 

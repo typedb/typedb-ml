@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import itertools
 import typing as typ
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random
 
@@ -29,9 +29,9 @@ class ConceptLabelExtractor:
         self._attribute_vars_config = attribute_vars_config
         self._query = query
 
-    def __call__(self, tx, sample_size):
+    def __call__(self, tx, sample_size, population_size):
 
-        response = tx.query(self._query)
+        response = itertools.islice(tx.query(self._query), population_size)
         sampled_responses = self._sampling_method(response, sample_size)
         owner_var = self._attribute_vars_config[0]
 

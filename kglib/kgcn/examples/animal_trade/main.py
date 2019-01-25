@@ -48,8 +48,7 @@ flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" ope
 flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
 
 # Sample selection params
-EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
-                 'limit {}; get;'
+EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; get;'
 LABEL_ATTRIBUTE_TYPE = 'appendix'
 EXAMPLE_CONCEPT_TYPE = 'traded-item'
 

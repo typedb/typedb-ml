@@ -139,11 +139,11 @@ define
             relates member-item,
             relates taxonomic-group;
 
-    taxonomic-ranking sub rule,
+    taxonomic-ranking
         when {
             (super-taxon: $a, sub-taxon: $b) isa taxonomic-hierarchy;
             (super-taxon: $b, sub-taxon: $c) isa taxonomic-hierarchy;
-        }
+        },
         then {
             (super-taxon: $a, sub-taxon: $c) isa taxonomic-hierarchy;
         };
@@ -152,7 +152,7 @@ define
         when {
             (member-item: $a, taxonomic-group: $taxon) isa taxon-membership;
             (sub-taxon: $taxon, super-taxon: $super) isa taxonomic-hierarchy;
-        }
+        },
         then {
             (member-item: $a, taxonomic-group: $super) isa taxon-membership;
         };

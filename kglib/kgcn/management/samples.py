@@ -31,14 +31,13 @@ def query_for_random_samples_with_attribute(tx, query, example_var_name, attribu
     labels = {}
 
     for a in attribute_vals:
-        target_concept_query = query.format(a, population_size)
+        target_concept_query = query.format(a)
 
         extractor = label_extraction.ConceptLabelExtractor(target_concept_query,
                                                            (example_var_name, collections.OrderedDict(
                                                                [(attribute_var_name, attribute_vals)])),
-                                                           sampling_method=random.random_sample
-                                                           )
-        concepts_with_labels = extractor(tx, sample_size_per_label)
+                                                           sampling_method=random.random_sample)
+        concepts_with_labels = extractor(tx, sample_size_per_label, population_size)
         if len(concepts_with_labels) == 0:
             raise RuntimeError(f'Couldn\'t find any concepts to match target query "{target_concept_query}"')
 
