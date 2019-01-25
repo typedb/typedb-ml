@@ -50,12 +50,13 @@ def query_for_random_samples_with_attribute(tx, query, example_var_name, attribu
     return concepts, labels
 
 
-def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_name, train_and_eval_transaction,
-                              predict_transaction, sampling_params):
+def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_name, attribute_values,
+                              train_and_eval_transaction, predict_transaction, sampling_params):
     """
     Assumes the case that data is partitioned into 2 keyspaces, one for training and evaluation, and another for
     prediction on unseen data (with labels). Therefore this function draws training and evaluation samples from the
     same keyspace.
+    :param attribute_values:
     :param samples_query: Query to use to select possible samples
     :param concept_var_name: The variable used for the example concepts within the `samples_query`
     :param attribute_var_name: The variable used for the samples' labels (attributes) within the `samples_query`
@@ -70,7 +71,7 @@ def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_nam
     print('    for training and evaluation')
     concepts_dicts, labels_dicts = \
         query_for_random_samples_with_attribute(train_and_eval_transaction, samples_query,
-                                                concept_var_name, attribute_var_name, [1, 2, 3],
+                                                concept_var_name, attribute_var_name, attribute_values,
                                                 sampling_params['train']['sample_size'] +
                                                 sampling_params['eval']['sample_size'],
                                                 sampling_params['train']['population_size'] +
@@ -80,7 +81,7 @@ def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_nam
         query_for_random_samples_with_attribute(predict_transaction,
                                                 samples_query,
                                                 concept_var_name,
-                                                attribute_var_name, [1, 2, 3],
+                                                attribute_var_name, attribute_values,
                                                 sampling_params['predict']['sample_size'],
                                                 sampling_params['predict']['population_size'])
 

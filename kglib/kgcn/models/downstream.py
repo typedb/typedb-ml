@@ -142,8 +142,6 @@ class SupervisedKGCNClassifier:
                 print(f'\n-----')
                 print(f'Step {step}')
                 print(f'Loss: {loss_value:.2f}')
-                print(f'Confusion Matrix:')
-                print(confusion_matrix)
                 metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
         print("========= Training Complete =========\n\n")
 
@@ -157,8 +155,6 @@ class SupervisedKGCNClassifier:
                  self._labels_winners])
 
         print(f'Loss: {loss_value:.2f}')
-        print(f'Confusion Matrix:')
-        print(confusion_matrix)
         metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
         print("========= Evaluation Complete =========\n\n")
 
