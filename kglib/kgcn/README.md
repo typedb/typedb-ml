@@ -8,7 +8,7 @@ This project introduces a novel model: the Knowledge Graph Convolutional Network
 
 The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, made to work over a **knowledge graph**. Instead of working on a typical property graph, a KGCN learns from the context of a *typed hypergraph*, Grakn. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point on some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
 
-####How does a KGCN work?
+#### How does a KGCN work?
 
 The purpose of this method is to derive embeddings for a set of Concepts (and thereby directly learn to classify them). We start by querying Grakn to find a set of examples with labels. Following that, we gather data about the neighbourhood of each example Concept. We do this by considering their *k-hop* neighbours.
 
@@ -20,9 +20,9 @@ To create embeddings, we build a network in TensorFlow that successively aggrega
 
 
 
-##Example - CITES Animal Trade Data
+## Example - CITES Animal Trade Data
 
-####Quickstart
+#### Quickstart
 
 **Requirements:**
 
