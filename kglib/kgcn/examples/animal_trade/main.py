@@ -48,12 +48,12 @@ flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" ope
 flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
 
 # Sample selection params
-EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; ' \
-                 'limit {}; get;'
+EXAMPLES_QUERY = 'match $e(exchanged-item: $traded-item) isa exchange, has appendix $appendix; $appendix {}; get;'
 LABEL_ATTRIBUTE_TYPE = 'appendix'
+ATTRIBUTE_VALUES = [1, 2, 3]
 EXAMPLE_CONCEPT_TYPE = 'traded-item'
 
-NUM_PER_CLASS = 30
+NUM_PER_CLASS = 10
 POPULATION_SIZE_PER_CLASS = 1000
 
 # Params for persisting to files
@@ -125,8 +125,9 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                 PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
             }
             concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
-                                                                   LABEL_ATTRIBUTE_TYPE, transactions[TRAIN],
-                                                                   transactions[PREDICT], sampling_params)
+                                                                   LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
+                                                                   transactions[TRAIN], transactions[PREDICT],
+                                                                   sampling_params)
             prs.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
 
             samp_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)

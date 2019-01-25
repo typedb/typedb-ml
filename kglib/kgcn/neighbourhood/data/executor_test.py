@@ -120,7 +120,7 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 
 class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
 
-    query = "match $attribute isa date-started 2015-11-12T00:00; limit 1; get;"
+    query = "match $attribute isa date-started; $attribute 2015-11-12T00:00; get;"
     var = 'attribute'
     roles = ['has']
     num_results = 1

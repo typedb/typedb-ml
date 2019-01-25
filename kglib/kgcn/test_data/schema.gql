@@ -19,9 +19,11 @@
 
 define
 
-name sub attribute datatype string;
+name sub attribute,
+    datatype string;
 job-title sub name;
-date-started sub attribute datatype date;
+date-started sub attribute,
+    datatype date;
 
 ownership sub relationship,
     relates owner,
@@ -29,7 +31,7 @@ ownership sub relationship,
 
 organisation sub entity,
     plays member,
-    plays group,
+    plays organisational-group,
     plays property,
     plays owner,
     plays party,
@@ -51,11 +53,11 @@ affiliation sub relationship,
 
 membership sub affiliation,
     relates member as party,
-    relates group as party;
+    relates organisational-group as party;
 
 employment sub affiliation,
     relates employee as member,
-    relates employer as group,
+    relates employer as organisational-group,
     has job-title;
 
 project sub entity,
