@@ -6,7 +6,7 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 ## Methodology
 
-The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, made to work over a **knowledge graph**. Instead of working on a typical property graph, a KGCN learns from the context of a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
+The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68), and a [video of the presentation](https://youtu.be/Jx_Twc75ka0?t=368). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, made to work over a **knowledge graph**. Instead of working on a typical property graph, a KGCN learns from the context of a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
 
 #### How do KGCNs work?
 
@@ -34,7 +34,7 @@ To create embeddings, we build a network in TensorFlow that successively aggrega
 
 - Prepare the data:
 
-  - If you already have an insatnce of Grakn running, make sure to stop it using `./grakn server stop`
+  - If you already have an instance of Grakn running, make sure to stop it using `./grakn server stop`
   
   - Download the pre-loaded Grakn distribution from the [latest release](https://github.com/graknlabs/kglib/releases/latest)
 
@@ -82,4 +82,4 @@ The [main](examples/animal_trade/main.py) function will:
 
 - Build the TensorFlow computation graph using `model.KGCN`, including a multi-class classification step and learning procedure defined by `downstream.SupervisedKGCNClassifier`
 
-- Feed the `raw_arrays` to the TensorFlow graph, and performs learning
+- Feed the `raw_arrays` to the TensorFlow graph, and perform learning
