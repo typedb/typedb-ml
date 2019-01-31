@@ -185,6 +185,78 @@ py_test(
     ]
 )
 
+py_test(
+    name = "import_test",
+    srcs = [
+        "test/import_test.py"
+    ],
+    deps = [
+        requirement('grakn-kglib'),
+
+        # Grakn deps
+        requirement('grakn'),
+        requirement('grpcio'),
+
+        # TensorFlow deps
+        requirement('tensorflow'),
+        requirement('numpy'),
+        requirement('protobuf'),
+        requirement('six'),
+        requirement('absl-py'),
+        requirement('keras_applications'),
+        requirement('keras_preprocessing'),
+        requirement('gast'),
+        requirement('astor'),
+        requirement('termcolor'),
+
+        requirement('tensorflow-hub'),
+        requirement('scikit-learn'),
+        requirement('scipy')
+    ]
+)
+
+py_test(
+    name = "test_pypi_end_to_end_test",
+    main = "end_to_end_test.py",
+    srcs = [
+        "examples/kgcn/animal_trade/test/end_to_end_test.py"
+    ],
+    deps = [
+        requirement('grakn-kglib'),
+
+        # Grakn deps
+        requirement('grakn'),
+        requirement('grpcio'),
+
+        # TensorFlow deps
+        requirement('tensorflow'),
+        requirement('numpy'),
+        requirement('protobuf'),
+        requirement('six'),
+        requirement('absl-py'),
+        requirement('keras_applications'),
+        requirement('keras_preprocessing'),
+        requirement('gast'),
+        requirement('astor'),
+        requirement('termcolor'),
+
+        requirement('tensorflow-hub'),
+        requirement('scikit-learn'),
+        requirement('scipy')
+    ]
+)
+
+py_test(
+    name = "local_end_to_end_test",
+    main = "end_to_end_test.py",
+    srcs = [
+        "examples/kgcn/animal_trade/test/end_to_end_test.py"
+    ],
+    deps = [
+        "kglib",
+    ]
+)
+
 py_library(
     name = "kglib",
     srcs = glob(['kglib/__init__.py', 'kglib/kgcn/**/*.py']),
