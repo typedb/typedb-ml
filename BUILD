@@ -191,27 +191,7 @@ py_test(
         "test/import_test.py"
     ],
     deps = [
-        requirement('grakn-kglib'),
-
-        # Grakn deps
-        requirement('grakn'),
-        requirement('grpcio'),
-
-        # TensorFlow deps
-        requirement('tensorflow'),
-        requirement('numpy'),
-        requirement('protobuf'),
-        requirement('six'),
-        requirement('absl-py'),
-        requirement('keras_applications'),
-        requirement('keras_preprocessing'),
-        requirement('gast'),
-        requirement('astor'),
-        requirement('termcolor'),
-
-        requirement('tensorflow-hub'),
-        requirement('scikit-learn'),
-        requirement('scipy')
+        "test-pypi-kglib"
     ]
 )
 
@@ -222,27 +202,7 @@ py_test(
         "examples/kgcn/animal_trade/test/end_to_end_test.py"
     ],
     deps = [
-        requirement('grakn-kglib'),
-
-        # Grakn deps
-        requirement('grakn'),
-        requirement('grpcio'),
-
-        # TensorFlow deps
-        requirement('tensorflow'),
-        requirement('numpy'),
-        requirement('protobuf'),
-        requirement('six'),
-        requirement('absl-py'),
-        requirement('keras_applications'),
-        requirement('keras_preprocessing'),
-        requirement('gast'),
-        requirement('astor'),
-        requirement('termcolor'),
-
-        requirement('tensorflow-hub'),
-        requirement('scikit-learn'),
-        requirement('scipy')
+        "test-pypi-kglib"
     ]
 )
 
@@ -261,6 +221,36 @@ py_library(
     name = "kglib",
     srcs = glob(['kglib/__init__.py', 'kglib/kgcn/**/*.py']),
     deps = [
+        # Grakn deps
+        requirement('grakn'),
+        requirement('grpcio'),
+
+        # TensorFlow deps
+        requirement('tensorflow'),
+        requirement('numpy'),
+        requirement('protobuf'),
+        requirement('six'),
+        requirement('absl-py'),
+        requirement('keras_applications'),
+        requirement('keras_preprocessing'),
+        requirement('gast'),
+        requirement('astor'),
+        requirement('termcolor'),
+
+        requirement('tensorflow-hub'),
+        requirement('scikit-learn'),
+        requirement('scipy'),
+    ]
+)
+
+py_library(
+    name = "test-pypi-kglib",
+    srcs = [
+        "examples/kgcn/animal_trade/test/end_to_end_test.py"
+    ],
+    deps = [
+        requirement('grakn-kglib'),
+        
         # Grakn deps
         requirement('grakn'),
         requirement('grpcio'),
