@@ -2,16 +2,6 @@ load("@io_bazel_rules_python//python:python.bzl", "py_library", "py_test")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 py_test(
-    name = "import_test",
-    srcs = [
-        "test/import_test.py"
-    ],
-    deps = [
-        "test-pypi-kglib"
-    ]
-)
-
-py_test(
     name = "test_pypi_end_to_end_test",
     main = "end_to_end_test.py",
     srcs = [
