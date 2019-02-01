@@ -82,7 +82,8 @@ workflows:
           requires:
             - test
       - end-to-end-test:
-          - requires: test-deploy-pip
+          requires:
+            - test-deploy-pip
       - approve-deploy-git:
           type: approval
           requires:
