@@ -1,6 +1,9 @@
 # Bazel files
 bazel-*
 
+# IntelliJ Bazel project
+.ijwb/
+
 # Compiled class file
 *.class
 
