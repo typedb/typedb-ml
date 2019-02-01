@@ -8,7 +8,10 @@ py_test(
         "kgcn/animal_trade/test/end_to_end_test.py"
     ],
     deps = [
-        "test-pypi-kglib"
+        "test-pypi-kglib",
+    ],
+    data = [
+        "@animaltrade_dist//file",
     ]
 )
 

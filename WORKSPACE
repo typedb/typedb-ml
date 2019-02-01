@@ -36,3 +36,12 @@ pip3_import(
 )
 load("@pypi_deployment_dependencies//:requirements.bzl", "pip_install")
 pip_install()
+
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+  name = "animaltrade_dist",
+  urls = ["https://github.com/graknlabs/kglib/releases/download/v0.1a1/grakn-animaltrade.zip", # TODO How to update to the latest relase each time?
+  ]
+)

@@ -59,5 +59,5 @@ deploy_pip(
         deployment_requirement("webencodings"),
         deployment_requirement("six"),
     ],
-    target = ":kglib"
+    target = "//kglib:kglib"
 )
