@@ -25,7 +25,7 @@ client = grakn.Grakn(uri=URI)
 session = client.session(keyspace=training_keyspace)
 transaction = session.transaction(grakn.TxType.WRITE)
 
-kgcn = models.model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
+kgcn = models.model.KGCN(neighbour_sample_sizes,
                          features_length,
                          starting_concepts_features_length,
                          aggregated_length,

@@ -15,9 +15,9 @@
 
   - If you already have an instance of Grakn running, make sure to stop it using `./grakn server stop`
   
-  - Download the pre-loaded Grakn distribution from the [latest release](https://github.com/graknlabs/kglib/releases/latest)
+  - Download `grakn-animaltrade.zip` from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a Grakn distribution, pre-loaded with the CITES dataset
 
-  - Unzip the distribution `unzip grakn-animaltrade.zip `, where you store this doesn't matter 
+  - Unzip the distribution `unzip grakn-animaltrade.zip`, where you store this doesn't matter
 
   - cd into the distribution `cd grakn-animaltrade`
   
@@ -62,3 +62,14 @@ The [main](../../examples/kgcn/animal_trade/main.py) function will:
 - Build the TensorFlow computation graph using `model.KGCN`, including a multi-class classification step and learning procedure defined by `downstream.SupervisedKGCNClassifier`
 
 - Feed the `raw_arrays` to the TensorFlow graph, and perform learning
+
+##### Re-training the model
+Re-running the `main` function will make use of the `feed_dicts` previously saved to file (at `dataset/10_concepts/input`), and so will repeat `classifier.train(feed_dicts[TRAIN])`, `classifier.eval(feed_dicts[EVAL])` and `classifier.eval(feed_dicts[PREDICT])` over the exact same data as previously retrieved. Therefore, to play with the learning parameters, do so and then simply re-run `main`.
+
+##### Re-generating the `feed_dicts`
+To re-generate the `feed_dicts`, delete the saved files in `dataset/10_concepts/input`.
+
+##### Picking new samples
+To pick different sample concepts to use for training/evaluation/prediction you need to:
+- Force the `feed-dict`s to re-generate by deleting the saved files (as above)
+- Use a fresh version of `grakn-animaltrade`, since the present one has had the supervised labels deleted!
