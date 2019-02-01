@@ -8,9 +8,9 @@ pkginfo==1.5.0.1
 readme-renderer==24.0
 requests-toolbelt==0.8.0
 requests==2.21.0
-setuptools>=38.6.0
 tqdm==4.29.1
 twine==1.12.1
+setuptools==40.7.2  # Setuptools 40.7.2 is brought in automatically by twine regardless, so insluding it here is misleading. Including a different version than twine brings proves to be fatal, as there are two versions, one from twine and one from us.
 urllib3==1.24.1
 webencodings==0.5.1
 wheel==0.32.3
