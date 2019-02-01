@@ -18,6 +18,7 @@
 #
 
 import os
+import subprocess as sub
 import time
 import unittest
 
@@ -78,7 +79,15 @@ NEIGHBOUR_SAMPLE_SIZES = (2, 1)
 
 
 class TestEndToEnd(unittest.TestCase):
+
     def test_end_to_end(self):
+        # Unzip the Grakn distribution containing our data
+        sub.run(['unzip', 'external/animaltrade_dist/file/downloaded', '-d',
+                          'external/animaltrade_dist/file/downloaded-unzipped'])
+
+        # Start Grakn
+        sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-animaltrade/grakn', 'server', 'start'])
+
         modes = (TRAIN, EVAL)
 
         client = grakn.Grakn(uri=URI)
