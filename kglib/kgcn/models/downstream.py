@@ -33,6 +33,7 @@ class SupervisedKGCNClassifier:
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer()):
 
         self._log_dir = log_dir
+        self._write_summary = self._log_dir is not None
         self._kgcn = kgcn
         self._optimizer = optimizer
         self._num_classes = num_classes
@@ -92,7 +93,8 @@ class SupervisedKGCNClassifier:
         init_tables = tf.tables_initializer()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        self.summary_writer = tf.summary.FileWriter(self._log_dir, self.tf_session.graph)
+        if self._write_summary:
+            self.summary_writer = tf.summary.FileWriter(self._log_dir, self.tf_session.graph)
 
         # Run the Op to initialize the variables.
         self.tf_session.run(init_global)
@@ -136,8 +138,9 @@ class SupervisedKGCNClassifier:
                  self._predictions_class_winners, self._labels_winners])
 
             summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
-            self.summary_writer.add_summary(summary_str, step)
-            self.summary_writer.flush()
+            if self._write_summary:
+                self.summary_writer.add_summary(summary_str, step)
+                self.summary_writer.flush()
             if step % int(self._max_training_steps / 20) == 0:
                 print(f'\n-----')
                 print(f'Step {step}')

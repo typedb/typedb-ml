@@ -1,3 +1,5 @@
+--extra-index-url https://testpypi.python.org/pypi
+grakn-kglib
 absl-py==0.5.0
 astor==0.7.1
 decorator==4.3.0

@@ -14,7 +14,7 @@ git_repository(
 git_repository(
     name="graknlabs_bazel_distribution",
     remote="https://github.com/graknlabs/bazel-distribution",
-    commit="2e932a2555d1e43f75c8ee676c926399bd12f240"
+    commit="ebc9ae9e6d4ef0086d1c6731bf6f5f8a8f40b509"
 )
 
 ## Only needed for PIP support:
@@ -32,7 +32,16 @@ pip_install()
 
 pip3_import(
     name = "pypi_deployment_dependencies",
-    requirements = "//:deployment/requirements.txt",
+    requirements = "@graknlabs_bazel_distribution//pip:requirements.txt"
 )
 load("@pypi_deployment_dependencies//:requirements.bzl", "pip_install")
 pip_install()
+
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
+
+http_file(
+  name = "animaltrade_dist",
+  urls = ["https://github.com/graknlabs/kglib/releases/download/v0.1a1/grakn-animaltrade.zip", # TODO How to update to the latest relase each time?
+  ]
+)

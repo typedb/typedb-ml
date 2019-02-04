@@ -136,8 +136,8 @@ define
         relates originated-species;
 
     taxon-membership sub relationship,
-            relates member-item,
-            relates taxonomic-group;
+        relates member-item,
+        relates taxonomic-group;
 
     taxonomic-ranking
         when {
