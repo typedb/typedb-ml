@@ -58,10 +58,6 @@ POPULATION_SIZE_PER_CLASS = 100
 # Params for persisting to files
 DIR = os.path.dirname(os.path.realpath(__file__))
 TIMESTAMP = time.strftime("%Y-%m-%d_%H-%M-%S")
-# BASE_PATH = f'{DIR}/dataset/{NUM_PER_CLASS}_concepts/'
-# flags.DEFINE_string('log_dir', BASE_PATH + 'out/out_' + TIMESTAMP, 'directory to use to store data from training')
-
-# SAVED_LABELS_PATH = BASE_PATH + 'labels/labels_{}.p'
 
 TRAIN = 'train'
 EVAL = 'eval'
