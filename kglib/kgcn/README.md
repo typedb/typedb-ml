@@ -6,9 +6,9 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 **Requirements:**
 
-- Python 3.6.3 < version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022))
+- Python 3.6.3 <= version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022))
 
-- kglib installed from pip: `pip install --extra-index-url https://test.pypi.org/simple/ grakn-kglib`
+- kglib installed from pip: `pip install grakn-kglib`
 
 ### Usage
 
@@ -47,7 +47,7 @@ transaction.close()
 session.close()
 ```
 
-There is also a [full example](https://github.com/graknlabs/kglib/examples/kgcn/animal_trade) which outlines retrieving sample concepts with labels and working with separate keyspaces for training and testing.  
+There is also a [full example](https://github.com/graknlabs/kglib/tree/master/examples/kgcn/animal_trade) which outlines retrieving sample concepts with labels and working with separate keyspaces for training and testing.
 
 ## Methodology
 

@@ -4,8 +4,7 @@
 
 **Requirements:**
 
-- Python 3.6.3 < version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022))
-- kglib installed from pip: `pip install grakn-kglib`
+- The requirements listed in the [KGCN quickstart](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn#quickstart)
 - The source code in order to access the example `git clone https://github.com/graknlabs/kglib.git`
 - The `grakn-animaltrade.zip` dataset from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a dataset that has been pre-loaded into Grakn v1.5 (so you don't have to run the data import yourself), with two keyspaces: `animaltrade_train` and `animaltrade_test`
 
