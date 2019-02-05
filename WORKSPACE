@@ -14,7 +14,7 @@ git_repository(
 git_repository(
     name="graknlabs_bazel_distribution",
     remote="https://github.com/graknlabs/bazel-distribution",
-    commit="ebc9ae9e6d4ef0086d1c6731bf6f5f8a8f40b509"
+    commit="27c8bf9e5d9f9b11b2a70dc2697da196d69f799c"
 )
 
 ## Only needed for PIP support:
