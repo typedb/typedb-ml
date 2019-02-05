@@ -8,7 +8,7 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 - Python 3.6.3 <= version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022))
 
-- kglib installed from pip: `pip install grakn-kglib`
+- kglib installed from pip: `pip install grakn-kglib`. Ensure that `pip` use the Python version listed above. Find out using 'pip --version'. By default `pip` may use Python 2, in which case you may need either `pip3`, or to create an isolated environment using `pipenv`/`virtualenv`, or change your global Python with `pyenv`.
 
 ### Usage
 
