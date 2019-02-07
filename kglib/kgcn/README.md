@@ -1,6 +1,28 @@
 # Knowledge Graph Convolutional Networks (KGCNs)
 
-This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN). The principal idea of this work is to forge a bridge between knowledge graphs and machine learning, using [Grakn](https://github.com/graknlabs/grakn) as the knowledge graph. A KGCN can be used to create vector representations, *embeddings*, of any labelled set of Grakn Concepts via supervised learning. As a result, a KGCN can be trained directly for the classification or regression of Concepts stored in Grakn. Future work will include building embeddings via unsupervised learning.![KGCN Process](readme_images/KGCN_process.png)
+This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN). The principal idea of this work is to forge a bridge between knowledge graphs and machine learning, using [Grakn](https://github.com/graknlabs/grakn) as the knowledge graph.
+
+A KGCN can be used to create vector representations, *embeddings*, of any labelled set of Grakn [Things](https://dev.grakn.ai/docs/concept-api/overview) via supervised learning.    
+
+As a result, a KGCN can be trained directly for the classification or regression of Things stored in Grakn. Future work will include building embeddings via unsupervised learning.
+
+## Use-Case
+
+Often, data doesn't fit well into a tabular format. Many existing machine learning techniques rely upon an input *vector for each sample*. This makes using many conventional machine learning techniques unfeasible when your input data doesn't have this structure. 
+
+Instead, your data can be stored in a knowledge graph. Now, however, to use existing ideas, tools and pipelines, we need a method of building a *vector for each sample*, so that we can leverage the knowledge graph for the task we want to perform.
+
+This is what a KGCN can achieve. It can examine a knowledge graph to assess the data in the vicinity of a sample. Based on this vicinity it can determine a representation (*embedding*) for that sample.
+
+Subsequently, the embeddings can be fed into some learning pipeline which performs the task we're actually interested in. We refer to this task as *downstream learning*, which could be classification, regression, link prediction etc..
+
+![KGCN Process](readme_images/KGCN_process.png)
+
+In order to build a *useful* representation, a KGCN needs to perform some learning. To do that we need a function to optimise. In the supervised case, we can use this to our advantage and optimise the exact task we want to perform.
+
+This may be counter to intuition, in this case embeddings are an intermediate step in a single learning pipeline. in this way the whole pipeline performs the end task (classification/regression/otherwise), and the KGCN is directly optimised to that task.
+
+
 
 ## Quickstart
 
@@ -29,7 +51,7 @@ transaction = session.transaction(grakn.TxType.WRITE)
 
 kgcn = models.model.KGCN(neighbour_sample_sizes,
                          features_length,
-                         starting_concepts_features_length,
+                         starting_things_features_length,
                          aggregated_length,
                          output_length,
                          transaction,
@@ -41,7 +63,7 @@ optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 classifier = models.downstream.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
                                                         max_training_steps=max_training_steps)
 
-training_feed_dict = classifier.get_feed_dict(session, training_concepts, labels=training_labels)
+training_feed_dict = classifier.get_feed_dict(session, training_things, labels=training_labels)
 
 classifier.train(training_feed_dict)
 
@@ -49,7 +71,7 @@ transaction.close()
 session.close()
 ```
 
-There is also a [full example](https://github.com/graknlabs/kglib/tree/master/examples/kgcn/animal_trade) which outlines retrieving sample concepts with labels and working with separate keyspaces for training and testing.
+There is also a [full example](https://github.com/graknlabs/kglib/tree/master/examples/kgcn/animal_trade) which outlines retrieving sample Things with labels and working with separate keyspaces for training and testing.
 
 ## Methodology
 
@@ -57,9 +79,9 @@ The ideology behind this project is described [here](https://blog.grakn.ai/knowl
 
 #### How do KGCNs work?
 
-The purpose of this method is to derive embeddings for a set of Concepts (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the neighbourhood of each example Concept. We do this by considering their *k-hop* neighbours.
+The purpose of this method is to derive embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the neighbourhood of each example Thing. We do this by considering their *k-hop* neighbours.
 
-![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn. This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Concept encountered.
+![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn. This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered.
 
 To create embeddings, we build a network in TensorFlow that successively aggregates and combines features from the K hops until a 'summary' representation remains - an embedding. In our example these embeddings are directly optimised to perform multi-class classification. This is achieved by passing the embeddings to a single subsequent dense layer and determining loss via softmax cross entropy with the labels retrieved.
 
