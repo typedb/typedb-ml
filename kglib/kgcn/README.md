@@ -79,15 +79,33 @@ The ideology behind this project is described [here](https://blog.grakn.ai/knowl
 
 #### How do KGCNs work?
 
+##### Consider the neighbourhood
+
 The purpose of this method is to derive embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the neighbourhood of each example Thing. We do this by considering their *k-hop* neighbours.
 
 ![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (dotted lines, above).
+
+##### Aggregation and Combination Model
 
 To create embeddings, we build a network in TensorFlow that successively aggregates and combines features from the K hops until a 'summary' representation remains - an embedding (diagram below). In supervised learning these embeddings are directly optimised to perform the task at hand. For multi-class classification this is achieved by passing the embeddings to a single subsequent dense layer and determining loss via softmax cross entropy with the labels retrieved; then, optimising to minimise that loss.
 
 ![Aggregation and Combination process](readme_images/aggregate_and_combine.png)
 
+##### Aggregation
+
+An *Aggregation* step (pictured below) takes in a vector representation of a subsample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
+
+##### Combination
+
+Once we have Aggregated the neighbours of a Thing into a singel vector representation, we need to combine this with the vecto representation of that thing itself. We use a simple *Combination* step to achieve this, a concatenation of the two vectors, followed by reducing the dimensions using a single densely connected layer. 
+
+##### ![combination](readme_images/combination.png)
+
+##### Recursion
+
+To create the pipeline, Aggregation and Combination are performed recursively for the K-hops of neighbours considered. e.g. for the 2-hop case this means Aggregate-Combine-Aggregate-Combine.
+
+##### The data
 
 
-  
 
