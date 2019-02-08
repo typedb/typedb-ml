@@ -14,7 +14,7 @@ Instead, your data can be stored in a knowledge graph. Now, however, to use exis
 
 This is what a KGCN can achieve. It can examine a knowledge graph to assess the data in the vicinity of a sample. Based on this vicinity it can determine a representation (*embedding*) for that sample.
 
-Subsequently, the embeddings can be fed into some learning pipeline which performs the task we're actually interested in. We refer to this task as *downstream learning*, which could be classification, regression, link prediction etc..
+Subsequently, the embeddings can be fed into some learning pipeline which performs the task we're actually interested in. We refer to this task as *downstream learning*, which could be classification, regression, link prediction etc., or unsupervised learning.
 
 ![KGCN Process](readme_images/KGCN_process.png)
 
@@ -81,13 +81,13 @@ The ideology behind this project is described [here](https://blog.grakn.ai/knowl
 
 #### Consider the neighbourhood
 
-The purpose of this method is to derive embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the neighbourhood of each example Thing. We do this by considering their *k-hop* neighbours.
+The purpose of this method is to derive embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the context of each example Thing. We do this by considering their *k-hop* neighbours.
 
 ![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (dotted lines, above).
 
-#### The data
+#### The Input Data
 
-In order to feed a TensorFlow neural network model, we need regular array structures of input data. A KGCN builds these *raw arrays* by querying Grakn for (a sub-sample of) the neighbours of the starting Things. For each Thing, KGCN stores its Id, Type, Meta-Type (Entity/Relationship/Attribute), its data-type and value (if its an attribute), and the Role that connects to that Thing, plus the direction of that Role. 
+In order to feed a TensorFlow neural network, we need regular array structures of input data. The Context Builder builds these *context arrays*. It talks to a Neighbour Finder, which queries Grakn for (a sub-sample of) the neighbours of the starting Things. For each Thing, the Neighbour Finder retrieves its Id, Type, Meta-Type (either Entity or Relationship or Attribute), its data-type and value (if its an attribute), and the Role that connects to that Thing, plus the direction of that Role. It passes these to the Context Builder to be added to the context arrays.
 
 Using the unique Ids of those 1-hop neighbours, KGCN queries Grakn for (a sub-sample of) their 2-hop neighbours and, again, store the information found for them. This process is recursive until K-hops has been reached.
 
