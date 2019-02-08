@@ -77,19 +77,27 @@ There is also a [full example](https://github.com/graknlabs/kglib/tree/master/ex
 
 The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68), and a [video of the presentation](https://youtu.be/Jx_Twc75ka0?t=368). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, made to work over a knowledge graph. Instead of working on a typical property graph, a KGCN learns from the context of a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
 
-#### How do KGCNs work?
+### How do KGCNs work?
 
-##### Consider the neighbourhood
+#### Consider the neighbourhood
 
 The purpose of this method is to derive embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the neighbourhood of each example Thing. We do this by considering their *k-hop* neighbours.
 
 ![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (dotted lines, above).
 
-##### Aggregation and Combination Model
+#### The data
+
+In order to feed a TensorFlow neural network model, we need regular array structures of input data. A KGCN builds these *raw arrays* by querying Grakn for (a sub-sample of) the neighbours of the starting Things. For each Thing, KGCN stores its Id, Type, Meta-Type (Entity/Relationship/Attribute), its data-type and value (if its an attribute), and the Role that connects to that Thing, plus the direction of that Role. 
+
+Using the unique Ids of those 1-hop neighbours, KGCN queries Grakn for (a sub-sample of) their 2-hop neighbours and, again, store the information found for them. This process is recursive until K-hops has been reached.
+
+#### Aggregation and Combination Model
 
 To create embeddings, we build a network in TensorFlow that successively aggregates and combines features from the K hops until a 'summary' representation remains - an embedding (diagram below). In supervised learning these embeddings are directly optimised to perform the task at hand. For multi-class classification this is achieved by passing the embeddings to a single subsequent dense layer and determining loss via softmax cross entropy with the labels retrieved; then, optimising to minimise that loss.
 
 ![Aggregation and Combination process](readme_images/aggregate_and_combine.png)
+
+
 
 ##### Aggregation
 
@@ -99,13 +107,8 @@ An *Aggregation* step (pictured below) takes in a vector representation of a sub
 
 Once we have Aggregated the neighbours of a Thing into a singel vector representation, we need to combine this with the vecto representation of that thing itself. We use a simple *Combination* step to achieve this, a concatenation of the two vectors, followed by reducing the dimensions using a single densely connected layer. 
 
-##### ![combination](readme_images/combination.png)
+![combination](readme_images/combination.png)
 
-##### Recursion
+##### Chaining
 
-To create the pipeline, Aggregation and Combination are performed recursively for the K-hops of neighbours considered. e.g. for the 2-hop case this means Aggregate-Combine-Aggregate-Combine.
-
-##### The data
-
-
-
+To create the pipeline, Aggregation and Combination operations are chained for the K-hops of neighbours considered. e.g. for the 2-hop case this means Aggregate-Combine-Aggregate-Combine.
