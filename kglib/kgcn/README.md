@@ -85,11 +85,29 @@ The purpose of this method is to derive embeddings for a set of Things (and ther
 
 ![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (dotted lines, above).
 
-#### The Input Data
+#### Input Feed Dicts
 
 In order to feed a TensorFlow neural network, we need regular array structures of input data. The Context Builder builds these *context arrays*. It talks to a Neighbour Finder, which queries Grakn for (a sub-sample of) the neighbours of the starting Things. For each Thing, the Neighbour Finder retrieves its Id, Type, Meta-Type (either Entity or Relationship or Attribute), its data-type and value (if its an attribute), and the Role that connects to that Thing, plus the direction of that Role. It passes these to the Context Builder to be added to the context arrays.
 
 Using the unique Ids of those 1-hop neighbours, KGCN queries Grakn for (a sub-sample of) their 2-hop neighbours and, again, store the information found for them. This process is recursive until K-hops has been reached.
+
+These context arrays are then composed by KGCN into feed dicts (TensorFlow terminology), which can be fed to the network. This could (probably should) be replaced by TensorFLow Datasets as input to the network.
+
+#### Data Encoding
+
+Having built context arrays, these need to be mapped to numerical vector representations. This is performed by an Encoder that operates inside the TensorFlow computation graph, acting immediately after the data is input to the TensorFlow placeholders.
+
+All of the data contained in the context arrays is encoded in this step.
+
+- Role Types are multi-hot encoded according to their hierarchy
+- Role directions are not affected
+- Neighbour Types are multi-hot encoded according to their hierarchy
+- Neighbour Data Types are one-hot encoded
+- Longs are converted to floats
+- Doubles are not affected
+- Booleans are encoded to True = 1, False = 0, Not present = -1
+- Dates are given in unixtime and converted to floats, then normalised
+- Strings are encoded to 128 dimensional floats using a [pre-trained network](https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1) from TensorFlow Hub
 
 #### Aggregation and Combination Model
 
@@ -97,15 +115,13 @@ To create embeddings, we build a network in TensorFlow that successively aggrega
 
 ![Aggregation and Combination process](readme_images/aggregate_and_combine.png)
 
-
-
 ##### Aggregation
 
 An *Aggregation* step (pictured below) takes in a vector representation of a subsample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
 
 ##### Combination
 
-Once we have Aggregated the neighbours of a Thing into a singel vector representation, we need to combine this with the vecto representation of that thing itself. We use a simple *Combination* step to achieve this, a concatenation of the two vectors, followed by reducing the dimensions using a single densely connected layer. 
+Once we have Aggregated the neighbours of a Thing into a single vector representation, we need to combine this with the vector representation of that thing itself. We use a simple *Combination* step to achieve this, a concatenation of the two vectors, followed by reducing the dimensions using a single densely connected layer. 
 
 ![combination](readme_images/combination.png)
 
