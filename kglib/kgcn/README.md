@@ -8,11 +8,11 @@ As a result, a KGCN can be trained directly for the classification or regression
 
 ## Use-Case
 
-Often, data doesn't fit well into a tabular format. Many existing machine learning techniques rely upon an input *vector for each sample*. This makes using many conventional machine learning techniques unfeasible when your input data doesn't have this structure. 
+Often, data doesn't fit well into a tabular format. Many existing machine learning techniques rely upon an input *vector for each example*. This makes using many conventional machine learning techniques unfeasible when your input data doesn't have this structure. 
 
-Instead, your data can be stored in a knowledge graph. Now, however, to use existing ideas, tools and pipelines, we need a method of building a *vector for each sample*, so that we can leverage the knowledge graph for the task we want to perform.
+Instead, your data can be stored in a knowledge graph. Now, however, to use existing ideas, tools and pipelines, we need a method of building a *vector for each example*, so that we can leverage the knowledge graph for the task we want to perform.
 
-This is what a KGCN can achieve. It can examine a knowledge graph to assess the data in the vicinity of a sample. Based on this vicinity it can determine a representation (*embedding*) for that sample.
+This is what a KGCN can achieve. It can examine a knowledge graph to assess the data in the vicinity of a example. Based on this vicinity it can determine a representation (*embedding*) for that example.
 
 Subsequently, the embeddings can be fed into some learning pipeline which performs the task we're actually interested in. We refer to this task as *downstream learning*, which could be classification, regression, link prediction etc., or unsupervised learning.
 
@@ -71,7 +71,7 @@ transaction.close()
 session.close()
 ```
 
-There is also a [full example](https://github.com/graknlabs/kglib/tree/master/examples/kgcn/animal_trade) which outlines retrieving sample Things with labels and working with separate keyspaces for training and testing.
+There is also a [full example](https://github.com/graknlabs/kglib/tree/master/examples/kgcn/animal_trade) which outlines retrieving a set of example Things with labels and working with separate keyspaces for training and testing.
 
 ## Methodology
 
@@ -117,7 +117,7 @@ To create embeddings, we build a network in TensorFlow that successively aggrega
 
 ##### Aggregation
 
-An *Aggregation* step (pictured below) takes in a vector representation of a subsample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
+An *Aggregation* step (pictured below) takes in a vector representation of a sub-sample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
 
 ##### Combination
 
