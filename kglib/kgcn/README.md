@@ -134,11 +134,11 @@ To create the pipeline, the Embedder chains Aggregation and Combination operatio
 
 ![Aggregation and Combination process](readme_images/aggregate_and_combine.png)
 
-##### Aggregator
+#### Aggregator
 
 An *Aggregator* (pictured below) takes in a vector representation of a sub-sample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
 
-##### Combiner
+#### Combiner
 
 Once we have Aggregated the neighbours of a Thing into a single vector representation, we need to combine this with the vector representation of that thing itself. A *Combiner* achieves this by concatenating the two vectors, and reduces the dimensionality using a single densely connected layer.
 

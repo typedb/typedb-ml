@@ -63,91 +63,76 @@ class KGCNFeature:
 F = KGCNFeature
 
 
-class DatasetBuilder:
-    def __init__(self, neighbour_sample_sizes,
-                 role_type=F(tf.string, lambda x: x, lambda x: tf.convert_to_tensor(x, dtype=tf.string)),
-                 role_direction=F(tf.int64, lambda x: x, lambda x: x),
-                 neighbour_type=F(tf.string, lambda x: x, lambda x: tf.convert_to_tensor(x, dtype=tf.string)),
-                 neighbour_data_type=F(tf.string, lambda x: x, lambda x: x),
-                 neighbour_value_long=F(tf.int64, lambda x: x, lambda x: x),
-                 neighbour_value_double=F(tf.float32, lambda x: x, lambda x: x),
-                 neighbour_value_boolean=F(tf.int64, lambda x: x, lambda x: x),
-                 neighbour_value_date=F(tf.int64, datetime_to_unixtime, lambda x: x),
-                 neighbour_value_string=F(tf.string, lambda x: x, lambda x: x)):
-        # TODO Get rid of pointless lambdas
-        # TODO Remove formatters
+def build_dataset(neighbour_sample_sizes,
+                  role_type=F(tf.string, lambda x: x, lambda x: tf.convert_to_tensor(x, dtype=tf.string)),
+                  role_direction=F(tf.int64, lambda x: x, lambda x: x),
+                  neighbour_type=F(tf.string, lambda x: x, lambda x: tf.convert_to_tensor(x, dtype=tf.string)),
+                  neighbour_data_type=F(tf.string, lambda x: x, lambda x: x),
+                  neighbour_value_long=F(tf.int64, lambda x: x, lambda x: x),
+                  neighbour_value_double=F(tf.float32, lambda x: x, lambda x: x),
+                  neighbour_value_boolean=F(tf.int64, lambda x: x, lambda x: x),
+                  neighbour_value_date=F(tf.int64, datetime_to_unixtime, lambda x: x),
+                  neighbour_value_string=F(tf.string, lambda x: x, lambda x: x)):
+    # TODO Get rid of pointless lambdas
+    # TODO Remove formatters
 
-        self._neighbour_sample_sizes = neighbour_sample_sizes
+    neighbour_sample_sizes = neighbour_sample_sizes
 
-        self._features = {'role_type': role_type,
-                          'role_direction': role_direction,
-                          'neighbour_type': neighbour_type,
-                          'neighbour_data_type': neighbour_data_type,
-                          'neighbour_value_long': neighbour_value_long,
-                          'neighbour_value_double': neighbour_value_double,
-                          'neighbour_value_boolean': neighbour_value_boolean,
-                          'neighbour_value_date': neighbour_value_date,
-                          'neighbour_value_string': neighbour_value_string}
+    features = {'role_type': role_type,
+                'role_direction': role_direction,
+                'neighbour_type': neighbour_type,
+                'neighbour_data_type': neighbour_data_type,
+                'neighbour_value_long': neighbour_value_long,
+                'neighbour_value_double': neighbour_value_double,
+                'neighbour_value_boolean': neighbour_value_boolean,
+                'neighbour_value_date': neighbour_value_date,
+                'neighbour_value_string': neighbour_value_string}
 
-        for key, value in self._features.items():
-            # Remove the features we don't want
-            if value is None:
-                del self._features[key]
+    for key, value in features.items():
+        # Remove the features we don't want
+        if value is None:
+            del features[key]
 
-        # self._formatters = {feature_name: feature.formatter for feature_name, feature in self._features.items()}
-        self._feature_types = {feature_name: feature.raw_data_type for feature_name, feature in self._features.items()}
-        self._tensorisors = {feature_name: feature.tensorisor for feature_name, feature in self._features.items()}
+    # formatters = {feature_name: feature.formatter for feature_name, feature in features.items()}
+    feature_types = {feature_name: feature.raw_data_type for feature_name, feature in features.items()}
+    tensorisors = {feature_name: feature.tensorisor for feature_name, feature in features.items()}
 
-        ################################################################################################################
-        # Placeholders
-        ################################################################################################################
+    ################################################################################################################
+    # Placeholders
+    ################################################################################################################
 
-        all_feature_types = [copy.copy(self._feature_types) for _ in range(len(self._neighbour_sample_sizes) + 1)]
-        # Remove role placeholders for the starting concepts (there are no roles for them)
-        del all_feature_types[-1]['role_type']
-        del all_feature_types[-1]['role_direction']
+    all_feature_types = [copy.copy(feature_types) for _ in range(len(neighbour_sample_sizes) + 1)]
+    # Remove role placeholders for the starting concepts (there are no roles for them)
+    del all_feature_types[-1]['role_type']
+    del all_feature_types[-1]['role_direction']
 
-        # Build the placeholders for the neighbourhood_depths for each feature type
-        self.raw_array_placeholders = build_array_placeholders(None, self._neighbour_sample_sizes, 1,
-                                                               all_feature_types, name='array_input')
+    # Build the placeholders for the neighbourhood_depths for each feature type
+    raw_array_placeholders = build_array_placeholders(None, neighbour_sample_sizes, 1,
+                                                           all_feature_types, name='array_input')
 
-    def __call__(self):
+    ################################################################################################################
+    # Tensorising
+    ################################################################################################################
 
-        ################################################################################################################
-        # Tensorising
-        ################################################################################################################
+    # Any steps needed to get arrays ready for the rest of the pipeline
+    with tf.name_scope('tensorising') as scope:
+        tensorised_arrays = apply_operations(raw_array_placeholders, tensorisors)
 
-        # Any steps needed to get arrays ready for the rest of the pipeline
-        with tf.name_scope('tensorising') as scope:
-            tensorised_arrays = apply_operations(self.raw_array_placeholders, self._tensorisors)
+    ################################################################################################################
+    # Build Dataset
+    ################################################################################################################
+    # Building the dataset using a generator became unnecessarily complex
+    # https://stackoverflow.com/questions/51136862/creating-a-tensorflow-dataset-that-outputs-a-dict
+    array_datasets = []
+    for tensorised_array in tensorised_arrays:
+        array_dataset = {}
+        for key, tensor in tensorised_array.items():
+            array_dataset[key] = tf.data.Dataset.from_tensor_slices(tensor)
+        array_datasets.append(array_dataset)
 
-        ################################################################################################################
-        # Build Dataset
-        ################################################################################################################
-        # Building the dataset using a generator became unnecessarily complex
-        # https://stackoverflow.com/questions/51136862/creating-a-tensorflow-dataset-that-outputs-a-dict
-        array_datasets = []
-        for tensorised_array in tensorised_arrays:
-            array_dataset = {}
-            for key, tensor in tensorised_array.items():
-                array_dataset[key] = tf.data.Dataset.from_tensor_slices(tensor)
-            array_datasets.append(array_dataset)
+    arrays_dataset = tf.data.Dataset.zip(tuple(array_datasets))
 
-        arrays_dataset = tf.data.Dataset.zip(tuple(array_datasets))
-
-        return arrays_dataset, self.raw_array_placeholders
-
-
-def build_feed_dict(raw_array_placeholders, raw_array_depths, labels_placeholder=None, labels=None):
-    feed_dict = {}
-    if labels is not None:
-        feed_dict[labels_placeholder] = labels
-
-    for raw_array_placeholder, raw_arrays_dict in zip(raw_array_placeholders, raw_array_depths):
-        for feature_type_name in list(raw_arrays_dict.keys()):
-            feed_dict[raw_array_placeholder[feature_type_name]] = raw_arrays_dict[feature_type_name]
-
-    return feed_dict
+    return arrays_dataset, raw_array_placeholders
 
 
 def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,

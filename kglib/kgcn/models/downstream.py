@@ -176,6 +176,18 @@ class SupervisedKGCNClassifier:
         # Possibly save/load raw arrays here instead
         raw_arrays = self._kgcn.input_fn(session, concepts)
 
-        feed_dict = preprocess.build_feed_dict(self.array_placeholders, raw_arrays,
-                                               labels_placeholder=self.labels_placeholder, labels=labels)
+        feed_dict = build_feed_dict(self.array_placeholders, raw_arrays,
+                                    labels_placeholder=self.labels_placeholder, labels=labels)
         return feed_dict
+
+
+def build_feed_dict(raw_array_placeholders, raw_array_depths, labels_placeholder=None, labels=None):
+    feed_dict = {}
+    if labels is not None:
+        feed_dict[labels_placeholder] = labels
+
+    for raw_array_placeholder, raw_arrays_dict in zip(raw_array_placeholders, raw_array_depths):
+        for feature_type_name in list(raw_arrays_dict.keys()):
+            feed_dict[raw_array_placeholder[feature_type_name]] = raw_arrays_dict[feature_type_name]
+
+    return feed_dict

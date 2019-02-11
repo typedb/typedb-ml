@@ -57,7 +57,7 @@ class KGCN:
         self._schema_transaction = schema_transaction
         self.include_metatypes = include_metatypes
         self.include_implicit = include_implicit
-        self._encoder = encode.Encoder(self._schema_transaction, self.include_implicit, self.include_metatypes)
+        self._encode = encode.Encoder(self._schema_transaction, self.include_implicit, self.include_metatypes)
 
         self.batch_size = batch_size
         self._buffer_size = buffer_size
@@ -71,15 +71,17 @@ class KGCN:
 
         self._traverser = preprocess.Traverser(traversal_samplers)
 
+        self._embed = learners.Embedder(self.feature_lengths, self.aggregated_length, self.output_length,
+                                        self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
+
     def input_fn(self, session, concepts):
         raw_array_depths = self._traverser(session, concepts)
         raw_array_depths = preprocess.apply_operations(raw_array_depths, self._formatters)
         return raw_array_depths
 
-    def build_dataset(self):
+    def _build_dataset(self):
         features_to_exclude = {feat_name: None for feat_name in self._features_to_exclude}
-        dataset_builder = preprocess.DatasetBuilder(self.neighbour_sample_sizes, **features_to_exclude)
-        arrays_dataset, placeholders = dataset_builder()
+        arrays_dataset, placeholders = preprocess.build_dataset(self.neighbour_sample_sizes, **features_to_exclude)
         return arrays_dataset, placeholders
 
     def batch_dataset(self, dataset):
@@ -91,20 +93,12 @@ class KGCN:
         dataset_initializer = dataset_iterator.initializer
         return dataset_initializer, dataset_iterator
 
-    def encode(self, arrays):
-        return self._encoder(arrays)
-
-    def embed(self, encoded_arrays):
-        embedder = learners.Embedder(self.feature_lengths, self.aggregated_length, self.output_length,
-                                     self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
-        return embedder(encoded_arrays)
-
     def embed_with_labels(self, num_classes):
         labels_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='labels_input')
         labels_dataset = tf.data.Dataset.from_tensor_slices(labels_placeholder)
 
         # Pipeline
-        arrays_dataset, array_placeholders = self.build_dataset()
+        arrays_dataset, array_placeholders = self._build_dataset()
 
         combined_dataset = tf.data.Dataset.zip((arrays_dataset, labels_dataset))
 
@@ -113,9 +107,9 @@ class KGCN:
         # TODO This should be called in a loop when using more than one batch
         batch_arrays, labels = dataset_iterator.get_next()
 
-        encoded_arrays = self.encode(batch_arrays)
+        encoded_arrays = self._encode(batch_arrays)
 
-        embeddings = self.embed(encoded_arrays)
+        embeddings = self._embed(encoded_arrays)
         tf.summary.histogram('evaluate/embeddings', embeddings)
 
         return embeddings, labels, dataset_initializer, array_placeholders, labels_placeholder
