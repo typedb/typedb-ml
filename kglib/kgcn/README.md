@@ -51,13 +51,12 @@ transaction = session.transaction(grakn.TxType.WRITE)
 
 kgcn = models.model.KGCN(neighbour_sample_sizes,
                          features_length,
-                         starting_things_features_length,
+                         example_things_features_length,
                          aggregated_length,
                          output_length,
                          transaction,
                          batch_size,
-                         buffer_size
-                         )
+                         buffer_size)
 
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 classifier = models.downstream.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
@@ -77,21 +76,39 @@ There is also a [full example](https://github.com/graknlabs/kglib/tree/master/ex
 
 The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68), and a [video of the presentation](https://youtu.be/Jx_Twc75ka0?t=368). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, made to work over a knowledge graph. Instead of working on a typical property graph, a KGCN learns from the context of a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
 
-### How do KGCNs work?
+## Components
 
-#### Consider the neighbourhood
+Now we introduce the key components and how they interact.
 
-The purpose of this method is to derive embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the context of each example Thing. We do this by considering their *k-hop* neighbours.
+### KGCN
 
-![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (dotted lines, above).
+A KGCN is responsible for deriving embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the context of each example Thing. We do this by considering their *k-hop* neighbours.
+
+![k-hop neighbours](readme_images/k-hop_neighbours.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (represented above by dotted lines).
+
+In supervised learning these embeddings are directly optimised to perform the task at hand. For multi-class classification this is achieved by passing the embeddings to a single subsequent dense layer and determining loss via softmax cross entropy (against the example Things' labels); then, optimising to minimise that loss.
 
 #### Input Feed Dicts
 
-In order to feed a TensorFlow neural network, we need regular array structures of input data. The Context Builder builds these *context arrays*. It talks to a Neighbour Finder, which queries Grakn for (a sub-sample of) the neighbours of the starting Things. For each Thing, the Neighbour Finder retrieves its Id, Type, Meta-Type (either Entity or Relationship or Attribute), its data-type and value (if its an attribute), and the Role that connects to that Thing, plus the direction of that Role. It passes these to the Context Builder to be added to the context arrays.
+...
+
+#### Context Builder
+
+In order to feed a TensorFlow neural network, we need regular array structures of input data. The Context Builder builds these *context arrays*. For each example Thing, it talks to a Neighbour Finder, which queries Grakn for (a sub-sample of) the neighbours of that example Thing. For each neighbouring Thing, the Neighbour Finder retrieves its:
+
+- Id
+- Type
+- Meta-Type (either Entity or Relationship or Attribute)
+- Data-type (if it's an attribute)
+- Value (if it's an attribute)
+- The Role that connects the example to that neighbour
+- The direction of that Role
+
+It passes these to the Context Builder to be added to the context arrays.
 
 Using the unique Ids of those 1-hop neighbours, KGCN queries Grakn for (a sub-sample of) their 2-hop neighbours and, again, store the information found for them. This process is recursive until K-hops has been reached.
 
-These context arrays are then composed by KGCN into feed dicts (TensorFlow terminology), which can be fed to the network. This could (probably should) be replaced by TensorFLow Datasets as input to the network.
+These context arrays are composed by KGCN into feed dicts (TensorFlow terminology), which can be fed to the network. This could (probably should) be replaced by TensorFlow Datasets as input to the network.
 
 #### Data Encoding
 
@@ -109,22 +126,24 @@ All of the data contained in the context arrays is encoded in this step.
 - Dates are given in unixtime and converted to floats, then normalised
 - Strings are encoded to 128 dimensional floats using a [pre-trained network](https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1) from TensorFlow Hub
 
-#### Aggregation and Combination Model
+#### Embedder
 
-To create embeddings, we build a network in TensorFlow that successively aggregates and combines features from the K hops until a 'summary' representation remains - an embedding (diagram below). In supervised learning these embeddings are directly optimised to perform the task at hand. For multi-class classification this is achieved by passing the embeddings to a single subsequent dense layer and determining loss via softmax cross entropy with the labels retrieved; then, optimising to minimise that loss.
+To create embeddings, we build a network in TensorFlow that successively aggregates and combines features from the K hops until a 'summary' representation remains - an embedding (diagram below). 
+
+To create the pipeline, the Embedder chains Aggregation and Combination operations for the K-hops of neighbours considered. e.g. for the 2-hop case this means Aggregate-Combine-Aggregate-Combine.
 
 ![Aggregation and Combination process](readme_images/aggregate_and_combine.png)
 
-##### Aggregation
+##### Aggregator
 
-An *Aggregation* step (pictured below) takes in a vector representation of a sub-sample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
+An *Aggregator* (pictured below) takes in a vector representation of a sub-sample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
 
-##### Combination
+##### Combiner
 
-Once we have Aggregated the neighbours of a Thing into a single vector representation, we need to combine this with the vector representation of that thing itself. We use a simple *Combination* step to achieve this, a concatenation of the two vectors, followed by reducing the dimensions using a single densely connected layer. 
+Once we have Aggregated the neighbours of a Thing into a single vector representation, we need to combine this with the vector representation of that thing itself. A *Combiner* achieves this by concatenating the two vectors, and reduces the dimensionality using a single densely connected layer.
 
 ![combination](readme_images/combination.png)
 
-##### Chaining
+### Supervised KGCN Classifier
 
-To create the pipeline, Aggregation and Combination operations are chained for the K-hops of neighbours considered. e.g. for the 2-hop case this means Aggregate-Combine-Aggregate-Combine.
+...
