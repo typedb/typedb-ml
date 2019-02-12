@@ -108,7 +108,7 @@ def build_dataset(neighbour_sample_sizes,
 
     # Build the placeholders for the neighbourhood_depths for each feature type
     raw_array_placeholders = build_array_placeholders(None, neighbour_sample_sizes, 1,
-                                                           all_feature_types, name='array_input')
+                                                      all_feature_types, name='array_input')
 
     ################################################################################################################
     # Tensorising

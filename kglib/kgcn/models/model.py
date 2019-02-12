@@ -73,6 +73,8 @@ class KGCN:
 
         self._embed = learners.Embedder(self.feature_lengths, self.aggregated_length, self.output_length,
                                         self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
+        
+        self.neighbourhood_dataset, self.array_placeholders = self._build_dataset()
 
     def input_fn(self, session, concepts):
         raw_array_depths = self._traverser(session, concepts)
@@ -84,7 +86,7 @@ class KGCN:
         arrays_dataset, placeholders = preprocess.build_dataset(self.neighbour_sample_sizes, **features_to_exclude)
         return arrays_dataset, placeholders
 
-    def batch_dataset(self, dataset):
+    def _batch_dataset(self, dataset):
         # buffer_size = batch_size = tf.cast(self._batch_size, tf.int64)
         dataset = dataset.shuffle(buffer_size=self._buffer_size, seed=5, reshuffle_each_iteration=True)
         dataset = dataset.batch(batch_size=self.batch_size).repeat()
@@ -93,23 +95,22 @@ class KGCN:
         dataset_initializer = dataset_iterator.initializer
         return dataset_initializer, dataset_iterator
 
-    def embed_with_labels(self, num_classes):
-        labels_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='labels_input')
-        labels_dataset = tf.data.Dataset.from_tensor_slices(labels_placeholder)
+    def embed(self, *additional_datasets):
 
-        # Pipeline
-        arrays_dataset, array_placeholders = self._build_dataset()
+        datasets = list(additional_datasets)
+        datasets.insert(0, self.neighbourhood_dataset)
 
-        combined_dataset = tf.data.Dataset.zip((arrays_dataset, labels_dataset))
+        combined_dataset = tf.data.Dataset.zip(tuple(datasets))
 
-        dataset_initializer, dataset_iterator = self.batch_dataset(combined_dataset)
+        dataset_initializer, dataset_iterator = self._batch_dataset(combined_dataset)
 
         # TODO This should be called in a loop when using more than one batch
-        batch_arrays, labels = dataset_iterator.get_next()
+        next_batch = dataset_iterator.get_next()
 
-        encoded_arrays = self._encode(batch_arrays)
+        # The neighbourhood_dataset will be the first item since that's the order they were zipped
+        encoded_arrays = self._encode(next_batch[0])
 
         embeddings = self._embed(encoded_arrays)
         tf.summary.histogram('evaluate/embeddings', embeddings)
 
-        return embeddings, labels, dataset_initializer, array_placeholders, labels_placeholder
+        return embeddings, next_batch[1:], dataset_initializer, self.array_placeholders

@@ -48,9 +48,12 @@ class SupervisedKGCNClassifier:
         ################################################################################################################
         # KGCN Embeddings
         ################################################################################################################
+        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='labels_input')
+        labels_dataset = tf.data.Dataset.from_tensor_slices(self.labels_placeholder)
 
-        self.embeddings, self.labels, self.dataset_initializer, self.array_placeholders, self.labels_placeholder = \
-            self._kgcn.embed_with_labels(self._num_classes)
+        self.embeddings, next_batch, self.dataset_initializer, self.neighbourhood_placeholders = self._kgcn.embed(
+            labels_dataset)
+        self.labels = next_batch[0]
 
         ################################################################################################################
         # Downstream of embeddings - classification
@@ -176,7 +179,7 @@ class SupervisedKGCNClassifier:
         # Possibly save/load raw arrays here instead
         raw_arrays = self._kgcn.input_fn(session, concepts)
 
-        feed_dict = build_feed_dict(self.array_placeholders, raw_arrays,
+        feed_dict = build_feed_dict(self.neighbourhood_placeholders, raw_arrays,
                                     labels_placeholder=self.labels_placeholder, labels=labels)
         return feed_dict
 

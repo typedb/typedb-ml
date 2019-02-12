@@ -122,6 +122,9 @@ class TestEndToEnd(unittest.TestCase):
         for mode in modes:
             feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=labels[mode])
 
+        # Note: The ground-truth attribute labels haven't been removed from Grakn, so the results found here are
+        # invalid, and used as an end-to-end test only
+
         # Train
         if TRAIN in modes:
             print("\n\n********** TRAIN Keyspace **********")

@@ -15,6 +15,19 @@ py_test(
     ]
 )
 
+py_test(
+     name = "local_end_to_end_test",
+     main = "end_to_end_test.py",
+     srcs = [
+         "kgcn/animal_trade/test/end_to_end_test.py"
+     ],
+     deps = [
+         "//kglib:kglib",
+     ],
+     data = [
+         "@animaltrade_dist//file",
+     ]
+)
 
 py_library(
     name = "test-pypi-kglib",
