@@ -73,27 +73,15 @@ class KGCN:
 
         self._embed = learners.Embedder(self.feature_lengths, self.aggregated_length, self.output_length,
                                         self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
-        
-        self.neighbourhood_dataset, self.array_placeholders = self._build_dataset()
+
+        features_to_exclude = {feat_name: None for feat_name in self._features_to_exclude}
+        self.neighbourhood_dataset, self.array_placeholders = preprocess.build_dataset(self.neighbour_sample_sizes,
+                                                                                       **features_to_exclude)
 
     def input_fn(self, session, concepts):
-        raw_array_depths = self._traverser(session, concepts)
-        raw_array_depths = preprocess.apply_operations(raw_array_depths, self._formatters)
-        return raw_array_depths
-
-    def _build_dataset(self):
-        features_to_exclude = {feat_name: None for feat_name in self._features_to_exclude}
-        arrays_dataset, placeholders = preprocess.build_dataset(self.neighbour_sample_sizes, **features_to_exclude)
-        return arrays_dataset, placeholders
-
-    def _batch_dataset(self, dataset):
-        # buffer_size = batch_size = tf.cast(self._batch_size, tf.int64)
-        dataset = dataset.shuffle(buffer_size=self._buffer_size, seed=5, reshuffle_each_iteration=True)
-        dataset = dataset.batch(batch_size=self.batch_size).repeat()
-
-        dataset_iterator = dataset.make_initializable_iterator()
-        dataset_initializer = dataset_iterator.initializer
-        return dataset_initializer, dataset_iterator
+        neighbourhoods = self._traverser(session, concepts)
+        formatted_neighbourhoods = preprocess.apply_operations(neighbourhoods, self._formatters)
+        return formatted_neighbourhoods
 
     def embed(self, *additional_datasets):
 
@@ -102,7 +90,7 @@ class KGCN:
 
         combined_dataset = tf.data.Dataset.zip(tuple(datasets))
 
-        dataset_initializer, dataset_iterator = self._batch_dataset(combined_dataset)
+        dataset_initializer, dataset_iterator = _batch_dataset(combined_dataset, self.batch_size, self._buffer_size)
 
         # TODO This should be called in a loop when using more than one batch
         next_batch = dataset_iterator.get_next()
@@ -114,3 +102,13 @@ class KGCN:
         tf.summary.histogram('evaluate/embeddings', embeddings)
 
         return embeddings, next_batch[1:], dataset_initializer, self.array_placeholders
+
+
+def _batch_dataset(dataset, batch_size, buffer_size):
+    # buffer_size = batch_size = tf.cast(self._batch_size, tf.int64)
+    dataset = dataset.shuffle(buffer_size=buffer_size, seed=5, reshuffle_each_iteration=True)
+    dataset = dataset.batch(batch_size=batch_size).repeat()
+
+    dataset_iterator = dataset.make_initializable_iterator()
+    dataset_initializer = dataset_iterator.initializer
+    return dataset_initializer, dataset_iterator
