@@ -53,7 +53,7 @@ class TestKGCN(unittest.TestCase):
     pass
 
 
-class TestBatchDataset(unittest.TestCase):
+class TestShuffleAndBatchDataset(unittest.TestCase):
     def test_shuffles_each_iter(self):
         x = np.array([[1], [2], [3], [4], [5]])
         placeholder = tf.placeholder(tf.int32, shape=(None, 1), name='input')
@@ -61,7 +61,7 @@ class TestBatchDataset(unittest.TestCase):
 
         # make a dataset from a numpy array
         dataset = tf.data.Dataset.from_tensor_slices(placeholder)
-        dataset_initializer, dataset_iterator = model._batch_dataset(dataset, 5)
+        dataset_initializer, dataset_iterator = model._shuffle_and_batch_dataset(dataset, 5)
 
         batch = dataset_iterator.get_next()
         sess = tf.Session()

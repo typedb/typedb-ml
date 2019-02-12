@@ -90,7 +90,7 @@ class KGCN:
 
         combined_dataset = tf.data.Dataset.zip(tuple(datasets))
 
-        dataset_initializer, dataset_iterator = _batch_dataset(combined_dataset, self.batch_size)
+        dataset_initializer, dataset_iterator = _shuffle_and_batch_dataset(combined_dataset, self.batch_size)
 
         # TODO This should be called in a loop when using more than one batch
         next_batch = dataset_iterator.get_next()
@@ -104,7 +104,7 @@ class KGCN:
         return embeddings, next_batch[1:], dataset_initializer, self.array_placeholders
 
 
-def _batch_dataset(dataset, batch_size):
+def _shuffle_and_batch_dataset(dataset, batch_size):
     dataset = dataset.shuffle(buffer_size=batch_size, seed=5, reshuffle_each_iteration=True)
     dataset = dataset.batch(batch_size=batch_size).repeat()
 
