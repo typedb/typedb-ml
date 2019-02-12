@@ -125,6 +125,18 @@ py_test(
     ]
 )
 
+py_test(
+    name = "model_test",
+    srcs = [
+        "kgcn/models/model_test.py"
+    ],
+    deps = [
+        "kglib",
+    ]
+)
+
+
+
 py_library(
     name = "kglib",
     srcs = glob(['__init__.py', 'kgcn/**/*.py']),
