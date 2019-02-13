@@ -25,7 +25,7 @@ import grakn
 import grakn.service.Session.Concept.Concept as concept
 import grakn.service.Session.util.ResponseReader as response
 
-import kglib.kgcn.learn.classify.attribute.label_extraction as label_extraction
+import kglib.kgcn.learn.attribute.label_extraction as label_extraction
 
 
 class TestConceptLabelExtractor(unittest.TestCase):

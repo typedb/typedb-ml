@@ -22,7 +22,7 @@ import collections
 import numpy as np
 
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random
-import kglib.kgcn.learn.classify.attribute.label_extraction as label_extraction
+import kglib.kgcn.learn.attribute.label_extraction as label_extraction
 
 
 def query_for_random_samples_with_attribute(tx, query, example_var_name, attribute_var_name, attribute_vals,

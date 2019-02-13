@@ -25,7 +25,7 @@ py_test(
 py_test(
     name = "label_extraction_test",
     srcs = [
-        "kgcn/use_cases/attribute_prediction/label_extraction_test.py"
+        "kgcn/learn/attribute/label_extraction_test.py"
     ],
     deps = [
         "kglib",
@@ -33,9 +33,9 @@ py_test(
 )
 
 py_test(
-    name = "metrics_test",
+    name = "report_test",
     srcs = [
-        "kgcn/learn/metrics_test.py"
+        "kgcn/learn/metrics/report_test.py"
     ],
     deps = [
         "kglib",
@@ -45,7 +45,7 @@ py_test(
 py_test(
     name = "tf_hub_test",
     srcs = [
-        "kgcn/encoder/tf_hub_test.py"
+        "kgcn/encode/tf_hub_test.py"
     ],
     deps = [
         "kglib",
@@ -55,7 +55,7 @@ py_test(
 py_test(
     name = "schema_test",
     srcs = [
-        "kgcn/encoder/schema_test.py"
+        "kgcn/encode/schema_test.py"
     ],
     deps = [
         "kglib",
@@ -65,7 +65,7 @@ py_test(
 py_test(
     name = "encode_test",
     srcs = [
-        "kgcn/encoder/encode_test.py"
+        "kgcn/encode/encode_test.py"
     ],
     deps = [
         "kglib",
@@ -75,7 +75,7 @@ py_test(
 py_test(
     name = "boolean_test",
     srcs = [
-        "kgcn/encoder/boolean_test.py"
+        "kgcn/encode/boolean_test.py"
     ],
     deps = [
         "kglib",
