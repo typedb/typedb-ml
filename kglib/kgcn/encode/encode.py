@@ -20,7 +20,7 @@
 import tensorflow as tf
 
 import kglib.kgcn.neighbourhood.data.executor as data_ex
-from kglib.kgcn.encoder import tf_hub, schema, boolean
+from kglib.kgcn.encode import tf_hub, schema, boolean
 from kglib.kgcn.neighbourhood.schema import traversal as trav, executor as schema_ex
 
 GET_THING_TYPES_QUERY = "match $x sub thing; get;"

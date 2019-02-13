@@ -19,7 +19,7 @@
 
 import tensorflow as tf
 
-import kglib.kgcn.encoder.encode as encode
+import kglib.kgcn.encode.encode as encode
 import kglib.kgcn.embed.embedding as embedding
 import kglib.kgcn.neighbourhood.data.sampling.ordered as ordered
 import kglib.kgcn.neighbourhood.data.sampling.sampler as samp

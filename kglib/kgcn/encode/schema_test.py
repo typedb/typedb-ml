@@ -23,7 +23,7 @@ import collections
 import numpy as np
 import tensorflow as tf
 
-import kglib.kgcn.encoder.schema as se
+import kglib.kgcn.encode.schema as se
 import kglib.kgcn.preprocess.raw_array_builder as raw
 
 schema_traversal = collections.OrderedDict((('animal', ['animal']),

@@ -21,7 +21,7 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.encoder.encode as encode
+import kglib.kgcn.encode.encode as encode
 import kglib.kgcn.neighbourhood.schema.executor as ex
 import kglib.kgcn.neighbourhood.schema.traversal as trv
 
