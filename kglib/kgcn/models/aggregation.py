@@ -22,11 +22,11 @@ import tensorflow.contrib.layers as layers
 
 
 class Aggregate:
-    def __init__(self, aggregated_length, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.7,
+    def __init__(self, aggregated_size, reduction=tf.reduce_max, activation=tf.nn.relu, dropout=0.7,
                  initializer=tf.contrib.layers.xavier_initializer(), regularizer=layers.l2_regularizer(scale=0.1),
                  name=None):
         """
-        :param aggregated_length: the number of elements in the representation created
+        :param aggregated_size: the number of elements in the representation created
         :param reduction: order-independent method of pooling the response for each neighbour
         :param activation: activation function for the included dense layer
         :param dropout: quantity of dropout regularisation on the output of the included dense layer
@@ -34,7 +34,7 @@ class Aggregate:
         :param initializer: initializer for the weights of the dense layer
         :param name: Name for the operation (optional).
         """
-        self._aggregated_length = aggregated_length
+        self._aggregated_size = aggregated_size
         self._reduction = reduction
         self._activation = activation
         self._dropout = dropout
@@ -47,13 +47,13 @@ class Aggregate:
         Take a tensor that describes the features (aggregated or otherwise) of a set of neighbours and aggregate
         them through a dense layer and order-independent pooling/reduction
 
-        :param neighbour_features: the neighbours' features, shape (num_neighbours, neighbour_feat_length)
-        :return: aggregated representation of neighbours, shape (1, aggregated_length)
+        :param neighbour_features: the neighbours' features, shape (num_neighbours, neighbour_feat_size)
+        :return: aggregated representation of neighbours, shape (1, aggregated_size)
         """
 
         with tf.name_scope(self._name, default_name="aggregate") as scope:
 
-            dense_layer = tf.layers.Dense(units=self._aggregated_length, activation=self._activation, use_bias=True,
+            dense_layer = tf.layers.Dense(units=self._aggregated_size, activation=self._activation, use_bias=True,
                                           kernel_initializer=self._initializer, kernel_regularizer=self._regularizer,
                                           name=f'dense_layer_{self._name}')
 
@@ -94,7 +94,7 @@ class Aggregate:
 class Combine:
     def __init__(self, weights, activation=tf.nn.relu, name=None):
         """
-        :param weights: weight matrix, shape (combined_length, output_length)
+        :param weights: weight matrix, shape (combined_size, output_size)
         :param activation: activation function performed on the
         :param name: Name for the operation (optional).
         """
@@ -125,7 +125,7 @@ class Combine:
 
 
 class DenseCombine:
-    def __init__(self, output_length, activation=tf.nn.relu, initializer=tf.contrib.layers.xavier_initializer(),
+    def __init__(self, output_size, activation=tf.nn.relu, initializer=tf.contrib.layers.xavier_initializer(),
                  regularizer=layers.l2_regularizer(scale=0.1), use_bias=True, name=None):
         """
         :param activation: activation function performed on the
@@ -134,7 +134,7 @@ class DenseCombine:
         self._use_bias = use_bias
         self._regularizer = regularizer
         self._initializer = initializer
-        self._output_length = output_length
+        self._output_size = output_size
         self._activation = activation
         self._name = name
 
@@ -150,7 +150,7 @@ class DenseCombine:
         with tf.name_scope(self._name, default_name="combine") as scope:
             concatenated_features = tf.concat([target_features, neighbour_representations], axis=-1)
 
-            dense_layer = tf.layers.Dense(units=self._output_length, activation=self._activation, use_bias=False,
+            dense_layer = tf.layers.Dense(units=self._output_size, activation=self._activation, use_bias=False,
                                           kernel_initializer=self._initializer, kernel_regularizer=self._regularizer,
                                           name=f'dense_layer_{self._name}')
 

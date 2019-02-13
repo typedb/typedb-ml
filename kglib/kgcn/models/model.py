@@ -29,10 +29,10 @@ import kglib.kgcn.preprocess.preprocess as preprocess
 class KGCN:
     def __init__(self,
                  neighbour_sample_sizes,
-                 features_length,
-                 example_concepts_features_length,
-                 aggregated_length,
-                 output_length,
+                 features_size,
+                 example_concepts_features_size,
+                 aggregated_size,
+                 embedding_size,
                  schema_transaction,
                  batch_size,
                  embedding_normalisation=tf.nn.l2_normalize,
@@ -44,13 +44,13 @@ class KGCN:
                  include_metatypes=False):
 
         self._embedding_normalisation = embedding_normalisation
-        self.output_length = output_length
-        self.aggregated_length = aggregated_length
+        self.embedding_size = embedding_size
+        self.aggregated_size = aggregated_size
         self.neighbour_sample_sizes = neighbour_sample_sizes
 
-        self.feature_lengths = [features_length] * len(self.neighbour_sample_sizes)
-        self.feature_lengths[-1] = example_concepts_features_length
-        print(f'feature lengths: {self.feature_lengths}')
+        self.feature_sizes = [features_size] * len(self.neighbour_sample_sizes)
+        self.feature_sizes[-1] = example_concepts_features_size
+        print(f'feature sizes: {self.feature_sizes}')
 
         self._schema_transaction = schema_transaction
         self.include_metatypes = include_metatypes
@@ -68,7 +68,7 @@ class KGCN:
 
         self._traverser = preprocess.Traverser(traversal_samplers)
 
-        self._embed = learners.Embedder(self.feature_lengths, self.aggregated_length, self.output_length,
+        self._embed = learners.Embedder(self.feature_sizes, self.aggregated_size, self.embedding_size,
                                         self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
 
         features_to_exclude = {feat_name: None for feat_name in self._features_to_exclude}

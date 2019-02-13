@@ -25,10 +25,10 @@ import kglib.kgcn.encoder.tf_hub as tf_hub
 import tensorflow as tf
 
 
-def check_shape(test: unittest.TestCase, array, result, expected_vector_length):
+def check_shape(test: unittest.TestCase, array, result, expected_vector_size):
     with test.subTest('test output shape'):
         expected_shape = list(array.shape)
-        expected_shape[-1] = expected_vector_length
+        expected_shape[-1] = expected_vector_size
         expected_shape = tuple(expected_shape)
         actual_shape = result.shape
         test.assertTupleEqual(expected_shape, actual_shape)

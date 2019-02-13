@@ -24,33 +24,33 @@ import kglib.kgcn.models.aggregation as agg
 
 
 class Embedder:
-    def __init__(self, feature_lengths, aggregated_length, output_length, neighbourhood_sizes,
+    def __init__(self, k_hop_feature_sizes, aggregated_size, embedding_size, neighbourhood_sizes,
                  normalisation=tf.nn.l2_normalize):
 
         self._neighbourhood_sizes = neighbourhood_sizes
-        self._aggregated_length = aggregated_length
-        self._feature_lengths = feature_lengths
-        self._output_length = output_length
-        self._combined_lengths = [feature_length + self._aggregated_length for feature_length in self._feature_lengths]
+        self._aggregated_size = aggregated_size
+        self._k_hop_feature_sizes = k_hop_feature_sizes
+        self._embedding_size = embedding_size
+        self._combined_size = [feature_size + self._aggregated_size for feature_size in self._k_hop_feature_sizes]
         self._normalisation = normalisation
 
     def __call__(self, neighbourhoods):
 
         # TODO pass through params for aggregators, combiners and normalisers
-        aggregators = [agg.Aggregate(self._aggregated_length, name=f'aggregate_{i}') for i in
+        aggregators = [agg.Aggregate(self._aggregated_size, name=f'aggregate_{i}') for i in
                        range(len(self._neighbourhood_sizes))]
 
         combiners = []
         for i in range(len(self._neighbourhood_sizes)):
 
-            # weights = initialise_glorot_weights((self._combined_lengths[i], self._output_length),
+            # weights = initialise_glorot_weights((self._combined_sizes[i], self._embedding_size),
             #                                     name=f'weights_{i}')
 
             if i + 1 == len(self._neighbourhood_sizes):
                 # combiner = agg.Combine(weights, activation=lambda x: x, name=f'combine_{i}_linear')
-                combiner = agg.DenseCombine(self._output_length, activation=lambda x: x, name=f'combine_{i}_linear')
+                combiner = agg.DenseCombine(self._embedding_size, activation=lambda x: x, name=f'combine_{i}_linear')
             else:
-                combiner = agg.DenseCombine(self._output_length, activation=tf.nn.relu, name=f'combine_{i}_relu')
+                combiner = agg.DenseCombine(self._embedding_size, activation=tf.nn.relu, name=f'combine_{i}_relu')
             combiners.append(combiner)
 
         normalisers = [agg.normalise for _ in range(len(self._neighbourhood_sizes))]

@@ -37,13 +37,13 @@ FLAGS = flags.FLAGS
 # Learning params
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('num_classes', 3, 'Number of classes')
-flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
-flags.DEFINE_integer('starting_concepts_features_length', 173,
+flags.DEFINE_integer('features_size', 198, 'Number of features after encoding')
+flags.DEFINE_integer('starting_concepts_features_size', 173,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
                      'role_type and role_direction')
-flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
-flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
-                                          'and the final length of the embeddings')
+flags.DEFINE_integer('aggregated_size', 20, 'Size of aggregated representation of neighbours, a hidden dimension')
+flags.DEFINE_integer('embedding_size', 32, 'Size of the output of "combine" operation, taking place at each depth, '
+                                          'and the final size of the embeddings')
 flags.DEFINE_integer('max_training_steps', 50, 'Max number of gradient steps to take during gradient descent')
 
 # Sample selection params
@@ -92,10 +92,10 @@ class TestEndToEnd(unittest.TestCase):
 
         batch_size = NUM_PER_CLASS * FLAGS.num_classes
         kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
-                          FLAGS.features_length,
-                          FLAGS.starting_concepts_features_length,
-                          FLAGS.aggregated_length,
-                          FLAGS.output_length,
+                          FLAGS.features_size,
+                          FLAGS.starting_concepts_features_size,
+                          FLAGS.aggregated_size,
+                          FLAGS.embedding_size,
                           transactions[TRAIN],
                           batch_size,
                           sampling_method=random_sampling.random_sample,

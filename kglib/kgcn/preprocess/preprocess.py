@@ -135,7 +135,7 @@ def build_dataset(neighbour_sample_sizes,
     return arrays_dataset, raw_array_placeholders
 
 
-def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
+def build_array_placeholders(batch_size, neighbourhood_sizes, features_size,
                              feature_types: typ.Union[typ.List[typ.MutableMapping[str, tf.DType]], tf.DType],
                              name=None):
     array_neighbourhood_sizes = list(reversed(neighbourhood_sizes))
@@ -145,7 +145,7 @@ def build_array_placeholders(batch_size, neighbourhood_sizes, features_length,
                                 tf.uint16, tf.float16, tf.uint32, tf.uint64]
 
     for i in range(len(array_neighbourhood_sizes) + 1):
-        shape = [batch_size] + list(array_neighbourhood_sizes[i:]) + [features_length]
+        shape = [batch_size] + list(array_neighbourhood_sizes[i:]) + [features_size]
         phs = {}
         for name, data_type in feature_types[i].items():
             phs[name] = tf.placeholder(data_type, shape=shape, name=name)

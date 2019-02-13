@@ -50,13 +50,12 @@ session = client.session(keyspace=training_keyspace)
 transaction = session.transaction(grakn.TxType.WRITE)
 
 kgcn = models.model.KGCN(neighbour_sample_sizes,
-                         features_length,
-                         example_things_features_length,
-                         aggregated_length,
-                         output_length,
+                         features_size,
+                         example_things_features_size,
+                         aggregated_size,
+                         embedding_size,
                          transaction,
-                         batch_size,
-                         buffer_size)
+                         batch_size)
 
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 classifier = models.downstream.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
