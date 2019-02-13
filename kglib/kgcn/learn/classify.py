@@ -33,12 +33,12 @@ import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
 import kglib.kgcn.learn.metrics.report as metrics
-import kglib.kgcn.embed.model
+import kglib.kgcn.core.model as model
 
 
 class SupervisedKGCNClassifier:
 
-    def __init__(self, kgcn: kglib.kgcn.embed.model.KGCN, optimizer, num_classes, log_dir, max_training_steps=10000,
+    def __init__(self, kgcn: model.KGCN, optimizer, num_classes, log_dir, max_training_steps=10000,
                  regularisation_weight=0.0, classification_dropout_keep_prob=0.7, use_bias=True,
                  classification_activation=lambda x: x, classification_regularizer=layers.l2_regularizer(scale=0.1),
                  classification_kernel_initializer=tf.contrib.layers.xavier_initializer()):

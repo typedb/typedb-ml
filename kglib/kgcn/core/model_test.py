@@ -19,7 +19,7 @@
 import numpy as np
 import unittest
 
-import kglib.kgcn.embed.model as model
+import kglib.kgcn.core.model as model
 import tensorflow as tf
 
 

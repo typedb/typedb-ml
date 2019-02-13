@@ -20,8 +20,8 @@
 import numpy as np
 import tensorflow as tf
 
-import kglib.kgcn.embed.aggregate as aggregate
-import kglib.kgcn.embed.combine as combine
+import kglib.kgcn.core.nn.aggregate as aggregate
+import kglib.kgcn.core.nn.combine as combine
 
 
 class Embedder:

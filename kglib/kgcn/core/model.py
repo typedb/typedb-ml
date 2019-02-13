@@ -20,7 +20,7 @@
 import tensorflow as tf
 
 import kglib.kgcn.encode.encode as encode
-import kglib.kgcn.embed.embedding as embedding
+import kglib.kgcn.core.nn.embed as embed
 import kglib.kgcn.neighbourhood.data.sampling.ordered as ordered
 import kglib.kgcn.neighbourhood.data.sampling.sampler as samp
 import kglib.kgcn.preprocess.preprocess as preprocess
@@ -69,8 +69,8 @@ class KGCN:
 
         self._traverser = raw_array_builder.Traverser(traversal_samplers)
 
-        self._embed = embedding.Embedder(self.feature_sizes, self.aggregated_size, self.embedding_size,
-                                         self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
+        self._embed = embed.Embedder(self.feature_sizes, self.aggregated_size, self.embedding_size,
+                                     self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
 
         features_to_exclude = {feat_name: None for feat_name in self._features_to_exclude}
         self.neighbourhood_dataset, self.array_placeholders = preprocess.build_dataset(self.neighbour_sample_sizes,

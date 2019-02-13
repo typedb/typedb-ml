@@ -28,7 +28,7 @@ import kglib.kgcn.management.logging as logging
 import kglib.kgcn.management.persistence as prs
 import kglib.kgcn.management.thing as thing_mgmt
 import kglib.kgcn.learn.classify as classify
-import kglib.kgcn.embed.model as model
+import kglib.kgcn.core.model as model
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
 import kglib.kgcn.preprocess.persistence as persistence
 

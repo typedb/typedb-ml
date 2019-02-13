@@ -28,7 +28,7 @@ import tensorflow as tf
 import kglib.kgcn.management.grakn as grakn_mgmt
 import kglib.kgcn.management.thing as thing_mgmt
 import kglib.kgcn.learn.classify as classify
-import kglib.kgcn.embed.model as model
+import kglib.kgcn.core.model as model
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
 
 flags = tf.app.flags

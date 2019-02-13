@@ -128,7 +128,7 @@ py_test(
 py_test(
     name = "model_test",
     srcs = [
-        "kgcn/embed/model_test.py"
+        "kgcn/core/model_test.py"
     ],
     deps = [
         "kglib",
