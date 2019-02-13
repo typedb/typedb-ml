@@ -87,7 +87,7 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
     sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
     transactions = grakn_mgmt.get_transactions(sessions)
 
-    batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
+    batch_size = NUM_PER_CLASS * FLAGS.num_classes
     kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
                       FLAGS.features_length,
                       FLAGS.starting_concepts_features_length,
@@ -95,10 +95,8 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                       FLAGS.output_length,
                       transactions[TRAIN],
                       batch_size,
-                      buffer_size,
                       sampling_method=random_sampling.random_sample,
-                      sampling_limit_factor=4
-                      )
+                      sampling_limit_factor=4)
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
     classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,

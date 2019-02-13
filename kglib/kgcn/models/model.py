@@ -30,20 +30,18 @@ class KGCN:
     def __init__(self,
                  neighbour_sample_sizes,
                  features_length,
-                 starting_concepts_features_length,
+                 example_concepts_features_length,
                  aggregated_length,
                  output_length,
                  schema_transaction,
                  batch_size,
-                 buffer_size,
                  embedding_normalisation=tf.nn.l2_normalize,
                  sampling_method=ordered.ordered_sample,
                  sampling_limit_factor=1,
                  formatters={'neighbour_value_date': preprocess.datetime_to_unixtime},
                  features_to_exclude=(),
                  include_implicit=False,
-                 include_metatypes=False,
-                 ):
+                 include_metatypes=False):
 
         self._embedding_normalisation = embedding_normalisation
         self.output_length = output_length
@@ -51,7 +49,7 @@ class KGCN:
         self.neighbour_sample_sizes = neighbour_sample_sizes
 
         self.feature_lengths = [features_length] * len(self.neighbour_sample_sizes)
-        self.feature_lengths[-1] = starting_concepts_features_length
+        self.feature_lengths[-1] = example_concepts_features_length
         print(f'feature lengths: {self.feature_lengths}')
 
         self._schema_transaction = schema_transaction
@@ -60,7 +58,6 @@ class KGCN:
         self._encode = encode.Encoder(self._schema_transaction, self.include_implicit, self.include_metatypes)
 
         self.batch_size = batch_size
-        self._buffer_size = buffer_size
         self._formatters = formatters
         self._features_to_exclude = features_to_exclude
 
