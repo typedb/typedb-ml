@@ -25,8 +25,8 @@ import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random
 import kglib.kgcn.learn.attribute.label_extraction as label_extraction
 
 
-def query_for_random_samples_with_attribute(tx, query, example_var_name, attribute_var_name, attribute_vals,
-                                            sample_size_per_label, population_size):
+def randomly_sample_things_with_attribute(tx, query, example_var_name, attribute_var_name, attribute_vals,
+                                          sample_size_per_label, population_size):
     concepts = {}
     labels = {}
 
@@ -70,20 +70,20 @@ def compile_labelled_concepts(samples_query, concept_var_name, attribute_var_nam
     print(f'Finding concepts and labels')
     print('    for training and evaluation')
     concepts_dicts, labels_dicts = \
-        query_for_random_samples_with_attribute(train_and_eval_transaction, samples_query,
-                                                concept_var_name, attribute_var_name, attribute_values,
-                                                sampling_params['train']['sample_size'] +
-                                                sampling_params['eval']['sample_size'],
-                                                sampling_params['train']['population_size'] +
-                                                sampling_params['eval']['population_size'])
+        randomly_sample_things_with_attribute(train_and_eval_transaction, samples_query,
+                                              concept_var_name, attribute_var_name, attribute_values,
+                                              sampling_params['train']['sample_size'] +
+                                              sampling_params['eval']['sample_size'],
+                                              sampling_params['train']['population_size'] +
+                                              sampling_params['eval']['population_size'])
     print('    for prediction')
     concepts_dicts_predict, labels_dicts_predict = \
-        query_for_random_samples_with_attribute(predict_transaction,
-                                                samples_query,
-                                                concept_var_name,
-                                                attribute_var_name, attribute_values,
-                                                sampling_params['predict']['sample_size'],
-                                                sampling_params['predict']['population_size'])
+        randomly_sample_things_with_attribute(predict_transaction,
+                                              samples_query,
+                                              concept_var_name,
+                                              attribute_var_name, attribute_values,
+                                              sampling_params['predict']['sample_size'],
+                                              sampling_params['predict']['population_size'])
 
     division = sampling_params['train']['sample_size']
     # Iterate over the classes

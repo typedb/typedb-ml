@@ -26,7 +26,7 @@ import tensorflow as tf
 import kglib.kgcn.management.grakn as grakn_mgmt
 import kglib.kgcn.management.logging as logging
 import kglib.kgcn.management.persistence as prs
-import kglib.kgcn.management.samples as samp_mgmt
+import kglib.kgcn.management.thing as thing_mgmt
 import kglib.kgcn.learn.classify as classify
 import kglib.kgcn.embed.model as model
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
@@ -122,13 +122,13 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                 EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
                 PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
             }
-            concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
-                                                                   LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
-                                                                   transactions[TRAIN], transactions[PREDICT],
-                                                                   sampling_params)
+            concepts, labels = thing_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
+                                                                    LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
+                                                                    transactions[TRAIN], transactions[PREDICT],
+                                                                    sampling_params)
             prs.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
 
-            samp_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
+            thing_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
 
             # Get new transactions since deleting labels requires committing and therefore closes transactions
             transactions = grakn_mgmt.get_transactions(sessions)
