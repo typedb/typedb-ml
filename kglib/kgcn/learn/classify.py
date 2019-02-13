@@ -39,7 +39,7 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
 
-import kglib.kgcn.embed.metrics as metrics
+import kglib.kgcn.learn.metrics as metrics
 import kglib.kgcn.embed.model
 
 
