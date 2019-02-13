@@ -20,12 +20,7 @@
 import copy
 import typing as typ
 
-import grakn
 import tensorflow as tf
-
-import kglib.kgcn.neighbourhood.data.executor as data_ex
-import kglib.kgcn.neighbourhood.data.traversal as trv
-import kglib.kgcn.preprocess.raw_array_builder as raw
 
 
 def datetime_to_unixtime(datetime_array):
@@ -88,6 +83,7 @@ def build_dataset(neighbour_sample_sizes,
                 'neighbour_value_date': neighbour_value_date,
                 'neighbour_value_string': neighbour_value_string}
 
+    # TODO Drop support for ignoring features
     keys_to_delete = []
     for key, value in features.items():
         # Remove the features we don't want
@@ -158,39 +154,3 @@ def build_array_placeholders(batch_size, neighbourhood_sizes, features_size,
 
         neighbourhood_placeholders.append(phs)
     return neighbourhood_placeholders
-
-
-class Traverser:
-
-    def __init__(self, traversal_samplers):
-        self._traversal_samplers = traversal_samplers
-        neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
-        self._raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes)
-
-    def __call__(self, session, concepts):
-        ################################################################################################################
-        # Neighbour Traversals
-        ################################################################################################################
-        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
-
-        data_executor = data_ex.TraversalExecutor()
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
-
-        neighbourhood_depths = []
-        for concept_info in concept_infos:
-            tx = session.transaction(grakn.TxType.WRITE)
-            print(f'Opening transaction {tx}')
-            depths = neighourhood_traverser(concept_info, tx)
-            trv.collect_to_tree(depths)
-            neighbourhood_depths.append(depths)
-            print(f'closing transaction {tx}')
-            tx.close()
-        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
-
-        ################################################################################################################
-        # Raw Array Building
-        ################################################################################################################
-        # TODO Deal with where to build arrays
-
-        raw_array_depths = self._raw_builder.build_raw_arrays(neighbour_roles)
-        return raw_array_depths

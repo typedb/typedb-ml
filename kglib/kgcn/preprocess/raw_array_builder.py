@@ -20,9 +20,11 @@
 import typing as typ
 
 import collections
+
+import grakn
 import numpy as np
 
-import kglib.kgcn.neighbourhood.data.traversal as trv
+from kglib.kgcn.neighbourhood.data import executor as data_ex, traversal as trv
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_types):
@@ -196,3 +198,39 @@ def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
     curtailed_filler = filler[filler_axes]
 
     array[slice_to_replace] = curtailed_filler
+
+
+class Traverser:
+
+    def __init__(self, traversal_samplers):
+        self._traversal_samplers = traversal_samplers
+        neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
+        self._raw_builder = RawArrayBuilder(neighbour_sample_sizes)
+
+    def __call__(self, session, concepts):
+        ################################################################################################################
+        # Neighbour Traversals
+        ################################################################################################################
+        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
+
+        data_executor = data_ex.TraversalExecutor()
+        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
+
+        neighbourhood_depths = []
+        for concept_info in concept_infos:
+            tx = session.transaction(grakn.TxType.WRITE)
+            print(f'Opening transaction {tx}')
+            depths = neighourhood_traverser(concept_info, tx)
+            trv.collect_to_tree(depths)
+            neighbourhood_depths.append(depths)
+            print(f'closing transaction {tx}')
+            tx.close()
+        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+
+        ################################################################################################################
+        # Raw Array Building
+        ################################################################################################################
+        # TODO Deal with where to build arrays
+
+        raw_array_depths = self._raw_builder.build_raw_arrays(neighbour_roles)
+        return raw_array_depths

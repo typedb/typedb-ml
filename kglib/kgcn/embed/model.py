@@ -24,6 +24,7 @@ import kglib.kgcn.embed.embedding as embedding
 import kglib.kgcn.neighbourhood.data.sampling.ordered as ordered
 import kglib.kgcn.neighbourhood.data.sampling.sampler as samp
 import kglib.kgcn.preprocess.preprocess as preprocess
+import kglib.kgcn.preprocess.raw_array_builder as raw_array_builder
 
 
 class KGCN:
@@ -66,7 +67,7 @@ class KGCN:
             traversal_samplers.append(
                 samp.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
 
-        self._traverser = preprocess.Traverser(traversal_samplers)
+        self._traverser = raw_array_builder.Traverser(traversal_samplers)
 
         self._embed = embedding.Embedder(self.feature_sizes, self.aggregated_size, self.embedding_size,
                                          self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
