@@ -27,7 +27,7 @@ import tensorflow as tf
 
 import kglib.kgcn.management.grakn as grakn_mgmt
 import kglib.kgcn.management.samples as samp_mgmt
-import kglib.kgcn.models.downstream as downstream
+import kglib.kgcn.learn.downstream as downstream
 import kglib.kgcn.models.model as model
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
 
