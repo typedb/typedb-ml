@@ -33,11 +33,11 @@ class KGCN:
                  example_concepts_features_size,
                  aggregated_size,
                  embedding_size,
-                 schema_transaction,
+                 schema_encoding_transaction,
                  batch_size,
                  embedding_normalisation=tf.nn.l2_normalize,
-                 sampling_method=ordered.ordered_sample,
-                 sampling_limit_factor=1,
+                 neighbour_sampling_method=ordered.ordered_sample,
+                 neighbour_sampling_limit_factor=1,
                  formatters={'neighbour_value_date': preprocess.datetime_to_unixtime},
                  features_to_exclude=(),
                  include_implicit=False,
@@ -52,10 +52,10 @@ class KGCN:
         self.feature_sizes[-1] = example_concepts_features_size
         print(f'feature sizes: {self.feature_sizes}')
 
-        self._schema_transaction = schema_transaction
+        self._schema_encoding_transaction = schema_encoding_transaction
         self.include_metatypes = include_metatypes
         self.include_implicit = include_implicit
-        self._encode = encode.Encoder(self._schema_transaction, self.include_implicit, self.include_metatypes)
+        self._encode = encode.Encoder(self._schema_encoding_transaction, self.include_implicit, self.include_metatypes)
 
         self.batch_size = batch_size
         self._formatters = formatters
@@ -64,7 +64,7 @@ class KGCN:
         traversal_samplers = []
         for sample_size in neighbour_sample_sizes:
             traversal_samplers.append(
-                samp.Sampler(sample_size, sampling_method, limit=int(sample_size * sampling_limit_factor)))
+                samp.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
 
         self._traverser = preprocess.Traverser(traversal_samplers)
 
@@ -101,8 +101,8 @@ class KGCN:
         return embeddings, next_batch[1:], dataset_initializer, self.array_placeholders
 
 
-def _shuffle_and_batch_dataset(dataset, batch_size):
-    dataset = dataset.shuffle(buffer_size=batch_size, seed=5, reshuffle_each_iteration=True)
+def _shuffle_and_batch_dataset(dataset, batch_size, seed=5):
+    dataset = dataset.shuffle(buffer_size=batch_size, seed=seed, reshuffle_each_iteration=True)
     dataset = dataset.batch(batch_size=batch_size).repeat()
 
     dataset_iterator = dataset.make_initializable_iterator()

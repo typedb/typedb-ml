@@ -98,8 +98,8 @@ class TestEndToEnd(unittest.TestCase):
                           FLAGS.embedding_size,
                           transactions[TRAIN],
                           batch_size,
-                          sampling_method=random_sampling.random_sample,
-                          sampling_limit_factor=4)
+                          neighbour_sampling_method=random_sampling.random_sample,
+                          neighbour_sampling_limit_factor=4)
 
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
         classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, None,

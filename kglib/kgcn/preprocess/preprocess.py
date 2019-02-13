@@ -88,10 +88,14 @@ def build_dataset(neighbour_sample_sizes,
                 'neighbour_value_date': neighbour_value_date,
                 'neighbour_value_string': neighbour_value_string}
 
+    keys_to_delete = []
     for key, value in features.items():
         # Remove the features we don't want
         if value is None:
-            del features[key]
+            keys_to_delete.append(key)
+
+    for key in keys_to_delete:
+        del features[key]
 
     # formatters = {feature_name: feature.formatter for feature_name, feature in features.items()}
     feature_types = {feature_name: feature.raw_data_type for feature_name, feature in features.items()}
