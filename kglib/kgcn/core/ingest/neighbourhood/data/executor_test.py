@@ -21,7 +21,7 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.neighbourhood.data.executor as ex
+import kglib.kgcn.core.ingest.neighbourhood.data.executor as ex
 
 
 class BaseGraknIntegrationTest:

@@ -23,7 +23,7 @@ import grakn
 import numpy as np
 import tensorflow as tf
 
-import kglib.kgcn.encode.encode as encode
+import kglib.kgcn.core.ingest.encode.encode as encode
 
 
 class TestEncode(unittest.TestCase):

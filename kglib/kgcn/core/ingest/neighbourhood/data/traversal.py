@@ -21,8 +21,8 @@ import itertools
 
 import collections
 
-import kglib.kgcn.neighbourhood.data.executor as data_executor
-import kglib.kgcn.neighbourhood.data.utils as utils
+import kglib.kgcn.core.ingest.neighbourhood.data.executor as data_executor
+import kglib.kgcn.core.ingest.neighbourhood.data.utils as utils
 
 
 class ConceptInfoWithNeighbourhood(utils.PropertyComparable):

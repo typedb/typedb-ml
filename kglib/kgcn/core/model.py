@@ -19,12 +19,12 @@
 
 import tensorflow as tf
 
-import kglib.kgcn.encode.encode as encode
+import kglib.kgcn.core.ingest.encode.encode as encode
 import kglib.kgcn.core.nn.embed as embed
-import kglib.kgcn.neighbourhood.data.sampling.ordered as ordered
-import kglib.kgcn.neighbourhood.data.sampling.sampler as samp
-import kglib.kgcn.preprocess.preprocess as preprocess
-import kglib.kgcn.preprocess.raw_array_builder as raw_array_builder
+import kglib.kgcn.core.ingest.neighbourhood.data.sampling.ordered as ordered
+import kglib.kgcn.core.ingest.neighbourhood.data.sampling.sampler as samp
+import kglib.kgcn.core.ingest.preprocess.preprocess as preprocess
+import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw_array_builder
 
 
 class KGCN:

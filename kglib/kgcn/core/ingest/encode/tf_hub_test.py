@@ -21,7 +21,7 @@ import unittest
 
 import numpy as np
 
-import kglib.kgcn.encode.tf_hub as tf_hub
+import kglib.kgcn.core.ingest.encode.tf_hub as tf_hub
 import tensorflow as tf
 
 

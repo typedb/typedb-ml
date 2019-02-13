@@ -22,7 +22,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-import kglib.kgcn.encode.boolean as bool_enc
+import kglib.kgcn.core.ingest.encode.boolean as bool_enc
 
 tf.enable_eager_execution()
 
