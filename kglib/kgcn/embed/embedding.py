@@ -20,7 +20,7 @@
 import numpy as np
 import tensorflow as tf
 
-import kglib.kgcn.models.aggregation as agg
+import kglib.kgcn.embed.aggregation as agg
 
 
 class Embedder:

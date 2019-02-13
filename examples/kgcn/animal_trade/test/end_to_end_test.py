@@ -27,8 +27,8 @@ import tensorflow as tf
 
 import kglib.kgcn.management.grakn as grakn_mgmt
 import kglib.kgcn.management.samples as samp_mgmt
-import kglib.kgcn.learn.downstream as downstream
-import kglib.kgcn.models.model as model
+import kglib.kgcn.learn.classify as classify
+import kglib.kgcn.embed.model as model
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
 
 flags = tf.app.flags
@@ -102,8 +102,8 @@ class TestEndToEnd(unittest.TestCase):
                           neighbour_sampling_limit_factor=4)
 
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-        classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, None,
-                                                         max_training_steps=FLAGS.max_training_steps)
+        classifier = classify.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, None,
+                                                       max_training_steps=FLAGS.max_training_steps)
 
         feed_dicts = {}
 

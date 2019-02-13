@@ -27,8 +27,8 @@ import kglib.kgcn.management.grakn as grakn_mgmt
 import kglib.kgcn.management.logging as logging
 import kglib.kgcn.management.persistence as prs
 import kglib.kgcn.management.samples as samp_mgmt
-import kglib.kgcn.learn.downstream as downstream
-import kglib.kgcn.models.model as model
+import kglib.kgcn.learn.classify as classify
+import kglib.kgcn.embed.model as model
 import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
 import kglib.kgcn.preprocess.persistence as persistence
 
@@ -99,8 +99,8 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                       neighbour_sampling_limit_factor=4)
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-    classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
-                                                     max_training_steps=FLAGS.max_training_steps)
+    classifier = classify.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
+                                                   max_training_steps=FLAGS.max_training_steps)
 
     feed_dicts = {}
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH + 'input/')

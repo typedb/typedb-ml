@@ -21,7 +21,7 @@ import unittest
 
 import numpy as np
 
-import kglib.kgcn.models.metrics as metrics
+import kglib.kgcn.embed.metrics as metrics
 
 
 class TestMetricsReport(unittest.TestCase):

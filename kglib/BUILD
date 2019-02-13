@@ -35,7 +35,7 @@ py_test(
 py_test(
     name = "metrics_test",
     srcs = [
-        "kgcn/models/metrics_test.py"
+        "kgcn/embed/metrics_test.py"
     ],
     deps = [
         "kglib",
@@ -128,7 +128,7 @@ py_test(
 py_test(
     name = "model_test",
     srcs = [
-        "kgcn/models/model_test.py"
+        "kgcn/embed/model_test.py"
     ],
     deps = [
         "kglib",

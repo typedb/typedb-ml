@@ -39,7 +39,7 @@ This may be counter to intuition, in this case embeddings are an intermediate st
 The following is a template of what must be defined in order to instantiate a KGCN, optimised for a downstream learning task of multi-class classification:
 
 ```python
-import kglib.kgcn.models as models
+import kglib.kgcn.embed.model as model
 import tensorflow as tf
 import grakn
 
@@ -49,16 +49,16 @@ client = grakn.Grakn(uri=URI)
 session = client.session(keyspace=training_keyspace)
 transaction = session.transaction(grakn.TxType.WRITE)
 
-kgcn = models.model.KGCN(neighbour_sample_sizes,
-                         features_size,
-                         example_things_features_size,
-                         aggregated_size,
-                         embedding_size,
-                         transaction,
-                         batch_size)
+kgcn = model.KGCN(neighbour_sample_sizes,
+                  features_size,
+                  example_things_features_size,
+                  aggregated_size,
+                  embedding_size,
+                  transaction,
+                  batch_size)
 
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-classifier = models.downstream.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
+classifier = learn.classify.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
                                                         max_training_steps=max_training_steps)
 
 training_feed_dict = classifier.get_feed_dict(session, training_things, labels=training_labels)
