@@ -45,7 +45,7 @@ def convert_thing_contexts_to_neighbours(thing_contexts):
 
 
 class ContextBuilder:
-    def __init__(self, query_executor: data_executor.TraversalExecutor, depth_samplers):
+    def __init__(self, query_executor: data_executor.NeighbourFinder, depth_samplers):
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 

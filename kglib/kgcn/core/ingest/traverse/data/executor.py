@@ -29,7 +29,7 @@ ROLEPLAYERS = 1
 DATA_TYPE_NAMES = ('long', 'double', 'boolean', 'date', 'string')
 
 
-class TraversalExecutor:
+class NeighbourFinder:
 
     TARGET_QUERY = {
         'query': 'match $target id {}; get;',
@@ -76,14 +76,34 @@ class TraversalExecutor:
         print(query)
         return tx.query(query)
 
-    def __call__(self, query_direction, concept_id, tx):
+    def __call__(self, query_direction, thing_id, tx):
         """
         Takes a query to execute and the variables to return
         :param query_direction: whether we want to retrieve roles played or role players
-        :param concept_id: id for the concept to find connections for
+        :param thing_id: id for the concept to find connections for
         :return:
         """
 
+        def _link_iterator():
+            # TODO Drop support for implicit relationships
+
+            # Direct connections to attributes
+            if not self._attributes_via_implicit_relationships:
+
+                target_query = self.TARGET_QUERY['query'].format(thing_id)
+                target_concept = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
+
+                yield from self._find_direct_attribute_neighbours(tx, target_concept, thing_id)
+
+                if target_concept.is_attribute() and self._find_neighbours_from_attributes:
+                    yield from self._find_neighbours_from_attribute(tx, target_concept)
+
+            # Connections to entities, relationships and optionally implicit relationships
+            yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
+
+        return list(_link_iterator())
+
+    def _find_entity_and_relationship_neighbours(self, query_direction, thing_id, tx):
         if query_direction == ROLES_PLAYED:
             base_query = self.ROLES_PLAYED_QUERY
             thing_variable = base_query['target_variable']
@@ -96,60 +116,54 @@ class TraversalExecutor:
         else:
             raise ValueError('query_direction isn\'t properly defined')
 
-        query = base_query['query'].format(concept_id)
+        query = base_query['query'].format(thing_id)
         print(query)
-        connection_iterator = self._query(query, tx)
+        link_iterator = self._query(query, tx)
 
-        def _link_iterator():
+        for answer in link_iterator:
+            relationship = answer.get(relationship_variable)
+            thing = answer.get(thing_variable)
+            if (relationship.type().is_implicit() or thing.type().is_implicit()) and not self._attributes_via_implicit_relationships:
+                # TODO Missing support for finding implicit relationship neighbours
+                pass
+            else:
 
-            # Direct connections to attributes
-            if not self._attributes_via_implicit_relationships:
+                role_sups = self._find_roles(thing, relationship, tx)
+                role = find_lowest_role_from_rols_sups(role_sups)
 
-                target_query = self.TARGET_QUERY['query'].format(concept_id)
-                target_concept = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
+                role_label = role.label()
 
-                if target_concept.type().is_implicit():
-                    raise ValueError(
-                        "A target concept has been found to be implicit, but using implicit relationships has "
-                        "been optionally disabled")
-                attribute_query = self.ATTRIBUTE_QUERY['query'].format(concept_id)
-                attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._query(attribute_query, tx))
+                neighbour_concept = answer.get(base_query['neighbour_variable'])
+                neighbour_thing = build_thing(neighbour_concept)
 
-                for attribute in attributes:
-                    neighbour_thing = build_thing(attribute)
-                    yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
-                           'neighbour_thing': neighbour_thing}
+                yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
+                       'neighbour_thing': neighbour_thing}
 
-                if target_concept.is_attribute() and self._find_neighbours_from_attributes:
-                    attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.id)
-                    neighbours = map(lambda x: x.get(self.ATTRIBUTE_OWNER_QUERY['variable']),
-                                     self._query(attribute_owners_query, tx))
+    def _find_direct_attribute_neighbours(self, tx, target_concept, thing_id):
 
-                    for neighbour in neighbours:
-                        neighbour_thing = build_thing(neighbour)
-                        yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
-                               'neighbour_thing': neighbour_thing}
+        if target_concept.type().is_implicit():
+            raise ValueError(
+                "A target concept has been found to be implicit, but using implicit relationships has "
+                "been optionally disabled")
 
-            # Connections to entities, relationships and optionally implicit relationships
-            for answer in connection_iterator:
-                relationship = answer.get(relationship_variable)
-                thing = answer.get(thing_variable)
-                if (relationship.type().is_implicit() or thing.type().is_implicit()) and not self._attributes_via_implicit_relationships:
-                    pass
-                else:
+        attribute_query = self.ATTRIBUTE_QUERY['query'].format(thing_id)
+        attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._query(attribute_query, tx))
 
-                    role_sups = self._find_roles(thing, relationship, tx)
-                    role = find_lowest_role_from_rols_sups(role_sups)
+        for attribute in attributes:
+            neighbour_thing = build_thing(attribute)
+            yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
+                   'neighbour_thing': neighbour_thing}
 
-                    role_label = role.label()
+    def _find_neighbours_from_attribute(self, tx, target_concept):
 
-                    neighbour_concept = answer.get(base_query['neighbour_variable'])
-                    neighbour_thing = build_thing(neighbour_concept)
+        attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.id)
+        neighbours = map(lambda x: x.get(self.ATTRIBUTE_OWNER_QUERY['variable']),
+                         self._query(attribute_owners_query, tx))
 
-                    yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
-                           'neighbour_thing': neighbour_thing}
-
-        return _link_iterator()
+        for neighbour in neighbours:
+            neighbour_thing = build_thing(neighbour)
+            yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
+                   'neighbour_thing': neighbour_thing}
 
     def _find_roles(self, thing, relationship, tx):
         query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)

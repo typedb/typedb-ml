@@ -41,7 +41,7 @@ class BaseGraknIntegrationTest:
 
         def setUp(self):
             self._tx = self.session.transaction(grakn.TxType.WRITE)
-            self._executor = ex.TraversalExecutor()
+            self._executor = ex.NeighbourFinder()
 
 
 class BaseTestTraversalExecutor:

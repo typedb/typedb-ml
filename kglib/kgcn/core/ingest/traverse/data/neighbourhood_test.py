@@ -50,7 +50,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
 
         self._thing = ex.build_thing(list(self._tx.query(entity_query))[0].get('x'))
 
-        self._executor = ex.TraversalExecutor()
+        self._executor = ex.NeighbourFinder()
 
     def _neighbourhood_traverser_factory(self, neighbour_sample_sizes):
         sampling_method = ordered.ordered_sample
@@ -225,7 +225,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         things = [ex.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = ex.TraversalExecutor()
+        data_executor = ex.NeighbourFinder()
 
         neighourhood_traverser = trv.ContextBuilder(data_executor, samplers)
 

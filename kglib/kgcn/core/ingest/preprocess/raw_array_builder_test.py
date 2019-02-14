@@ -134,7 +134,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         things = [data_ex.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = data_ex.TraversalExecutor()
+        data_executor = data_ex.NeighbourFinder()
 
         neighourhood_traverser = trv.ContextBuilder(data_executor, samplers)
 
