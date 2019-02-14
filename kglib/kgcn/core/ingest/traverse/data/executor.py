@@ -20,7 +20,7 @@
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
 
 
-TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this concept plays a role
+TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this thing plays a role
 NEIGHBOUR_PLAYS = 1  # In this case the target
 
 ROLES_PLAYED = 0
@@ -80,7 +80,7 @@ class NeighbourFinder:
         """
         Takes a query to execute and the variables to return
         :param query_direction: whether we want to retrieve roles played or role players
-        :param thing_id: id for the concept to find connections for
+        :param thing_id: id for the thing to find connections for
         :return:
         """
 
@@ -91,12 +91,12 @@ class NeighbourFinder:
             if not self._attributes_via_implicit_relationships:
 
                 target_query = self.TARGET_QUERY['query'].format(thing_id)
-                target_concept = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
+                target_thing = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
 
-                yield from self._find_direct_attribute_neighbours(tx, target_concept, thing_id)
+                yield from self._find_direct_attribute_neighbours(tx, target_thing, thing_id)
 
-                if target_concept.is_attribute() and self._find_neighbours_from_attributes:
-                    yield from self._find_neighbours_from_attribute(tx, target_concept)
+                if target_thing.is_attribute() and self._find_neighbours_from_attributes:
+                    yield from self._find_neighbours_from_attribute(tx, target_thing)
 
             # Connections to entities, relationships and optionally implicit relationships
             yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
@@ -133,17 +133,17 @@ class NeighbourFinder:
 
                 role_label = role.label()
 
-                neighbour_concept = answer.get(base_query['neighbour_variable'])
-                neighbour_thing = build_thing(neighbour_concept)
+                neighbour_grakn_thing = answer.get(base_query['neighbour_variable'])
+                neighbour_thing = build_thing(neighbour_grakn_thing)
 
                 yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
                        'neighbour_thing': neighbour_thing}
 
-    def _find_direct_attribute_neighbours(self, tx, target_concept, thing_id):
+    def _find_direct_attribute_neighbours(self, tx, target_thing, thing_id):
 
-        if target_concept.type().is_implicit():
+        if target_thing.type().is_implicit():
             raise ValueError(
-                "A target concept has been found to be implicit, but using implicit relationships has "
+                "A target thing has been found to be implicit, but using implicit relationships has "
                 "been optionally disabled")
 
         attribute_query = self.ATTRIBUTE_QUERY['query'].format(thing_id)
@@ -154,9 +154,9 @@ class NeighbourFinder:
             yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
                    'neighbour_thing': neighbour_thing}
 
-    def _find_neighbours_from_attribute(self, tx, target_concept):
+    def _find_neighbours_from_attribute(self, tx, target_thing):
 
-        attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.id)
+        attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_thing.id)
         neighbours = map(lambda x: x.get(self.ATTRIBUTE_OWNER_QUERY['variable']),
                          self._query(attribute_owners_query, tx))
 
@@ -198,7 +198,7 @@ class Thing(utils.PropertyComparable):
         self.type_label = type_label
         self.base_type_label = base_type_label  # TODO rename to base_type in line with Client Python
 
-        # If the concept is an attribute
+        # If the thing is an attribute
         self.data_type = data_type
         self.value = value
 

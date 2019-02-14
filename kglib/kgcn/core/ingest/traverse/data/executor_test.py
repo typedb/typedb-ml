@@ -49,7 +49,7 @@ class BaseTestTraversalExecutor:
         
         def setUp(self):
             super(BaseTestTraversalExecutor.TestTraversalExecutor, self).setUp()
-            self._concept = list(self._tx.query(self.query))[0].get(self.var)
+            self._grakn_thing = list(self._tx.query(self.query))[0].get(self.var)
 
         def test_role_is_in_neighbour_roles(self):
             for role in self.roles:
@@ -75,7 +75,7 @@ class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExe
 
     def setUp(self):
         super(TestTraversalExecutorFromEntity, self).setUp()
-        self._res = list(self._executor(ex.TARGET_PLAYS, self._concept.id, self._tx))
+        self._res = list(self._executor(ex.TARGET_PLAYS, self._grakn_thing.id, self._tx))
 
 
 class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -88,7 +88,7 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
 
     def setUp(self):
         super(TestTraversalExecutorFromRelationship, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx))
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
 class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -101,7 +101,7 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 
     def setUp(self):
         super(TestTraversalExecutorFromAttribute, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx))
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
 # class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -115,7 +115,7 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 #
 #     def setUp(self):
 #         super(IntegrationTestTraversalExecutorFromDateAttribute, self).setUp()
-#         self._res = list(itertools.islice(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx), 2))
+#         self._res = list(itertools.islice(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
 
 
 class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -128,7 +128,7 @@ class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTrave
 
     def setUp(self):
         super(TestTraversalExecutorFromDateAttribute, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._concept.id, self._tx))
+        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
 class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):
@@ -160,18 +160,18 @@ class BaseTestBuildConceptInfo:
         def setUp(self):
             super(BaseTestBuildConceptInfo.TestBuildConceptInfo, self).setUp()
 
-            self._concept = list(self._tx.query(self.query))[0].get(self.var)
+            self._grakn_thing = list(self._tx.query(self.query))[0].get(self.var)
 
-            self._concept_info = ex.build_thing(self._concept)
+            self._thing = ex.build_thing(self._grakn_thing)
 
         def test_id(self):
-            self.assertEqual(self._concept_info.id, self._concept.id)
+            self.assertEqual(self._thing.id, self._grakn_thing.id)
 
         def test_type_label(self):
-            self.assertEqual(self._concept_info.type_label, self.type_label)
+            self.assertEqual(self._thing.type_label, self.type_label)
 
         def test_base_type_label(self):
-            self.assertEqual(self._concept_info.base_type_label, self.base_type)
+            self.assertEqual(self._thing.base_type_label, self.base_type)
 
 
 class TestBuildConceptInfoForEntity(BaseTestBuildConceptInfo.TestBuildConceptInfo):
@@ -202,10 +202,10 @@ class BaseTestBuildConceptInfoForAttribute:
     class TestBuildConceptInfoForAttribute(BaseTestBuildConceptInfo.TestBuildConceptInfo):
 
         def test_data_type(self):
-            self.assertEqual(self._concept_info.data_type, self.data_type)
+            self.assertEqual(self._thing.data_type, self.data_type)
 
         def test_value(self):
-            self.assertEqual(self._concept_info.value, self.value)
+            self.assertEqual(self._thing.value, self.value)
 
 
 class TestBuildConceptInfoForStringAttribute(BaseTestBuildConceptInfoForAttribute.TestBuildConceptInfoForAttribute):
