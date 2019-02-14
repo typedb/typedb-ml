@@ -27,12 +27,12 @@ import numpy as np
 from kglib.kgcn.core.ingest.traverse.data import neighbourhood as trv, executor as data_ex
 
 
-def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_types):
+def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):
     depthwise_arrays = []
     depth_shape = list(neighbourhood_sizes) + [1]
 
     for i in range(len(depth_shape)):
-        shape_at_this_depth = [n_starting_concepts] + depth_shape[i:]
+        shape_at_this_depth = [n_starting_things] + depth_shape[i:]
         arrays = {}
         for array_name, (array_data_type, default_value) in array_data_types.items():
 
@@ -58,7 +58,7 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
 
     if neighbour_data_type is not None:
         # Potentially confusing to create an index of these arrays, since role type and direction will be omitted
-        #  for the starting concepts
+        #  for the starting things
         # values_to_put['neighbour_data_type'] = list(self._array_data_types.keys()).index(
         #     'neighbour_value_' + neighbour_data_type)
         values_to_put['neighbour_data_type'] = neighbour_data_type
@@ -89,32 +89,30 @@ class RawArrayBuilder:
              ('neighbour_value_string', (np.dtype('U50'), ''))])
         self.indices_visited = []
 
-    def _initialise_arrays(self, n_starting_concepts):
+    def _initialise_arrays(self, num_example_things):
         #####################################################
         # Make the empty arrays to fill
         #####################################################
 
-        return build_default_arrays(self._neighbourhood_sizes, n_starting_concepts, self._array_data_types)
+        return build_default_arrays(self._neighbourhood_sizes, num_example_things, self._array_data_types)
 
-    def build_raw_arrays(self, concept_infos_with_neighbourhoods: typ.List[trv.Neighbour]):
+    def build_raw_arrays(self, thing_contexts: typ.List[trv.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
         :param top_level_neighbours:
         :return: a list of arrays, one for each depth, including one for the starting nodes of interest
         """
 
-        n_starting_concepts = len(concept_infos_with_neighbourhoods)
+        nun_example_things = len(thing_contexts)
         self.indices_visited = []
-        depthwise_arrays = self._initialise_arrays(n_starting_concepts)
+        depthwise_arrays = self._initialise_arrays(nun_example_things)
 
         #####################################################
         # Populate the arrays from the neighbour traversals
         #####################################################
-        depthwise_arrays = self._build_neighbours(concept_infos_with_neighbourhoods,
-                                                  depthwise_arrays,
-                                                  tuple())
+        depthwise_arrays = self._build_neighbours(thing_contexts, depthwise_arrays, tuple())
         # try:
-        #     poss = all_possible_indices(self._neighbourhood_sizes, n_starting_concepts)
+        #     poss = all_possible_indices(self._neighbourhood_sizes, nun_example_things)
         #     assert(set(self.indices_visited) == set(poss))
         # except AssertionError:
         #     raise AssertionError(
@@ -207,14 +205,14 @@ class BatchContextBuilder:
         neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
         self._raw_builder = RawArrayBuilder(neighbour_sample_sizes)
 
-    def __call__(self, session, concepts):
+    def __call__(self, session, grakn_things):
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
-        things = [data_ex.build_thing(concept) for concept in concepts]
+        things = [data_ex.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
         data_executor = data_ex.TraversalExecutor()
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
+        neighourhood_traverser = trv.ContextBuilder(data_executor, self._traversal_samplers)
 
         neighbourhood_depths = []
         for thing in things:

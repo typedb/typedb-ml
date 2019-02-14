@@ -59,7 +59,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         for sample_size in neighbour_sample_sizes:
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(self._executor, samplers)
+        neighourhood_traverser = trv.ContextBuilder(self._executor, samplers)
         return neighourhood_traverser
 
     def tearDown(self):
@@ -72,8 +72,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         :return:
         """
         self.assertIsInstance(thing_context, trv.ThingContext)
-        self.assertIsInstance(thing_context.thing,
-                              ex.Thing)
+        self.assertIsInstance(thing_context.thing, ex.Thing)
         self.assertIn(type(thing_context.neighbourhood).__name__, ('list',))
 
         try:
@@ -159,7 +158,7 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = ex.Thing("0", "person", "entity")
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
+        neighourhood_traverser = trv.ContextBuilder(mocks.mock_executor, samplers)
 
         thing_context = neighourhood_traverser(starting_thing, self._tx)
 
@@ -178,7 +177,7 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = ex.Thing("0", "person", "entity")
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
+        neighourhood_traverser = trv.ContextBuilder(mocks.mock_executor, samplers)
 
         thing_context = neighourhood_traverser(starting_thing, self._tx)
 
@@ -228,7 +227,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         data_executor = ex.TraversalExecutor()
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
+        neighourhood_traverser = trv.ContextBuilder(data_executor, samplers)
 
         self._neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 
@@ -262,7 +261,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         starting_thing = ex.Thing("0", "person", "entity")
         things = [starting_thing]
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
+        neighourhood_traverser = trv.ContextBuilder(mocks.mock_executor, samplers)
 
         self._neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 

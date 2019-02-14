@@ -29,7 +29,6 @@ import kglib.kgcn.core.ingest.traverse.data.neighbourhood as trv
 import kglib.kgcn.core.ingest.traverse.data.neighbourhood_mocks as mock
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as builders
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw
-import kglib.kgcn.core.ingest.traverse.data.executor as ex
 
 
 class TestDetermineValuesToPut(unittest.TestCase):
@@ -84,13 +83,13 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
             with self.subTest(exp[i]):
                 self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
 
-    def _concept_infos_with_neighbourhoods_factory(self):
+    def _thing_contexts_factory(self):
         return trv.convert_thing_contexts_to_neighbours(
             [mock.mock_traversal_output(), mock.mock_traversal_output()])
 
     def test_build_raw_arrays(self):
 
-        depthwise_arrays = self._builder.build_raw_arrays(self._concept_infos_with_neighbourhoods_factory())
+        depthwise_arrays = self._builder.build_raw_arrays(self._thing_contexts_factory())
         self._check_dims(depthwise_arrays)
         with self.subTest('spot-check thing type'):
             self.assertEqual(depthwise_arrays[-1]['neighbour_type'][0, 0], 'person')
@@ -107,7 +106,7 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
         self._check_dims(initialised_arrays)
 
     def test_array_values(self):
-        depthwise_arrays = self._builder.build_raw_arrays(self._concept_infos_with_neighbourhoods_factory())
+        depthwise_arrays = self._builder.build_raw_arrays(self._thing_contexts_factory())
         with self.subTest('role_type not empty'):
             self.assertFalse('' in depthwise_arrays[0]['role_type'])
         with self.subTest('neighbour_type not empty'):
@@ -137,7 +136,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         data_executor = data_ex.TraversalExecutor()
 
-        neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, samplers)
+        neighourhood_traverser = trv.ContextBuilder(data_executor, samplers)
 
         neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
@@ -207,8 +206,8 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
 class TestAttributeTypes(unittest.TestCase):
     def test_date(self):
         neighbour_roles = [trv.Neighbour(None, None, trv.ThingContext(
-            ex.Thing("1", "start-date", "attribute", data_type='date',
-                     value=datetime.datetime(day=1, month=1, year=2018)),
+            data_ex.Thing("1", "start-date", "attribute", data_type='date',
+                          value=datetime.datetime(day=1, month=1, year=2018)),
             mock.gen([])
         )), ]
 

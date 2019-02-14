@@ -17,9 +17,8 @@
 #  under the License.
 #
 
-import itertools
-
 import collections
+import itertools
 
 import kglib.kgcn.core.ingest.traverse.data.executor as data_executor
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
@@ -45,7 +44,7 @@ def convert_thing_contexts_to_neighbours(thing_contexts):
     return top_level_neighbours
 
 
-class NeighbourhoodTraverser:
+class ContextBuilder:
     def __init__(self, query_executor: data_executor.TraversalExecutor, depth_samplers):
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
