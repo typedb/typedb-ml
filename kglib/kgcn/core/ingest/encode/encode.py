@@ -19,9 +19,9 @@
 
 import tensorflow as tf
 
-import kglib.kgcn.core.ingest.neighbourhood.data.executor as data_ex
+import kglib.kgcn.core.ingest.traverse.data.executor as data_ex
 from kglib.kgcn.core.ingest.encode import tf_hub, boolean, schema
-from kglib.kgcn.core.ingest.neighbourhood.schema import traversal as trav, executor as schema_ex
+from kglib.kgcn.core.ingest.traverse.schema import traversal as trav, executor as schema_ex
 
 GET_THING_TYPES_QUERY = "match $x sub thing; get;"
 GET_ROLE_TYPES_QUERY = "match $x sub role; get;"

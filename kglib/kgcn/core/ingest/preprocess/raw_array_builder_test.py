@@ -22,14 +22,14 @@ import unittest
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.neighbourhood.data.executor as data_ex
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.ordered as ordered
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.sampler as samp
-import kglib.kgcn.core.ingest.neighbourhood.data.traversal as trv
-import kglib.kgcn.core.ingest.neighbourhood.data.traversal_mocks as mock
+import kglib.kgcn.core.ingest.traverse.data.executor as data_ex
+import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
+import kglib.kgcn.core.ingest.traverse.data.neighbourhood as trv
+import kglib.kgcn.core.ingest.traverse.data.neighbourhood_mocks as mock
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as builders
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw
-import kglib.kgcn.core.ingest.neighbourhood.data.executor as ex
+import kglib.kgcn.core.ingest.traverse.data.executor as ex
 
 
 class TestDetermineValuesToPut(unittest.TestCase):

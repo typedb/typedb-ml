@@ -5,7 +5,7 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 py_test(
     name = "ordered_test",
     srcs = [
-        "kgcn/core/ingest/neighbourhood/data/sampling/ordered_test.py"
+        "kgcn/core/ingest/traverse/data/sampling/ordered_test.py"
     ],
     deps = [
         "kglib"
@@ -15,7 +15,7 @@ py_test(
 py_test(
     name = "random_sampling_test",
     srcs = [
-        "kgcn/core/ingest/neighbourhood/data/sampling/random_sampling_test.py"
+        "kgcn/core/ingest/traverse/data/sampling/random_sampling_test.py"
     ],
     deps = [
         "kglib",
@@ -83,10 +83,9 @@ py_test(
 )
 
 py_test(
-    name = "data_traversal_test",
-    main = "traversal_test.py",
+    name = "neighbourhood_test",
     srcs = [
-        "kgcn/core/ingest/neighbourhood/data/traversal_test.py"
+        "kgcn/core/ingest/traverse/data/neighbourhood_test.py"
     ],
     deps = [
         "kglib",
@@ -97,7 +96,7 @@ py_test(
     name = "data_executor_test",
     main = "executor_test.py",
     srcs = [
-        "kgcn/core/ingest/neighbourhood/data/executor_test.py"
+        "kgcn/core/ingest/traverse/data/executor_test.py"
     ],
     deps = [
         "kglib",
@@ -108,7 +107,7 @@ py_test(
     name = "schema_traversal_test",
     main = "traversal_test.py",
     srcs = [
-        "kgcn/core/ingest/neighbourhood/schema/traversal_test.py"
+        "kgcn/core/ingest/traverse/schema/traversal_test.py"
     ],
     deps = [
         "kglib",

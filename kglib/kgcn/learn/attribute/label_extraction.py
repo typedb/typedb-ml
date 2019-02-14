@@ -18,7 +18,7 @@
 #
 import itertools
 import typing as typ
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.random_sampling as random
+import kglib.kgcn.core.ingest.traverse.data.sampling.random_sampling as random
 
 
 class ConceptLabelExtractor:

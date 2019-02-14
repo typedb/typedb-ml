@@ -22,8 +22,8 @@ import unittest
 import grakn
 
 import kglib.kgcn.core.ingest.encode.encode as encode
-import kglib.kgcn.core.ingest.neighbourhood.schema.executor as ex
-import kglib.kgcn.core.ingest.neighbourhood.schema.traversal as trv
+import kglib.kgcn.core.ingest.traverse.schema.executor as ex
+import kglib.kgcn.core.ingest.traverse.schema.traversal as trv
 
 
 class TestGetSchemaConceptTypes(unittest.TestCase):

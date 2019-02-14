@@ -24,7 +24,7 @@ import collections
 import grakn
 import numpy as np
 
-from kglib.kgcn.core.ingest.neighbourhood.data import traversal as trv, executor as data_ex
+from kglib.kgcn.core.ingest.traverse.data import neighbourhood as trv, executor as data_ex
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_concepts, array_data_types):

@@ -17,7 +17,7 @@
 #  under the License.
 #
 
-import kglib.kgcn.core.ingest.neighbourhood.schema.traversal as trav
+import kglib.kgcn.core.ingest.traverse.schema.traversal as trav
 
 
 class TraversalExecutor:

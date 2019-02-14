@@ -21,11 +21,11 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.core.ingest.neighbourhood.data.executor as ex
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.sampler as samp
-import kglib.kgcn.core.ingest.neighbourhood.data.traversal as trv
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.ordered as ordered
-import kglib.kgcn.core.ingest.neighbourhood.data.traversal_mocks as mocks
+import kglib.kgcn.core.ingest.traverse.data.executor as ex
+import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
+import kglib.kgcn.core.ingest.traverse.data.neighbourhood as trv
+import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.neighbourhood_mocks as mocks
 
 
 class TestNeighbourTraversalFromEntity(unittest.TestCase):

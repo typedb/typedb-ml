@@ -1,4 +1,3 @@
-
 #
 #  Licensed to the Apache Software Foundation (ASF) under one
 #  or more contributor license agreements.  See the NOTICE file
@@ -20,7 +19,7 @@
 
 import unittest
 
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sampling.random_sampling as rnd
 
 
 def _gen(l):
@@ -28,7 +27,7 @@ def _gen(l):
         yield i
 
 
-class TestOrderedSample(unittest.TestCase):
+class TestRandomSample(unittest.TestCase):
     def setUp(self):
         self._p = list(range(5))
 
@@ -36,8 +35,9 @@ class TestOrderedSample(unittest.TestCase):
 
         population = _gen(self._p)
         n = 3
-        first_n = ordered.ordered_sample(population, n)
-        self.assertListEqual(list(first_n), self._p[:n])
+        rnd_samples = rnd.random_sample(population, n)
+        self.assertEqual(min(n, len(self._p)), len(rnd_samples))
+        self.assertTrue(set(rnd_samples).issubset(set(self._p)))
 
     def test_when_sample_size_more_than_population(self):
         ns = [7, 10, 11, 15, 24]
@@ -46,26 +46,22 @@ class TestOrderedSample(unittest.TestCase):
             with self.subTest(f'population size = {len(self._p)}, n = {n}'):
                 population = _gen(self._p)
 
-                first_n = ordered.ordered_sample(population, n)
-
-                self.assertListEqual(list(first_n), list(_gen(self._p))[:n])
+                rnd_samples = rnd.random_sample(population, n)
+                self.assertEqual(min(n, len(self._p)), len(rnd_samples))
+                self.assertTrue(set(rnd_samples).issubset(set(self._p)))
 
     def test_when_sample_size_is_zero(self):
 
         population = _gen(self._p)
         n = 0
-        first_n = ordered.ordered_sample(population, n)
-        self.assertListEqual(list(first_n), [])
+        rnd_samples = rnd.random_sample(population, n)
+        self.assertListEqual(list(rnd_samples), [])
 
     def test_when_population_size_is_zero(self):
 
         population = _gen([])
         n = 5
         with self.assertRaises(ValueError) as context:
-            first_n = ordered.ordered_sample(population, n)
+            first_n = rnd.random_sample(population, n)
 
         self.assertTrue('Population is empty' in str(context.exception))
-
-
-if __name__ == "__main__":
-    unittest.main()

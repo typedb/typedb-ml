@@ -21,8 +21,8 @@ import tensorflow as tf
 
 import kglib.kgcn.core.ingest.encode.encode as encode
 import kglib.kgcn.core.nn.embed as embed
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.ordered as ordered
-import kglib.kgcn.core.ingest.neighbourhood.data.sampling.sampler as samp
+import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
 import kglib.kgcn.core.ingest.preprocess.preprocess as preprocess
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw_array_builder
 

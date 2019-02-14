@@ -17,8 +17,8 @@
 #  under the License.
 #
 
-import kglib.kgcn.core.ingest.neighbourhood.data.executor as ex
-import kglib.kgcn.core.ingest.neighbourhood.data.traversal as trv
+import kglib.kgcn.core.ingest.traverse.data.executor as ex
+import kglib.kgcn.core.ingest.traverse.data.neighbourhood as trv
 
 
 def gen(elements):
