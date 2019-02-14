@@ -25,25 +25,23 @@ import kglib.kgcn.core.ingest.traverse.data.executor as data_executor
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
 
 
-class ConceptInfoWithNeighbourhood(utils.PropertyComparable):
-    def __init__(self, concept_info: data_executor.ConceptInfo, neighbourhood: collections.Generator):
-        self.concept_info = concept_info
-        self.neighbourhood = neighbourhood  # An iterator of `NeighbourRole`s
+class ThingContext(utils.PropertyComparable):
+    def __init__(self, thing: data_executor.Thing, neighbourhood: collections.Generator):
+        self.thing = thing
+        self.neighbourhood = neighbourhood  # An iterator of `Neighbour`s
 
 
-class NeighbourRole(utils.PropertyComparable):
-    def __init__(self, role_label: (str, None), role_direction: (int, None),
-                 neighbour_info_with_neighbourhood: ConceptInfoWithNeighbourhood):
+class Neighbour(utils.PropertyComparable):
+    def __init__(self, role_label: (str, None), role_direction: (int, None), context: ThingContext):
         self.role_label = role_label
         self.role_direction = role_direction
-        self.neighbour_info_with_neighbourhood = neighbour_info_with_neighbourhood
+        self.context = context
 
 
-def concepts_with_neighbourhoods_to_neighbour_roles(concept_infos_with_neighbourhoods):
+def concepts_with_neighbourhoods_to_neighbour_roles(thing_contexts):
     """Dummy NeighbourRoles so that a consistent data structure can be used right from the top level"""
-    top_level_neighbour_roles = [NeighbourRole(None, None, concept_info_with_neighbourhood) for
-                                 concept_info_with_neighbourhood in concept_infos_with_neighbourhoods]
-    return top_level_neighbour_roles
+    top_level_neighbours = [Neighbour(None, None, thing_context) for thing_context in thing_contexts]
+    return top_level_neighbours
 
 
 class NeighbourhoodTraverser:
@@ -51,16 +49,15 @@ class NeighbourhoodTraverser:
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 
-    def __call__(self, target_concept_info: data_executor.ConceptInfo, tx):
+    def __call__(self, target_concept_info: data_executor.Thing, tx):
         depth = len(self._depth_samplers)
-        # self._query_executor.refresh_transaction()
         return self._traverse(target_concept_info, depth, tx)
 
-    def _traverse(self, target_concept_info: data_executor.ConceptInfo, depth: int, tx):
+    def _traverse(self, starting_thing_context: data_executor.Thing, depth: int, tx):
 
         if depth == 0:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return ConceptInfoWithNeighbourhood(concept_info=target_concept_info, neighbourhood=[])
+            return ThingContext(thing=starting_thing_context, neighbourhood=[])
 
         sampler = self._depth_samplers[-depth]
         next_depth = depth - 1
@@ -71,12 +68,11 @@ class NeighbourhoodTraverser:
         # Any concept could play a role in a relationship if the schema permits it
 
         # Distinguish the concepts found as roles-played
-        roles_played = self._query_executor(data_executor.ROLES_PLAYED, target_concept_info.id, tx)
+        roles_played = self._query_executor(data_executor.ROLES_PLAYED, starting_thing_context.id, tx)
 
         neighbourhood = self._get_neighbour_role(roles_played, next_depth, tx)
 
-        concept_info_with_neighbourhood = ConceptInfoWithNeighbourhood(concept_info=target_concept_info,
-                                                                       neighbourhood=neighbourhood)
+        thing_context = ThingContext(thing=starting_thing_context, neighbourhood=neighbourhood)
 
         # TODO If user doesn't attach anything to impicit @has relationships, then these could be filtered out. Instead
         # another query would be required: "match $x id {}, has attribute $attribute; get $attribute;"
@@ -90,62 +86,61 @@ class NeighbourhoodTraverser:
         #     # Optionally stop further propagation through attributes, since they are shared across the knowledge
         #     # graph so this may not provide relevant information
 
-        if target_concept_info.base_type_label == 'relationship':
+        if starting_thing_context.base_type_label == 'relationship':
             # Find its roleplayers
-            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, target_concept_info.id, tx)
+            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, starting_thing_context.id, tx)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
-            concept_info_with_neighbourhood.neighbourhood = itertools.chain(
-                concept_info_with_neighbourhood.neighbourhood,
+            thing_context.neighbourhood = itertools.chain(
+                thing_context.neighbourhood,
                 self._get_neighbour_role(roleplayers, next_depth, tx))
 
         # Randomly sample the neighbourhood
-        concept_info_with_neighbourhood.neighbourhood = sampler(concept_info_with_neighbourhood.neighbourhood)
+        thing_context.neighbourhood = sampler(thing_context.neighbourhood)
 
-        return concept_info_with_neighbourhood
+        return thing_context
 
     def _get_neighbour_role(self, role_and_concept_info_iterator, depth, tx):
 
         for connection in role_and_concept_info_iterator:
             neighbour_info_with_neighbourhood = self._traverse(connection['neighbour_info'], depth, tx)
 
-            yield NeighbourRole(role_label=connection['role_label'], role_direction=connection['role_direction'],
-                                neighbour_info_with_neighbourhood=neighbour_info_with_neighbourhood)
+            yield Neighbour(role_label=connection['role_label'], role_direction=connection['role_direction'],
+                            context=neighbour_info_with_neighbourhood)
 
 
-def collect_to_tree(concept_info_with_neighbourhood):
+def collect_to_tree(thing_context):
     """
     Given the neighbour generators, yield the fully populated tree of each of the target concept's neighbours
-    :param concept_info_with_neighbourhood:
+    :param thing_context:
     :return:
     """
-    if concept_info_with_neighbourhood is not None:
-        concept_info_with_neighbourhood.neighbourhood = materialise_subordinate_neighbours(
-            concept_info_with_neighbourhood)
-        for neighbour_role in concept_info_with_neighbourhood.neighbourhood:
-            collect_to_tree(neighbour_role.neighbour_info_with_neighbourhood)
+    if thing_context is not None:
+        thing_context.neighbourhood = materialise_subordinate_neighbours(thing_context)
+        for neighbour in thing_context.neighbourhood:
+            collect_to_tree(neighbour.context)
 
-    return concept_info_with_neighbourhood
+    return thing_context
 
 
-def materialise_subordinate_neighbours(concept_info_with_neighbourhood):
+def materialise_subordinate_neighbours(thing_context):
     """
     Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one
     layer deeper in the neighbour graph
-    :param concept_info_with_neighbourhood:
+    :param thing_context:
     :return:
     """
-    return [neighbour_role for neighbour_role in concept_info_with_neighbourhood.neighbourhood]
+    return [neighbour_role for neighbour_role in thing_context.neighbourhood]
 
 
 def flatten_tree(neighbour_roles):
     all_connections = []
 
-    for neighbour_role in neighbour_roles:
-        ci = neighbour_role.neighbour_info_with_neighbourhood.concept_info
+    for neighbour in neighbour_roles:
+        ci = neighbour.context.thing
         all_connections.append(
-            (neighbour_role.role_label,
-             neighbour_role.role_direction,
+            (neighbour.role_label,
+             neighbour.role_direction,
              ci.type_label,
              ci.base_type_label,
              ci.id,
@@ -153,23 +148,23 @@ def flatten_tree(neighbour_roles):
              ci.value
              ))
 
-        all_connections += flatten_tree(neighbour_role.neighbour_info_with_neighbourhood.neighbourhood)  # List of neighbour roles
+        all_connections += flatten_tree(neighbour.context.neighbourhood)  # List of neighbour roles
     return all_connections
 
 
-def get_max_depth(concept_info_with_neighbourhood):
+def get_max_depth(thing_context: ThingContext):
     """
     Find the length of the deepest aggregation path
-    :param concept_info_with_neighbourhood:
+    :param thing_context:
     :return:
     """
 
-    if len(concept_info_with_neighbourhood.neighbourhood) == 0:
+    if len(thing_context.neighbourhood) == 0:
         return 0
     else:
         max_depth = 0
-        for neighbour_role in concept_info_with_neighbourhood.neighbourhood:
-            m = get_max_depth(neighbour_role.neighbour_info_with_neighbourhood)
+        for neighbour in thing_context.neighbourhood:
+            m = get_max_depth(neighbour.context)
             if m > max_depth:
                 max_depth = m
         return max_depth + 1

@@ -162,7 +162,7 @@ class BaseTestBuildConceptInfo:
 
             self._concept = list(self._tx.query(self.query))[0].get(self.var)
 
-            self._concept_info = ex.build_concept_info(self._concept)
+            self._concept_info = ex.build_thing(self._concept)
 
         def test_id(self):
             self.assertEqual(self._concept_info.id, self._concept.id)

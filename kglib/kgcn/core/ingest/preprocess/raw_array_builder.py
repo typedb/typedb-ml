@@ -96,7 +96,7 @@ class RawArrayBuilder:
 
         return build_default_arrays(self._neighbourhood_sizes, n_starting_concepts, self._array_data_types)
 
-    def build_raw_arrays(self, concept_infos_with_neighbourhoods: typ.List[trv.NeighbourRole]):
+    def build_raw_arrays(self, concept_infos_with_neighbourhoods: typ.List[trv.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
         :param top_level_neighbour_roles:
@@ -122,7 +122,7 @@ class RawArrayBuilder:
         #         f'Indices\n{set(poss).difference(set(self.indices_visited))}')
         return depthwise_arrays
 
-    def _build_neighbour_roles(self, neighbour_roles: typ.List[trv.NeighbourRole],
+    def _build_neighbour_roles(self, neighbour_roles: typ.List[trv.Neighbour],
                                depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
                                indices: typ.Tuple):
 
@@ -142,10 +142,10 @@ class RawArrayBuilder:
             depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
             arrays_at_this_depth = depthwise_arrays[depth]
 
-            concept_info = neighbour_role.neighbour_info_with_neighbourhood.concept_info
+            thing = neighbour_role.context.thing
             values_to_put = determine_values_to_put(neighbour_role.role_label, neighbour_role.role_direction,
-                                                    concept_info.type_label, concept_info.data_type,
-                                                    concept_info.value)
+                                                    thing.type_label, thing.data_type,
+                                                    thing.value)
 
             for key, value in values_to_put.items():
                 # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
@@ -154,7 +154,7 @@ class RawArrayBuilder:
                 arrays_at_this_depth[key][current_indices] = value
 
             depthwise_arrays = self._build_neighbour_roles(
-                neighbour_role.neighbour_info_with_neighbourhood.neighbourhood,
+                neighbour_role.context.neighbourhood,
                 depthwise_arrays,
                 current_indices)
 
@@ -200,7 +200,7 @@ def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
     array[slice_to_replace] = curtailed_filler
 
 
-class Traverser:
+class BatchContextBuilder:
 
     def __init__(self, traversal_samplers):
         self._traversal_samplers = traversal_samplers
@@ -211,16 +211,16 @@ class Traverser:
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
-        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
+        things = [data_ex.build_thing(concept) for concept in concepts]
 
         data_executor = data_ex.TraversalExecutor()
         neighourhood_traverser = trv.NeighbourhoodTraverser(data_executor, self._traversal_samplers)
 
         neighbourhood_depths = []
-        for concept_info in concept_infos:
+        for thing in things:
             tx = session.transaction(grakn.TxType.WRITE)
             print(f'Opening transaction {tx}')
-            depths = neighourhood_traverser(concept_info, tx)
+            depths = neighourhood_traverser(thing, tx)
             trv.collect_to_tree(depths)
             neighbourhood_depths.append(depths)
             print(f'closing transaction {tx}')

@@ -133,7 +133,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
 
-        concept_infos = [data_ex.build_concept_info(concept) for concept in concepts]
+        concept_infos = [data_ex.build_thing(concept) for concept in concepts]
 
         data_executor = data_ex.TraversalExecutor()
 
@@ -206,9 +206,9 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
 
 class TestAttributeTypes(unittest.TestCase):
     def test_date(self):
-        neighbour_roles = [trv.NeighbourRole(None, None, trv.ConceptInfoWithNeighbourhood(
-            ex.ConceptInfo("1", "start-date", "attribute", data_type='date',
-                           value=datetime.datetime(day=1, month=1, year=2018)),
+        neighbour_roles = [trv.Neighbour(None, None, trv.ThingContext(
+            ex.Thing("1", "start-date", "attribute", data_type='date',
+                     value=datetime.datetime(day=1, month=1, year=2018)),
             mock.gen([])
         )), ]
 

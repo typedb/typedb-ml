@@ -48,7 +48,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         # entity_query = "match $x isa person, has identifier '{}'; get $x;".format(identifier)
         entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
 
-        self._concept_info = ex.build_concept_info(list(self._tx.query(entity_query))[0].get('x'))
+        self._concept_info = ex.build_thing(list(self._tx.query(entity_query))[0].get('x'))
 
         self._executor = ex.TraversalExecutor()
 
@@ -71,15 +71,15 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
         :param concept_info_with_neighbourhood:
         :return:
         """
-        self.assertIsInstance(concept_info_with_neighbourhood, trv.ConceptInfoWithNeighbourhood)
-        self.assertIsInstance(concept_info_with_neighbourhood.concept_info,
-                              ex.ConceptInfo)
+        self.assertIsInstance(concept_info_with_neighbourhood, trv.ThingContext)
+        self.assertIsInstance(concept_info_with_neighbourhood.thing,
+                              ex.Thing)
         self.assertIn(type(concept_info_with_neighbourhood.neighbourhood).__name__, ('list',))
 
         try:
             neighbour_role = concept_info_with_neighbourhood.neighbourhood[0]
 
-            self.assertIsInstance(neighbour_role, trv.NeighbourRole)
+            self.assertIsInstance(neighbour_role, trv.Neighbour)
 
             self.assertTrue(
                 isinstance(neighbour_role.role_label, str)
@@ -87,7 +87,7 @@ class TestNeighbourTraversalFromEntity(unittest.TestCase):
                                                  ex.UNKNOWN_ROLE_NEIGHBOUR_PLAYS_LABEL])
             self.assertIn(neighbour_role.role_direction, [ex.TARGET_PLAYS,
                                                           ex.NEIGHBOUR_PLAYS])
-            self.assertTrue(self._assert_types_correct(neighbour_role.neighbour_info_with_neighbourhood))
+            self.assertTrue(self._assert_types_correct(neighbour_role.context))
         except IndexError:
             pass
 
@@ -159,7 +159,7 @@ class TestIsolated(unittest.TestCase):
 
         samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
 
-        starting_concept = ex.ConceptInfo("0", "person", "entity")
+        starting_concept = ex.Thing("0", "person", "entity")
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
 
@@ -178,7 +178,7 @@ class TestIsolated(unittest.TestCase):
 
         samplers = [samp.Sampler(2, sampling_method, limit=2), samp.Sampler(3, sampling_method, limit=1)]
 
-        starting_concept = ex.ConceptInfo("0", "person", "entity")
+        starting_concept = ex.Thing("0", "person", "entity")
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)
 
@@ -226,7 +226,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
 
-        concept_infos = [ex.build_concept_info(concept) for concept in concepts]
+        concept_infos = [ex.build_thing(concept) for concept in concepts]
 
         data_executor = ex.TraversalExecutor()
 
@@ -261,7 +261,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
 
-        starting_concept = ex.ConceptInfo("0", "person", "entity")
+        starting_concept = ex.Thing("0", "person", "entity")
         concept_infos = [starting_concept]
 
         neighourhood_traverser = trv.NeighbourhoodTraverser(mocks.mock_executor, samplers)

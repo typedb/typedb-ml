@@ -116,7 +116,7 @@ class TraversalExecutor:
                 attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._query(attribute_query, tx))
 
                 for attribute in attributes:
-                    neighbour_info = build_concept_info(attribute)
+                    neighbour_info = build_thing(attribute)
                     yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
                            'neighbour_info': neighbour_info}
 
@@ -126,7 +126,7 @@ class TraversalExecutor:
                                      self._query(attribute_owners_query, tx))
 
                     for neighbour in neighbours:
-                        neighbour_info = build_concept_info(neighbour)
+                        neighbour_info = build_thing(neighbour)
                         yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
                                'neighbour_info': neighbour_info}
 
@@ -144,7 +144,7 @@ class TraversalExecutor:
                     role_label = role.label()
 
                     neighbour_concept = answer.get(base_query['neighbour_variable'])
-                    neighbour_info = build_concept_info(neighbour_concept)
+                    neighbour_info = build_thing(neighbour_concept)
 
                     yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
                            'neighbour_info': neighbour_info}
@@ -178,7 +178,7 @@ def find_lowest_role_from_rols_sups(role_sups):
     return role
 
 
-class ConceptInfo(utils.PropertyComparable):
+class Thing(utils.PropertyComparable):
     def __init__(self, id, type_label, base_type_label, data_type=None, value=None):
         self.id = id
         self.type_label = type_label
@@ -189,19 +189,19 @@ class ConceptInfo(utils.PropertyComparable):
         self.value = value
 
 
-def build_concept_info(concept):
+def build_thing(grakn_thing):
 
-    id = concept.id
-    type_label = concept.type().label()
-    base_type_label = concept.base_type.lower()
+    id = grakn_thing.id
+    type_label = grakn_thing.type().label()
+    base_type_label = grakn_thing.base_type.lower()
 
     assert(base_type_label in ['entity', 'relationship', 'attribute'])
 
     if base_type_label == 'attribute':
-        data_type = concept.type().data_type().name.lower()
+        data_type = grakn_thing.type().data_type().name.lower()
         assert data_type in DATA_TYPE_NAMES
-        value = concept.value()
+        value = grakn_thing.value()
 
-        return ConceptInfo(id, type_label, base_type_label, data_type, value)
+        return Thing(id, type_label, base_type_label, data_type, value)
 
-    return ConceptInfo(id, type_label, base_type_label)
+    return Thing(id, type_label, base_type_label)
