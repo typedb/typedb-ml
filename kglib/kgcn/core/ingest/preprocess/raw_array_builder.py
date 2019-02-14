@@ -99,7 +99,7 @@ class RawArrayBuilder:
     def build_raw_arrays(self, concept_infos_with_neighbourhoods: typ.List[trv.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
-        :param top_level_neighbour_roles:
+        :param top_level_neighbours:
         :return: a list of arrays, one for each depth, including one for the starting nodes of interest
         """
 
@@ -110,9 +110,9 @@ class RawArrayBuilder:
         #####################################################
         # Populate the arrays from the neighbour traversals
         #####################################################
-        depthwise_arrays = self._build_neighbour_roles(concept_infos_with_neighbourhoods,
-                                                       depthwise_arrays,
-                                                       tuple())
+        depthwise_arrays = self._build_neighbours(concept_infos_with_neighbourhoods,
+                                                  depthwise_arrays,
+                                                  tuple())
         # try:
         #     poss = all_possible_indices(self._neighbourhood_sizes, n_starting_concepts)
         #     assert(set(self.indices_visited) == set(poss))
@@ -122,16 +122,16 @@ class RawArrayBuilder:
         #         f'Indices\n{set(poss).difference(set(self.indices_visited))}')
         return depthwise_arrays
 
-    def _build_neighbour_roles(self, neighbour_roles: typ.List[trv.Neighbour],
-                               depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
-                               indices: typ.Tuple):
+    def _build_neighbours(self, neighbours: typ.List[trv.Neighbour],
+                          depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
+                          indices: typ.Tuple):
 
         # depth = len(self._neighbourhood_sizes) + 2 - (len(indices) + 1)
 
         n = None
         current_indices = None
 
-        for n, neighbour_role in enumerate(neighbour_roles):
+        for n, neighbour in enumerate(neighbours):
             if len(indices) == 0:
                 current_indices = (n, 0)
             else:
@@ -142,8 +142,8 @@ class RawArrayBuilder:
             depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
             arrays_at_this_depth = depthwise_arrays[depth]
 
-            thing = neighbour_role.context.thing
-            values_to_put = determine_values_to_put(neighbour_role.role_label, neighbour_role.role_direction,
+            thing = neighbour.context.thing
+            values_to_put = determine_values_to_put(neighbour.role_label, neighbour.role_direction,
                                                     thing.type_label, thing.data_type,
                                                     thing.value)
 
@@ -153,8 +153,8 @@ class RawArrayBuilder:
                 assert len(arrays_at_this_depth[key].shape) == len(current_indices)
                 arrays_at_this_depth[key][current_indices] = value
 
-            depthwise_arrays = self._build_neighbour_roles(
-                neighbour_role.context.neighbourhood,
+            depthwise_arrays = self._build_neighbours(
+                neighbour.context.neighbourhood,
                 depthwise_arrays,
                 current_indices)
 
@@ -225,12 +225,12 @@ class BatchContextBuilder:
             neighbourhood_depths.append(depths)
             print(f'closing transaction {tx}')
             tx.close()
-        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+        neighbours = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
         # Raw Array Building
         ################################################################################################################
         # TODO Deal with where to build arrays
 
-        raw_array_depths = self._raw_builder.build_raw_arrays(neighbour_roles)
+        raw_array_depths = self._raw_builder.build_raw_arrays(neighbours)
         return raw_array_depths

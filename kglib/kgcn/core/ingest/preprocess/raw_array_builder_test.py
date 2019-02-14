@@ -85,7 +85,7 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
                 self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
 
     def _concept_infos_with_neighbourhoods_factory(self):
-        return trv.concepts_with_neighbourhoods_to_neighbour_roles(
+        return trv.convert_thing_contexts_to_neighbours(
             [mock.mock_traversal_output(), mock.mock_traversal_output()])
 
     def test_build_raw_arrays(self):
@@ -141,7 +141,7 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
-        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+        neighbour_roles = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         # flat = trv.flatten_tree(neighbour_roles)
         # [trv.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
@@ -167,7 +167,7 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
 
         neighbourhood_depths = [mock.mock_traversal_output()]
 
-        neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(neighbourhood_depths)
+        neighbour_roles = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
         # Raw Array Building

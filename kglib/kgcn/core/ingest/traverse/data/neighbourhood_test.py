@@ -234,7 +234,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
-        self._neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(self._neighbourhood_depths)
+        self._neighbour_roles = trv.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = trv.flatten_tree(self._neighbour_roles)
 
@@ -268,7 +268,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
 
-        self._neighbour_roles = trv.concepts_with_neighbourhoods_to_neighbour_roles(self._neighbourhood_depths)
+        self._neighbour_roles = trv.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = trv.flatten_tree(self._neighbour_roles)
 

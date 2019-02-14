@@ -59,7 +59,7 @@ class BaseTestTraversalExecutor:
             self.assertSetEqual(set(self.roles), {r['role_label'] for r in self._res})
 
         def test_neighbour_type_in_found_neighbours(self):
-            self.assertIn(self.neighbour_type, [r['neighbour_info'].type_label for r in self._res])
+            self.assertIn(self.neighbour_type, [r['neighbour_thing'].type_label for r in self._res])
 
         def test_num_results(self):
             self.assertEqual(self.num_results, len(self._res))

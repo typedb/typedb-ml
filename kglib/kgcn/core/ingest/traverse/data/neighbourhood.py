@@ -25,6 +25,7 @@ import kglib.kgcn.core.ingest.traverse.data.executor as data_executor
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
 
 
+# Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
 class ThingContext(utils.PropertyComparable):
     def __init__(self, thing: data_executor.Thing, neighbourhood: collections.Generator):
         self.thing = thing
@@ -38,8 +39,8 @@ class Neighbour(utils.PropertyComparable):
         self.context = context
 
 
-def concepts_with_neighbourhoods_to_neighbour_roles(thing_contexts):
-    """Dummy NeighbourRoles so that a consistent data structure can be used right from the top level"""
+def convert_thing_contexts_to_neighbours(thing_contexts):
+    """Dummy Neighbours so that a consistent data structure can be used right from the top level"""
     top_level_neighbours = [Neighbour(None, None, thing_context) for thing_context in thing_contexts]
     return top_level_neighbours
 
@@ -49,9 +50,9 @@ class NeighbourhoodTraverser:
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 
-    def __call__(self, target_concept_info: data_executor.Thing, tx):
+    def __call__(self, example_thing: data_executor.Thing, tx):
         depth = len(self._depth_samplers)
-        return self._traverse(target_concept_info, depth, tx)
+        return self._traverse(example_thing, depth, tx)
 
     def _traverse(self, starting_thing_context: data_executor.Thing, depth: int, tx):
 
@@ -70,7 +71,7 @@ class NeighbourhoodTraverser:
         # Distinguish the concepts found as roles-played
         roles_played = self._query_executor(data_executor.ROLES_PLAYED, starting_thing_context.id, tx)
 
-        neighbourhood = self._get_neighbour_role(roles_played, next_depth, tx)
+        neighbourhood = self._get_neighbour(roles_played, next_depth, tx)
 
         thing_context = ThingContext(thing=starting_thing_context, neighbourhood=neighbourhood)
 
@@ -78,10 +79,10 @@ class NeighbourhoodTraverser:
         # another query would be required: "match $x id {}, has attribute $attribute; get $attribute;"
         # We would use TARGET_PLAYS with Role "has" or role "@has-< attribute type name >"
 
-        # if target_concept_info.metatype_label == 'entity':
+        # if target_thing.metatype_label == 'entity':
         #     # Nothing special to do in this case?
         #     pass
-        # elif target_concept_info.metatype_label == 'attribute':
+        # elif target_thing.metatype_label == 'attribute':
         #     # Do anything specific to attribute values
         #     # Optionally stop further propagation through attributes, since they are shared across the knowledge
         #     # graph so this may not provide relevant information
@@ -93,20 +94,20 @@ class NeighbourhoodTraverser:
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             thing_context.neighbourhood = itertools.chain(
                 thing_context.neighbourhood,
-                self._get_neighbour_role(roleplayers, next_depth, tx))
+                self._get_neighbour(roleplayers, next_depth, tx))
 
         # Randomly sample the neighbourhood
         thing_context.neighbourhood = sampler(thing_context.neighbourhood)
 
         return thing_context
 
-    def _get_neighbour_role(self, role_and_concept_info_iterator, depth, tx):
+    def _get_neighbour(self, role_and_concept_info_iterator, depth, tx):
 
         for connection in role_and_concept_info_iterator:
-            neighbour_info_with_neighbourhood = self._traverse(connection['neighbour_info'], depth, tx)
+            neighbour_context = self._traverse(connection['neighbour_thing'], depth, tx)
 
             yield Neighbour(role_label=connection['role_label'], role_direction=connection['role_direction'],
-                            context=neighbour_info_with_neighbourhood)
+                            context=neighbour_context)
 
 
 def collect_to_tree(thing_context):
@@ -130,13 +131,13 @@ def materialise_subordinate_neighbours(thing_context):
     :param thing_context:
     :return:
     """
-    return [neighbour_role for neighbour_role in thing_context.neighbourhood]
+    return [neighbour for neighbour in thing_context.neighbourhood]
 
 
-def flatten_tree(neighbour_roles):
+def flatten_tree(neighbours):
     all_connections = []
 
-    for neighbour in neighbour_roles:
+    for neighbour in neighbours:
         ci = neighbour.context.thing
         all_connections.append(
             (neighbour.role_label,

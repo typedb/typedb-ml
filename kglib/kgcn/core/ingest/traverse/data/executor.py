@@ -100,7 +100,7 @@ class TraversalExecutor:
         print(query)
         connection_iterator = self._query(query, tx)
 
-        def _roles_iterator():
+        def _link_iterator():
 
             # Direct connections to attributes
             if not self._attributes_via_implicit_relationships:
@@ -116,9 +116,9 @@ class TraversalExecutor:
                 attributes = map(lambda x: x.get(self.ATTRIBUTE_QUERY['variable']), self._query(attribute_query, tx))
 
                 for attribute in attributes:
-                    neighbour_info = build_thing(attribute)
+                    neighbour_thing = build_thing(attribute)
                     yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
-                           'neighbour_info': neighbour_info}
+                           'neighbour_thing': neighbour_thing}
 
                 if target_concept.is_attribute() and self._find_neighbours_from_attributes:
                     attribute_owners_query = self.ATTRIBUTE_OWNER_QUERY['query'].format(target_concept.id)
@@ -126,9 +126,9 @@ class TraversalExecutor:
                                      self._query(attribute_owners_query, tx))
 
                     for neighbour in neighbours:
-                        neighbour_info = build_thing(neighbour)
+                        neighbour_thing = build_thing(neighbour)
                         yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
-                               'neighbour_info': neighbour_info}
+                               'neighbour_thing': neighbour_thing}
 
             # Connections to entities, relationships and optionally implicit relationships
             for answer in connection_iterator:
@@ -144,12 +144,12 @@ class TraversalExecutor:
                     role_label = role.label()
 
                     neighbour_concept = answer.get(base_query['neighbour_variable'])
-                    neighbour_info = build_thing(neighbour_concept)
+                    neighbour_thing = build_thing(neighbour_concept)
 
                     yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
-                           'neighbour_info': neighbour_info}
+                           'neighbour_thing': neighbour_thing}
 
-        return _roles_iterator()
+        return _link_iterator()
 
     def _find_roles(self, thing, relationship, tx):
         query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)

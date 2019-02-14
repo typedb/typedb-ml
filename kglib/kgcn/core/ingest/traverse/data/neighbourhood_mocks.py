@@ -55,8 +55,8 @@ def mock_traversal_output():
 def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighbour_metatype, data_type=None,
                 value=None):
     return {'role_label': role_label, 'role_direction': role_direction,
-            'neighbour_info': ex.Thing(neighbour_id, neighbour_type, neighbour_metatype, data_type=data_type,
-                                       value=value)}
+            'neighbour_thing': ex.Thing(neighbour_id, neighbour_type, neighbour_metatype, data_type=data_type,
+                                        value=value)}
 
 
 def _role_wrapper(outcome, role_direction, query_direction):
