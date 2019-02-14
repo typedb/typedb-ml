@@ -67,11 +67,11 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
 
     def setUp(self):
         self._neighbourhood_sizes = (2, 3)
-        self._n_starting_concepts = 2
+        self._num_example_things = 2
 
         self._builder = builders.RawArrayBuilder(self._neighbourhood_sizes)
 
-        self._expected_dims = [self._n_starting_concepts] + list(reversed(self._neighbourhood_sizes)) + [1]
+        self._expected_dims = [self._num_example_things] + list(reversed(self._neighbourhood_sizes)) + [1]
 
     def _check_dims(self, arrays):
         # We expect dimensions:
@@ -102,7 +102,7 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
 
     def test_initialised_array_sizes(self):
 
-        initialised_arrays = self._builder._initialise_arrays(self._n_starting_concepts)
+        initialised_arrays = self._builder._initialise_arrays(self._num_example_things)
         self._check_dims(initialised_arrays)
 
     def test_array_values(self):
@@ -130,15 +130,15 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         for sample_size in neighbour_sample_sizes:
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-        concepts = [concept.get('x') for concept in list(self._tx.query(entity_query))]
+        grakn_things = [answermap.get('x') for answermap in list(self._tx.query(entity_query))]
 
-        concept_infos = [data_ex.build_thing(concept) for concept in concepts]
+        things = [data_ex.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
         data_executor = data_ex.TraversalExecutor()
 
         neighourhood_traverser = trv.ContextBuilder(data_executor, samplers)
 
-        neighbourhood_depths = [neighourhood_traverser(concept_info, self._tx) for concept_info in concept_infos]
+        neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 
         neighbour_roles = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
