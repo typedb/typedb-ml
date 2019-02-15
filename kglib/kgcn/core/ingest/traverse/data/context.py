@@ -20,13 +20,13 @@
 import collections
 import itertools
 
-import kglib.kgcn.core.ingest.traverse.data.executor as data_executor
+import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
 
 
 # Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
 class ThingContext(utils.PropertyComparable):
-    def __init__(self, thing: data_executor.Thing, neighbourhood: collections.Generator):
+    def __init__(self, thing: neighbour.Thing, neighbourhood: collections.Generator):
         self.thing = thing
         self.neighbourhood = neighbourhood  # An iterator of `Neighbour`s
 
@@ -45,15 +45,15 @@ def convert_thing_contexts_to_neighbours(thing_contexts):
 
 
 class ContextBuilder:
-    def __init__(self, query_executor: data_executor.NeighbourFinder, depth_samplers):
+    def __init__(self, query_executor: neighbour.NeighbourFinder, depth_samplers):
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 
-    def __call__(self, example_thing: data_executor.Thing, tx):
+    def __call__(self, example_thing: neighbour.Thing, tx):
         depth = len(self._depth_samplers)
         return self._traverse(example_thing, depth, tx)
 
-    def _traverse(self, starting_thing_context: data_executor.Thing, depth: int, tx):
+    def _traverse(self, starting_thing_context: neighbour.Thing, depth: int, tx):
 
         if depth == 0:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
@@ -68,7 +68,7 @@ class ContextBuilder:
         # Any concept could play a role in a relationship if the schema permits it
 
         # Distinguish the concepts found as roles-played
-        roles_played = self._query_executor(data_executor.ROLES_PLAYED, starting_thing_context.id, tx)
+        roles_played = self._query_executor(neighbour.ROLES_PLAYED, starting_thing_context.id, tx)
 
         neighbourhood = self._get_neighbour(roles_played, next_depth, tx)
 
@@ -88,7 +88,7 @@ class ContextBuilder:
 
         if starting_thing_context.base_type_label == 'relationship':
             # Find its roleplayers
-            roleplayers = self._query_executor(data_executor.ROLEPLAYERS, starting_thing_context.id, tx)
+            roleplayers = self._query_executor(neighbour.ROLEPLAYERS, starting_thing_context.id, tx)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             thing_context.neighbourhood = itertools.chain(

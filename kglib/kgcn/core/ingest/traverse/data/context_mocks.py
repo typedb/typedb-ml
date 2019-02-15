@@ -17,8 +17,8 @@
 #  under the License.
 #
 
-import kglib.kgcn.core.ingest.traverse.data.executor as ex
-import kglib.kgcn.core.ingest.traverse.data.neighbourhood as trv
+import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context as context
 
 
 def gen(elements):
@@ -27,22 +27,22 @@ def gen(elements):
 
 
 def mock_traversal_output():
-    c = trv.ThingContext(
-        ex.Thing("0", "person", "entity"),
+    c = context.ThingContext(
+        neighbour.Thing("0", "person", "entity"),
         gen([
-            trv.Neighbour("employee", ex.TARGET_PLAYS, trv.ThingContext(
-                ex.Thing("1", "employment", "relationship"),
+            context.Neighbour("employee", neighbour.TARGET_PLAYS, context.ThingContext(
+                neighbour.Thing("1", "employment", "relationship"),
                 gen([
-                    trv.Neighbour("employer", ex.NEIGHBOUR_PLAYS, trv.ThingContext(
-                        ex.Thing("2", "company", "entity"), gen([])
+                    context.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, context.ThingContext(
+                        neighbour.Thing("2", "company", "entity"), gen([])
                     )),
                 ])
             )),
-            trv.Neighbour("@has-name-owner", ex.TARGET_PLAYS, trv.ThingContext(
-                ex.Thing("3", "@has-name", "relationship"),
+            context.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, context.ThingContext(
+                neighbour.Thing("3", "@has-name", "relationship"),
                 gen([
-                    trv.Neighbour("@has-name-value", ex.NEIGHBOUR_PLAYS, trv.ThingContext(
-                        ex.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
+                    context.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, context.ThingContext(
+                        neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
                         gen([])
                     )),
                 ])
@@ -55,8 +55,8 @@ def mock_traversal_output():
 def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighbour_metatype, data_type=None,
                 value=None):
     return {'role_label': role_label, 'role_direction': role_direction,
-            'neighbour_thing': ex.Thing(neighbour_id, neighbour_type, neighbour_metatype, data_type=data_type,
-                                        value=value)}
+            'neighbour_thing': neighbour.Thing(neighbour_id, neighbour_type, neighbour_metatype, data_type=data_type,
+                                               value=value)}
 
 
 def _role_wrapper(outcome, role_direction, query_direction):
@@ -71,7 +71,7 @@ def mock_executor(query_direction, *args):
     concept_id = args[0]
     if concept_id == "0":
 
-        role_direction = ex.TARGET_PLAYS
+        role_direction = neighbour.TARGET_PLAYS
         return _role_wrapper([
                 _build_data("employee", role_direction, "1", "employment", "relationship"),
                 _build_data("@has-name-owner", role_direction, "3", "@has-name", "relationship")
@@ -82,14 +82,14 @@ def mock_executor(query_direction, *args):
 
     elif concept_id == "1":
 
-        role_direction = ex.NEIGHBOUR_PLAYS
+        role_direction = neighbour.NEIGHBOUR_PLAYS
         return _role_wrapper([_build_data("employer", role_direction, "2", "company", "entity")],
                              role_direction,
                              query_direction)
 
     elif concept_id == "3":
 
-        role_direction = ex.NEIGHBOUR_PLAYS
+        role_direction = neighbour.NEIGHBOUR_PLAYS
         return _role_wrapper([_build_data("@has-name-value", role_direction, "4", "name", "attribute",
                                           data_type='string', value="Employee Name")],
                              role_direction,

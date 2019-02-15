@@ -22,11 +22,11 @@ import unittest
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.executor as data_ex
+import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
-import kglib.kgcn.core.ingest.traverse.data.neighbourhood as trv
-import kglib.kgcn.core.ingest.traverse.data.neighbourhood_mocks as mock
+import kglib.kgcn.core.ingest.traverse.data.context as context
+import kglib.kgcn.core.ingest.traverse.data.context_mocks as mock
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as builders
 import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw
 
@@ -35,7 +35,7 @@ class TestDetermineValuesToPut(unittest.TestCase):
 
     def test__determine_values_to_put_with_entity(self):
         role_label = 'employer'
-        role_direction = data_ex.TARGET_PLAYS
+        role_direction = neighbour.TARGET_PLAYS
         neighbour_type_label = 'company'
         neighbour_data_type = None
         neighbour_value = None
@@ -49,7 +49,7 @@ class TestDetermineValuesToPut(unittest.TestCase):
 
     def test__determine_values_to_put_with_string_attribute(self):
         role_label = '@has-name-value'
-        role_direction = data_ex.NEIGHBOUR_PLAYS
+        role_direction = neighbour.NEIGHBOUR_PLAYS
         neighbour_type_label = 'name'
         neighbour_data_type = 'string'
         neighbour_value = 'Person\'s Name'
@@ -84,7 +84,7 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
                 self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
 
     def _thing_contexts_factory(self):
-        return trv.convert_thing_contexts_to_neighbours(
+        return context.convert_thing_contexts_to_neighbours(
             [mock.mock_traversal_output(), mock.mock_traversal_output()])
 
     def test_build_raw_arrays(self):
@@ -132,18 +132,18 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
 
         grakn_things = [answermap.get('x') for answermap in list(self._tx.query(entity_query))]
 
-        things = [data_ex.build_thing(grakn_thing) for grakn_thing in grakn_things]
+        things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = data_ex.NeighbourFinder()
+        data_executor = neighbour.NeighbourFinder()
 
-        neighourhood_traverser = trv.ContextBuilder(data_executor, samplers)
+        neighourhood_traverser = context.ContextBuilder(data_executor, samplers)
 
         neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 
-        neighbour_roles = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
-        # flat = trv.flatten_tree(neighbour_roles)
-        # [trv.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
+        # flat = context.flatten_tree(neighbour_roles)
+        # [context.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
 
         ################################################################################################################
         # Raw Array Building
@@ -166,7 +166,7 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
 
         neighbourhood_depths = [mock.mock_traversal_output()]
 
-        neighbour_roles = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
         # Raw Array Building
@@ -205,9 +205,9 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
 
 class TestAttributeTypes(unittest.TestCase):
     def test_date(self):
-        neighbour_roles = [trv.Neighbour(None, None, trv.ThingContext(
-            data_ex.Thing("1", "start-date", "attribute", data_type='date',
-                          value=datetime.datetime(day=1, month=1, year=2018)),
+        neighbour_roles = [context.Neighbour(None, None, context.ThingContext(
+            neighbour.Thing("1", "start-date", "attribute", data_type='date',
+                            value=datetime.datetime(day=1, month=1, year=2018)),
             mock.gen([])
         )), ]
 

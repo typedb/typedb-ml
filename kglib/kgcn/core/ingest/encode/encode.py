@@ -19,7 +19,7 @@
 
 import tensorflow as tf
 
-import kglib.kgcn.core.ingest.traverse.data.executor as data_ex
+import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 from kglib.kgcn.core.ingest.encode import tf_hub, boolean, schema
 from kglib.kgcn.core.ingest.traverse.schema import traversal as trav, executor as schema_ex
 
@@ -85,7 +85,7 @@ class Encoder:
             string_encoder = tf_hub.TensorFlowHubEncoder(
                 "https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1", 128)
 
-            data_types = list(data_ex.DATA_TYPE_NAMES)
+            data_types = list(neighbour.DATA_TYPE_NAMES)
             data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
             data_types_traversal = {data_type: data_types for data_type in data_types}
 

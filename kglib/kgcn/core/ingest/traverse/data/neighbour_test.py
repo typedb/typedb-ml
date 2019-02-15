@@ -21,7 +21,7 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.core.ingest.traverse.data.executor as ex
+import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 
 
 class BaseGraknIntegrationTest:
@@ -41,7 +41,7 @@ class BaseGraknIntegrationTest:
 
         def setUp(self):
             self._tx = self.session.transaction(grakn.TxType.WRITE)
-            self._executor = ex.NeighbourFinder()
+            self._executor = neighbour.NeighbourFinder()
 
 
 class BaseTestTraversalExecutor:
@@ -75,7 +75,7 @@ class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExe
 
     def setUp(self):
         super(TestTraversalExecutorFromEntity, self).setUp()
-        self._res = list(self._executor(ex.TARGET_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._executor(neighbour.TARGET_PLAYS, self._grakn_thing.id, self._tx))
 
 
 class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -88,7 +88,7 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
 
     def setUp(self):
         super(TestTraversalExecutorFromRelationship, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
 class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -101,7 +101,7 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 
     def setUp(self):
         super(TestTraversalExecutorFromAttribute, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
 # class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -115,7 +115,7 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 #
 #     def setUp(self):
 #         super(IntegrationTestTraversalExecutorFromDateAttribute, self).setUp()
-#         self._res = list(itertools.islice(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
+#         self._res = list(itertools.islice(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
 
 
 class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
@@ -128,7 +128,7 @@ class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTrave
 
     def setUp(self):
         super(TestTraversalExecutorFromDateAttribute, self).setUp()
-        self._res = list(self._executor(ex.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
 class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):
@@ -147,11 +147,11 @@ class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTe
         self._role_sups = [r.get(self.role_var) for r in self._tx.query(role_query)]
 
     def test_role_matches(self):
-        role_found = ex.find_lowest_role_from_rols_sups(self._role_sups)
+        role_found = neighbour.find_lowest_role_from_rols_sups(self._role_sups)
         self.assertEqual('employee', role_found.label())
 
     def test_reversed_matches(self):
-        role_found = ex.find_lowest_role_from_rols_sups(list(reversed(self._role_sups)))
+        role_found = neighbour.find_lowest_role_from_rols_sups(list(reversed(self._role_sups)))
         self.assertEqual('employee', role_found.label())
 
 
@@ -162,7 +162,7 @@ class BaseTestBuildConceptInfo:
 
             self._grakn_thing = list(self._tx.query(self.query))[0].get(self.var)
 
-            self._thing = ex.build_thing(self._grakn_thing)
+            self._thing = neighbour.build_thing(self._grakn_thing)
 
         def test_id(self):
             self.assertEqual(self._thing.id, self._grakn_thing.id)

@@ -24,7 +24,7 @@ import collections
 import grakn
 import numpy as np
 
-from kglib.kgcn.core.ingest.traverse.data import neighbourhood as trv, executor as data_ex
+from kglib.kgcn.core.ingest.traverse.data import context as context, neighbour as neighbour
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):
@@ -96,7 +96,7 @@ class RawArrayBuilder:
 
         return build_default_arrays(self._neighbourhood_sizes, num_example_things, self._array_data_types)
 
-    def build_raw_arrays(self, thing_contexts: typ.List[trv.Neighbour]):
+    def build_raw_arrays(self, thing_contexts: typ.List[context.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
         :param top_level_neighbours:
@@ -120,7 +120,7 @@ class RawArrayBuilder:
         #         f'Indices\n{set(poss).difference(set(self.indices_visited))}')
         return depthwise_arrays
 
-    def _build_neighbours(self, neighbours: typ.List[trv.Neighbour],
+    def _build_neighbours(self, neighbours: typ.List[context.Neighbour],
                           depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
                           indices: typ.Tuple):
 
@@ -209,21 +209,21 @@ class BatchContextBuilder:
         ################################################################################################################
         # Neighbour Traversals
         ################################################################################################################
-        things = [data_ex.build_thing(grakn_thing) for grakn_thing in grakn_things]
+        things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = data_ex.NeighbourFinder()
-        neighourhood_traverser = trv.ContextBuilder(data_executor, self._traversal_samplers)
+        data_executor = neighbour.NeighbourFinder()
+        neighourhood_traverser = context.ContextBuilder(data_executor, self._traversal_samplers)
 
         neighbourhood_depths = []
         for thing in things:
             tx = session.transaction(grakn.TxType.WRITE)
             print(f'Opening transaction {tx}')
             depths = neighourhood_traverser(thing, tx)
-            trv.collect_to_tree(depths)
+            context.collect_to_tree(depths)
             neighbourhood_depths.append(depths)
             print(f'closing transaction {tx}')
             tx.close()
-        neighbours = trv.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbours = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
         # Raw Array Building
