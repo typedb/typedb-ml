@@ -67,7 +67,7 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
     return values_to_put
 
 
-class RawArrayBuilder:
+class ContextArrayBuilder:
 
     def __init__(self, neighbourhood_sizes: typ.Tuple[int]):
         """
@@ -96,7 +96,7 @@ class RawArrayBuilder:
 
         return build_default_arrays(self._neighbourhood_sizes, num_example_things, self._array_data_types)
 
-    def build_raw_arrays(self, thing_contexts: typ.List[context.Neighbour]):
+    def build_context_arrays(self, thing_contexts: typ.List[context.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
         :param top_level_neighbours:
@@ -203,7 +203,7 @@ class BatchContextBuilder:
     def __init__(self, traversal_samplers):
         self._traversal_samplers = traversal_samplers
         neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
-        self._raw_builder = RawArrayBuilder(neighbour_sample_sizes)
+        self._array_builder = ContextArrayBuilder(neighbour_sample_sizes)
 
     def __call__(self, session, grakn_things):
         ################################################################################################################
@@ -226,9 +226,9 @@ class BatchContextBuilder:
         neighbours = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
-        # Raw Array Building
+        # Context Array Building
         ################################################################################################################
         # TODO Deal with where to build arrays
 
-        raw_array_depths = self._raw_builder.build_raw_arrays(neighbours)
-        return raw_array_depths
+        context_array_depths = self._array_builder.build_context_arrays(neighbours)
+        return context_array_depths

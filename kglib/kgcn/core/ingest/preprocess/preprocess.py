@@ -27,25 +27,25 @@ def datetime_to_unixtime(datetime_array):
     return datetime_array.astype('datetime64[s]').astype('int64')
 
 
-def apply_operations(raw_arrays, operations):
+def apply_operations(context_arrays, operations):
     """
-    :param raw_arrays: numpy arrays to be transformed into a format such that can be fed into a TensorFlow op graph
+    :param context_arrays: numpy arrays to be transformed into a format such that can be fed into a TensorFlow op graph
     :return: tensor-ready arrays
     """
 
-    preprocessed_raw_arrays = []
-    for raw_array in raw_arrays:
+    preprocessed_context_arrays = []
+    for context_array in context_arrays:
         preprocessed_features = {}
-        for key, features_array in raw_array.items():
+        for key, features_array in context_array.items():
             if key in set(operations.keys()):
                 if operations[key] is not None:
                     preprocessed_features[key] = operations[key](features_array)
             else:
                 preprocessed_features[key] = features_array
 
-        preprocessed_raw_arrays.append(preprocessed_features)
+        preprocessed_context_arrays.append(preprocessed_features)
 
-    return preprocessed_raw_arrays
+    return preprocessed_context_arrays
 
 
 class KGCNFeature:
@@ -107,7 +107,7 @@ def build_dataset(neighbour_sample_sizes,
     del all_feature_types[-1]['role_direction']
 
     # Build the placeholders for the neighbourhood_depths for each feature type
-    raw_array_placeholders = build_array_placeholders(None, neighbour_sample_sizes, 1,
+    context_array_placeholders = build_array_placeholders(None, neighbour_sample_sizes, 1,
                                                       all_feature_types, name='array_input')
 
     ################################################################################################################
@@ -116,7 +116,7 @@ def build_dataset(neighbour_sample_sizes,
 
     # Any steps needed to get arrays ready for the rest of the pipeline
     with tf.name_scope('tensorising') as scope:
-        tensorised_arrays = apply_operations(raw_array_placeholders, tensorisors)
+        tensorised_arrays = apply_operations(context_array_placeholders, tensorisors)
 
     ################################################################################################################
     # Build Dataset
@@ -132,7 +132,7 @@ def build_dataset(neighbour_sample_sizes,
 
     arrays_dataset = tf.data.Dataset.zip(tuple(array_datasets))
 
-    return arrays_dataset, raw_array_placeholders
+    return arrays_dataset, context_array_placeholders
 
 
 def build_array_placeholders(batch_size, neighbourhood_sizes, features_size,

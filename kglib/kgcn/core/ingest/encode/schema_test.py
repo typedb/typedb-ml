@@ -24,7 +24,7 @@ import numpy as np
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.encode.schema as se
-import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw
+import kglib.kgcn.core.ingest.preprocess.context_array as context_array
 
 schema_traversal = collections.OrderedDict((('animal', ['animal']),
                                             ('dog', ['animal', 'dog']),
@@ -101,7 +101,7 @@ class TestEncodeSchemaTypes(unittest.TestCase):
 
     def test_integration(self):
         array_data_types = collections.OrderedDict([('neighbour_type', ('U25', 'collie'))])
-        example_arrays = raw.build_default_arrays((3, 2), 4, array_data_types)
+        example_arrays = context_array.build_default_arrays((3, 2), 4, array_data_types)
         example = np.array(example_arrays[0]['neighbour_type'], dtype=str)
         tf.enable_eager_execution()
         encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)

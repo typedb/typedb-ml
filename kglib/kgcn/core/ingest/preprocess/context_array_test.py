@@ -27,8 +27,7 @@ import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
 import kglib.kgcn.core.ingest.traverse.data.context as context
 import kglib.kgcn.core.ingest.traverse.data.context_mocks as mock
-import kglib.kgcn.core.ingest.preprocess.raw_array_builder as builders
-import kglib.kgcn.core.ingest.preprocess.raw_array_builder as raw
+import kglib.kgcn.core.ingest.preprocess.context_array as context_array
 
 
 class TestDetermineValuesToPut(unittest.TestCase):
@@ -39,8 +38,8 @@ class TestDetermineValuesToPut(unittest.TestCase):
         neighbour_type_label = 'company'
         neighbour_data_type = None
         neighbour_value = None
-        values_dict = builders.determine_values_to_put(role_label, role_direction, neighbour_type_label,
-                                                       neighbour_data_type, neighbour_value)
+        values_dict = context_array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
+                                                            neighbour_data_type, neighbour_value)
         expected_result = {"role_type": 'employer',
                            'role_direction': role_direction,
                            'neighbour_type': 'company'
@@ -53,8 +52,8 @@ class TestDetermineValuesToPut(unittest.TestCase):
         neighbour_type_label = 'name'
         neighbour_data_type = 'string'
         neighbour_value = 'Person\'s Name'
-        values_dict = builders.determine_values_to_put(role_label, role_direction, neighbour_type_label,
-                                                       neighbour_data_type, neighbour_value)
+        values_dict = context_array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
+                                                            neighbour_data_type, neighbour_value)
         expected_result = {"role_type": '@has-name-value',
                            'role_direction': role_direction,
                            'neighbour_type': 'name',
@@ -63,13 +62,13 @@ class TestDetermineValuesToPut(unittest.TestCase):
         self.assertEqual(expected_result, values_dict)
 
 
-class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
+class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
 
     def setUp(self):
         self._neighbourhood_sizes = (2, 3)
         self._num_example_things = 2
 
-        self._builder = builders.RawArrayBuilder(self._neighbourhood_sizes)
+        self._builder = context_array.ContextArrayBuilder(self._neighbourhood_sizes)
 
         self._expected_dims = [self._num_example_things] + list(reversed(self._neighbourhood_sizes)) + [1]
 
@@ -87,9 +86,9 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
         return context.convert_thing_contexts_to_neighbours(
             [mock.mock_traversal_output(), mock.mock_traversal_output()])
 
-    def test_build_raw_arrays(self):
+    def test_build_context_arrays(self):
 
-        depthwise_arrays = self._builder.build_raw_arrays(self._thing_contexts_factory())
+        depthwise_arrays = self._builder.build_context_arrays(self._thing_contexts_factory())
         self._check_dims(depthwise_arrays)
         with self.subTest('spot-check thing type'):
             self.assertEqual(depthwise_arrays[-1]['neighbour_type'][0, 0], 'person')
@@ -106,14 +105,14 @@ class TestNeighbourTraversalFromMockEntity(unittest.TestCase):
         self._check_dims(initialised_arrays)
 
     def test_array_values(self):
-        depthwise_arrays = self._builder.build_raw_arrays(self._thing_contexts_factory())
+        depthwise_arrays = self._builder.build_context_arrays(self._thing_contexts_factory())
         with self.subTest('role_type not empty'):
             self.assertFalse('' in depthwise_arrays[0]['role_type'])
         with self.subTest('neighbour_type not empty'):
             self.assertFalse('' in depthwise_arrays[0]['neighbour_type'])
 
 
-class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
+class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
     def setUp(self):
         import grakn
         entity_query = "match $x isa company, has name 'Google'; get;"
@@ -146,20 +145,20 @@ class TestIntegrationsNeighbourTraversalFromEntity(unittest.TestCase):
         # [context.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
 
         ################################################################################################################
-        # Raw Array Building
+        # Context Array Building
         ################################################################################################################
 
-        self._raw_builder = raw.RawArrayBuilder(neighbour_sample_sizes)
-        self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
+        self._array_builder = context_array.ContextArrayBuilder(neighbour_sample_sizes)
+        self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
 
     def test_array_values(self):
         with self.subTest('role_type not empty'):
-            self.assertFalse('' in self._raw_arrays[0]['role_type'])
+            self.assertFalse('' in self._context_arrays[0]['role_type'])
         with self.subTest('neighbour_type not empty'):
-            self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
+            self.assertFalse('' in self._context_arrays[0]['neighbour_type'])
 
 
-class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
+class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
     def setUp(self):
 
         self._neighbour_sample_sizes = (2, 3)
@@ -169,38 +168,38 @@ class TestIntegrationsNeighbourTraversalWithMock(unittest.TestCase):
         neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
-        # Raw Array Building
+        # Context Array Building
         ################################################################################################################
 
-        self._raw_builder = raw.RawArrayBuilder(self._neighbour_sample_sizes)
-        self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
+        self._array_builder = context_array.ContextArrayBuilder(self._neighbour_sample_sizes)
+        self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
 
     def test_role_type_not_empty(self):
-        self.assertFalse('' in self._raw_arrays[0]['role_type'])
+        self.assertFalse('' in self._context_arrays[0]['role_type'])
 
     def test_neighbour_type_not_empty(self):
-        self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
+        self.assertFalse('' in self._context_arrays[0]['neighbour_type'])
 
     def test_string_values_not_empty(self):
-        self.assertFalse('' in self._raw_arrays[0]['neighbour_value_string'][0, :, 1, 0])
+        self.assertFalse('' in self._context_arrays[0]['neighbour_value_string'][0, :, 1, 0])
 
     def test_data_type_values_not_empty(self):
-        self.assertFalse('' in self._raw_arrays[0]['neighbour_data_type'][0, :, 1, 0])
+        self.assertFalse('' in self._context_arrays[0]['neighbour_data_type'][0, :, 1, 0])
 
     def test_shapes_as_expected(self):
-        self.assertTupleEqual(self._raw_arrays[0]['neighbour_type'].shape, (1, 3, 2, 1))
-        self.assertTupleEqual(self._raw_arrays[1]['neighbour_type'].shape, (1, 2, 1))
-        self.assertTupleEqual(self._raw_arrays[2]['neighbour_type'].shape, (1, 1))
+        self.assertTupleEqual(self._context_arrays[0]['neighbour_type'].shape, (1, 3, 2, 1))
+        self.assertTupleEqual(self._context_arrays[1]['neighbour_type'].shape, (1, 2, 1))
+        self.assertTupleEqual(self._context_arrays[2]['neighbour_type'].shape, (1, 1))
 
     # def test_all_indices_visited(self):
-    #     print(self._raw_builder.indices_visited)
-    #     self.assertEqual(len(self._raw_builder.indices_visited), 6+2+1)
+    #     print(self._array_builder.indices_visited)
+    #     self.assertEqual(len(self._array_builder.indices_visited), 6+2+1)
 
     def test_array_values(self):
         with self.subTest('role_type not empty'):
-            self.assertFalse('' in self._raw_arrays[0]['role_type'])
+            self.assertFalse('' in self._context_arrays[0]['role_type'])
         with self.subTest('neighbour_type not empty'):
-            self.assertFalse('' in self._raw_arrays[0]['neighbour_type'])
+            self.assertFalse('' in self._context_arrays[0]['neighbour_type'])
 
 
 class TestAttributeTypes(unittest.TestCase):
@@ -211,8 +210,8 @@ class TestAttributeTypes(unittest.TestCase):
             mock.gen([])
         )), ]
 
-        self._raw_builder = raw.RawArrayBuilder((2, 3))
-        self._raw_arrays = self._raw_builder.build_raw_arrays(neighbour_roles)
+        self._array_builder = context_array.ContextArrayBuilder((2, 3))
+        self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
 
 
 class TestFillArrayWithRepeats(unittest.TestCase):
@@ -232,7 +231,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, :, 1:, 0] = 0
 
-        builders.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
+        context_array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -269,7 +268,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                            [16]]]]])
         arr[1, :, :, 1:, 0] = 0
 
-        builders.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
+        context_array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[[1],
@@ -306,7 +305,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, 1:, 1, 0] = 0
 
-        builders.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
+        context_array.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -339,7 +338,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[0, 2:, 0, 0] = 0
 
-        builders.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
+        context_array.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
         print(arr)
 
         expected_output = np.array([[[[1],
