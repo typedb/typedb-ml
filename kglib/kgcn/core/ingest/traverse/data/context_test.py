@@ -60,8 +60,8 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         for sample_size in neighbour_sample_sizes:
             samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-        neighourhood_traverser = context.ContextBuilder(self._executor, samplers)
-        return neighourhood_traverser
+        context_builder = context.ContextBuilder(self._executor, samplers)
+        return context_builder
 
     def tearDown(self):
         self._tx.close()
@@ -98,18 +98,18 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         if neighbour_role is not None:
             self._assert_depth_correct(neighbour_role.neighbour)
 
-    def test_neighbour_traversal_structure_types(self):
+    def test_context_structure_types(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._thing_context = self._neighbourhood_traverser_factory(sample_sizes)(self._thing, self._tx)
+                self._thing_context = self._neighbourhood_traverser_factory(sample_sizes)(self._tx, self._thing)
                 self._assert_types_correct(self._thing_context)
 
-    def test_neighbour_traversal_check_depth(self):
+    def test_context_check_depth(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(sample_sizes)):
-                self._thing_context = self._neighbourhood_traverser_factory(sample_sizes)(self._thing, self._tx)
+                self._thing_context = self._neighbourhood_traverser_factory(sample_sizes)(self._tx, self._thing)
 
                 collected_tree = context.collect_to_tree(self._thing_context)
 
@@ -118,12 +118,12 @@ class TestContextBuilderFromEntity(unittest.TestCase):
                 with self.subTest("Check max depth of tree"):
                     self.assertEqual(len(sample_sizes), context.get_max_depth(self._thing_context))
 
-    def test_neighbour_traversal_is_deterministic(self):
+    def test_context_is_deterministic(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             def to_test():
                 return context.collect_to_tree(
-                    self._neighbourhood_traverser_factory(sample_sizes)(self._thing, self._tx))
+                    self._neighbourhood_traverser_factory(sample_sizes)(self._tx, self._thing))
 
             with self.subTest(sample_sizes=str(data)):
                 thing_context = to_test()
@@ -159,9 +159,9 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        neighourhood_traverser = context.ContextBuilder(mocks.mock_executor, samplers)
+        context_builder = context.ContextBuilder(mocks.mock_executor, samplers)
 
-        thing_context = neighourhood_traverser(starting_thing, self._tx)
+        thing_context = context_builder(self._tx, starting_thing)
 
         a, b = context.collect_to_tree(thing_context), context.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
@@ -180,7 +180,7 @@ class TestIsolated(unittest.TestCase):
 
         neighourhood_traverser = context.ContextBuilder(mocks.mock_executor, samplers)
 
-        thing_context = neighourhood_traverser(starting_thing, self._tx)
+        thing_context = neighourhood_traverser(self._tx, starting_thing)
 
         a, b = context.collect_to_tree(thing_context), context.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
@@ -230,7 +230,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         neighourhood_traverser = context.ContextBuilder(data_executor, samplers)
 
-        self._neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
+        self._neighbourhood_depths = [neighourhood_traverser(self._tx, thing) for thing in things]
 
         self._neighbour_roles = batch.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
@@ -264,7 +264,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         neighourhood_traverser = context.ContextBuilder(mocks.mock_executor, samplers)
 
-        self._neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
+        self._neighbourhood_depths = [neighourhood_traverser(self._tx, thing) for thing in things]
 
         self._neighbour_roles = batch.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 

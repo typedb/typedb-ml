@@ -138,7 +138,7 @@ class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
 
         neighourhood_traverser = context.ContextBuilder(data_executor, samplers)
 
-        neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
+        neighbourhood_depths = [neighourhood_traverser(self._tx, thing) for thing in things]
 
         neighbour_roles = batch.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 

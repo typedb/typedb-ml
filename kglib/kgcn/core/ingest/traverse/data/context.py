@@ -29,7 +29,7 @@ class ContextBuilder:
         self._query_executor = query_executor
         self._depth_samplers = depth_samplers
 
-    def __call__(self, example_thing: neighbour.Thing, tx):
+    def __call__(self, tx, example_thing: neighbour.Thing):
         depth = len(self._depth_samplers)
         return self._traverse(example_thing, depth, tx)
 

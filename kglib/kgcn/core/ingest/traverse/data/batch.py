@@ -33,14 +33,14 @@ class BatchContextBuilder:
         ################################################################################################################
         things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = neighbour.NeighbourFinder()
-        context_builder = context.ContextBuilder(data_executor, self._traversal_samplers)
+        neighbour_finder = neighbour.NeighbourFinder()
+        context_builder = context.ContextBuilder(neighbour_finder, self._traversal_samplers)
 
         thing_contexts = []
         for thing in things:
             tx = session.transaction(grakn.TxType.WRITE)
             print(f'Opening transaction {tx}')
-            thing_context = context_builder(thing, tx)
+            thing_context = context_builder(tx, thing)
             context.collect_to_tree(thing_context)
             thing_contexts.append(thing_context)
             print(f'closing transaction {tx}')
