@@ -19,7 +19,7 @@
 
 import unittest
 
-import kglib.kgcn.core.ingest.traverse.data.sampling.random_sampling as rnd
+import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as rnd
 
 
 def _gen(l):

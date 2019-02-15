@@ -22,8 +22,8 @@ import tensorflow as tf
 import kglib.kgcn.core.ingest.encode.encode as encode
 import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.nn.embed as embed
-import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
-import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
+import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sample.sample as sample
 import kglib.kgcn.core.ingest.preprocess.preprocess as preprocess
 import kglib.kgcn.core.ingest.preprocess.context_array as context_array
 
@@ -62,7 +62,7 @@ class KGCN:
         traversal_samplers = []
         for sample_size in neighbour_sample_sizes:
             traversal_samplers.append(
-                samp.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
+                sample.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
 
         self._array_builder = context_array.ContextArrayBuilder(neighbour_sample_sizes)
 

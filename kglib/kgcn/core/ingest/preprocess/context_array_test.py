@@ -24,8 +24,8 @@ import numpy as np
 
 import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
-import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
+import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
 import kglib.kgcn.core.ingest.traverse.data.context as context
 import kglib.kgcn.core.ingest.traverse.data.context_mocks as mock
 import kglib.kgcn.core.ingest.preprocess.context_array as context_array

@@ -29,7 +29,7 @@ import kglib.kgcn.management.persistence as prs
 import kglib.kgcn.management.thing as thing_mgmt
 import kglib.kgcn.learn.classify as classify
 import kglib.kgcn.core.model as model
-import kglib.kgcn.core.ingest.traverse.data.sampling.random_sampling as random_sampling
+import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
 import kglib.kgcn.core.ingest.preprocess.persistence as persistence
 
 flags = tf.app.flags

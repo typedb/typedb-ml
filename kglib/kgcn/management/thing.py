@@ -21,7 +21,7 @@ import collections
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.sampling.random_sampling as random
+import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random
 import kglib.kgcn.learn.attribute.label_extraction as label_extraction
 
 

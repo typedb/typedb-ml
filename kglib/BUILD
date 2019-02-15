@@ -5,7 +5,7 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 py_test(
     name = "ordered_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/sampling/ordered_test.py"
+        "kgcn/core/ingest/traverse/data/sample/ordered_test.py"
     ],
     deps = [
         "kglib"
@@ -15,7 +15,7 @@ py_test(
 py_test(
     name = "random_sampling_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/sampling/random_sampling_test.py"
+        "kgcn/core/ingest/traverse/data/sample/random_sampling_test.py"
     ],
     deps = [
         "kglib",

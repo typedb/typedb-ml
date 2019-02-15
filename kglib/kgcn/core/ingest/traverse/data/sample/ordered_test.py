@@ -20,7 +20,7 @@
 
 import unittest
 
-import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 
 
 def _gen(l):
