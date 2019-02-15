@@ -25,11 +25,11 @@ import unittest
 import grakn
 import tensorflow as tf
 
-import kglib.kgcn.management.grakn as grakn_mgmt
-import kglib.kgcn.management.thing as thing_mgmt
-import kglib.kgcn.learn.classify as classify
-import kglib.kgcn.core.model as model
 import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
+import kglib.kgcn.core.model as model
+import kglib.kgcn.learn.classify as classify
+import kglib.kgcn.management.grakn.server as server_mgmt
+import kglib.kgcn.management.grakn.thing as thing_mgmt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -43,7 +43,7 @@ flags.DEFINE_integer('starting_concepts_features_size', 173,
                      'role_type and role_direction')
 flags.DEFINE_integer('aggregated_size', 20, 'Size of aggregated representation of neighbours, a hidden dimension')
 flags.DEFINE_integer('embedding_size', 32, 'Size of the output of "combine" operation, taking place at each depth, '
-                                          'and the final size of the embeddings')
+                                           'and the final size of the embeddings')
 flags.DEFINE_integer('max_training_steps', 50, 'Max number of gradient steps to take during gradient descent')
 
 # Sample selection params
@@ -87,8 +87,8 @@ class TestEndToEnd(unittest.TestCase):
         modes = (TRAIN, EVAL)
 
         client = grakn.Grakn(uri=URI)
-        sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
-        transactions = grakn_mgmt.get_transactions(sessions)
+        sessions = server_mgmt.get_sessions(client, KEYSPACES)
+        transactions = server_mgmt.get_transactions(sessions)
 
         batch_size = NUM_PER_CLASS * FLAGS.num_classes
         kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
@@ -134,8 +134,8 @@ class TestEndToEnd(unittest.TestCase):
             # Presently, eval keyspace is the same as the TRAIN keyspace
             classifier.eval(feed_dicts[EVAL])
 
-        grakn_mgmt.close(sessions)
-        grakn_mgmt.close(transactions)
+        server_mgmt.close(sessions)
+        server_mgmt.close(transactions)
 
 
 if __name__ == "__main__":

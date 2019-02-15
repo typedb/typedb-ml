@@ -23,10 +23,10 @@ import time
 import grakn
 import tensorflow as tf
 
-import kglib.kgcn.management.grakn as grakn_mgmt
+import kglib.kgcn.management.grakn.server as grakn_mgmt
 import kglib.kgcn.management.logging as logging
 import kglib.kgcn.management.persistence as prs
-import kglib.kgcn.management.thing as thing_mgmt
+import kglib.kgcn.management.grakn.thing as thing_mgmt
 import kglib.kgcn.learn.classify as classify
 import kglib.kgcn.core.model as model
 import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
