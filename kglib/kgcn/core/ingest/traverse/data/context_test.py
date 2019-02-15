@@ -26,6 +26,7 @@ import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
 import kglib.kgcn.core.ingest.traverse.data.context as context
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.context_mocks as mocks
+from kglib.kgcn.core.ingest.traverse.data.context import ThingContext
 
 
 def _neighbourhood_traverser_factory(neighbour_sample_sizes):
@@ -114,7 +115,7 @@ class TestContextBuilderFromEntity(unittest.TestCase):
                 with self.subTest("Check number of immediate neighbours"):
                     self.assertEqual(len(collected_tree.neighbourhood), sample_sizes[0])
                 with self.subTest("Check max depth of tree"):
-                    self.assertEqual(len(sample_sizes), context.get_max_depth(self._thing_context))
+                    self.assertEqual(len(sample_sizes), get_max_depth(self._thing_context))
 
     def test_context_is_deterministic(self):
         data = ((1,), (2, 3), (2, 3, 4))
@@ -230,7 +231,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
-        self._flattened = context.flatten_tree(self._neighbour_roles)
+        self._flattened = flatten_tree(self._neighbour_roles)
 
 
 class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
@@ -264,7 +265,44 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
-        self._flattened = context.flatten_tree(self._neighbour_roles)
+        self._flattened = flatten_tree(self._neighbour_roles)
+
+
+def flatten_tree(neighbours):
+    all_connections = []
+
+    for neighbour in neighbours:
+        ci = neighbour.context.thing
+        all_connections.append(
+            (neighbour.role_label,
+             neighbour.role_direction,
+             ci.type_label,
+             ci.base_type_label,
+             ci.id,
+             ci.data_type,
+             ci.value
+             ))
+
+        all_connections += flatten_tree(neighbour.context.neighbourhood)  # List of neighbour roles
+    return all_connections
+
+
+def get_max_depth(thing_context: ThingContext):
+    """
+    Find the length of the deepest aggregation path
+    :param thing_context:
+    :return:
+    """
+
+    if len(thing_context.neighbourhood) == 0:
+        return 0
+    else:
+        max_depth = 0
+        for neighbour in thing_context.neighbourhood:
+            m = get_max_depth(neighbour.context)
+            if m > max_depth:
+                max_depth = m
+        return max_depth + 1
 
 
 if __name__ == "__main__":

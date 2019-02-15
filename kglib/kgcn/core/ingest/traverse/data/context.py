@@ -129,58 +129,11 @@ def collect_to_tree(thing_context):
     :return:
     """
     if thing_context is not None:
-        thing_context.neighbourhood = materialise_subordinate_neighbours(thing_context)
+        thing_context.neighbourhood = [neighbour for neighbour in thing_context.neighbourhood]
         for neighbour in thing_context.neighbourhood:
             collect_to_tree(neighbour.context)
 
     return thing_context
-
-
-def materialise_subordinate_neighbours(thing_context):
-    """
-    Build the list of all of the neighbours immediately "beneath" this concept. By beneath, meaning belonging to one
-    layer deeper in the neighbour graph
-    :param thing_context:
-    :return:
-    """
-    return [neighbour for neighbour in thing_context.neighbourhood]
-
-
-def flatten_tree(neighbours):
-    all_connections = []
-
-    for neighbour in neighbours:
-        ci = neighbour.context.thing
-        all_connections.append(
-            (neighbour.role_label,
-             neighbour.role_direction,
-             ci.type_label,
-             ci.base_type_label,
-             ci.id,
-             ci.data_type,
-             ci.value
-             ))
-
-        all_connections += flatten_tree(neighbour.context.neighbourhood)  # List of neighbour roles
-    return all_connections
-
-
-def get_max_depth(thing_context: ThingContext):
-    """
-    Find the length of the deepest aggregation path
-    :param thing_context:
-    :return:
-    """
-
-    if len(thing_context.neighbourhood) == 0:
-        return 0
-    else:
-        max_depth = 0
-        for neighbour in thing_context.neighbourhood:
-            m = get_max_depth(neighbour.context)
-            if m > max_depth:
-                max_depth = m
-        return max_depth + 1
 
 
 def convert_thing_contexts_to_neighbours(thing_contexts):
