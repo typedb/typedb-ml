@@ -83,9 +83,9 @@ py_test(
 )
 
 py_test(
-    name = "neighbourhood_test",
+    name = "context_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/neighbourhood_test.py"
+        "kgcn/core/ingest/traverse/data/context_test.py"
     ],
     deps = [
         "kglib",
@@ -93,10 +93,9 @@ py_test(
 )
 
 py_test(
-    name = "data_executor_test",
-    main = "executor_test.py",
+    name = "neighbour_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/executor_test.py"
+        "kgcn/core/ingest/traverse/data/neighbour_test.py"
     ],
     deps = [
         "kglib",
