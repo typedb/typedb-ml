@@ -101,7 +101,7 @@ class NeighbourFinder:
             # Connections to entities, relationships and optionally implicit relationships
             yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
 
-        return list(_link_iterator())
+        return _link_iterator()
 
     def _find_entity_and_relationship_neighbours(self, query_direction, thing_id, tx):
         if query_direction == ROLES_PLAYED:
