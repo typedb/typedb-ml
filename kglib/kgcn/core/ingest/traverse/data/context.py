@@ -19,17 +19,36 @@
 
 import collections
 import itertools
+import typing as typ
+
+import grakn
 
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
 
 
 class ContextBuilder:
-    def __init__(self, query_executor: neighbour.NeighbourFinder, depth_samplers):
-        self._query_executor = query_executor
+    def __init__(self, depth_samplers, neighbour_finder=neighbour.NeighbourFinder()):
+        self._neighbour_finder = neighbour_finder
         self._depth_samplers = depth_samplers
 
-    def __call__(self, tx, example_thing: neighbour.Thing):
+    def build_batch(self, session: grakn.Session, grakn_things: typ.List[neighbour.Thing]):
+        things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
+
+        thing_contexts = []
+        for thing in things:
+            tx = session.transaction(grakn.TxType.WRITE)
+            print(f'Opening transaction {tx}')
+            thing_context = self.build(tx, thing)
+            collect_to_tree(thing_context)
+            thing_contexts.append(thing_context)
+            print(f'closing transaction {tx}')
+            tx.close()
+        context_batch = convert_thing_contexts_to_neighbours(thing_contexts)
+
+        return context_batch
+
+    def build(self, tx: grakn.Transaction, example_thing: neighbour.Thing):
         depth = len(self._depth_samplers)
         return self._traverse(example_thing, depth, tx)
 
@@ -48,7 +67,7 @@ class ContextBuilder:
         # Any concept could play a role in a relationship if the schema permits it
 
         # Distinguish the concepts found as roles-played
-        roles_played = self._query_executor(neighbour.ROLES_PLAYED, starting_thing_context.id, tx)
+        roles_played = self._neighbour_finder(neighbour.ROLES_PLAYED, starting_thing_context.id, tx)
 
         neighbourhood = self._get_neighbour(roles_played, next_depth, tx)
 
@@ -68,7 +87,7 @@ class ContextBuilder:
 
         if starting_thing_context.base_type_label == 'relationship':
             # Find its roleplayers
-            roleplayers = self._query_executor(neighbour.ROLEPLAYERS, starting_thing_context.id, tx)
+            roleplayers = self._neighbour_finder(neighbour.ROLEPLAYERS, starting_thing_context.id, tx)
 
             # Chain the iterators together, so that after getting the roles played you get the roleplayers
             thing_context.neighbourhood = itertools.chain(
@@ -162,3 +181,9 @@ def get_max_depth(thing_context: ThingContext):
             if m > max_depth:
                 max_depth = m
         return max_depth + 1
+
+
+def convert_thing_contexts_to_neighbours(thing_contexts):
+    """Dummy Neighbours so that a consistent data structure can be used right from the top level"""
+    top_level_neighbours = [Neighbour(None, None, thing_context) for thing_context in thing_contexts]
+    return top_level_neighbours

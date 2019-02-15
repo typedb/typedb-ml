@@ -66,7 +66,7 @@ def _role_wrapper(outcome, role_direction, query_direction):
         return gen([])
 
 
-def mock_executor(query_direction, *args):
+def mock_neighbour_finder(query_direction, *args):
 
     concept_id = args[0]
     if concept_id == "0":

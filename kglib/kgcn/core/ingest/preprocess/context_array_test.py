@@ -22,7 +22,6 @@ import unittest
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
@@ -84,7 +83,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
                 self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
 
     def _thing_contexts_factory(self):
-        return batch.convert_thing_contexts_to_neighbours(
+        return context.convert_thing_contexts_to_neighbours(
             [mock.mock_traversal_output(), mock.mock_traversal_output()])
 
     def test_build_context_arrays(self):
@@ -134,13 +133,11 @@ class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
 
         things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = neighbour.NeighbourFinder()
+        context_builder = context.ContextBuilder(samplers)
 
-        neighourhood_traverser = context.ContextBuilder(data_executor, samplers)
+        neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
-        neighbourhood_depths = [neighourhood_traverser(self._tx, thing) for thing in things]
-
-        neighbour_roles = batch.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         # flat = context.flatten_tree(neighbour_roles)
         # [context.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
@@ -166,7 +163,7 @@ class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
 
         neighbourhood_depths = [mock.mock_traversal_output()]
 
-        neighbour_roles = batch.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
         # Context Array Building

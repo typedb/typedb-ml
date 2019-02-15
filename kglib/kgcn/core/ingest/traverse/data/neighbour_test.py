@@ -115,7 +115,7 @@ class TestNeighbourFinderFromAttribute(BaseTestNeighbourFinder.TestNeighbourFind
 #
 #     def setUp(self):
 #         super(IntegrationTestNeighbourFinderFromDateAttribute, self).setUp()
-#         self._res = list(itertools.islice(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
+#         self._res = list(itertools.islice(self._neighbour_finder(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
 
 
 class TestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):

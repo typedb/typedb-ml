@@ -21,12 +21,22 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
 import kglib.kgcn.core.ingest.traverse.data.context as context
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.context_mocks as mocks
+
+
+def _neighbourhood_traverser_factory(neighbour_sample_sizes):
+    sampling_method = ordered.ordered_sample
+
+    samplers = []
+    for sample_size in neighbour_sample_sizes:
+        samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
+
+    context_builder = context.ContextBuilder(samplers)
+    return context_builder
 
 
 class TestContextBuilderFromEntity(unittest.TestCase):
@@ -50,18 +60,6 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         entity_query = "match $x isa person, has name 'Sundar Pichai'; get;"
 
         self._thing = neighbour.build_thing(list(self._tx.query(entity_query))[0].get('x'))
-
-        self._executor = neighbour.NeighbourFinder()
-
-    def _neighbourhood_traverser_factory(self, neighbour_sample_sizes):
-        sampling_method = ordered.ordered_sample
-
-        samplers = []
-        for sample_size in neighbour_sample_sizes:
-            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
-
-        context_builder = context.ContextBuilder(self._executor, samplers)
-        return context_builder
 
     def tearDown(self):
         self._tx.close()
@@ -102,14 +100,14 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._thing_context = self._neighbourhood_traverser_factory(sample_sizes)(self._tx, self._thing)
+                self._thing_context = _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
                 self._assert_types_correct(self._thing_context)
 
     def test_context_check_depth(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(sample_sizes)):
-                self._thing_context = self._neighbourhood_traverser_factory(sample_sizes)(self._tx, self._thing)
+                self._thing_context = _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
 
                 collected_tree = context.collect_to_tree(self._thing_context)
 
@@ -123,7 +121,7 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         for sample_sizes in data:
             def to_test():
                 return context.collect_to_tree(
-                    self._neighbourhood_traverser_factory(sample_sizes)(self._tx, self._thing))
+                    _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing))
 
             with self.subTest(sample_sizes=str(data)):
                 thing_context = to_test()
@@ -159,9 +157,9 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = context.ContextBuilder(mocks.mock_executor, samplers)
+        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.mock_neighbour_finder)
 
-        thing_context = context_builder(self._tx, starting_thing)
+        thing_context = context_builder.build(self._tx, starting_thing)
 
         a, b = context.collect_to_tree(thing_context), context.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
@@ -178,9 +176,9 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        neighourhood_traverser = context.ContextBuilder(mocks.mock_executor, samplers)
+        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.mock_neighbour_finder)
 
-        thing_context = neighourhood_traverser(self._tx, starting_thing)
+        thing_context = context_builder.build(self._tx, starting_thing)
 
         a, b = context.collect_to_tree(thing_context), context.collect_to_tree(mocks.mock_traversal_output())
         self.assertEqual(a, b)
@@ -226,13 +224,11 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        data_executor = neighbour.NeighbourFinder()
+        context_builder = context.ContextBuilder(samplers)
 
-        neighourhood_traverser = context.ContextBuilder(data_executor, samplers)
+        self._neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
-        self._neighbourhood_depths = [neighourhood_traverser(self._tx, thing) for thing in things]
-
-        self._neighbour_roles = batch.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
+        self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = context.flatten_tree(self._neighbour_roles)
 
@@ -262,11 +258,11 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         starting_thing = neighbour.Thing("0", "person", "entity")
         things = [starting_thing]
 
-        neighourhood_traverser = context.ContextBuilder(mocks.mock_executor, samplers)
+        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.mock_neighbour_finder)
 
-        self._neighbourhood_depths = [neighourhood_traverser(self._tx, thing) for thing in things]
+        self._neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
-        self._neighbour_roles = batch.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
+        self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = context.flatten_tree(self._neighbour_roles)
 
