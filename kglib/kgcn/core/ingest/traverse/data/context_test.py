@@ -110,10 +110,8 @@ class TestContextBuilderFromEntity(unittest.TestCase):
             with self.subTest(sample_sizes=str(sample_sizes)):
                 self._thing_context = _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
 
-                collected_tree = context.collect_to_tree(self._thing_context)
-
                 with self.subTest("Check number of immediate neighbours"):
-                    self.assertEqual(len(collected_tree.neighbourhood), sample_sizes[0])
+                    self.assertEqual(len(self._thing_context.neighbourhood), sample_sizes[0])
                 with self.subTest("Check max depth of tree"):
                     self.assertEqual(len(sample_sizes), get_max_depth(self._thing_context))
 
@@ -121,8 +119,7 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             def to_test():
-                return context.collect_to_tree(
-                    _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing))
+                return _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
 
             with self.subTest(sample_sizes=str(data)):
                 thing_context = to_test()
@@ -162,8 +159,7 @@ class TestIsolated(unittest.TestCase):
 
         thing_context = context_builder.build(self._tx, starting_thing)
 
-        a, b = context.collect_to_tree(thing_context), context.collect_to_tree(mocks.mock_traversal_output())
-        self.assertEqual(a, b)
+        self.assertEqual(thing_context, mocks.mock_traversal_output())
 
     def test_input_output_integration(self):
         """
@@ -181,8 +177,7 @@ class TestIsolated(unittest.TestCase):
 
         thing_context = context_builder.build(self._tx, starting_thing)
 
-        a, b = context.collect_to_tree(thing_context), context.collect_to_tree(mocks.mock_traversal_output())
-        self.assertEqual(a, b)
+        self.assertEqual(thing_context, mocks.mock_traversal_output())
 
 
 class BaseTestFlattenedTree:

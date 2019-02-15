@@ -40,7 +40,6 @@ class ContextBuilder:
             tx = session.transaction(grakn.TxType.WRITE)
             print(f'Opening transaction {tx}')
             thing_context = self.build(tx, thing)
-            collect_to_tree(thing_context)
             thing_contexts.append(thing_context)
             print(f'closing transaction {tx}')
             tx.close()
@@ -95,7 +94,7 @@ class ContextBuilder:
                 self._get_neighbour(roleplayers, next_depth, tx))
 
         # Randomly sample the neighbourhood
-        thing_context.neighbourhood = sampler(thing_context.neighbourhood)
+        thing_context.neighbourhood = list(sampler(thing_context.neighbourhood))
 
         return thing_context
 
@@ -110,7 +109,7 @@ class ContextBuilder:
 
 # Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
 class ThingContext(utils.PropertyComparable):
-    def __init__(self, thing: neighbour.Thing, neighbourhood: collections.Generator):
+    def __init__(self, thing: neighbour.Thing, neighbourhood: typ.List['Neighbour']):
         self.thing = thing
         self.neighbourhood = neighbourhood  # An iterator of `Neighbour`s
 
@@ -120,20 +119,6 @@ class Neighbour(utils.PropertyComparable):
         self.role_label = role_label
         self.role_direction = role_direction
         self.context = context
-
-
-def collect_to_tree(thing_context):
-    """
-    Given the neighbour generators, yield the fully populated tree of each of the target concept's neighbours
-    :param thing_context:
-    :return:
-    """
-    if thing_context is not None:
-        thing_context.neighbourhood = [neighbour for neighbour in thing_context.neighbourhood]
-        for neighbour in thing_context.neighbourhood:
-            collect_to_tree(neighbour.context)
-
-    return thing_context
 
 
 def convert_thing_contexts_to_neighbours(thing_contexts):

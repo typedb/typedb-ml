@@ -29,26 +29,26 @@ def gen(elements):
 def mock_traversal_output():
     c = context.ThingContext(
         neighbour.Thing("0", "person", "entity"),
-        gen([
+        [
             context.Neighbour("employee", neighbour.TARGET_PLAYS, context.ThingContext(
                 neighbour.Thing("1", "employment", "relationship"),
-                gen([
+                [
                     context.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, context.ThingContext(
-                        neighbour.Thing("2", "company", "entity"), gen([])
+                        neighbour.Thing("2", "company", "entity"), []
                     )),
-                ])
+                ]
             )),
             context.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, context.ThingContext(
                 neighbour.Thing("3", "@has-name", "relationship"),
-                gen([
+                [
                     context.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, context.ThingContext(
                         neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
-                        gen([])
+                        []
                     )),
-                ])
+                ]
             ))
 
-        ]))
+        ])
     return c
 
 
