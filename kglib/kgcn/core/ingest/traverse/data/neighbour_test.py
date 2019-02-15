@@ -147,11 +147,11 @@ class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTe
         self._role_sups = [r.get(self.role_var) for r in self._tx.query(role_query)]
 
     def test_role_matches(self):
-        role_found = neighbour.find_lowest_role_from_rols_sups(self._role_sups)
+        role_found = neighbour.find_lowest_role_from_role_sups(self._role_sups)
         self.assertEqual('employee', role_found.label())
 
     def test_reversed_matches(self):
-        role_found = neighbour.find_lowest_role_from_rols_sups(list(reversed(self._role_sups)))
+        role_found = neighbour.find_lowest_role_from_role_sups(list(reversed(self._role_sups)))
         self.assertEqual('employee', role_found.label())
 
 

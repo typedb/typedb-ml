@@ -123,7 +123,7 @@ class NeighbourFinder:
             thing = answer.get(thing_variable)
             if not(relationship.type().is_implicit() or thing.type().is_implicit()):
                 role_sups = self._find_roles(thing, relationship, tx)
-                role = find_lowest_role_from_rols_sups(role_sups)
+                role = find_lowest_role_from_role_sups(role_sups)
 
                 role_label = role.label()
 
@@ -166,7 +166,7 @@ class NeighbourFinder:
         return role_sups
 
 
-def find_lowest_role_from_rols_sups(role_sups):
+def find_lowest_role_from_role_sups(role_sups):
     """
     Take a list containing a hierarchy of role concepts (order not necessarily known), and find the 'lowest' role.
     That is, the role without any of it's subtypes in the list.
