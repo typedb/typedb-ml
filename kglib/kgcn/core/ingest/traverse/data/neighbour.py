@@ -65,10 +65,9 @@ class NeighbourFinder:
         'target_variable': 'relationship',
         'neighbour_variable': 'thing'}
 
-    def __init__(self, find_neighbours_from_attributes=True, attributes_via_implicit_relationships=False,
-                 roles_played_query=ROLES_PLAYED_QUERY, roleplayers_query=ROLEPLAYERS_QUERY):
+    def __init__(self, find_neighbours_from_attributes=True, roles_played_query=ROLES_PLAYED_QUERY,
+                 roleplayers_query=ROLEPLAYERS_QUERY):
         self._find_neighbours_from_attributes = find_neighbours_from_attributes
-        self._attributes_via_implicit_relationships = attributes_via_implicit_relationships
         self.roles_played_query = roles_played_query
         self.roleplayers_query = roleplayers_query
 
@@ -88,15 +87,14 @@ class NeighbourFinder:
             # TODO Drop support for implicit relationships
 
             # Direct connections to attributes
-            if not self._attributes_via_implicit_relationships:
 
-                target_query = self.TARGET_QUERY['query'].format(thing_id)
-                target_thing = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
+            target_query = self.TARGET_QUERY['query'].format(thing_id)
+            target_thing = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
 
-                yield from self._find_direct_attribute_neighbours(tx, target_thing, thing_id)
+            yield from self._find_direct_attribute_neighbours(tx, target_thing, thing_id)
 
-                if target_thing.is_attribute() and self._find_neighbours_from_attributes:
-                    yield from self._find_neighbours_from_attribute(tx, target_thing)
+            if target_thing.is_attribute() and self._find_neighbours_from_attributes:
+                yield from self._find_neighbours_from_attribute(tx, target_thing)
 
             # Connections to entities, relationships and optionally implicit relationships
             yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
@@ -123,11 +121,7 @@ class NeighbourFinder:
         for answer in link_iterator:
             relationship = answer.get(relationship_variable)
             thing = answer.get(thing_variable)
-            if (relationship.type().is_implicit() or thing.type().is_implicit()) and not self._attributes_via_implicit_relationships:
-                # TODO Missing support for finding implicit relationship neighbours
-                pass
-            else:
-
+            if not(relationship.type().is_implicit() or thing.type().is_implicit()):
                 role_sups = self._find_roles(thing, relationship, tx)
                 role = find_lowest_role_from_rols_sups(role_sups)
 

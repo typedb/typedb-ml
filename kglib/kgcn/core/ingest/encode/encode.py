@@ -56,7 +56,7 @@ def encode_all(raw_arrays, encoders, name='encode_all'):
 
 
 class Encoder:
-    def __init__(self, schema_tx, include_implicit=False, include_metatypes=False):
+    def __init__(self, schema_tx):
         ################################################################################################################
         # Schema Traversals
         ################################################################################################################
@@ -65,12 +65,10 @@ class Encoder:
         schema_traversal_executor = schema_ex.TraversalExecutor(schema_tx)
 
         # THINGS
-        thing_schema_traversal = trav.traverse_schema(schema_traversal_executor, GET_THING_TYPES_QUERY,
-                                                      include_implicit, include_metatypes)
+        thing_schema_traversal = trav.traverse_schema(schema_traversal_executor, GET_THING_TYPES_QUERY)
 
         # ROLES
-        role_schema_traversal = trav.traverse_schema(schema_traversal_executor, GET_ROLE_TYPES_QUERY, include_implicit,
-                                                     include_metatypes)
+        role_schema_traversal = trav.traverse_schema(schema_traversal_executor, GET_ROLE_TYPES_QUERY)
         role_schema_traversal['has'] = ['has']
 
         ############################################################################################################

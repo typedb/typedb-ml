@@ -34,7 +34,7 @@ class TestEncode(unittest.TestCase):
         client = grakn.Grakn(uri=uri)
         session = client.session(keyspace=keyspace)
         tx = session.transaction(grakn.TxType.WRITE)
-        encoder = encode.Encoder(tx, include_implicit=False, include_metatypes=False)
+        encoder = encode.Encoder(tx)
 
         placeholders = [
             {'role_type': tf.placeholder(dtype=tf.string, shape=(None, 1)),

@@ -46,11 +46,8 @@ def get_sups_labels_per_type(schema_concept_types, include_metatypes=False, incl
     return schema_concept_super_types
 
 
-def traverse_schema(traversal_executor, query, include_implicit, include_metatypes):
-    schema_concept_types = list(traversal_executor.get_schema_concept_types(query,
-                                                                            include_implicit=include_implicit,
-                                                                            include_metatypes=include_metatypes))
+def traverse_schema(traversal_executor, query):
+    schema_concept_types = list(traversal_executor.get_schema_concept_types(query))
 
-    schema_concept_super_type_labels = get_sups_labels_per_type(schema_concept_types, include_self=True,
-                                                                include_metatypes=include_metatypes)
+    schema_concept_super_type_labels = get_sups_labels_per_type(schema_concept_types, include_self=True)
     return schema_concept_super_type_labels

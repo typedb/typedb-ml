@@ -40,9 +40,7 @@ class KGCN:
                  neighbour_sampling_method=ordered.ordered_sample,
                  neighbour_sampling_limit_factor=1,
                  formatters={'neighbour_value_date': preprocess.datetime_to_unixtime},
-                 features_to_exclude=(),
-                 include_implicit=False,
-                 include_metatypes=False):
+                 features_to_exclude=()):
 
         self._embedding_normalisation = embedding_normalisation
         self.embedding_size = embedding_size
@@ -54,9 +52,7 @@ class KGCN:
         print(f'feature sizes: {self.feature_sizes}')
 
         self._schema_encoding_transaction = schema_encoding_transaction
-        self.include_metatypes = include_metatypes
-        self.include_implicit = include_implicit
-        self._encode = encode.Encoder(self._schema_encoding_transaction, self.include_implicit, self.include_metatypes)
+        self._encode = encode.Encoder(self._schema_encoding_transaction)
 
         self.batch_size = batch_size
         self._formatters = formatters
