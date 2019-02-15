@@ -22,6 +22,7 @@ import unittest
 
 import numpy as np
 
+import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
@@ -83,7 +84,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
                 self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
 
     def _thing_contexts_factory(self):
-        return context.convert_thing_contexts_to_neighbours(
+        return batch.convert_thing_contexts_to_neighbours(
             [mock.mock_traversal_output(), mock.mock_traversal_output()])
 
     def test_build_context_arrays(self):
@@ -139,7 +140,7 @@ class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
 
         neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 
-        neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbour_roles = batch.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         # flat = context.flatten_tree(neighbour_roles)
         # [context.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
@@ -165,7 +166,7 @@ class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
 
         neighbourhood_depths = [mock.mock_traversal_output()]
 
-        neighbour_roles = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
+        neighbour_roles = batch.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
         ################################################################################################################
         # Context Array Building

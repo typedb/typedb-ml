@@ -24,26 +24,6 @@ import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.utils as utils
 
 
-# Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
-class ThingContext(utils.PropertyComparable):
-    def __init__(self, thing: neighbour.Thing, neighbourhood: collections.Generator):
-        self.thing = thing
-        self.neighbourhood = neighbourhood  # An iterator of `Neighbour`s
-
-
-class Neighbour(utils.PropertyComparable):
-    def __init__(self, role_label: (str, None), role_direction: (int, None), context: ThingContext):
-        self.role_label = role_label
-        self.role_direction = role_direction
-        self.context = context
-
-
-def convert_thing_contexts_to_neighbours(thing_contexts):
-    """Dummy Neighbours so that a consistent data structure can be used right from the top level"""
-    top_level_neighbours = [Neighbour(None, None, thing_context) for thing_context in thing_contexts]
-    return top_level_neighbours
-
-
 class ContextBuilder:
     def __init__(self, query_executor: neighbour.NeighbourFinder, depth_samplers):
         self._query_executor = query_executor
@@ -107,6 +87,20 @@ class ContextBuilder:
 
             yield Neighbour(role_label=connection['role_label'], role_direction=connection['role_direction'],
                             context=neighbour_context)
+
+
+# Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
+class ThingContext(utils.PropertyComparable):
+    def __init__(self, thing: neighbour.Thing, neighbourhood: collections.Generator):
+        self.thing = thing
+        self.neighbourhood = neighbourhood  # An iterator of `Neighbour`s
+
+
+class Neighbour(utils.PropertyComparable):
+    def __init__(self, role_label: (str, None), role_direction: (int, None), context: ThingContext):
+        self.role_label = role_label
+        self.role_direction = role_direction
+        self.context = context
 
 
 def collect_to_tree(thing_context):

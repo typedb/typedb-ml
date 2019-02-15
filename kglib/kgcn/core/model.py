@@ -20,6 +20,7 @@
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.encode.encode as encode
+import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.nn.embed as embed
 import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
@@ -63,7 +64,9 @@ class KGCN:
             traversal_samplers.append(
                 samp.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
 
-        self._traverser = context_array.BatchContextBuilder(traversal_samplers)
+        self._array_builder = context_array.ContextArrayBuilder(neighbour_sample_sizes)
+
+        self._batch_context_builder = batch.BatchContextBuilder(traversal_samplers)
 
         self._embed = embed.Embedder(self.feature_sizes, self.aggregated_size, self.embedding_size,
                                      self.neighbour_sample_sizes, normalisation=self._embedding_normalisation)
@@ -73,8 +76,9 @@ class KGCN:
                                                                                        **features_to_exclude)
 
     def input_fn(self, session, concepts):
-        neighbourhoods = self._traverser(session, concepts)
-        formatted_neighbourhoods = preprocess.apply_operations(neighbourhoods, self._formatters)
+        context_batch = self._batch_context_builder(session, concepts)
+        context_arrays = self._array_builder.build_context_arrays(context_batch)
+        formatted_neighbourhoods = preprocess.apply_operations(context_arrays, self._formatters)
         return formatted_neighbourhoods
 
     def embed(self, *additional_datasets):

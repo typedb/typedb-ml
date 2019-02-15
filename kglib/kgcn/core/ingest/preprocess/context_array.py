@@ -21,10 +21,9 @@ import typing as typ
 
 import collections
 
-import grakn
 import numpy as np
 
-from kglib.kgcn.core.ingest.traverse.data import context as context, neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context as context
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):
@@ -196,39 +195,3 @@ def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
     curtailed_filler = filler[filler_axes]
 
     array[slice_to_replace] = curtailed_filler
-
-
-class BatchContextBuilder:
-
-    def __init__(self, traversal_samplers):
-        self._traversal_samplers = traversal_samplers
-        neighbour_sample_sizes = tuple(sampler.sample_size for sampler in self._traversal_samplers)
-        self._array_builder = ContextArrayBuilder(neighbour_sample_sizes)
-
-    def __call__(self, session, grakn_things):
-        ################################################################################################################
-        # Neighbour Traversals
-        ################################################################################################################
-        things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
-
-        data_executor = neighbour.NeighbourFinder()
-        neighourhood_traverser = context.ContextBuilder(data_executor, self._traversal_samplers)
-
-        neighbourhood_depths = []
-        for thing in things:
-            tx = session.transaction(grakn.TxType.WRITE)
-            print(f'Opening transaction {tx}')
-            depths = neighourhood_traverser(thing, tx)
-            context.collect_to_tree(depths)
-            neighbourhood_depths.append(depths)
-            print(f'closing transaction {tx}')
-            tx.close()
-        neighbours = context.convert_thing_contexts_to_neighbours(neighbourhood_depths)
-
-        ################################################################################################################
-        # Context Array Building
-        ################################################################################################################
-        # TODO Deal with where to build arrays
-
-        context_array_depths = self._array_builder.build_context_arrays(neighbours)
-        return context_array_depths

@@ -21,6 +21,7 @@ import unittest
 
 import grakn
 
+import kglib.kgcn.core.ingest.traverse.data.batch as batch
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sampling.sampler as samp
 import kglib.kgcn.core.ingest.traverse.data.context as context
@@ -231,7 +232,7 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 
-        self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
+        self._neighbour_roles = batch.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = context.flatten_tree(self._neighbour_roles)
 
@@ -265,7 +266,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         self._neighbourhood_depths = [neighourhood_traverser(thing, self._tx) for thing in things]
 
-        self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
+        self._neighbour_roles = batch.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = context.flatten_tree(self._neighbour_roles)
 
