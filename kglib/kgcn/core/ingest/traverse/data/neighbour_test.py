@@ -44,11 +44,11 @@ class BaseGraknIntegrationTest:
             self._executor = neighbour.NeighbourFinder()
 
 
-class BaseTestTraversalExecutor:
-    class TestTraversalExecutor(BaseGraknIntegrationTest.GraknIntegrationTest):
+class BaseTestNeighbourFinder:
+    class TestNeighbourFinder(BaseGraknIntegrationTest.GraknIntegrationTest):
         
         def setUp(self):
-            super(BaseTestTraversalExecutor.TestTraversalExecutor, self).setUp()
+            super(BaseTestNeighbourFinder.TestNeighbourFinder, self).setUp()
             self._grakn_thing = list(self._tx.query(self.query))[0].get(self.var)
 
         def test_role_is_in_neighbour_roles(self):
@@ -65,7 +65,7 @@ class BaseTestTraversalExecutor:
             self.assertEqual(self.num_results, len(self._res))
 
 
-class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExecutor):
+class TestNeighbourFinderFromEntity(BaseTestNeighbourFinder.TestNeighbourFinder):
 
     query = "match $x isa company, has name 'Google'; get;"
     var = 'x'
@@ -74,11 +74,11 @@ class TestTraversalExecutorFromEntity(BaseTestTraversalExecutor.TestTraversalExe
     neighbour_type = 'employment'
 
     def setUp(self):
-        super(TestTraversalExecutorFromEntity, self).setUp()
+        super(TestNeighbourFinderFromEntity, self).setUp()
         self._res = list(self._executor(neighbour.TARGET_PLAYS, self._grakn_thing.id, self._tx))
 
 
-class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraversalExecutor):
+class TestNeighbourFinderFromRelationship(BaseTestNeighbourFinder.TestNeighbourFinder):
 
     query = "match $x isa employment; get;"
     var = 'x'
@@ -87,11 +87,11 @@ class TestTraversalExecutorFromRelationship(BaseTestTraversalExecutor.TestTraver
     neighbour_type = 'person'
 
     def setUp(self):
-        super(TestTraversalExecutorFromRelationship, self).setUp()
+        super(TestNeighbourFinderFromRelationship, self).setUp()
         self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
-class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+class TestNeighbourFinderFromAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):
 
     query = "match $x isa job-title; get;"
     var = 'x'
@@ -100,12 +100,12 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
     neighbour_type = 'employment'
 
     def setUp(self):
-        super(TestTraversalExecutorFromAttribute, self).setUp()
+        super(TestNeighbourFinderFromAttribute, self).setUp()
         self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
-# class IntegrationTestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
-#     # Replicates the same issue as TestTraversalExecutorFromDateAttribute but using real animaltrede dataset
+# class IntegrationTestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):
+#     # Replicates the same issue as TestNeighbourFinderFromDateAttribute but using real animaltrede dataset
 #     query = "match $attribute isa exchange-date 2016-01-01T00:00:00; limit 1; get;"
 #     var = 'attribute'
 #     roles = ['has']
@@ -114,11 +114,11 @@ class TestTraversalExecutorFromAttribute(BaseTestTraversalExecutor.TestTraversal
 #     keyspace = 'animaltrade_train'
 #
 #     def setUp(self):
-#         super(IntegrationTestTraversalExecutorFromDateAttribute, self).setUp()
+#         super(IntegrationTestNeighbourFinderFromDateAttribute, self).setUp()
 #         self._res = list(itertools.islice(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
 
 
-class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTraversalExecutor):
+class TestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):
 
     query = "match $attribute isa date-started; $attribute 2015-11-12T00:00; get;"
     var = 'attribute'
@@ -127,7 +127,7 @@ class TestTraversalExecutorFromDateAttribute(BaseTestTraversalExecutor.TestTrave
     neighbour_type = 'project'
 
     def setUp(self):
-        super(TestTraversalExecutorFromDateAttribute, self).setUp()
+        super(TestNeighbourFinderFromDateAttribute, self).setUp()
         self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
 
 
@@ -155,10 +155,10 @@ class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTe
         self.assertEqual('employee', role_found.label())
 
 
-class BaseTestBuildConceptInfo:
-    class TestBuildConceptInfo(BaseGraknIntegrationTest.GraknIntegrationTest):
+class BaseTestBuildThing:
+    class TestBuildThing(BaseGraknIntegrationTest.GraknIntegrationTest):
         def setUp(self):
-            super(BaseTestBuildConceptInfo.TestBuildConceptInfo, self).setUp()
+            super(BaseTestBuildThing.TestBuildThing, self).setUp()
 
             self._grakn_thing = list(self._tx.query(self.query))[0].get(self.var)
 
@@ -174,7 +174,7 @@ class BaseTestBuildConceptInfo:
             self.assertEqual(self._thing.base_type_label, self.base_type)
 
 
-class TestBuildConceptInfoForEntity(BaseTestBuildConceptInfo.TestBuildConceptInfo):
+class TestBuildThingForEntity(BaseTestBuildThing.TestBuildThing):
 
     query = "match $x isa company, has name 'Google'; get;"
     var = 'x'
@@ -182,7 +182,7 @@ class TestBuildConceptInfoForEntity(BaseTestBuildConceptInfo.TestBuildConceptInf
     base_type = 'entity'
 
 
-class TestBuildConceptInfoForRelationship(BaseTestBuildConceptInfo.TestBuildConceptInfo):
+class TestBuildThingForRelationship(BaseTestBuildThing.TestBuildThing):
 
     query = "match $x isa employment; get;"
     var = 'x'
@@ -190,7 +190,7 @@ class TestBuildConceptInfoForRelationship(BaseTestBuildConceptInfo.TestBuildConc
     base_type = 'relationship'
 
 
-class TestBuildConceptInfoForImplicitRelationship(BaseTestBuildConceptInfo.TestBuildConceptInfo):
+class TestBuildThingForImplicitRelationship(BaseTestBuildThing.TestBuildThing):
 
     query = "match $x isa @has-job-title; get;"
     var = 'x'
@@ -198,8 +198,8 @@ class TestBuildConceptInfoForImplicitRelationship(BaseTestBuildConceptInfo.TestB
     base_type = 'relationship'  # TODO do we want to see @has-attribute here?
 
 
-class BaseTestBuildConceptInfoForAttribute:
-    class TestBuildConceptInfoForAttribute(BaseTestBuildConceptInfo.TestBuildConceptInfo):
+class BaseTestBuildThingForAttribute:
+    class TestBuildThingForAttribute(BaseTestBuildThing.TestBuildThing):
 
         def test_data_type(self):
             self.assertEqual(self._thing.data_type, self.data_type)
@@ -208,7 +208,7 @@ class BaseTestBuildConceptInfoForAttribute:
             self.assertEqual(self._thing.value, self.value)
 
 
-class TestBuildConceptInfoForStringAttribute(BaseTestBuildConceptInfoForAttribute.TestBuildConceptInfoForAttribute):
+class TestBuildThingForStringAttribute(BaseTestBuildThingForAttribute.TestBuildThingForAttribute):
 
     query = "match $x isa job-title; get;"
     var = 'x'

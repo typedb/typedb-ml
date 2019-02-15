@@ -28,7 +28,7 @@ import kglib.kgcn.core.ingest.traverse.data.sampling.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.context_mocks as mocks
 
 
-class TestNeighbourTraversalFromEntity(unittest.TestCase):
+class TestContextBuilderFromEntity(unittest.TestCase):
 
     session = None
 
