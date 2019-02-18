@@ -64,7 +64,7 @@ class KGCN:
             traversal_samplers.append(
                 sample.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
 
-        self._array_builder = array.ContextArrayBuilder(neighbour_sample_sizes)
+        self._array_builder = array.ArrayConverter(neighbour_sample_sizes)
 
         self._context_builder = builder.ContextBuilder(traversal_samplers)
 
@@ -77,7 +77,7 @@ class KGCN:
 
     def input_fn(self, session, concepts):
         context_batch = self._context_builder.build_batch(session, concepts)
-        context_arrays = self._array_builder.build_context_arrays(context_batch)
+        context_arrays = self._array_builder.convert_to_array(context_batch)
         formatted_neighbourhoods = preprocess.apply_operations(context_arrays, self._formatters)
         return formatted_neighbourhoods
 

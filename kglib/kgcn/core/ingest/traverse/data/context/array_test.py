@@ -68,7 +68,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
         self._neighbourhood_sizes = (2, 3)
         self._num_example_things = 2
 
-        self._builder = array.ContextArrayBuilder(self._neighbourhood_sizes)
+        self._builder = array.ArrayConverter(self._neighbourhood_sizes)
 
         self._expected_dims = [self._num_example_things] + list(reversed(self._neighbourhood_sizes)) + [1]
 
@@ -88,7 +88,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
 
     def test_build_context_arrays(self):
 
-        depthwise_arrays = self._builder.build_context_arrays(self._thing_contexts_factory())
+        depthwise_arrays = self._builder.convert_to_array(self._thing_contexts_factory())
         self._check_dims(depthwise_arrays)
         with self.subTest('spot-check thing type'):
             self.assertEqual(depthwise_arrays[-1]['neighbour_type'][0, 0], 'person')
@@ -105,7 +105,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
         self._check_dims(initialised_arrays)
 
     def test_array_values(self):
-        depthwise_arrays = self._builder.build_context_arrays(self._thing_contexts_factory())
+        depthwise_arrays = self._builder.convert_to_array(self._thing_contexts_factory())
         with self.subTest('role_type not empty'):
             self.assertFalse('' in depthwise_arrays[0]['role_type'])
         with self.subTest('neighbour_type not empty'):
@@ -146,8 +146,8 @@ class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
         # Context Array Building
         ################################################################################################################
 
-        self._array_builder = array.ContextArrayBuilder(neighbour_sample_sizes)
-        self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
+        self._array_builder = array.ArrayConverter(neighbour_sample_sizes)
+        self._context_arrays = self._array_builder.convert_to_array(neighbour_roles)
 
     def test_array_values(self):
         with self.subTest('role_type not empty'):
@@ -169,8 +169,8 @@ class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
         # Context Array Building
         ################################################################################################################
 
-        self._array_builder = array.ContextArrayBuilder(self._neighbour_sample_sizes)
-        self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
+        self._array_builder = array.ArrayConverter(self._neighbour_sample_sizes)
+        self._context_arrays = self._array_builder.convert_to_array(neighbour_roles)
 
     def test_role_type_not_empty(self):
         self.assertFalse('' in self._context_arrays[0]['role_type'])
@@ -208,8 +208,8 @@ class TestAttributeTypes(unittest.TestCase):
             mock.gen([])
         )), ]
 
-        self._array_builder = array.ContextArrayBuilder((2, 3))
-        self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
+        self._array_builder = array.ArrayConverter((2, 3))
+        self._context_arrays = self._array_builder.convert_to_array(neighbour_roles)
 
 
 class TestFillArrayWithRepeats(unittest.TestCase):

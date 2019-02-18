@@ -66,7 +66,10 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
     return values_to_put
 
 
-class ContextArrayBuilder:
+class ArrayConverter:
+    """
+    Converts contexts into an array
+    """
 
     def __init__(self, neighbourhood_sizes: typ.Tuple[int]):
         """
@@ -95,7 +98,7 @@ class ContextArrayBuilder:
 
         return build_default_arrays(self._neighbourhood_sizes, num_example_things, self._array_data_types)
 
-    def build_context_arrays(self, thing_contexts: typ.List[builder.Neighbour]):
+    def convert_to_array(self, thing_contexts: typ.List[builder.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
         :param top_level_neighbours:
