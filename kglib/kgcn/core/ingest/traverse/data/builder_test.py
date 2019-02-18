@@ -23,10 +23,10 @@ import grakn
 
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
-import kglib.kgcn.core.ingest.traverse.data.context as context
+import kglib.kgcn.core.ingest.traverse.data.builder as builder
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
-import kglib.kgcn.core.ingest.traverse.data.context_mocks as mocks
-from kglib.kgcn.core.ingest.traverse.data.context import ThingContext
+import kglib.kgcn.core.ingest.traverse.data.builder_mocks as mocks
+from kglib.kgcn.core.ingest.traverse.data.builder import ThingContext
 
 
 def _neighbourhood_traverser_factory(neighbour_sample_sizes):
@@ -36,7 +36,7 @@ def _neighbourhood_traverser_factory(neighbour_sample_sizes):
     for sample_size in neighbour_sample_sizes:
         samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
 
-    context_builder = context.ContextBuilder(samplers)
+    context_builder = builder.ContextBuilder(samplers)
     return context_builder
 
 
@@ -71,14 +71,14 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         :param thing_context:
         :return:
         """
-        self.assertIsInstance(thing_context, context.ThingContext)
+        self.assertIsInstance(thing_context, builder.ThingContext)
         self.assertIsInstance(thing_context.thing, neighbour.Thing)
         self.assertIn(type(thing_context.neighbourhood).__name__, ('list',))
 
         try:
             neighbour_role = thing_context.neighbourhood[0]
 
-            self.assertIsInstance(neighbour_role, context.Neighbour)
+            self.assertIsInstance(neighbour_role, builder.Neighbour)
 
             self.assertTrue(
                 isinstance(neighbour_role.role_label, str)
@@ -155,7 +155,7 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
 
         thing_context = context_builder.build(self._tx, starting_thing)
 
@@ -173,7 +173,7 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
 
         thing_context = context_builder.build(self._tx, starting_thing)
 
@@ -220,11 +220,11 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
         things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
-        context_builder = context.ContextBuilder(samplers)
+        context_builder = builder.ContextBuilder(samplers)
 
         self._neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
-        self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
+        self._neighbour_roles = builder.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = flatten_tree(self._neighbour_roles)
 
@@ -254,11 +254,11 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         starting_thing = neighbour.Thing("0", "person", "entity")
         things = [starting_thing]
 
-        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
 
         self._neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
-        self._neighbour_roles = context.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
+        self._neighbour_roles = builder.convert_thing_contexts_to_neighbours(self._neighbourhood_depths)
 
         self._flattened = flatten_tree(self._neighbour_roles)
 

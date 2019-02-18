@@ -83,9 +83,9 @@ py_test(
 )
 
 py_test(
-    name = "context_test",
+    name = "builder_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/context_test.py"
+        "kgcn/core/ingest/traverse/data/builder_test.py"
     ],
     deps = [
         "kglib",

@@ -18,7 +18,7 @@
 #
 
 import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.context as context
+import kglib.kgcn.core.ingest.traverse.data.builder as builder
 
 
 def gen(elements):
@@ -27,21 +27,21 @@ def gen(elements):
 
 
 def mock_traversal_output():
-    c = context.ThingContext(
+    c = builder.ThingContext(
         neighbour.Thing("0", "person", "entity"),
         [
-            context.Neighbour("employee", neighbour.TARGET_PLAYS, context.ThingContext(
+            builder.Neighbour("employee", neighbour.TARGET_PLAYS, builder.ThingContext(
                 neighbour.Thing("1", "employment", "relationship"),
                 [
-                    context.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, context.ThingContext(
+                    builder.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
                         neighbour.Thing("2", "company", "entity"), []
                     )),
                 ]
             )),
-            context.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, context.ThingContext(
+            builder.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, builder.ThingContext(
                 neighbour.Thing("3", "@has-name", "relationship"),
                 [
-                    context.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, context.ThingContext(
+                    builder.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
                         neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
                         []
                     )),

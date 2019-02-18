@@ -23,7 +23,7 @@ import collections
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.context as context
+import kglib.kgcn.core.ingest.traverse.data.builder as builder
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):
@@ -95,7 +95,7 @@ class ContextArrayBuilder:
 
         return build_default_arrays(self._neighbourhood_sizes, num_example_things, self._array_data_types)
 
-    def build_context_arrays(self, thing_contexts: typ.List[context.Neighbour]):
+    def build_context_arrays(self, thing_contexts: typ.List[builder.Neighbour]):
         """
         Build the arrays to represent the depths of neighbour traversals.
         :param top_level_neighbours:
@@ -119,7 +119,7 @@ class ContextArrayBuilder:
         #         f'Indices\n{set(poss).difference(set(self.indices_visited))}')
         return depthwise_arrays
 
-    def _build_neighbours(self, neighbours: typ.List[context.Neighbour],
+    def _build_neighbours(self, neighbours: typ.List[builder.Neighbour],
                           depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
                           indices: typ.Tuple):
 
