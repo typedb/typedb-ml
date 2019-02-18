@@ -32,28 +32,28 @@ import kglib.kgcn.core.ingest.traverse.data.context.array as array
 
 class TestDetermineValuesToPut(unittest.TestCase):
 
-    def test__determine_values_to_put_with_entity(self):
+    def test__get_values_to_put_with_entity(self):
         role_label = 'employer'
         role_direction = neighbour.TARGET_PLAYS
         neighbour_type_label = 'company'
         neighbour_data_type = None
         neighbour_value = None
-        values_dict = array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
-                                                    neighbour_data_type, neighbour_value)
+        values_dict = array._get_values_to_put(role_label, role_direction, neighbour_type_label,
+                                               neighbour_data_type, neighbour_value)
         expected_result = {"role_type": 'employer',
                            'role_direction': role_direction,
                            'neighbour_type': 'company'
                            }
         self.assertEqual(values_dict, expected_result)
 
-    def test__determine_values_to_put_with_string_attribute(self):
+    def test__get_values_to_put_with_string_attribute(self):
         role_label = '@has-name-value'
         role_direction = neighbour.NEIGHBOUR_PLAYS
         neighbour_type_label = 'name'
         neighbour_data_type = 'string'
         neighbour_value = 'Person\'s Name'
-        values_dict = array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
-                                                    neighbour_data_type, neighbour_value)
+        values_dict = array._get_values_to_put(role_label, role_direction, neighbour_type_label,
+                                               neighbour_data_type, neighbour_value)
         expected_result = {"role_type": '@has-name-value',
                            'role_direction': role_direction,
                            'neighbour_type': 'name',

@@ -45,8 +45,18 @@ def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_type
     return depthwise_arrays
 
 
-def determine_values_to_put(role_label, role_direction, neighbour_type_label, neighbour_data_type,
-                            neighbour_value):
+def _get_indices(last_indices, n):
+    if len(last_indices) == 0:
+        current_indices = (n, 0)
+    else:
+        current_indices = list(last_indices)
+        current_indices.insert(1, n)
+        current_indices = tuple(current_indices)
+    return current_indices
+
+
+def _get_values_to_put(role_label, role_direction, neighbour_type_label, neighbour_data_type,
+                       neighbour_value):
     values_to_put = {}
     if role_label is not None:
         values_to_put['role_type'] = role_label
@@ -64,6 +74,44 @@ def determine_values_to_put(role_label, role_direction, neighbour_type_label, ne
         values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
 
     return values_to_put
+
+
+def _put_values_into_array(arrays_at_this_depth, current_indices, values_to_put):
+    for key, value in values_to_put.items():
+        # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
+        # one value
+        assert len(arrays_at_this_depth[key].shape) == len(current_indices)
+        arrays_at_this_depth[key][current_indices] = value
+    return arrays_at_this_depth
+
+
+def _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n):
+    # TODO This has side-effects, it modifies depthwise_arrays in-place
+    if n < expected_n:
+        boundary = n + 1
+        slice_to_repeat = list(current_indices)
+        slice_to_repeat[1] = slice(boundary)
+        slice_to_repeat.insert(1, ...)
+        slice_to_repeat = tuple(slice_to_repeat)
+
+        slice_to_replace = list(slice_to_repeat)
+        slice_to_replace[2] = slice(boundary, None)
+        slice_to_replace = tuple(slice_to_replace)
+
+        # For the current depth and deeper
+        for d in list(range(depth, -1, -1)):
+            for array in list(depthwise_arrays[d].values()):
+                fill_array_with_repeats(array, slice_to_repeat, slice_to_replace)
+    return depthwise_arrays
+
+
+def _add_neighbour_data_to_array(current_indices, depth, depthwise_arrays, neighbour):
+    # TODO This has side-effects, it modifies depthwise_arrays in-place
+    thing = neighbour.context.thing
+    values_to_put = _get_values_to_put(neighbour.role_label, neighbour.role_direction,
+                                       thing.type_label, thing.data_type, thing.value)
+    depthwise_arrays[depth] = _put_values_into_array(depthwise_arrays[depth], current_indices, values_to_put)
+    return depthwise_arrays
 
 
 class ArrayConverter:
@@ -110,76 +158,42 @@ class ArrayConverter:
         depthwise_arrays = self._initialise_arrays(nun_example_things)
 
         #####################################################
-        # Populate the arrays from the neighbour traversals
+        # Populate the arrays from the neighbour contexts
         #####################################################
         depthwise_arrays = self._build_neighbours(thing_contexts, depthwise_arrays, tuple())
-        # try:
-        #     poss = all_possible_indices(self._neighbourhood_sizes, nun_example_things)
-        #     assert(set(self.indices_visited) == set(poss))
-        # except AssertionError:
-        #     raise AssertionError(
-        #         f'\nPossible indices: \n{poss}\n=====\nVisited indices\n{self.indices_visited}\n=====\nMising '
-        #         f'Indices\n{set(poss).difference(set(self.indices_visited))}')
         return depthwise_arrays
 
     def _build_neighbours(self, neighbours: typ.List[builder.Neighbour],
                           depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
-                          indices: typ.Tuple):
-
-        # depth = len(self._neighbourhood_sizes) + 2 - (len(indices) + 1)
+                          last_indices: typ.Tuple):
+        # TODO This has side-effects, it modifies depthwise_arrays in-place
 
         n = None
         current_indices = None
 
         for n, neighbour in enumerate(neighbours):
-            if len(indices) == 0:
-                current_indices = (n, 0)
-            else:
-                current_indices = list(indices)
-                current_indices.insert(1, n)
-                current_indices = tuple(current_indices)
-            self.indices_visited.append(current_indices)
-            depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
-            arrays_at_this_depth = depthwise_arrays[depth]
+            current_indices = _get_indices(last_indices, n)
+            self.indices_visited.append(current_indices)  # TODO Remove, but useful for debugging
 
-            thing = neighbour.context.thing
-            values_to_put = determine_values_to_put(neighbour.role_label, neighbour.role_direction,
-                                                    thing.type_label, thing.data_type,
-                                                    thing.value)
+            depth = self._determine_depth(current_indices)
 
-            for key, value in values_to_put.items():
-                # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
-                # one value
-                assert len(arrays_at_this_depth[key].shape) == len(current_indices)
-                arrays_at_this_depth[key][current_indices] = value
+            depthwise_arrays = _add_neighbour_data_to_array(current_indices, depth, depthwise_arrays, neighbour)
 
-            depthwise_arrays = self._build_neighbours(
-                neighbour.context.neighbourhood,
-                depthwise_arrays,
-                current_indices)
+            depthwise_arrays = self._build_neighbours(neighbour.context.neighbourhood, depthwise_arrays, current_indices)
 
-        print(f'n = {n}, indices = {current_indices}')
+        print(f'n = {n}, last_indices = {current_indices}')
 
         # Duplicate the sections of the arrays already built so that they are padded to be complete
         if n is not None and depth < len(self._neighbourhood_sizes):
             expected_n = self._neighbourhood_sizes[depth] - 1
-            if n < expected_n:
-                boundary = n + 1
-                slice_to_repeat = list(current_indices)
-                slice_to_repeat[1] = slice(boundary)
-                slice_to_repeat.insert(1, ...)
-                slice_to_repeat = tuple(slice_to_repeat)
-
-                slice_to_replace = list(slice_to_repeat)
-                slice_to_replace[2] = slice(boundary, None)
-                slice_to_replace = tuple(slice_to_replace)
-
-                # For the current depth and deeper
-                for d in list(range(depth, -1, -1)):
-                    for array in list(depthwise_arrays[d].values()):
-                        fill_array_with_repeats(array, slice_to_repeat, slice_to_replace)
+            depthwise_arrays = _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n)
 
         return depthwise_arrays
+
+    def _determine_depth(self, current_indices):
+        # depth = len(self._neighbourhood_sizes) + 2 - (len(last_indices) + 1)
+        depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
+        return depth
 
 
 def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
