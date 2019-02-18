@@ -21,7 +21,7 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 
 
 class BaseGraknIntegrationTest:

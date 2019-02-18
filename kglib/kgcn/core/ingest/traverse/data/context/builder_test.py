@@ -21,12 +21,11 @@ import unittest
 
 import grakn
 
-import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
-import kglib.kgcn.core.ingest.traverse.data.builder as builder
+import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
-import kglib.kgcn.core.ingest.traverse.data.builder_mocks as mocks
-from kglib.kgcn.core.ingest.traverse.data.builder import ThingContext
+import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mocks
 
 
 def _neighbourhood_traverser_factory(neighbour_sample_sizes):
@@ -282,7 +281,7 @@ def flatten_tree(neighbours):
     return all_connections
 
 
-def get_max_depth(thing_context: ThingContext):
+def get_max_depth(thing_context: builder.ThingContext):
     """
     Find the length of the deepest aggregation path
     :param thing_context:

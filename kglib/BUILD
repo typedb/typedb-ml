@@ -85,7 +85,7 @@ py_test(
 py_test(
     name = "builder_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/builder_test.py"
+        "kgcn/core/ingest/traverse/data/context/builder_test.py"
     ],
     deps = [
         "kglib",
@@ -95,7 +95,7 @@ py_test(
 py_test(
     name = "neighbour_test",
     srcs = [
-        "kgcn/core/ingest/traverse/data/neighbour_test.py"
+        "kgcn/core/ingest/traverse/data/context/neighbour_test.py"
     ],
     deps = [
         "kglib",
@@ -114,9 +114,9 @@ py_test(
 )
 
 py_test(
-    name = "context_array_test",
+    name = "array_test",
     srcs = [
-        "kgcn/core/ingest/preprocess/context_array_test.py"
+        "kgcn/core/ingest/traverse/data/context/array_test.py"
     ],
     deps = [
         "kglib",

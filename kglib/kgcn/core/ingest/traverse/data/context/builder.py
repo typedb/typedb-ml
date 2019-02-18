@@ -21,8 +21,8 @@ import typing as typ
 
 import grakn
 
-import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.utils as utils
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
 class ContextBuilder:

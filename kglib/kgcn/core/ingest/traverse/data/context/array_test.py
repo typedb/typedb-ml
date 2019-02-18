@@ -22,12 +22,12 @@ import unittest
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
-import kglib.kgcn.core.ingest.traverse.data.builder as builder
-import kglib.kgcn.core.ingest.traverse.data.builder_mocks as mock
-import kglib.kgcn.core.ingest.preprocess.context_array as context_array
+import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
+import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mock
+import kglib.kgcn.core.ingest.traverse.data.context.array as array
 
 
 class TestDetermineValuesToPut(unittest.TestCase):
@@ -38,8 +38,8 @@ class TestDetermineValuesToPut(unittest.TestCase):
         neighbour_type_label = 'company'
         neighbour_data_type = None
         neighbour_value = None
-        values_dict = context_array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
-                                                            neighbour_data_type, neighbour_value)
+        values_dict = array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
+                                                    neighbour_data_type, neighbour_value)
         expected_result = {"role_type": 'employer',
                            'role_direction': role_direction,
                            'neighbour_type': 'company'
@@ -52,8 +52,8 @@ class TestDetermineValuesToPut(unittest.TestCase):
         neighbour_type_label = 'name'
         neighbour_data_type = 'string'
         neighbour_value = 'Person\'s Name'
-        values_dict = context_array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
-                                                            neighbour_data_type, neighbour_value)
+        values_dict = array.determine_values_to_put(role_label, role_direction, neighbour_type_label,
+                                                    neighbour_data_type, neighbour_value)
         expected_result = {"role_type": '@has-name-value',
                            'role_direction': role_direction,
                            'neighbour_type': 'name',
@@ -68,7 +68,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
         self._neighbourhood_sizes = (2, 3)
         self._num_example_things = 2
 
-        self._builder = context_array.ContextArrayBuilder(self._neighbourhood_sizes)
+        self._builder = array.ContextArrayBuilder(self._neighbourhood_sizes)
 
         self._expected_dims = [self._num_example_things] + list(reversed(self._neighbourhood_sizes)) + [1]
 
@@ -146,7 +146,7 @@ class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
         # Context Array Building
         ################################################################################################################
 
-        self._array_builder = context_array.ContextArrayBuilder(neighbour_sample_sizes)
+        self._array_builder = array.ContextArrayBuilder(neighbour_sample_sizes)
         self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
 
     def test_array_values(self):
@@ -169,7 +169,7 @@ class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
         # Context Array Building
         ################################################################################################################
 
-        self._array_builder = context_array.ContextArrayBuilder(self._neighbour_sample_sizes)
+        self._array_builder = array.ContextArrayBuilder(self._neighbour_sample_sizes)
         self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
 
     def test_role_type_not_empty(self):
@@ -208,7 +208,7 @@ class TestAttributeTypes(unittest.TestCase):
             mock.gen([])
         )), ]
 
-        self._array_builder = context_array.ContextArrayBuilder((2, 3))
+        self._array_builder = array.ContextArrayBuilder((2, 3))
         self._context_arrays = self._array_builder.build_context_arrays(neighbour_roles)
 
 
@@ -229,7 +229,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, :, 1:, 0] = 0
 
-        context_array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
+        array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -266,7 +266,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                            [16]]]]])
         arr[1, :, :, 1:, 0] = 0
 
-        context_array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
+        array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[[1],
@@ -303,7 +303,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, 1:, 1, 0] = 0
 
-        context_array.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
+        array.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -336,7 +336,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[0, 2:, 0, 0] = 0
 
-        context_array.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
+        array.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
         print(arr)
 
         expected_output = np.array([[[[1],

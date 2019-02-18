@@ -17,7 +17,7 @@
 #  under the License.
 #
 
-import kglib.kgcn.core.ingest.traverse.data.utils as utils
+import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
 TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this thing plays a role

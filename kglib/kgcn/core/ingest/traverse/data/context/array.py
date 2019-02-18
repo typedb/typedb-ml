@@ -23,7 +23,7 @@ import collections
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.builder as builder
+import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
 
 
 def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):

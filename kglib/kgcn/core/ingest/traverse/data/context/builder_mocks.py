@@ -17,8 +17,8 @@
 #  under the License.
 #
 
-import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.builder as builder
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
 
 
 def gen(elements):

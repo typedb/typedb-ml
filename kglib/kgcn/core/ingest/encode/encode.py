@@ -19,7 +19,7 @@
 
 import tensorflow as tf
 
-import kglib.kgcn.core.ingest.traverse.data.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 from kglib.kgcn.core.ingest.encode import tf_hub, boolean, schema
 from kglib.kgcn.core.ingest.traverse.schema import traversal as trav, executor as schema_ex
 
@@ -41,7 +41,6 @@ def encode_all(context_arrays, encoders, name='encode_all'):
     with tf.name_scope(name) as scope:
         encoded_arrays = []
         for context_array in context_arrays:
-            # encoded_features = [encoders[key](features_array) for key, features_array in context_array.items()]
             all_encoded_features = []
             for key, features_array in context_array.items():
                 encoded_features = encoders[key](features_array)
