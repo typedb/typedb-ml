@@ -17,9 +17,8 @@
 #  under the License.
 #
 
-import typing as typ
-
 import collections
+import typing as typ
 
 import numpy as np
 
@@ -77,6 +76,7 @@ def _get_values_to_put(role_label, role_direction, neighbour_type_label, neighbo
 
 
 def _put_values_into_array(arrays_at_this_depth, current_indices, values_to_put):
+    arrays_at_this_depth = arrays_at_this_depth.copy()
     for key, value in values_to_put.items():
         # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
         # one value
@@ -86,32 +86,67 @@ def _put_values_into_array(arrays_at_this_depth, current_indices, values_to_put)
 
 
 def _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n):
-    # TODO This has side-effects, it modifies depthwise_arrays in-place
+    depthwise_arrays = depthwise_arrays.copy()
     if n < expected_n:
         boundary = n + 1
-        slice_to_repeat = list(current_indices)
-        slice_to_repeat[1] = slice(boundary)
-        slice_to_repeat.insert(1, ...)
-        slice_to_repeat = tuple(slice_to_repeat)
-
-        slice_to_replace = list(slice_to_repeat)
-        slice_to_replace[2] = slice(boundary, None)
-        slice_to_replace = tuple(slice_to_replace)
+        slice_to_repeat = _get_slice_to_repeat(boundary, current_indices)
+        slice_to_replace = _get_slice_to_replace(boundary, slice_to_repeat)
 
         # For the current depth and deeper
         for d in list(range(depth, -1, -1)):
-            for array in list(depthwise_arrays[d].values()):
-                fill_array_with_repeats(array, slice_to_repeat, slice_to_replace)
+            for key, array in list(depthwise_arrays[d].items()):
+                depthwise_arrays[d][key] = fill_array_with_repeats(array, slice_to_repeat, slice_to_replace)
     return depthwise_arrays
 
 
-def _add_neighbour_data_to_array(current_indices, depth, depthwise_arrays, neighbour):
-    # TODO This has side-effects, it modifies depthwise_arrays in-place
+def _get_slice_to_replace(boundary, slice_to_repeat):
+    slice_to_replace = list(slice_to_repeat)
+    slice_to_replace[2] = slice(boundary, None)
+    slice_to_replace = tuple(slice_to_replace)
+    return slice_to_replace
+
+
+def _get_slice_to_repeat(boundary, current_indices):
+    slice_to_repeat = list(current_indices)
+    slice_to_repeat[1] = slice(boundary)
+    slice_to_repeat.insert(1, ...)
+    slice_to_repeat = tuple(slice_to_repeat)
+    return slice_to_repeat
+
+
+def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
+    array = array.copy()
+    to_repeat = array[slice_to_repeat]
+    to_fill = array[slice_to_replace]
+
+    num_repeats = -(-to_fill.shape[0] // to_repeat.shape[0])
+
+    tile_axes = [1] * len(to_fill.shape)
+    tile_axes[0] = num_repeats + 1
+
+    filler = np.tile(to_repeat, tile_axes)
+
+    filler_axes = tuple(slice(None, i) for i in to_fill.shape)
+
+    curtailed_filler = filler[filler_axes]
+
+    array[slice_to_replace] = curtailed_filler
+    return array
+
+
+def _update_depthwise_arrays_with_neighbour(depthwise_arrays, current_indices, depth, neighbour):
+    """
+    Inserts the data concerning a neighbour into depthwise_arrays. Purposefully overwrite depthwise_arrays
+    :param depthwise_arrays: The array representation of a batch of ThingContexts
+    :param current_indices: Where this neighbour's data should be inserted
+    :param depth: The depth of the insertion
+    :param neighbour: The neighbour whose values should be inserted
+    :return: Nothing
+    """
     thing = neighbour.context.thing
     values_to_put = _get_values_to_put(neighbour.role_label, neighbour.role_direction,
                                        thing.type_label, thing.data_type, thing.value)
     depthwise_arrays[depth] = _put_values_into_array(depthwise_arrays[depth], current_indices, values_to_put)
-    return depthwise_arrays
 
 
 class ArrayConverter:
@@ -177,7 +212,7 @@ class ArrayConverter:
 
             depth = self._determine_depth(current_indices)
 
-            depthwise_arrays = _add_neighbour_data_to_array(current_indices, depth, depthwise_arrays, neighbour)
+            _update_depthwise_arrays_with_neighbour(depthwise_arrays, current_indices, depth, neighbour)
 
             depthwise_arrays = self._build_neighbours(neighbour.context.neighbourhood, depthwise_arrays, current_indices)
 
@@ -194,21 +229,3 @@ class ArrayConverter:
         # depth = len(self._neighbourhood_sizes) + 2 - (len(last_indices) + 1)
         depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
         return depth
-
-
-def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
-    to_repeat = array[slice_to_repeat]
-    to_fill = array[slice_to_replace]
-
-    num_repeats = -(-to_fill.shape[0] // to_repeat.shape[0])
-
-    tile_axes = [1] * len(to_fill.shape)
-    tile_axes[0] = num_repeats + 1
-
-    filler = np.tile(to_repeat, tile_axes)
-
-    filler_axes = tuple(slice(None, i) for i in to_fill.shape)
-
-    curtailed_filler = filler[filler_axes]
-
-    array[slice_to_replace] = curtailed_filler
