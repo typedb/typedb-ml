@@ -47,46 +47,34 @@ class ContextBuilder:
 
     def build(self, tx: grakn.Transaction, example_thing: neighbour.Thing):
         depth = len(self._depth_samplers)
-        return self._traverse(example_thing, depth, tx)
+        return self._traverse_from_thing(example_thing, depth, tx)
 
-    def _traverse(self, starting_thing_context: neighbour.Thing, depth: int, tx):
+    def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, tx):
 
         if depth == 0:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return ThingContext(thing=starting_thing_context, neighbourhood=[])
+            return ThingContext(thing=starting_thing, neighbourhood=[])
 
         sampler = self._depth_samplers[-depth]
         next_depth = depth - 1
 
         # Any concept could play a role in a relationship if the schema permits it
         # Distinguish the concepts found as roles-played
-        roles_played = self._neighbour_finder.find(starting_thing_context.id, tx)
+        connections = self._neighbour_finder.find(starting_thing.id, tx)
 
-        neighbourhood = self._get_neighbour(roles_played, next_depth, tx)
+        def neighbour_generator():
+            for connection in connections:
+                neighbour_context = self._traverse_from_thing(connection['neighbour_thing'], next_depth, tx)
 
-        thing_context = ThingContext(thing=starting_thing_context, neighbourhood=neighbourhood)
+                yield Neighbour(role_label=connection['role_label'], role_direction=connection['role_direction'],
+                                context=neighbour_context)
 
-        # if starting_thing_context.base_type_label == 'relationship':
-        #     # Find its roleplayers
-        #     roleplayers = self._neighbour_finder(neighbour.ROLEPLAYERS, starting_thing_context.id, tx)
-        #
-        #     # Chain the iterators together, so that after getting the roles played you get the roleplayers
-        #     thing_context.neighbourhood = itertools.chain(
-        #         thing_context.neighbourhood,
-        #         self._get_neighbour(roleplayers, next_depth, tx))
+        thing_context = ThingContext(thing=starting_thing, neighbourhood=neighbour_generator())
 
         # Randomly sample the neighbourhood
         thing_context.neighbourhood = list(sampler(thing_context.neighbourhood))
 
         return thing_context
-
-    def _get_neighbour(self, role_and_concept_info_iterator, depth, tx):
-
-        for connection in role_and_concept_info_iterator:
-            neighbour_context = self._traverse(connection['neighbour_thing'], depth, tx)
-
-            yield Neighbour(role_label=connection['role_label'], role_direction=connection['role_direction'],
-                            context=neighbour_context)
 
 
 # Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
