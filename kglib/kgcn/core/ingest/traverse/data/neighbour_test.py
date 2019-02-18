@@ -41,7 +41,7 @@ class BaseGraknIntegrationTest:
 
         def setUp(self):
             self._tx = self.session.transaction(grakn.TxType.WRITE)
-            self._executor = neighbour.NeighbourFinder()
+            self._neighbour_finder = neighbour.NeighbourFinder()
 
 
 class BaseTestNeighbourFinder:
@@ -75,7 +75,7 @@ class TestNeighbourFinderFromEntity(BaseTestNeighbourFinder.TestNeighbourFinder)
 
     def setUp(self):
         super(TestNeighbourFinderFromEntity, self).setUp()
-        self._res = list(self._executor(neighbour.TARGET_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._neighbour_finder.find(self._grakn_thing.id, self._tx))
 
 
 class TestNeighbourFinderFromRelationship(BaseTestNeighbourFinder.TestNeighbourFinder):
@@ -88,7 +88,7 @@ class TestNeighbourFinderFromRelationship(BaseTestNeighbourFinder.TestNeighbourF
 
     def setUp(self):
         super(TestNeighbourFinderFromRelationship, self).setUp()
-        self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._neighbour_finder.find(self._grakn_thing.id, self._tx))
 
 
 class TestNeighbourFinderFromAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):
@@ -101,7 +101,7 @@ class TestNeighbourFinderFromAttribute(BaseTestNeighbourFinder.TestNeighbourFind
 
     def setUp(self):
         super(TestNeighbourFinderFromAttribute, self).setUp()
-        self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._neighbour_finder.find(self._grakn_thing.id, self._tx))
 
 
 # class IntegrationTestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):
@@ -115,7 +115,7 @@ class TestNeighbourFinderFromAttribute(BaseTestNeighbourFinder.TestNeighbourFind
 #
 #     def setUp(self):
 #         super(IntegrationTestNeighbourFinderFromDateAttribute, self).setUp()
-#         self._res = list(itertools.islice(self._neighbour_finder(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
+#         self._res = list(itertools.islice(self._neighbour_finder.find(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx), 2))
 
 
 class TestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbourFinder):
@@ -128,7 +128,7 @@ class TestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbour
 
     def setUp(self):
         super(TestNeighbourFinderFromDateAttribute, self).setUp()
-        self._res = list(self._executor(neighbour.NEIGHBOUR_PLAYS, self._grakn_thing.id, self._tx))
+        self._res = list(self._neighbour_finder.find(self._grakn_thing.id, self._tx))
 
 
 class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):

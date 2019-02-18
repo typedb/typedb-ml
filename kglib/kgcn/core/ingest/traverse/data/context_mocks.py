@@ -59,40 +59,28 @@ def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighb
                                                value=value)}
 
 
-def _role_wrapper(outcome, role_direction, query_direction):
-    if role_direction == query_direction:
-        return gen(outcome)
-    else:
-        return gen([])
+class MockNeighbourFinder:
 
+    def find(self, thing_id, tx):
 
-def mock_neighbour_finder(query_direction, *args):
+        if thing_id == "0":
 
-    concept_id = args[0]
-    if concept_id == "0":
-
-        role_direction = neighbour.TARGET_PLAYS
-        return _role_wrapper([
+            role_direction = neighbour.TARGET_PLAYS
+            yield from gen([
                 _build_data("employee", role_direction, "1", "employment", "relationship"),
                 _build_data("@has-name-owner", role_direction, "3", "@has-name", "relationship")
-            ],
-            role_direction,
-            query_direction
-        )
+            ])
 
-    elif concept_id == "1":
+        elif thing_id == "1":
 
-        role_direction = neighbour.NEIGHBOUR_PLAYS
-        return _role_wrapper([_build_data("employer", role_direction, "2", "company", "entity")],
-                             role_direction,
-                             query_direction)
+            role_direction = neighbour.NEIGHBOUR_PLAYS
+            yield from gen([_build_data("employer", role_direction, "2", "company", "entity")])
 
-    elif concept_id == "3":
+        elif thing_id == "3":
 
-        role_direction = neighbour.NEIGHBOUR_PLAYS
-        return _role_wrapper([_build_data("@has-name-value", role_direction, "4", "name", "attribute",
-                                          data_type='string', value="Employee Name")],
-                             role_direction,
-                             query_direction)
-    else:
-        raise ValueError("This concept id hasn't been mocked")
+            role_direction = neighbour.NEIGHBOUR_PLAYS
+            yield from gen([_build_data("@has-name-value", role_direction, "4", "name", "attribute",
+                                        data_type='string', value="Employee Name")])
+
+        else:
+            raise ValueError("This concept id hasn't been mocked")

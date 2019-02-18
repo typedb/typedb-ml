@@ -23,9 +23,6 @@ import kglib.kgcn.core.ingest.traverse.data.utils as utils
 TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this thing plays a role
 NEIGHBOUR_PLAYS = 1  # In this case the target
 
-ROLES_PLAYED = 0
-ROLEPLAYERS = 1
-
 DATA_TYPE_NAMES = ('long', 'double', 'boolean', 'date', 'string')
 
 
@@ -75,45 +72,46 @@ class NeighbourFinder:
         print(query)
         return tx.query(query)
 
-    def __call__(self, query_direction, thing_id, tx):
+    def find(self, thing_id, tx):
         """
         Takes a query to execute and the variables to return
-        :param query_direction: whether we want to retrieve roles played or role players
         :param thing_id: id for the thing to find connections for
         :return:
         """
 
         def _link_iterator():
-            # TODO Drop support for implicit relationships
-
-            # Direct connections to attributes
-
             target_query = self.TARGET_QUERY['query'].format(thing_id)
             target_thing = next(self._query(target_query, tx)).get(self.TARGET_QUERY['variable'])
 
+            # Direct connections to attributes
             yield from self._find_direct_attribute_neighbours(tx, target_thing, thing_id)
 
             if target_thing.is_attribute() and self._find_neighbours_from_attributes:
                 yield from self._find_neighbours_from_attribute(tx, target_thing)
 
-            # Connections to entities, relationships and optionally implicit relationships
-            yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
+            # # Connections to entities, relationships and optionally implicit relationships
+            # yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
+
+            yield from self._find_neighbour_relationships_where_thing_plays_role(tx, thing_id)
+
+            if target_thing.is_relationship():
+                yield from self._find_neighbour_roleplayers(tx, thing_id)
 
         return _link_iterator()
 
-    def _find_entity_and_relationship_neighbours(self, query_direction, thing_id, tx):
-        if query_direction == ROLES_PLAYED:
-            base_query = self.ROLES_PLAYED_QUERY
-            thing_variable = base_query['target_variable']
-            relationship_variable = base_query['neighbour_variable']
+    def _find_neighbour_relationships_where_thing_plays_role(self, tx, thing_id):
+        base_query = self.ROLES_PLAYED_QUERY
+        thing_variable = base_query['target_variable']
+        relationship_variable = base_query['neighbour_variable']
+        yield from self._get_role_link(tx, base_query, relationship_variable, thing_variable, thing_id)
 
-        elif query_direction == ROLEPLAYERS:
-            base_query = self.ROLEPLAYERS_QUERY
-            thing_variable = base_query['neighbour_variable']
-            relationship_variable = base_query['target_variable']
-        else:
-            raise ValueError('query_direction isn\'t properly defined')
+    def _find_neighbour_roleplayers(self, tx, thing_id):
+        base_query = self.ROLEPLAYERS_QUERY
+        thing_variable = base_query['neighbour_variable']
+        relationship_variable = base_query['target_variable']
+        yield from self._get_role_link(tx, base_query, relationship_variable, thing_variable, thing_id)
 
+    def _get_role_link(self, tx, base_query, relationship_variable, thing_variable, thing_id):
         query = base_query['query'].format(thing_id)
         print(query)
         link_iterator = self._query(query, tx)
@@ -132,6 +130,12 @@ class NeighbourFinder:
 
                 yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
                        'neighbour_thing': neighbour_thing}
+
+    def _find_roles(self, thing, relationship, tx):
+        query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
+        answers = self._query(query_str, tx)
+        role_sups = [answer.get(self.ROLE_QUERY['variable']) for answer in answers]
+        return role_sups
 
     def _find_direct_attribute_neighbours(self, tx, target_thing, thing_id):
 
@@ -158,12 +162,6 @@ class NeighbourFinder:
             neighbour_thing = build_thing(neighbour)
             yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
                    'neighbour_thing': neighbour_thing}
-
-    def _find_roles(self, thing, relationship, tx):
-        query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
-        answers = self._query(query_str, tx)
-        role_sups = [answer.get(self.ROLE_QUERY['variable']) for answer in answers]
-        return role_sups
 
 
 def find_lowest_role_from_role_sups(role_sups):

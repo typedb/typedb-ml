@@ -17,8 +17,6 @@
 #  under the License.
 #
 
-import collections
-import itertools
 import typing as typ
 
 import grakn
@@ -59,39 +57,23 @@ class ContextBuilder:
 
         sampler = self._depth_samplers[-depth]
         next_depth = depth - 1
-        # next_neighbour_samplers = self._depth_samplers[1:]
-
-        # Different cases for traversal
 
         # Any concept could play a role in a relationship if the schema permits it
-
         # Distinguish the concepts found as roles-played
-        roles_played = self._neighbour_finder(neighbour.ROLES_PLAYED, starting_thing_context.id, tx)
+        roles_played = self._neighbour_finder.find(starting_thing_context.id, tx)
 
         neighbourhood = self._get_neighbour(roles_played, next_depth, tx)
 
         thing_context = ThingContext(thing=starting_thing_context, neighbourhood=neighbourhood)
 
-        # TODO If user doesn't attach anything to impicit @has relationships, then these could be filtered out. Instead
-        # another query would be required: "match $x id {}, has attribute $attribute; get $attribute;"
-        # We would use TARGET_PLAYS with Role "has" or role "@has-< attribute type name >"
-
-        # if target_thing.metatype_label == 'entity':
-        #     # Nothing special to do in this case?
-        #     pass
-        # elif target_thing.metatype_label == 'attribute':
-        #     # Do anything specific to attribute values
-        #     # Optionally stop further propagation through attributes, since they are shared across the knowledge
-        #     # graph so this may not provide relevant information
-
-        if starting_thing_context.base_type_label == 'relationship':
-            # Find its roleplayers
-            roleplayers = self._neighbour_finder(neighbour.ROLEPLAYERS, starting_thing_context.id, tx)
-
-            # Chain the iterators together, so that after getting the roles played you get the roleplayers
-            thing_context.neighbourhood = itertools.chain(
-                thing_context.neighbourhood,
-                self._get_neighbour(roleplayers, next_depth, tx))
+        # if starting_thing_context.base_type_label == 'relationship':
+        #     # Find its roleplayers
+        #     roleplayers = self._neighbour_finder(neighbour.ROLEPLAYERS, starting_thing_context.id, tx)
+        #
+        #     # Chain the iterators together, so that after getting the roles played you get the roleplayers
+        #     thing_context.neighbourhood = itertools.chain(
+        #         thing_context.neighbourhood,
+        #         self._get_neighbour(roleplayers, next_depth, tx))
 
         # Randomly sample the neighbourhood
         thing_context.neighbourhood = list(sampler(thing_context.neighbourhood))

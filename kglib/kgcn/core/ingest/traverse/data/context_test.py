@@ -155,7 +155,7 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.mock_neighbour_finder)
+        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
 
         thing_context = context_builder.build(self._tx, starting_thing)
 
@@ -173,7 +173,7 @@ class TestIsolated(unittest.TestCase):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.mock_neighbour_finder)
+        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
 
         thing_context = context_builder.build(self._tx, starting_thing)
 
@@ -254,7 +254,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         starting_thing = neighbour.Thing("0", "person", "entity")
         things = [starting_thing]
 
-        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.mock_neighbour_finder)
+        context_builder = context.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
 
         self._neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
