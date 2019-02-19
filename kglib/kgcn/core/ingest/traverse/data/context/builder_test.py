@@ -18,6 +18,7 @@
 #
 
 import unittest
+import unittest.mock
 
 import grakn
 
@@ -28,7 +29,45 @@ import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mocks
 
 
-def _neighbourhood_traverser_factory(neighbour_sample_sizes):
+class TestContextBuilder(unittest.TestCase):
+
+    def test_input_output(self):
+
+        neighbour_sample_sizes = (2, 1)
+
+        samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
+
+        starting_thing = neighbour.Thing("0", "person", "entity")
+
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+
+        context = context_builder.build(unittest.mock.Mock(grakn.Transaction), starting_thing)
+
+        self.assertEqual(context, mocks.mock_traversal_output())
+
+
+class ITContextBuilder(unittest.TestCase):
+
+    def test_input_output(self):
+        """
+        Runs using real samplers
+        :return:
+        """
+
+        sampling_method = ordered.ordered_sample
+
+        samplers = [samp.Sampler(2, sampling_method, limit=2), samp.Sampler(3, sampling_method, limit=1)]
+
+        starting_thing = neighbour.Thing("0", "person", "entity")
+
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+
+        context = context_builder.build(unittest.mock.Mock(grakn.Transaction), starting_thing)
+
+        self.assertEqual(context, mocks.mock_traversal_output())
+
+
+def _context_builder_factory(neighbour_sample_sizes):
     sampling_method = ordered.ordered_sample
 
     samplers = []
@@ -100,14 +139,14 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(data)):
-                self._thing_context = _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
+                self._thing_context = _context_builder_factory(sample_sizes).build(self._tx, self._thing)
                 self._assert_types_correct(self._thing_context)
 
     def test_context_check_depth(self):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             with self.subTest(sample_sizes=str(sample_sizes)):
-                self._thing_context = _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
+                self._thing_context = _context_builder_factory(sample_sizes).build(self._tx, self._thing)
 
                 with self.subTest("Check number of immediate neighbours"):
                     self.assertEqual(len(self._thing_context.neighbourhood), sample_sizes[0])
@@ -118,7 +157,7 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         data = ((1,), (2, 3), (2, 3, 4))
         for sample_sizes in data:
             def to_test():
-                return _neighbourhood_traverser_factory(sample_sizes).build(self._tx, self._thing)
+                return _context_builder_factory(sample_sizes).build(self._tx, self._thing)
 
             with self.subTest(sample_sizes=str(data)):
                 thing_context = to_test()
@@ -126,57 +165,6 @@ class TestContextBuilderFromEntity(unittest.TestCase):
                 for i in range(10):
                     new_thing_context = to_test()
                     self.assertEqual(new_thing_context, thing_context)
-
-
-class TestIsolated(unittest.TestCase):
-    session = None
-
-    @classmethod
-    def setUpClass(cls):
-        client = grakn.Grakn(uri="localhost:48555")
-        cls.session = client.session(keyspace="test_schema")
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.session.close()
-
-    def setUp(self):
-        self._tx = self.session.transaction(grakn.TxType.WRITE)
-
-    def tearDown(self):
-        self._tx.close()
-
-    def test_input_output(self):
-
-        neighbour_sample_sizes = (2, 3)
-
-        samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
-
-        starting_thing = neighbour.Thing("0", "person", "entity")
-
-        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
-
-        thing_context = context_builder.build(self._tx, starting_thing)
-
-        self.assertEqual(thing_context, mocks.mock_traversal_output())
-
-    def test_input_output_integration(self):
-        """
-        Runs using real samplers
-        :return:
-        """
-
-        sampling_method = ordered.ordered_sample
-
-        samplers = [samp.Sampler(2, sampling_method, limit=2), samp.Sampler(3, sampling_method, limit=1)]
-
-        starting_thing = neighbour.Thing("0", "person", "entity")
-
-        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
-
-        thing_context = context_builder.build(self._tx, starting_thing)
-
-        self.assertEqual(thing_context, mocks.mock_traversal_output())
 
 
 class BaseTestFlattenedTree:

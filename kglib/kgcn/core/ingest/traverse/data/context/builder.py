@@ -47,13 +47,13 @@ class ContextBuilder:
 
     def build(self, tx: grakn.Transaction, example_thing: neighbour.Thing):
         depth = len(self._depth_samplers)
-        return self._traverse_from_thing(example_thing, depth, tx)
+        return self._traverse_from_thing(example_thing, depth, (0,), tx)
 
-    def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, tx):
+    def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, indices: tuple, tx):
 
         if depth == 0:
-            # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return ThingContext(thing=starting_thing, neighbourhood=[])
+            # # This marks the end of the recursion, so there are no neighbours in the neighbourhood
+            return []
 
         sampler = self._depth_samplers[-depth]
         next_depth = depth - 1
@@ -62,19 +62,27 @@ class ContextBuilder:
         # Distinguish the concepts found as roles-played
         connections = self._neighbour_finder.find(starting_thing.id, tx)
 
-        def neighbour_generator():
-            for connection in connections:
-                neighbour_context = self._traverse_from_thing(connection['neighbour_thing'], next_depth, tx)
+        if depth == len(self._depth_samplers):
+            nodes = [Node(indices, starting_thing)]
+        else:
+            nodes = []
+        # Sample the neighbourhood and iterate over the results
+        for i, connection in enumerate(sampler(connections)):
+            next_indices = (i,) + indices
+            nodes.append(Node(indices=next_indices, thing=connection['neighbour_thing'], role_label=connection['role_label'],
+                              role_direction=connection['role_direction']))
+            child_nodes = self._traverse_from_thing(connection['neighbour_thing'], next_depth, next_indices, tx)
+            nodes.extend(child_nodes)
 
-                yield Neighbour(role_label=connection['role_label'], role_direction=connection['role_direction'],
-                                context=neighbour_context)
+        return nodes
 
-        thing_context = ThingContext(thing=starting_thing, neighbourhood=neighbour_generator())
 
-        # Randomly sample the neighbourhood
-        thing_context.neighbourhood = list(sampler(thing_context.neighbourhood))
-
-        return thing_context
+class Node(utils.PropertyComparable):
+    def __init__(self, indices, thing, role_label=None, role_direction=None):
+        self.indices = indices
+        self.role_label = role_label
+        self.role_direction = role_direction
+        self.thing = thing
 
 
 # Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone

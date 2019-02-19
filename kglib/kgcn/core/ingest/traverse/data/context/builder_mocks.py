@@ -27,29 +27,14 @@ def gen(elements):
 
 
 def mock_traversal_output():
-    c = builder.ThingContext(
-        neighbour.Thing("0", "person", "entity"),
-        [
-            builder.Neighbour("employee", neighbour.TARGET_PLAYS, builder.ThingContext(
-                neighbour.Thing("1", "employment", "relationship"),
-                [
-                    builder.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
-                        neighbour.Thing("2", "company", "entity"), []
-                    )),
-                ]
-            )),
-            builder.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, builder.ThingContext(
-                neighbour.Thing("3", "@has-name", "relationship"),
-                [
-                    builder.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
-                        neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
-                        []
-                    )),
-                ]
-            ))
-
-        ])
-    return c
+    return [
+        builder.Node((0,), neighbour.Thing("0", "person", "entity")),
+        builder.Node((0, 0), neighbour.Thing("1", "employment", "relationship"), "employee", neighbour.TARGET_PLAYS),
+        builder.Node((0, 0, 0), neighbour.Thing("2", "company", "entity"), "employer", neighbour.NEIGHBOUR_PLAYS),
+        builder.Node((1, 0), neighbour.Thing("3", "@has-name", "relationship"), "@has-name-owner",
+                     neighbour.TARGET_PLAYS),
+        builder.Node((0, 1, 0), neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
+                     "@has-name-value", neighbour.NEIGHBOUR_PLAYS)]
 
 
 def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighbour_metatype, data_type=None,
