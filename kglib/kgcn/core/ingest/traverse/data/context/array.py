@@ -76,6 +76,7 @@ def _get_values_to_put(role_label, role_direction, neighbour_type_label, neighbo
 
 
 def _put_values_into_array(arrays_at_this_depth, current_indices, values_to_put):
+    # TODO Side effects
     arrays_at_this_depth = arrays_at_this_depth.copy()
     for key, value in values_to_put.items():
         # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
@@ -86,6 +87,7 @@ def _put_values_into_array(arrays_at_this_depth, current_indices, values_to_put)
 
 
 def _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n):
+    # TODO Side effects
     depthwise_arrays = depthwise_arrays.copy()
     if n < expected_n:
         boundary = n + 1
@@ -146,7 +148,8 @@ def _update_depthwise_arrays_with_neighbour(depthwise_arrays, current_indices, d
     thing = neighbour.context.thing
     values_to_put = _get_values_to_put(neighbour.role_label, neighbour.role_direction,
                                        thing.type_label, thing.data_type, thing.value)
-    depthwise_arrays[depth] = _put_values_into_array(depthwise_arrays[depth], current_indices, values_to_put)
+    # depthwise_arrays[depth] = _put_values_into_array(depthwise_arrays[depth], current_indices, values_to_put)
+    _put_values_into_array(depthwise_arrays[depth], current_indices, values_to_put)
 
 
 class ArrayConverter:
@@ -221,7 +224,8 @@ class ArrayConverter:
         # Duplicate the sections of the arrays already built so that they are padded to be complete
         if n is not None and depth < len(self._neighbourhood_sizes):
             expected_n = self._neighbourhood_sizes[depth] - 1
-            depthwise_arrays = _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n)
+            # depthwise_arrays = _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n)
+            _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n)
 
         return depthwise_arrays
 
