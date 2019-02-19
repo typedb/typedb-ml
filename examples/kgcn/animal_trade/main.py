@@ -23,14 +23,14 @@ import time
 import grakn
 import tensorflow as tf
 
-import kglib.kgcn.management.grakn as grakn_mgmt
+import kglib.kgcn.management.grakn.server as grakn_mgmt
 import kglib.kgcn.management.logging as logging
 import kglib.kgcn.management.persistence as prs
-import kglib.kgcn.management.samples as samp_mgmt
-import kglib.kgcn.models.downstream as downstream
-import kglib.kgcn.models.model as model
-import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
-import kglib.kgcn.preprocess.persistence as persistence
+import kglib.kgcn.management.grakn.thing as thing_mgmt
+import kglib.kgcn.learn.classify as classify
+import kglib.kgcn.core.model as model
+import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
+import kglib.kgcn.core.ingest.preprocess.persistence as persistence
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -38,13 +38,13 @@ FLAGS = flags.FLAGS
 # Learning params
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('num_classes', 3, 'Number of classes')
-flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
-flags.DEFINE_integer('starting_concepts_features_length', 173,
+flags.DEFINE_integer('features_size', 198, 'Number of features after encoding')
+flags.DEFINE_integer('starting_concepts_features_size', 173,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
                      'role_type and role_direction')
-flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
-flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
-                                          'and the final length of the embeddings')
+flags.DEFINE_integer('aggregated_size', 20, 'Size of aggregated representation of neighbours, a hidden dimension')
+flags.DEFINE_integer('embedding_size', 32, 'Size of the output of "combine" operation, taking place at each depth, '
+                                           'and the final size of the embeddings')
 flags.DEFINE_integer('max_training_steps', 10000, 'Max number of gradient steps to take during gradient descent')
 
 # Sample selection params
@@ -87,22 +87,20 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
     sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
     transactions = grakn_mgmt.get_transactions(sessions)
 
-    batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
+    batch_size = NUM_PER_CLASS * FLAGS.num_classes
     kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
-                      FLAGS.features_length,
-                      FLAGS.starting_concepts_features_length,
-                      FLAGS.aggregated_length,
-                      FLAGS.output_length,
+                      FLAGS.features_size,
+                      FLAGS.starting_concepts_features_size,
+                      FLAGS.aggregated_size,
+                      FLAGS.embedding_size,
                       transactions[TRAIN],
                       batch_size,
-                      buffer_size,
-                      sampling_method=random_sampling.random_sample,
-                      sampling_limit_factor=4
-                      )
+                      neighbour_sampling_method=random_sampling.random_sample,
+                      neighbour_sampling_limit_factor=4)
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-    classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
-                                                     max_training_steps=FLAGS.max_training_steps)
+    classifier = classify.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
+                                                   max_training_steps=FLAGS.max_training_steps)
 
     feed_dicts = {}
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH + 'input/')
@@ -124,13 +122,13 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                 EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
                 PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
             }
-            concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
-                                                                   LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
-                                                                   transactions[TRAIN], transactions[PREDICT],
-                                                                   sampling_params)
+            concepts, labels = thing_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
+                                                                    LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
+                                                                    transactions[TRAIN], transactions[PREDICT],
+                                                                    sampling_params)
             prs.save_labelled_concepts(KEYSPACES, concepts, labels, SAVED_LABELS_PATH)
 
-            samp_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
+            thing_mgmt.delete_all_labels_from_keyspaces(transactions, LABEL_ATTRIBUTE_TYPE)
 
             # Get new transactions since deleting labels requires committing and therefore closes transactions
             transactions = grakn_mgmt.get_transactions(sessions)

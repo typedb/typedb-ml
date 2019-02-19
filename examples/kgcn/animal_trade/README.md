@@ -56,11 +56,11 @@ The [main](../../examples/kgcn/animal_trade/main.py) function will:
 
 - Delete all `appendix` attributes from both `animaltrade_train` and `animaltrade_test` keyspaces. This is the label we will predict in this example, so it should not be present in Grakn otherwise the network can cheat
 
-- Search Grakn for the k-hop neighbours of the selected examples, and store information about them as arrays, demoted in the code as `raw_arrays`. This data is saved to file so that subsequent steps can be re-run without recomputing these data
+- Search Grakn for the k-hop neighbours of the selected examples, and store information about them as arrays, denoted in the code as `context_arrays`. This data is saved to file so that subsequent steps can be re-run without recomputing these data
 
-- Build the TensorFlow computation graph using `model.KGCN`, including a multi-class classification step and learning procedure defined by `downstream.SupervisedKGCNClassifier`
+- Build the TensorFlow computation graph using `model.KGCN`, including a multi-class classification step and learning procedure defined by `classify.SupervisedKGCNClassifier`
 
-- Feed the `raw_arrays` to the TensorFlow graph, and perform learning
+- Feed the `context_arrays` to the TensorFlow graph, and perform learning
 
 ##### Re-training the model
 Re-running the `main` function will make use of the `feed_dicts` previously saved to file (at `dataset/10_concepts/input`), and so will repeat `classifier.train(feed_dicts[TRAIN])`, `classifier.eval(feed_dicts[EVAL])` and `classifier.eval(feed_dicts[PREDICT])` over the exact same data as previously retrieved. Therefore, to play with the learning parameters, do so and then simply re-run `main`.

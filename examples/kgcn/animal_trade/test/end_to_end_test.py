@@ -25,11 +25,11 @@ import unittest
 import grakn
 import tensorflow as tf
 
-import kglib.kgcn.management.grakn as grakn_mgmt
-import kglib.kgcn.management.samples as samp_mgmt
-import kglib.kgcn.models.downstream as downstream
-import kglib.kgcn.models.model as model
-import kglib.kgcn.neighbourhood.data.sampling.random_sampling as random_sampling
+import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
+import kglib.kgcn.core.model as model
+import kglib.kgcn.learn.classify as classify
+import kglib.kgcn.management.grakn.server as server_mgmt
+import kglib.kgcn.management.grakn.thing as thing_mgmt
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -37,13 +37,13 @@ FLAGS = flags.FLAGS
 # Learning params
 flags.DEFINE_float('learning_rate', 0.01, 'Learning rate')
 flags.DEFINE_integer('num_classes', 3, 'Number of classes')
-flags.DEFINE_integer('features_length', 198, 'Number of features after encoding')
-flags.DEFINE_integer('starting_concepts_features_length', 173,
+flags.DEFINE_integer('features_size', 198, 'Number of features after encoding')
+flags.DEFINE_integer('starting_concepts_features_size', 173,
                      'Number of features after encoding for the nodes of interest, which excludes the features for '
                      'role_type and role_direction')
-flags.DEFINE_integer('aggregated_length', 20, 'Length of aggregated representation of neighbours, a hidden dimension')
-flags.DEFINE_integer('output_length', 32, 'Length of the output of "combine" operation, taking place at each depth, '
-                                          'and the final length of the embeddings')
+flags.DEFINE_integer('aggregated_size', 20, 'Size of aggregated representation of neighbours, a hidden dimension')
+flags.DEFINE_integer('embedding_size', 32, 'Size of the output of "combine" operation, taking place at each depth, '
+                                           'and the final size of the embeddings')
 flags.DEFINE_integer('max_training_steps', 50, 'Max number of gradient steps to take during gradient descent')
 
 # Sample selection params
@@ -87,25 +87,23 @@ class TestEndToEnd(unittest.TestCase):
         modes = (TRAIN, EVAL)
 
         client = grakn.Grakn(uri=URI)
-        sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
-        transactions = grakn_mgmt.get_transactions(sessions)
+        sessions = server_mgmt.get_sessions(client, KEYSPACES)
+        transactions = server_mgmt.get_transactions(sessions)
 
-        batch_size = buffer_size = NUM_PER_CLASS * FLAGS.num_classes
+        batch_size = NUM_PER_CLASS * FLAGS.num_classes
         kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
-                          FLAGS.features_length,
-                          FLAGS.starting_concepts_features_length,
-                          FLAGS.aggregated_length,
-                          FLAGS.output_length,
+                          FLAGS.features_size,
+                          FLAGS.starting_concepts_features_size,
+                          FLAGS.aggregated_size,
+                          FLAGS.embedding_size,
                           transactions[TRAIN],
                           batch_size,
-                          buffer_size,
-                          sampling_method=random_sampling.random_sample,
-                          sampling_limit_factor=4
-                          )
+                          neighbour_sampling_method=random_sampling.random_sample,
+                          neighbour_sampling_limit_factor=4)
 
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-        classifier = downstream.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, None,
-                                                         max_training_steps=FLAGS.max_training_steps)
+        classifier = classify.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, None,
+                                                       max_training_steps=FLAGS.max_training_steps)
 
         feed_dicts = {}
 
@@ -114,13 +112,16 @@ class TestEndToEnd(unittest.TestCase):
             EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
             PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
         }
-        concepts, labels = samp_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
-                                                               LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
-                                                               transactions[TRAIN], transactions[PREDICT],
-                                                               sampling_params)
+        concepts, labels = thing_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
+                                                                LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
+                                                                transactions[TRAIN], transactions[PREDICT],
+                                                                sampling_params)
 
         for mode in modes:
             feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=labels[mode])
+
+        # Note: The ground-truth attribute labels haven't been removed from Grakn, so the results found here are
+        # invalid, and used as an end-to-end test only
 
         # Train
         if TRAIN in modes:
@@ -133,8 +134,8 @@ class TestEndToEnd(unittest.TestCase):
             # Presently, eval keyspace is the same as the TRAIN keyspace
             classifier.eval(feed_dicts[EVAL])
 
-        grakn_mgmt.close(sessions)
-        grakn_mgmt.close(transactions)
+        server_mgmt.close(sessions)
+        server_mgmt.close(transactions)
 
 
 if __name__ == "__main__":

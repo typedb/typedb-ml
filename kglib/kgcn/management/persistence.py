@@ -17,7 +17,7 @@
 #  under the License.
 #
 
-from kglib.kgcn.preprocess import persistence as persistence
+from kglib.kgcn.core.ingest.preprocess import persistence as persistence
 
 
 def load_saved_labelled_concepts(keyspaces, transactions, saved_labels_path):
