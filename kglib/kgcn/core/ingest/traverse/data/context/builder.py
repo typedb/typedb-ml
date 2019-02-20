@@ -26,8 +26,8 @@ import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
 def update_dict_lists(dict_to_add, dict_to_update):
-    for key, value in dict_to_add.items():
-        dict_to_update.setdefault(key, []).extend(value)
+    for key, contained_list in dict_to_add.items():
+        dict_to_update.setdefault(key, [])[0:0] = contained_list
     return dict_to_update
 
 
@@ -35,6 +35,7 @@ class ContextBuilder:
     def __init__(self, depth_samplers, neighbour_finder=neighbour.NeighbourFinder()):
         self._neighbour_finder = neighbour_finder
         self._depth_samplers = depth_samplers
+        self._max_depth = len(self._depth_samplers)
 
     def build_batch(self, session: grakn.Session, grakn_things: typ.List[neighbour.Thing]):
         things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
@@ -52,17 +53,16 @@ class ContextBuilder:
         return context_batch
 
     def build(self, tx: grakn.Transaction, example_thing: neighbour.Thing):
-        # depth = len(self._depth_samplers)
         depth = 0
         return self._traverse_from_thing(example_thing, depth, (), tx)
 
     def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, indices: tuple, tx):
 
-        if depth == len(self._depth_samplers):
+        if depth == self._max_depth:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
             return {}
 
-        sampler = self._depth_samplers[-depth]  # TODO Check this!
+        sampler = self._depth_samplers[depth]
 
         # Any concept could play a role in a relationship if the schema permits it
         # Distinguish the concepts found as roles-played

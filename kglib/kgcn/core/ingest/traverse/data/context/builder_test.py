@@ -29,17 +29,48 @@ import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mocks
 
 
+class TestUpdateDictLists(unittest.TestCase):
+
+    def test_order_list_update(self):
+        dict_to_update = {1: ['a'], 2: ['s'], 3: ['x']}
+        dict_to_add = {1: ['b'], 2: ['t'], 3: ['y']}
+        updated_dict = builder.update_dict_lists(dict_to_add, dict_to_update)
+        expected_dict = {1: ['b', 'a'], 2: ['t', 's'], 3: ['y', 'x']}
+        self.assertEqual(expected_dict, updated_dict)
+
+    def test_key_not_overwritten(self):
+        dict_to_update = {1: ['a']}
+        dict_to_add = {1: ['b']}
+        updated_dict = builder.update_dict_lists(dict_to_add, dict_to_update)
+        expected_dict = {1: ['b', 'a']}
+        self.assertEqual(expected_dict, updated_dict)
+
+    def test_key_added(self):
+        dict_to_update = {}
+        dict_to_add = {1: ['a']}
+        updated_dict = builder.update_dict_lists(dict_to_add, dict_to_update)
+        expected_dict = {1: ['a']}
+        self.assertEqual(expected_dict, updated_dict)
+
+    def test_update_with_one_key_absent(self):
+        dict_to_update = {1: ['a'], 2: ['s']}
+        dict_to_add = {1: ['b']}
+        updated_dict = builder.update_dict_lists(dict_to_add, dict_to_update)
+        expected_dict = {1: ['b', 'a'], 2: ['s']}
+        self.assertEqual(expected_dict, updated_dict)
+
+
 class TestContextBuilder(unittest.TestCase):
 
     def test_input_output(self):
 
-        neighbour_sample_sizes = (2, 1)
+        neighbour_sample_sizes = (2, 1, 3)
 
         samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.DummyNeighbourFinder())
 
         context = context_builder.build(unittest.mock.Mock(grakn.Transaction), starting_thing)
 
@@ -48,7 +79,7 @@ class TestContextBuilder(unittest.TestCase):
 
 class ITContextBuilder(unittest.TestCase):
 
-    def test_input_output(self):
+    def test_sampling_limits_correctly(self):
         """
         Runs using real samplers
         :return:
@@ -56,11 +87,13 @@ class ITContextBuilder(unittest.TestCase):
 
         sampling_method = ordered.ordered_sample
 
-        samplers = [samp.Sampler(2, sampling_method, limit=2), samp.Sampler(3, sampling_method, limit=1)]
+        samplers = [samp.Sampler(2, sampling_method, limit=2),
+                    samp.Sampler(1, sampling_method, limit=1),
+                    samp.Sampler(3, sampling_method, limit=3)]
 
         starting_thing = neighbour.Thing("0", "person", "entity")
 
-        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.DummyNeighbourFinder())
 
         context = context_builder.build(unittest.mock.Mock(grakn.Transaction), starting_thing)
 
@@ -241,7 +274,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         starting_thing = neighbour.Thing("0", "person", "entity")
         things = [starting_thing]
 
-        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.DummyNeighbourFinder())
 
         self._neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
 
