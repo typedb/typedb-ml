@@ -27,14 +27,16 @@ def gen(elements):
 
 
 def mock_traversal_output():
-    return [
-        builder.Node((0,), neighbour.Thing("0", "person", "entity")),
-        builder.Node((0, 0), neighbour.Thing("1", "employment", "relationship"), "employee", neighbour.TARGET_PLAYS),
-        builder.Node((0, 0, 0), neighbour.Thing("2", "company", "entity"), "employer", neighbour.NEIGHBOUR_PLAYS),
-        builder.Node((1, 0), neighbour.Thing("3", "@has-name", "relationship"), "@has-name-owner",
-                     neighbour.TARGET_PLAYS),
-        builder.Node((0, 1, 0), neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
-                     "@has-name-value", neighbour.NEIGHBOUR_PLAYS)]
+    return {
+        0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+        1: [builder.Node((0,), neighbour.Thing("1", "employment", "relationship"), "employee", neighbour.TARGET_PLAYS),
+            builder.Node((1,), neighbour.Thing("3", "@has-name", "relationship"), "@has-name-owner",
+                         neighbour.TARGET_PLAYS)],
+        2: [builder.Node((0, 1), neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
+                         "@has-name-value", neighbour.NEIGHBOUR_PLAYS),
+            builder.Node((0, 0), neighbour.Thing("2", "company", "entity"), "employer", neighbour.NEIGHBOUR_PLAYS),
+            ]
+    }
 
 
 def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighbour_metatype, data_type=None,

@@ -25,6 +25,12 @@ import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
+def update_dict_lists(dict_to_add, dict_to_update):
+    for key, value in dict_to_add.items():
+        dict_to_update.setdefault(key, []).extend(value)
+    return dict_to_update
+
+
 class ContextBuilder:
     def __init__(self, depth_samplers, neighbour_finder=neighbour.NeighbourFinder()):
         self._neighbour_finder = neighbour_finder
@@ -46,33 +52,36 @@ class ContextBuilder:
         return context_batch
 
     def build(self, tx: grakn.Transaction, example_thing: neighbour.Thing):
-        depth = len(self._depth_samplers)
-        return self._traverse_from_thing(example_thing, depth, (0,), tx)
+        # depth = len(self._depth_samplers)
+        depth = 0
+        return self._traverse_from_thing(example_thing, depth, (), tx)
 
     def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, indices: tuple, tx):
 
-        if depth == 0:
-            # # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return []
+        if depth == len(self._depth_samplers):
+            # This marks the end of the recursion, so there are no neighbours in the neighbourhood
+            return {}
 
-        sampler = self._depth_samplers[-depth]
-        next_depth = depth - 1
+        sampler = self._depth_samplers[-depth]  # TODO Check this!
 
         # Any concept could play a role in a relationship if the schema permits it
         # Distinguish the concepts found as roles-played
         connections = self._neighbour_finder.find(starting_thing.id, tx)
 
-        if depth == len(self._depth_samplers):
-            nodes = [Node(indices, starting_thing)]
-        else:
-            nodes = []
+        nodes = {}
+        if depth == 0:
+            nodes[0] = [Node(indices, starting_thing)]
+
+        next_depth = depth + 1
+
         # Sample the neighbourhood and iterate over the results
         for i, connection in enumerate(sampler(connections)):
             next_indices = (i,) + indices
-            nodes.append(Node(indices=next_indices, thing=connection['neighbour_thing'], role_label=connection['role_label'],
-                              role_direction=connection['role_direction']))
+            nodes.setdefault(next_depth, []).append(Node(indices=next_indices, thing=connection['neighbour_thing'],
+                                                         role_label=connection['role_label'],
+                                                         role_direction=connection['role_direction']))
             child_nodes = self._traverse_from_thing(connection['neighbour_thing'], next_depth, next_indices, tx)
-            nodes.extend(child_nodes)
+            nodes = update_dict_lists(nodes, child_nodes)
 
         return nodes
 
