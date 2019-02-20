@@ -18,7 +18,7 @@
 #
 
 import unittest
-import unittest.mock
+import unittest.mock as mock
 
 import grakn
 
@@ -62,19 +62,44 @@ class TestUpdateDictLists(unittest.TestCase):
 
 class TestContextBuilder(unittest.TestCase):
 
-    def test_input_output(self):
+    def test_neighbour_finder_called_with_root_node_id(self):
 
-        neighbour_sample_sizes = (2, 1, 3)
+        tx_mock = mock.Mock(grakn.Transaction)
+        sampler = mock.Mock(samp.Sampler)
+        sampler.return_value = []
 
-        samplers = [lambda x: x for sample_size in neighbour_sample_sizes]
+        starting_thing = mock.MagicMock(neighbour.Thing, id="0")
+        mock_neighbour_finder = mock.MagicMock(neighbour.NeighbourFinder)
 
-        starting_thing = neighbour.Thing("0", "person", "entity")
+        context_builder = builder.ContextBuilder([sampler], neighbour_finder=mock_neighbour_finder)
 
-        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.DummyNeighbourFinder())
+        # The call to assess
+        context_builder.build(tx_mock, starting_thing)
 
-        context = context_builder.build(unittest.mock.Mock(grakn.Transaction), starting_thing)
+        mock_neighbour_finder.find.assert_called_once_with("0", tx_mock)
 
-        self.assertEqual(context, mocks.mock_traversal_output())
+    def test_neighbour_finder_called_with_root_and_neighbour_ids(self):
+
+        tx_mock = mock.Mock(grakn.Transaction)
+        sampler = mock.Mock(samp.Sampler)
+        sampler.return_value = mocks.gen([
+                mocks._build_data("employee", neighbour.TARGET_PLAYS, "1", "employment", "relationship"),
+                mocks._build_data("@has-name-owner", neighbour.TARGET_PLAYS, "3", "@has-name", "relationship"),
+            ])
+        sampler2 = mock.Mock(samp.Sampler)
+        sampler2.return_value = []
+
+        starting_thing = mock.MagicMock(neighbour.Thing, id="0")
+        mock_neighbour_finder = mock.MagicMock(neighbour.NeighbourFinder)
+
+        context_builder = builder.ContextBuilder([sampler, sampler2], neighbour_finder=mock_neighbour_finder)
+
+        # The call to assess
+        context_builder.build(tx_mock, starting_thing)
+
+        print(mock_neighbour_finder.find.mock_calls)
+        mock_neighbour_finder.find.assert_has_calls(
+            [mock.call("0", tx_mock), mock.call("1", tx_mock), mock.call("3", tx_mock)])
 
 
 class ITContextBuilder(unittest.TestCase):
@@ -95,7 +120,7 @@ class ITContextBuilder(unittest.TestCase):
 
         context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.DummyNeighbourFinder())
 
-        context = context_builder.build(unittest.mock.Mock(grakn.Transaction), starting_thing)
+        context = context_builder.build(mock.Mock(grakn.Transaction), starting_thing)
 
         self.assertEqual(context, mocks.mock_traversal_output())
 
