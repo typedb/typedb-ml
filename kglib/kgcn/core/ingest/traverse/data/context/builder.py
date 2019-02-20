@@ -77,10 +77,10 @@ class ContextBuilder:
         # Sample the neighbourhood and iterate over the results
         for i, connection in enumerate(sampler(connections)):
             next_indices = (i,) + indices
-            nodes.setdefault(next_depth, []).append(Node(indices=next_indices, thing=connection['neighbour_thing'],
-                                                         role_label=connection['role_label'],
-                                                         role_direction=connection['role_direction']))
-            child_nodes = self._traverse_from_thing(connection['neighbour_thing'], next_depth, next_indices, tx)
+            nodes.setdefault(next_depth, []).append(Node(indices=next_indices, thing=connection.neighbour_thing,
+                                                         role_label=connection.role_label,
+                                                         role_direction=connection.role_direction))
+            child_nodes = self._traverse_from_thing(connection.neighbour_thing, next_depth, next_indices, tx)
             nodes = update_dict_lists(nodes, child_nodes)
 
         return nodes

@@ -53,13 +53,13 @@ class BaseTestNeighbourFinder:
 
         def test_role_is_in_neighbour_roles(self):
             for role in self.roles:
-                self.assertIn(role, [r['role_label'] for r in self._res])
+                self.assertIn(role, [r.role_label for r in self._res])
 
         def test_role_sets_equal(self):
-            self.assertSetEqual(set(self.roles), {r['role_label'] for r in self._res})
+            self.assertSetEqual(set(self.roles), {r.role_label for r in self._res})
 
         def test_neighbour_type_in_found_neighbours(self):
-            self.assertIn(self.neighbour_type, [r['neighbour_thing'].type_label for r in self._res])
+            self.assertIn(self.neighbour_type, [r.neighbour_thing.type_label for r in self._res])
 
         def test_num_results(self):
             self.assertEqual(self.num_results, len(self._res))

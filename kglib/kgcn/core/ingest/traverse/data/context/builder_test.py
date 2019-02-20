@@ -83,9 +83,11 @@ class TestContextBuilder(unittest.TestCase):
         tx_mock = mock.Mock(grakn.Transaction)
         sampler = mock.Mock(samp.Sampler)
         sampler.return_value = mocks.gen([
-                mocks._build_data("employee", neighbour.TARGET_PLAYS, "1", "employment", "relationship"),
-                mocks._build_data("@has-name-owner", neighbour.TARGET_PLAYS, "3", "@has-name", "relationship"),
-            ])
+            mock.MagicMock(neighbour.Connection, role_label="employmee", role_direction=1,
+                           neighbour_thing=mock.MagicMock(neighbour.Thing, id="1")),
+            mock.MagicMock(neighbour.Connection, role_label="@has-name-owner", role_direction=1,
+                           neighbour_thing=mock.MagicMock(neighbour.Thing, id="3")),
+        ])
         sampler2 = mock.Mock(samp.Sampler)
         sampler2.return_value = []
 

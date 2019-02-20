@@ -128,8 +128,7 @@ class NeighbourFinder:
                 neighbour_grakn_thing = answer.get(base_query['neighbour_variable'])
                 neighbour_thing = build_thing(neighbour_grakn_thing)
 
-                yield {'role_label': role_label, 'role_direction': base_query['role_direction'],
-                       'neighbour_thing': neighbour_thing}
+                yield Connection(role_label, base_query['role_direction'], neighbour_thing)
 
     def _find_roles(self, thing, relationship, tx):
         query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
@@ -149,8 +148,7 @@ class NeighbourFinder:
 
         for attribute in attributes:
             neighbour_thing = build_thing(attribute)
-            yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': NEIGHBOUR_PLAYS,
-                   'neighbour_thing': neighbour_thing}
+            yield Connection(self.ATTRIBUTE_ROLE_LABEL, NEIGHBOUR_PLAYS, neighbour_thing)
 
     def _find_neighbours_from_attribute(self, tx, target_thing):
 
@@ -160,8 +158,7 @@ class NeighbourFinder:
 
         for neighbour in neighbours:
             neighbour_thing = build_thing(neighbour)
-            yield {'role_label': self.ATTRIBUTE_ROLE_LABEL, 'role_direction': TARGET_PLAYS,
-                   'neighbour_thing': neighbour_thing}
+            yield Connection(self.ATTRIBUTE_ROLE_LABEL, TARGET_PLAYS, neighbour_thing)
 
 
 def find_lowest_role_from_role_sups(role_sups):
@@ -193,6 +190,13 @@ class Thing(utils.PropertyComparable):
         # If the thing is an attribute
         self.data_type = data_type
         self.value = value
+
+
+class Connection:
+    def __init__(self, role_label, role_direction, neighbour_thing):
+        self.role_label = role_label
+        self.role_direction = role_direction
+        self.neighbour_thing = neighbour_thing
 
 
 def build_thing(grakn_thing):
