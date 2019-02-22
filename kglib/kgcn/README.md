@@ -9,7 +9,7 @@ A KGCN can be used to create vector representations, *embeddings*, of any labell
 1. A KGCN can be trained directly for the classification or regression of Things stored in Grakn. 
 2. Future work will include building embeddings via unsupervised learning.
 
-## Application
+## What is it used for?
 
 Often, data doesn't fit well into a tabular format. There are many benefits to storing complex and interrelated data in a knowledge graph, not least that the context of each datapoint can be stored in full.
 
@@ -17,7 +17,7 @@ However, many existing machine learning techniques rely upon an *input vector fo
 
 In order to make use of the wealth of existing ideas, tools and pipelines in machine learning, we need a method of building a vector to describe a datapoint in a knowledge graph. In this way we can leverage contextual information from a knowledge graph for machine learning.
 
-This is what a KGCN can achieve. Given an example datapoint taken from a knowledge graph, it can examine the nodes in the vicinity of a example, its *context*. Based on this context it can determine a vector representation, an *embedding*, for that example.
+This is what a KGCN can achieve. Given an example datapoint taken from a knowledge graph, it can examine the nodes in the vicinity of an example, its *context*. Based on this context it can determine a vector representation, an *embedding*, for that example.
 
 **There are two broad learning tasks a KGCN is suitable for:**
 
@@ -30,8 +30,6 @@ In order to build a *useful* representation, a KGCN needs to perform some learni
 
 1. In the supervised case, we can optimise for the exact task we want to perform. In this case embeddings are interim tensors in a learning pipeline
 2. To build unsupervised embeddings as the output, we optimise to minimise some similarity metrics across the graph
-
-
 
 ## Quickstart
 
