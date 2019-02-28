@@ -16,8 +16,8 @@ Please replace every line in curly brackets ( { like this } ) with appropriate a
 
 ## Proposed Solution
 
-{ Please describe the solution you would Grakn to provide, to solve the problem above. }
+{ Please describe the solution you would like Grakn to provide, to solve the problem above. }
 
-## Additional context
+## Additional Information
 
 { Any additional information, including logs or screenshots if you have any. }
