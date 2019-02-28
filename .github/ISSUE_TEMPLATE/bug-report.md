@@ -14,7 +14,7 @@ Please replace every line in curly brackets ( { like this } ) with appropriate a
 
 1. OS (where Grakn server runs): { e.g. Mac OS 10, Windows 10, Ubuntu 16.4, etc. }
 2. Grakn version (and platform): { e.g. Grakn Core 1.4, or Grakn KGMS 1.4.3 on Google Cloud }
-3. Grakn client: { e.g. client-java, client-python, client-nodejs, or console }
+3. Grakn KGLIB and client-python version: { e.g. KGLIB 0.1 and client-python 1.4 }
 4. Other environment details:
 
 ## Reproducible Steps
