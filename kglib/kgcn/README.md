@@ -46,7 +46,8 @@ In order to build a *useful* representation, a KGCN needs to perform some learni
 The following is a template of what must be defined in order to instantiate a KGCN, optimised for a downstream learning task of multi-class classification:
 
 ```python
-import kglib.kgcn.embed.model as model
+import kglib.kgcn.core.model as model
+import kglib.kgcn.learn.classify as classify
 import tensorflow as tf
 import grakn
 
@@ -65,10 +66,16 @@ kgcn = model.KGCN(neighbour_sample_sizes,
                   batch_size)
 
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-classifier = learn.classify.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
-                                                        max_training_steps=max_training_steps)
 
-training_feed_dict = classifier.get_feed_dict(session, training_things, labels=training_labels)
+classifier = classify.SupervisedKGCNClassifier(kgcn,
+                                               optimizer, 
+                                               num_classes, 
+                                               log_dir,
+                                               max_training_steps=max_training_steps)
+
+training_feed_dict = classifier.get_feed_dict(session, 
+                                              training_things, 
+                                              labels=training_labels)
 
 classifier.train(training_feed_dict)
 
