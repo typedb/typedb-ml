@@ -20,7 +20,7 @@
 import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
 
-TARGET_PLAYS = 0  # In this case, the neighbour is a relationship in which this thing plays a role
+TARGET_PLAYS = 0  # In this case, the neighbour is a relation in which this thing plays a role
 NEIGHBOUR_PLAYS = 1  # In this case the target
 
 DATA_TYPE_NAMES = ('long', 'double', 'boolean', 'date', 'string')
@@ -46,20 +46,20 @@ class NeighbourFinder:
     ATTRIBUTE_ROLE_LABEL = 'has'
 
     ROLE_QUERY = {
-        'query': "match $thing id {}; $relationship id {}; $relationship($role: $thing); get $role;",
+        'query': "match $thing id {}; $relation id {}; $relation($role: $thing); get $role;",
         'variable': 'role'
     }
 
     ROLES_PLAYED_QUERY = {
-        'query': "match $thing id {}; $relationship($thing); get $relationship, $thing;",
+        'query': "match $thing id {}; $relation($thing); get $relation, $thing;",
         'role_direction': TARGET_PLAYS,
         'target_variable': 'thing',
-        'neighbour_variable': 'relationship'}
+        'neighbour_variable': 'relation'}
 
     ROLEPLAYERS_QUERY = {
-        'query': "match $relationship id {}; $relationship($thing); get $thing, $relationship;",
+        'query': "match $relation id {}; $relation($thing); get $thing, $relation;",
         'role_direction': NEIGHBOUR_PLAYS,
-        'target_variable': 'relationship',
+        'target_variable': 'relation',
         'neighbour_variable': 'thing'}
 
     def __init__(self, find_neighbours_from_attributes=True, roles_played_query=ROLES_PLAYED_QUERY,
@@ -89,38 +89,38 @@ class NeighbourFinder:
             if target_thing.is_attribute() and self._find_neighbours_from_attributes:
                 yield from self._find_neighbours_from_attribute(tx, target_thing)
 
-            # # Connections to entities, relationships and optionally implicit relationships
-            # yield from self._find_entity_and_relationship_neighbours(query_direction, thing_id, tx)
+            # # Connections to entities, relations and optionally implicit relations
+            # yield from self._find_entity_and_relation_neighbours(query_direction, thing_id, tx)
 
-            yield from self._find_neighbour_relationships_where_thing_plays_role(tx, thing_id)
+            yield from self._find_neighbour_relations_where_thing_plays_role(tx, thing_id)
 
-            if target_thing.is_relationship():
+            if target_thing.is_relation():
                 yield from self._find_neighbour_roleplayers(tx, thing_id)
 
         return _link_iterator()
 
-    def _find_neighbour_relationships_where_thing_plays_role(self, tx, thing_id):
+    def _find_neighbour_relations_where_thing_plays_role(self, tx, thing_id):
         base_query = self.ROLES_PLAYED_QUERY
         thing_variable = base_query['target_variable']
-        relationship_variable = base_query['neighbour_variable']
-        yield from self._get_role_link(tx, base_query, relationship_variable, thing_variable, thing_id)
+        relation_variable = base_query['neighbour_variable']
+        yield from self._get_role_link(tx, base_query, relation_variable, thing_variable, thing_id)
 
     def _find_neighbour_roleplayers(self, tx, thing_id):
         base_query = self.ROLEPLAYERS_QUERY
         thing_variable = base_query['neighbour_variable']
-        relationship_variable = base_query['target_variable']
-        yield from self._get_role_link(tx, base_query, relationship_variable, thing_variable, thing_id)
+        relation_variable = base_query['target_variable']
+        yield from self._get_role_link(tx, base_query, relation_variable, thing_variable, thing_id)
 
-    def _get_role_link(self, tx, base_query, relationship_variable, thing_variable, thing_id):
+    def _get_role_link(self, tx, base_query, relation_variable, thing_variable, thing_id):
         query = base_query['query'].format(thing_id)
         print(query)
         link_iterator = self._query(query, tx)
 
         for answer in link_iterator:
-            relationship = answer.get(relationship_variable)
+            relation = answer.get(relation_variable)
             thing = answer.get(thing_variable)
-            if not(relationship.type().is_implicit() or thing.type().is_implicit()):
-                role_sups = self._find_roles(thing, relationship, tx)
+            if not(relation.type().is_implicit() or thing.type().is_implicit()):
+                role_sups = self._find_roles(thing, relation, tx)
                 role = find_lowest_role_from_role_sups(role_sups)
 
                 role_label = role.label()
@@ -130,8 +130,8 @@ class NeighbourFinder:
 
                 yield Connection(role_label, base_query['role_direction'], neighbour_thing)
 
-    def _find_roles(self, thing, relationship, tx):
-        query_str = self.ROLE_QUERY['query'].format(thing.id, relationship.id)
+    def _find_roles(self, thing, relation, tx):
+        query_str = self.ROLE_QUERY['query'].format(thing.id, relation.id)
         answers = self._query(query_str, tx)
         role_sups = [answer.get(self.ROLE_QUERY['variable']) for answer in answers]
         return role_sups
@@ -140,7 +140,7 @@ class NeighbourFinder:
 
         if target_thing.type().is_implicit():
             raise ValueError(
-                "A target thing has been found to be implicit, but using implicit relationships has "
+                "A target thing has been found to be implicit, but using implicit relations has "
                 "been optionally disabled")
 
         attribute_query = self.ATTRIBUTE_QUERY['query'].format(thing_id)
@@ -205,7 +205,7 @@ def build_thing(grakn_thing):
     type_label = grakn_thing.type().label()
     base_type_label = grakn_thing.base_type.lower()
 
-    assert(base_type_label in ['entity', 'relationship', 'attribute'])
+    assert(base_type_label in ['entity', 'relation', 'attribute'])
 
     if base_type_label == 'attribute':
         data_type = grakn_thing.type().data_type().name.lower()

@@ -67,9 +67,9 @@ class DummyNeighbourFinder:
 
             role_direction = neighbour.TARGET_PLAYS
             yield from gen([
-                _build_data("employee", role_direction, "1", "employment", "relationship"),
-                _build_data("@has-name-owner", role_direction, "3", "@has-name", "relationship"),
-                'faux object, shouldn\'t be found'
+                _build_data("employee", role_direction, "1", "employment", "relation"),
+                _build_data("@has-name-owner", role_direction, "3", "@has-name", "relation")
+                # 'faux object, shouldn\'t be found'
             ])
 
         elif thing_id == "1":

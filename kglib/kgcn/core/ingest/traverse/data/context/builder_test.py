@@ -18,6 +18,7 @@
 #
 
 import unittest
+import unittest.mock as mock
 
 import grakn.client
 
@@ -63,7 +64,7 @@ class TestContextBuilder(unittest.TestCase):
 
     def test_neighbour_finder_called_with_root_node_id(self):
 
-        tx_mock = mock.Mock(grakn.Transaction)
+        tx_mock = mock.Mock(grakn.client.Transaction)
         sampler = mock.Mock(samp.Sampler)
         sampler.return_value = []
 
@@ -79,7 +80,7 @@ class TestContextBuilder(unittest.TestCase):
 
     def test_neighbour_finder_called_with_root_and_neighbour_ids(self):
 
-        tx_mock = mock.Mock(grakn.Transaction)
+        tx_mock = mock.Mock(grakn.client.Transaction)
         sampler = mock.Mock(samp.Sampler)
         sampler.return_value = mocks.gen([
             mock.MagicMock(neighbour.Connection, role_label="employmee", role_direction=1,
@@ -121,7 +122,7 @@ class ITContextBuilder(unittest.TestCase):
 
         context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.DummyNeighbourFinder())
 
-        context = context_builder.build(mock.Mock(grakn.Transaction), starting_thing)
+        context = context_builder.build(mock.Mock(grakn.client.Transaction), starting_thing)
 
         self.assertEqual(context, mocks.mock_traversal_output())
 

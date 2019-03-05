@@ -64,7 +64,7 @@ class ContextBuilder:
 
         sampler = self._depth_samplers[depth]
 
-        # Any concept could play a role in a relationship if the schema permits it
+        # Any concept could play a role in a relation if the schema permits it
         # Distinguish the concepts found as roles-played
         connections = self._neighbour_finder.find(starting_thing.id, tx)
 
