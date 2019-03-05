@@ -22,7 +22,7 @@ jobs:
       - run: wget https://storage.googleapis.com/kglib/grakn-core-all-20750ca0a46b4bc252ad81edccdfd8d8b7c46caa.zip
       - run: unzip grakn-core-all-20750ca0a46b4bc252ad81edccdfd8d8b7c46caa.zip
       - run: nohup grakn-core-all/grakn server start
-      - run: grakn-core-all/grakn console -k test_schema -f  kglib/kgcn/test_data/schema.gql
+      - run: cd grakn-core-all && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
       - run: bazel test //kglib/... --test_output=streamed --force_python PY3 --python_path $(which python)
 
   test-deploy-pip:
