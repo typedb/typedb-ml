@@ -13,15 +13,15 @@ A KGCN can be used to create vector representations, *embeddings*, of any labell
 
 Often, data doesn't fit well into a tabular format. There are many benefits to storing complex and interrelated data in a knowledge graph, not least that the context of each datapoint can be stored in full.
 
-However, many existing machine learning techniques rely upon an *input vector for each example*. This can make it difficult to directly apply many conventional machine learning techniques over a knowledge graph. 
+However, many existing machine learning techniques rely upon the existence of an *input vector for each example*. Creating such a vector to represent a node in a knowledge graph is non-trivial.
 
-In order to make use of the wealth of existing ideas, tools and pipelines in machine learning, we need a method of building a vector to describe a datapoint in a knowledge graph. In this way we can leverage contextual information from a knowledge graph for machine learning.
+In order to make use of the wealth of existing ideas, tools and pipelines in machine learning, we need a method of building these vectors. In this way we can leverage contextual information from a knowledge graph for machine learning.
 
-This is what a KGCN can achieve. Given an example datapoint taken from a knowledge graph, it can examine the nodes in the vicinity of an example, its *context*. Based on this context it can determine a vector representation, an *embedding*, for that example.
+This is what a KGCN can achieve. Given an example node in a knowledge graph, it can examine the nodes in the vicinity of that example, its *context*. Based on this context it can determine a vector representation, an *embedding*, for that example.
 
 **There are two broad learning tasks a KGCN is suitable for:**
 
-**1. Supervised learning from a knowledge graph for prediction e.g. multi-class classification (currently implemented), regression, link prediction**
+**1. Supervised learning from a knowledge graph for prediction e.g. multi-class classification (implemented), regression, link prediction**
 **2. Unsupervised creation of Knowledge Graph Embeddings, e.g. for clustering and node comparison tasks**
 
 ![KGCN Process](readme_images/KGCN_process.png)
@@ -46,7 +46,8 @@ In order to build a *useful* representation, a KGCN needs to perform some learni
 The following is a template of what must be defined in order to instantiate a KGCN, optimised for a downstream learning task of multi-class classification:
 
 ```python
-import kglib.kgcn.embed.model as model
+import kglib.kgcn.core.model as model
+import kglib.kgcn.learn.classify as classify
 import tensorflow as tf
 import grakn
 
@@ -65,10 +66,16 @@ kgcn = model.KGCN(neighbour_sample_sizes,
                   batch_size)
 
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-classifier = learn.classify.SupervisedKGCNClassifier(kgcn, optimizer, num_classes, log_dir,
-                                                        max_training_steps=max_training_steps)
 
-training_feed_dict = classifier.get_feed_dict(session, training_things, labels=training_labels)
+classifier = classify.SupervisedKGCNClassifier(kgcn,
+                                               optimizer, 
+                                               num_classes, 
+                                               log_dir,
+                                               max_training_steps=max_training_steps)
+
+training_feed_dict = classifier.get_feed_dict(session, 
+                                              training_things, 
+                                              labels=training_labels)
 
 classifier.train(training_feed_dict)
 
@@ -80,17 +87,17 @@ There is also a [full example](https://github.com/graknlabs/kglib/tree/master/ex
 
 ## Methodology
 
-The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68), and a [video of the presentation](https://youtu.be/Jx_Twc75ka0?t=368). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, heavily adapted to work over a knowledge graph. Instead of working on a typical property graph, a KGCN learns from the context of a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
+The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68), and a [video of the presentation](https://youtu.be/Jx_Twc75ka0?t=368). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, heavily adapted to work over a knowledge graph. Instead of working on a typical property graph, a KGCN learns from contextual data stored in a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
 
 Now we introduce the key components and how they interact.
 
 ### KGCN
 
-A KGCN is responsible for deriving embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the context of each example Thing. We do this by considering their *k-hop* neighbours.
+A KGCN is responsible for deriving embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the context of each example Thing. We do this by considering their neighbours, and their neighbours' neighbours, recursively, up to K hops away.
 
-![methodology](readme_images/methodology.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute* values of each neighbouring Thing encountered, and any inferred neighbours (represented above by dotted lines).
+![methodology](readme_images/methodology.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute value* of each neighbouring Thing encountered, and any inferred neighbours (represented above by dotted lines). This data is compiled into arrays to be ingested by a neural network.
 
-Via operations Aggregate and Combine, a single vector representation is built for a Thing. This process can be chained recursively over k-hops of neighbouring Things. This builds a representation for a Thing of interest that contains information extracted from a wide context.
+Via operations Aggregate and Combine, a single vector representation is built for a Thing. This process can be chained recursively over *K* hops of neighbouring Things. This builds a representation for a Thing of interest that contains information extracted from a wide context.
 
 ![chaining](readme_images/chaining.png)
 
@@ -104,7 +111,7 @@ In order to feed a TensorFlow neural network, we need regular array structures o
 
 - Id
 - Type
-- Meta-Type (either Entity or Relationship or Attribute)
+- Meta-Type (either Entity or Relation or Attribute)
 - Data-type (if it's an attribute)
 - Value (if it's an attribute)
 - The Role that connects the example to that neighbour

@@ -31,7 +31,7 @@ def mock_traversal_output():
         neighbour.Thing("0", "person", "entity"),
         [
             builder.Neighbour("employee", neighbour.TARGET_PLAYS, builder.ThingContext(
-                neighbour.Thing("1", "employment", "relationship"),
+                neighbour.Thing("1", "employment", "relation"),
                 [
                     builder.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
                         neighbour.Thing("2", "company", "entity"), []
@@ -39,7 +39,7 @@ def mock_traversal_output():
                 ]
             )),
             builder.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, builder.ThingContext(
-                neighbour.Thing("3", "@has-name", "relationship"),
+                neighbour.Thing("3", "@has-name", "relation"),
                 [
                     builder.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
                         neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
@@ -67,8 +67,8 @@ class MockNeighbourFinder:
 
             role_direction = neighbour.TARGET_PLAYS
             yield from gen([
-                _build_data("employee", role_direction, "1", "employment", "relationship"),
-                _build_data("@has-name-owner", role_direction, "3", "@has-name", "relationship")
+                _build_data("employee", role_direction, "1", "employment", "relation"),
+                _build_data("@has-name-owner", role_direction, "3", "@has-name", "relation")
             ])
 
         elif thing_id == "1":
