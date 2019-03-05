@@ -133,16 +133,6 @@ py_test(
     ]
 )
 
-py_test(
-    name = "test_client",
-    srcs = [
-        "test_client.py"
-    ],
-    deps = [
-        "kglib",
-    ]
-)
-
 py_library(
     name = "kglib",
     srcs = glob(['__init__.py', 'kgcn/**/*.py']),
