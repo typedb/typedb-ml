@@ -61,7 +61,7 @@ define
         has unit-of-measurement,
         plays quantification-measurement;
 
-    exchange sub relationship,
+    exchange sub relation,
         relates receiving-country,
         relates providing-country,
         relates exchanged-item,
@@ -80,11 +80,11 @@ define
         relates imported-item as exchanged-item,
         plays corresponding-import;
 
-    import-export-correspondence sub relationship,
+    import-export-correspondence sub relation,
         relates corresponding-import,
         relates corresponding-export;
 
-    quantification sub relationship,
+    quantification sub relation,
         relates quantified-subject,
         relates quantification-measurement;
 
@@ -111,7 +111,7 @@ define
         plays originated-species,
         plays sub-taxon;
 
-    hierarchy sub relationship,
+    hierarchy sub relation,
         relates superior,
         relates subordinate;
 
@@ -131,11 +131,11 @@ define
         relates containing-continent as container,
         relates contained-country as containee;
 
-    species-origination sub relationship,
+    species-origination sub relation,
         relates originating-country,
         relates originated-species;
 
-    taxon-membership sub relationship,
+    taxon-membership sub relation,
         relates member-item,
         relates taxonomic-group;
 

@@ -19,7 +19,7 @@
 
 import collections
 
-METATYPE_LABELS = ['thing', 'entity', 'relationship', 'attribute', 'role', '@has-attribute-value',
+METATYPE_LABELS = ['thing', 'entity', 'relation', 'attribute', 'role', '@has-attribute-value',
                    '@has-attribute-owner', '@has-attribute']
 
 

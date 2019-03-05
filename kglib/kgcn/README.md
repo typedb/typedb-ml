@@ -111,7 +111,7 @@ In order to feed a TensorFlow neural network, we need regular array structures o
 
 - Id
 - Type
-- Meta-Type (either Entity or Relationship or Attribute)
+- Meta-Type (either Entity or Relation or Attribute)
 - Data-type (if it's an attribute)
 - Value (if it's an attribute)
 - The Role that connects the example to that neighbour

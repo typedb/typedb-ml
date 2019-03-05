@@ -78,7 +78,7 @@ class TestNeighbourFinderFromEntity(BaseTestNeighbourFinder.TestNeighbourFinder)
         self._res = list(self._neighbour_finder.find(self._grakn_thing.id, self._tx))
 
 
-class TestNeighbourFinderFromRelationship(BaseTestNeighbourFinder.TestNeighbourFinder):
+class TestNeighbourFinderFromRelation(BaseTestNeighbourFinder.TestNeighbourFinder):
 
     query = "match $x isa employment; get;"
     var = 'x'
@@ -87,7 +87,7 @@ class TestNeighbourFinderFromRelationship(BaseTestNeighbourFinder.TestNeighbourF
     neighbour_type = 'person'
 
     def setUp(self):
-        super(TestNeighbourFinderFromRelationship, self).setUp()
+        super(TestNeighbourFinderFromRelation, self).setUp()
         self._res = list(self._neighbour_finder.find(self._grakn_thing.id, self._tx))
 
 
@@ -132,18 +132,18 @@ class TestNeighbourFinderFromDateAttribute(BaseTestNeighbourFinder.TestNeighbour
 
 
 class TestFindLowestRoleFromRoleSups(BaseGraknIntegrationTest.GraknIntegrationTest):
-    relationship_query = "match $employment(employee: $roleplayer) isa employment; get;"
+    relation_query = "match $employment(employee: $roleplayer) isa employment; get;"
     role_query = "match $employment id {}; $person id {}; $employment($role: $person); get $role;"
-    relationship_var = 'employment'
+    relation_var = 'employment'
     thing_var = 'roleplayer'
     role_var = 'role'
 
     def setUp(self):
         super(TestFindLowestRoleFromRoleSups, self).setUp()
-        ans = list(self._tx.query(self.relationship_query))[0]
+        ans = list(self._tx.query(self.relation_query))[0]
         self._thing = ans.get(self.thing_var)
-        self._relationship = ans.get(self.relationship_var)
-        role_query = self.role_query.format(self._relationship.id, self._thing.id)
+        self._relation = ans.get(self.relation_var)
+        role_query = self.role_query.format(self._relation.id, self._thing.id)
         self._role_sups = [r.get(self.role_var) for r in self._tx.query(role_query)]
 
     def test_role_matches(self):
@@ -182,20 +182,20 @@ class TestBuildThingForEntity(BaseTestBuildThing.TestBuildThing):
     base_type = 'entity'
 
 
-class TestBuildThingForRelationship(BaseTestBuildThing.TestBuildThing):
+class TestBuildThingForRelation(BaseTestBuildThing.TestBuildThing):
 
     query = "match $x isa employment; get;"
     var = 'x'
     type_label = 'employment'
-    base_type = 'relationship'
+    base_type = 'relation'
 
 
-class TestBuildThingForImplicitRelationship(BaseTestBuildThing.TestBuildThing):
+class TestBuildThingForImplicitRelation(BaseTestBuildThing.TestBuildThing):
 
     query = "match $x isa @has-job-title; get;"
     var = 'x'
     type_label = '@has-job-title'
-    base_type = 'relationship'  # TODO do we want to see @has-attribute here?
+    base_type = 'relation'  # TODO do we want to see @has-attribute here?
 
 
 class BaseTestBuildThingForAttribute:

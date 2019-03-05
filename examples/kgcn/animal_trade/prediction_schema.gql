@@ -24,7 +24,7 @@ prediction-score sub attribute, datatype double;
 
 traded-item has endangerment-level;
 
-value-prediction sub relationship,
+value-prediction sub relation,
     has prediction-score,
     relates predicted-value,
     relates predicting-kgcn-model;
@@ -49,7 +49,7 @@ match $t1 isa traded-item, has endangerment-level $el1 via $r1; $el1 1; $vp1(pre
 
 define
 
-suspicious-activity-detection sub relationship,
+suspicious-activity-detection sub relation,
     relates suspicious-activity,
     relates cause-of-suspicion;
 
