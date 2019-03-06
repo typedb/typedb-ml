@@ -25,7 +25,7 @@ job-title sub name;
 date-started sub attribute,
     datatype date;
 
-ownership sub relationship,
+ownership sub relation,
     relates owner,
     relates property;
 
@@ -48,7 +48,7 @@ person sub entity,
     plays member;
 
 
-affiliation sub relationship,
+affiliation sub relation,
     relates party;
 
 membership sub affiliation,

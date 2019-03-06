@@ -33,7 +33,7 @@ class TestKGCN(unittest.TestCase):
     - Number of neighbours to sample at each depth
     - How to sample those neighbours (incl. pseudo-random params)
     - Whether to propagate sampling through attributes
-    - Whether to use implicit relationships, or 'has' roles
+    - Whether to use implicit relations, or 'has' roles
     - Number of training steps
     - Learning rate
     - Optimiser e.g. AdamOptimiser

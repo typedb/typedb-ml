@@ -36,7 +36,7 @@ py_library(
         requirement('grakn-kglib'),
 
         # Grakn deps
-        requirement('grakn'),
+        requirement('grakn-client'),
         requirement('grpcio'),
 
         # TensorFlow deps
