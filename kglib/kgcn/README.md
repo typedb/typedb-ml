@@ -35,11 +35,13 @@ In order to build a *useful* representation, a KGCN needs to perform some learni
 
 **Requirements:**
 
-- Python 3.6.3 <= version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022))
+- Python 3.6.3 <= version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022)).
 
 - Ensure that `pip` uses the Python version listed above. Find out using 'pip --version'. By default `pip` may use Python 2, in which case you may need either `pip3`, or to create an isolated environment using `pipenv`/`virtualenv`, or change your global Python with `pyenv`.
 
 - kglib installed from pip: `pip install grakn-kglib`. 
+
+- A Grakn 1.5.2 server running locally on your machine.
 
 ### Usage
 
@@ -49,13 +51,13 @@ The following is a template of what must be defined in order to instantiate a KG
 import kglib.kgcn.core.model as model
 import kglib.kgcn.learn.classify as classify
 import tensorflow as tf
-import grakn
+import grakn.client
 
 URI = "localhost:48555"
 
-client = grakn.Grakn(uri=URI)
+client = grakn.client.GraknClient(uri=URI)
 session = client.session(keyspace=training_keyspace)
-transaction = session.transaction(grakn.TxType.WRITE)
+transaction = session.transaction().write()
 
 kgcn = model.KGCN(neighbour_sample_sizes,
                   features_size,

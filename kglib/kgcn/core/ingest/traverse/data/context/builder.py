@@ -30,12 +30,12 @@ class ContextBuilder:
         self._neighbour_finder = neighbour_finder
         self._depth_samplers = depth_samplers
 
-    def build_batch(self, session: grakn.Session, grakn_things: typ.List[neighbour.Thing]):
+    def build_batch(self, session: grakn.client.Session, grakn_things: typ.List[neighbour.Thing]):
         things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
 
         thing_contexts = []
         for thing in things:
-            tx = session.transaction(grakn.TxType.WRITE)
+            tx = session.transaction().write()
             print(f'Opening transaction {tx}')
             thing_context = self.build(tx, thing)
             thing_contexts.append(thing_context)
@@ -45,7 +45,7 @@ class ContextBuilder:
 
         return context_batch
 
-    def build(self, tx: grakn.Transaction, example_thing: neighbour.Thing):
+    def build(self, tx: grakn.client.Transaction, example_thing: neighbour.Thing):
         depth = len(self._depth_samplers)
         return self._traverse_from_thing(example_thing, depth, tx)
 

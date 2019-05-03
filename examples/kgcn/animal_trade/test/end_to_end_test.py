@@ -22,7 +22,7 @@ import subprocess as sub
 import time
 import unittest
 
-import grakn
+import grakn.client
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
@@ -86,7 +86,7 @@ class TestEndToEnd(unittest.TestCase):
 
         modes = (TRAIN, EVAL)
 
-        client = grakn.Grakn(uri=URI)
+        client = grakn.client.GraknClient(uri=URI)
         sessions = server_mgmt.get_sessions(client, KEYSPACES)
         transactions = server_mgmt.get_transactions(sessions)
 

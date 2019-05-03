@@ -19,7 +19,7 @@
 
 import unittest
 
-import grakn
+import grakn.client
 
 import kglib.kgcn.core.ingest.encode.encode as encode
 import kglib.kgcn.core.ingest.traverse.schema.executor as ex
@@ -29,9 +29,9 @@ import kglib.kgcn.core.ingest.traverse.schema.traversal as trv
 class TestGetSchemaConceptTypes(unittest.TestCase):
 
     def setUp(self):
-        client = grakn.Grakn(uri="localhost:48555")
+        client = grakn.client.GraknClient(uri="localhost:48555")
         session = client.session(keyspace="test_schema")
-        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = session.transaction().write()
 
     def tearDown(self):
         self._tx.close()
@@ -72,9 +72,9 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
         self._filtering(encode.GET_ROLE_TYPES_QUERY, 16)
 
     def test_integration(self):
-        client = grakn.Grakn(uri="localhost:48555")
+        client = grakn.client.GraknClient(uri="localhost:48555")
         session = client.session(keyspace="test_schema")
-        tx = session.transaction(grakn.TxType.WRITE)
+        tx = session.transaction().write()
 
         print("================= THINGS ======================")
         te = ex.TraversalExecutor(tx)

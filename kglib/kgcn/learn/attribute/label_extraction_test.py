@@ -74,7 +74,7 @@ class TestConceptLabelExtractor(unittest.TestCase):
         def get(variable):
             return responses_for_variables[variable]
 
-        self._grakn_tx = mock.Mock(grakn.Transaction)
+        self._grakn_tx = mock.Mock(grakn.client.Transaction)
         self._answer_mock = mock.Mock(response.Answer)
         self._answer_mock.get = mock.Mock()
         self._answer_mock.get.side_effect = get

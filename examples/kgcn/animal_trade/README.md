@@ -6,7 +6,7 @@
 
 - The requirements listed in the [KGCN quickstart](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn#quickstart)
 - The source code in order to access the example `git clone https://github.com/graknlabs/kglib.git`
-- The `grakn-animaltrade.zip` dataset from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a dataset that has been pre-loaded into Grakn v1.5 (so you don't have to run the data import yourself), with two keyspaces: `animaltrade_train` and `animaltrade_test`
+- The `grakn-1.5.2-animaltrade.zip` dataset from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a dataset that has been pre-loaded into Grakn 1.5.2 (so you don't have to run the data import yourself), with two keyspaces: `animaltrade_train` and `animaltrade_test`
 
 **To use:**
 
@@ -14,11 +14,11 @@
 
   - If you already have an instance of Grakn running, make sure to stop it using `./grakn server stop`
   
-  - Download `grakn-animaltrade.zip` from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a Grakn distribution, pre-loaded with the CITES dataset
+  - Download `grakn-1.5.2-animaltrade.zip` from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a Grakn distribution, pre-loaded with the CITES dataset
 
-  - Unzip the distribution `unzip grakn-animaltrade.zip`, where you store this doesn't matter
+  - Unzip the distribution `unzip grakn-1.5.2-animaltrade.zip`, where you store this doesn't matter
 
-  - cd into the distribution `cd grakn-animaltrade`
+  - cd into the distribution `cd grakn-1.5.2-animaltrade`
   
   - start Grakn `./grakn server start`
 
@@ -71,4 +71,4 @@ To re-generate the `feed_dicts`, delete the saved files in `dataset/10_concepts/
 ##### Picking new samples
 To pick different sample concepts to use for training/evaluation/prediction you need to:
 - Force the `feed-dict`s to re-generate by deleting the saved files (as above)
-- Use a fresh version of `grakn-animaltrade`, since the present one has had the supervised labels deleted!
+- Use a fresh version of `grakn-1.5.2-animaltrade`, since the present one has had the supervised labels deleted!
