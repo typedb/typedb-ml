@@ -22,7 +22,7 @@ jobs:
       - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-1.5.2.zip
       - run: unzip grakn-core-all-mac-1.5.2.zip
       - run: nohup grakn-core-all-mac-1.5.2/grakn server start
-      - run: cd grakn-core-all && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
+      - run: cd grakn-core-all-mac-1.5.2 && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
       - run: bazel test //kglib/... --test_output=streamed --force_python PY3 --python_path $(which python)
 
   test-deploy-pip:
