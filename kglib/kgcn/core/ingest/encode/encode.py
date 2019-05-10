@@ -83,7 +83,7 @@ class Encoder:
                 "https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1", 128)
 
             data_types = list(neighbour.DATA_TYPE_NAMES)
-            data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relationship is encountered
+            data_types.insert(0, NO_DATA_TYPE)  # For the case where an entity or relation is encountered
             data_types_traversal = {data_type: data_types for data_type in data_types}
 
             # Later a hierarchy could be added to data_type meaning. e.g. long and double are both numeric

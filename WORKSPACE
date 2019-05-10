@@ -42,6 +42,6 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 http_file(
   name = "animaltrade_dist",
-  urls = ["https://github.com/graknlabs/kglib/releases/download/v0.1a1/grakn-animaltrade.zip", # TODO How to update to the latest relase each time?
+  urls = ["https://storage.googleapis.com/kglib/grakn-core-all-mac-1.5.2.zip", # TODO How to update to the latest relase each time?
   ]
 )

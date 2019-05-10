@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-import collections
+
 import datetime
 import unittest
 
@@ -114,13 +114,13 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
 
 class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
     def setUp(self):
-        import grakn
+        import grakn.client
         entity_query = "match $x isa company, has name 'Google'; get;"
         uri = "localhost:48555"
         keyspace = "test_schema"
-        client = grakn.Grakn(uri=uri)
+        client = grakn.client.GraknClient(uri=uri)
         session = client.session(keyspace=keyspace)
-        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = session.transaction().write()
 
         neighbour_sample_sizes = (6, 4, 4)
         sampling_method = ordered.ordered_sample
@@ -229,7 +229,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, :, 1:, 0] = 0
 
-        arr = array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
+        array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -266,7 +266,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                            [16]]]]])
         arr[1, :, :, 1:, 0] = 0
 
-        arr = array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
+        array.fill_array_with_repeats(arr, (1, ..., slice(1), 0), (1, ..., slice(1, None), 0))
         print(arr)
 
         expected_output = np.array([[[[[1],
@@ -303,7 +303,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[1, 1:, 1, 0] = 0
 
-        arr = array.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
+        array.fill_array_with_repeats(arr, ([1], ..., slice(1), [1], [0]), ([1], ..., slice(1, None), [1], [0]))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -336,7 +336,7 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                           [12]]]])
         arr[0, 2:, 0, 0] = 0
 
-        arr = array.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
+        array.fill_array_with_repeats(arr, (0, ..., slice(2), 0, 0), (0, ..., slice(2, None), 0, 0))
         print(arr)
 
         expected_output = np.array([[[[1],
@@ -352,92 +352,6 @@ class TestFillArrayWithRepeats(unittest.TestCase):
                                      [[11],
                                       [12]]]])
         np.testing.assert_array_equal(expected_output, arr)
-
-
-class TestUpdateDepthwiseArraysWithNeighbour(unittest.TestCase):
-    def setUp(self):
-        self.current_indices = [0, 0]
-        self.depth = 0
-        context = builder.ThingContext(neighbour.Thing('1234', 'person', 'entity'), [])
-        self.nb = builder.Neighbour('employee', 0, context)
-
-        self.depthwise_arrays = [collections.OrderedDict(
-            [('role_type', np.array([['']], dtype='U50')),
-             ('role_direction', np.array([[0]], dtype=np.int)),
-             ('neighbour_type', np.array([['']], dtype=np.dtype('U50'))),
-             ('neighbour_data_type', np.array([['']], dtype=np.dtype('U10'))),
-             ('neighbour_value_long', np.array([[0]], dtype=np.int)),
-             ('neighbour_value_double', np.array([[0.0]], dtype=np.float)),
-             ('neighbour_value_boolean', np.array([[-1]], dtype=np.int)),
-             ('neighbour_value_date', np.array([['']], dtype='datetime64[s]')),
-             ('neighbour_value_string', np.array([['']], dtype=np.dtype('U50')))])]
-
-    def test_output_as_expected(self):
-        expected_output = [collections.OrderedDict(
-            [('role_type', np.array([['employee']], dtype='U50')),
-             ('role_direction', np.array([[0]], dtype=np.int)),
-             ('neighbour_type', np.array([['person']], dtype=np.dtype('U50'))),
-             ('neighbour_data_type', np.array([['']], dtype=np.dtype('U10'))),
-             ('neighbour_value_long', np.array([[0]], dtype=np.int)),
-             ('neighbour_value_double', np.array([[0.0]], dtype=np.float)),
-             ('neighbour_value_boolean', np.array([[-1]], dtype=np.int)),
-             ('neighbour_value_date', np.array([['']], dtype='datetime64[s]')),
-             ('neighbour_value_string', np.array([['']], dtype=np.dtype('U50')))])]
-        array._update_depthwise_arrays_with_neighbour(self.depthwise_arrays, self.current_indices,
-                                                                   self.depth, self.nb)
-        np.testing.assert_array_equal(expected_output, self.depthwise_arrays)
-
-
-class TestPutValuesIntoArray(unittest.TestCase):
-
-    def setUp(self):
-        self.values_to_put = collections.OrderedDict(
-            [('role_type', 'employee'),
-             ('role_direction', 0),
-             ('neighbour_type', 'person'),
-             ('neighbour_data_type', ''),
-             ('neighbour_value_long', 0),
-             ('neighbour_value_double', 0.0),
-             ('neighbour_value_boolean', -1),
-             ('neighbour_value_date', ''),
-             ('neighbour_value_string', '')])
-
-        self.current_indices = (0, 0)
-
-        self.arrays_at_this_depth = collections.OrderedDict(
-            [('role_type', np.array([['']], dtype='U50')),
-             ('role_direction', np.array([[0]], dtype=np.int)),
-             ('neighbour_type', np.array([['']], dtype=np.dtype('U50'))),
-             ('neighbour_data_type', np.array([['']], dtype=np.dtype('U10'))),
-             ('neighbour_value_long', np.array([[0]], dtype=np.int)),
-             ('neighbour_value_double', np.array([[0.0]], dtype=np.float)),
-             ('neighbour_value_boolean', np.array([[-1]], dtype=np.int)),
-             ('neighbour_value_date', np.array([['']], dtype='datetime64[s]')),
-             ('neighbour_value_string', np.array([['']], dtype=np.dtype('U50')))])
-
-    def test_output_as_expected(self):
-        expected_output = collections.OrderedDict(
-            [('role_type', np.array([['employee']], dtype='U50')),
-             ('role_direction', np.array([[0]], dtype=np.int)),
-             ('neighbour_type', np.array([['person']], dtype=np.dtype('U50'))),
-             ('neighbour_data_type', np.array([['']], dtype=np.dtype('U10'))),
-             ('neighbour_value_long', np.array([[0]], dtype=np.int)),
-             ('neighbour_value_double', np.array([[0.0]], dtype=np.float)),
-             ('neighbour_value_boolean', np.array([[-1]], dtype=np.int)),
-             ('neighbour_value_date', np.array([['']], dtype='datetime64[s]')),
-             ('neighbour_value_string', np.array([['']], dtype=np.dtype('U50')))])
-
-        output = array._put_values_into_array(self.arrays_at_this_depth, self.current_indices, self.values_to_put)
-        np.testing.assert_array_equal(expected_output, output)
-
-    def test_no_side_effects(self):
-        output = array._put_values_into_array(self.arrays_at_this_depth, self.current_indices, self.values_to_put)
-        self.assertNotEqual(id(self.arrays_at_this_depth), id(output))
-
-    def test_input_unchanged(self):
-        copy = self.arrays_at_this_depth.copy()
-        output = array._put_values_into_array(self.arrays_at_this_depth, self.current_indices, self.values_to_put)
-        np.testing.assert_array_equal(copy, self.arrays_at_this_depth)
 
 
 if __name__ == "__main__":
