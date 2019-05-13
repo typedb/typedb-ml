@@ -42,7 +42,7 @@
 
 The CITES dataset details exchanges of animal-based products between countries. In this example we aim to predict the value of `appendix` for a set of samples. This `appendix` can be thought of as the level of endangerment that a `traded-item` is subject to, where `1` represents the highest level of endangerment, and `3` the lowest.
 
-The [main](../../examples/kgcn/animal_trade/main.py) function will:
+The [main](../../../examples/kgcn/animal_trade/main.py) function will:
 
 - Search Grakn for 30 concepts (with attributes as labels) to use as the training set, 30 for the evaluation set, and 30 for the prediction set using queries such as (limiting the returned stream):
 
