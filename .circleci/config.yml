@@ -19,10 +19,10 @@ jobs:
       - run: sudo apt-get update
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
-      - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.2.zip
-      - run: unzip grakn-core-all-mac-animaltrade1.5.2.zip
-      - run: nohup grakn-core-all-mac-animaltrade1.5.2/grakn server start
-      - run: cd grakn-core-all-mac-animaltrade1.5.2 && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
+      - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip
+      - run: unzip grakn-core-all-mac-animaltrade1.5.3.zip
+      - run: nohup grakn-core-all-mac-animaltrade1.5.3/grakn server start
+      - run: cd grakn-core-all-mac-animaltrade1.5.3 && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
       - run: bazel test //kglib/... --test_output=streamed --force_python PY3 --python_path $(which python)
 
   test-deploy-pip:

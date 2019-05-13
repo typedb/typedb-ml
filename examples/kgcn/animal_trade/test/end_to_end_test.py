@@ -82,7 +82,7 @@ class TestEndToEnd(unittest.TestCase):
                           'external/animaltrade_dist/file/downloaded-unzipped'])
 
         # Start Grakn
-        sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-core-all-mac-animaltrade1.5.2/grakn', 'server', 'start'])
+        sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-core-all-mac-animaltrade1.5.3/grakn', 'server', 'start'])
 
         modes = (TRAIN, EVAL)
 
