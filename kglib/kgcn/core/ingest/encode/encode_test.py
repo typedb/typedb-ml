@@ -19,7 +19,7 @@
 
 import unittest
 
-import grakn
+import grakn.client
 import numpy as np
 import tensorflow as tf
 
@@ -31,9 +31,9 @@ class TestEncode(unittest.TestCase):
     def test_encode(self):
         keyspace="test_schema"
         uri="localhost:48555"
-        client = grakn.Grakn(uri=uri)
+        client = grakn.client.GraknClient(uri=uri)
         session = client.session(keyspace=keyspace)
-        tx = session.transaction(grakn.TxType.WRITE)
+        tx = session.transaction().write()
         encoder = encode.Encoder(tx)
 
         placeholders = [

@@ -20,7 +20,7 @@ import os
 import sys
 import time
 
-import grakn
+import grakn.client
 import tensorflow as tf
 
 import kglib.kgcn.management.grakn.server as grakn_mgmt
@@ -83,7 +83,7 @@ sys.stdout = logging.Logger(FLAGS.log_dir + '/output.log')
 
 def main(modes=(TRAIN, EVAL, PREDICT)):
 
-    client = grakn.Grakn(uri=URI)
+    client = grakn.client.GraknClient(uri=URI)
     sessions = grakn_mgmt.get_sessions(client, KEYSPACES)
     transactions = grakn_mgmt.get_transactions(sessions)
 

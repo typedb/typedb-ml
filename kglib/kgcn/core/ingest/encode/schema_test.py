@@ -107,6 +107,15 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)
         embeddings = encoder(tf.convert_to_tensor(example, tf.string))
 
+    def test_raise_exception_when_schema_traversal_empty(self):
+        tf.enable_eager_execution()
+        empty_schema_traversal = collections.OrderedDict()
+
+        with self.assertRaises(ValueError) as context:
+            se.MultiHotSchemaTypeEncoder(empty_schema_traversal)
+
+        self.assertTrue('The schema traversal supplied cannot be empty' in str(context.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
