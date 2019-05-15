@@ -93,6 +93,16 @@ py_test(
 )
 
 py_test(
+    name = "builder_IT",
+    srcs = [
+        "kgcn/core/ingest/traverse/data/context/builder_IT.py"
+    ],
+    deps = [
+        "kglib",
+    ]
+)
+
+py_test(
     name = "neighbour_test",
     srcs = [
         "kgcn/core/ingest/traverse/data/context/neighbour_test.py"

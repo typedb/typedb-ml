@@ -26,7 +26,7 @@ def gen(elements):
         yield el
 
 
-def mock_traversal_output():
+def mock_context():
     return {
         0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
         1: [builder.Node((0,), neighbour.Thing("1", "employment", "relationship"), "employee", neighbour.TARGET_PLAYS),
@@ -59,49 +59,30 @@ def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighb
                                                 value=value))
 
 
-class DummyNeighbourFinder:
+class MockNeighbourFinder:
 
     def find(self, thing_id, tx):
 
-        if thing_id == "0":
+        if thing_id == "0":  # person
 
-            role_direction = neighbour.TARGET_PLAYS
             yield from gen([
-                _build_data("employee", role_direction, "1", "employment", "relation"),
-                _build_data("@has-name-owner", role_direction, "3", "@has-name", "relation")
-                # 'faux object, shouldn\'t be found'
+                _build_data("has", neighbour.NEIGHBOUR_PLAYS, "1", "name", "attribute", data_type='string', value="Sundar Pichai"),
+                _build_data("employee", neighbour.TARGET_PLAYS, "2", "employment", "relation"),
             ])
 
-        elif thing_id == "1":
+        elif thing_id == "1":  # person's name
 
-            role_direction = neighbour.NEIGHBOUR_PLAYS
-            yield from gen([_build_data("employer", role_direction, "2", "company", "entity"),
-                            'faux object, shouldn\'t be found'])
+            yield from gen([_build_data("has", neighbour.TARGET_PLAYS, "0", "person", "entity")])
 
-        elif thing_id == "3":
+        elif thing_id == "2":  # employment relation
 
-            role_direction = neighbour.NEIGHBOUR_PLAYS
-            yield from gen([_build_data("@has-name-value", role_direction, "4", "name", "attribute",
-                                        data_type='string', value="Employee Name"),
-                            'faux object, shouldn\'t be found'])
+            yield from gen([_build_data("employer", neighbour.NEIGHBOUR_PLAYS, "3", "company", "entity"),
+                            _build_data("employee", neighbour.NEIGHBOUR_PLAYS, "0", "person", "entity")])
 
-        elif thing_id == "2":
-            # Mixes using implicit relationships and not, inconsistent as an example
-            role_direction = neighbour.NEIGHBOUR_PLAYS
-            yield from gen([_build_data("has", role_direction, "5a", "name", "attribute",
-                                        data_type='string', value="Google"),
-                            _build_data("has", role_direction, "5b", "name", "attribute",
-                                        data_type='string', value="Google"),
-                            _build_data("has", role_direction, "5c", "name", "attribute",
-                                        data_type='string', value="Google"),
-                           'faux object, shouldn\'t be found'])
+        elif thing_id == "3":  # company name
 
-        elif thing_id == "4":
-            role_direction = neighbour.TARGET_PLAYS
-            yield from gen([_build_data("@has-name-value", role_direction, "6a", "@has-name", "relationship"),
-                            _build_data("@has-name-value", role_direction, "6b", "@has-name", "relationship"),
-                            _build_data("@has-name-value", role_direction, "6c", "@has-name", "relationship"),
-                            'faux object, shouldn\'t be found'])
+            yield from gen([_build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
+                                        data_type='string', value="Google")])
 
         else:
             raise ValueError("This concept id hasn't been mocked")

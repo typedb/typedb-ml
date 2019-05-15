@@ -84,7 +84,7 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
 
     def _thing_contexts_factory(self):
         return builder.convert_thing_contexts_to_neighbours(
-            [mock.mock_traversal_output(), mock.mock_traversal_output()])
+            [mock.mock_context(), mock.mock_context()])
 
     def test_build_context_arrays(self):
 
@@ -161,7 +161,7 @@ class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
 
         self._neighbour_sample_sizes = (2, 3)
 
-        neighbourhood_depths = [mock.mock_traversal_output()]
+        neighbourhood_depths = [mock.mock_context()]
 
         neighbour_roles = builder.convert_thing_contexts_to_neighbours(neighbourhood_depths)
 
