@@ -58,9 +58,13 @@ class ContextBuilder:
 
     def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, indices: tuple, tx):
 
+        nodes = {}
+        if depth == 0:
+            nodes[0] = [Node(indices, starting_thing)]
+
         if depth == self._max_depth:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
-            return {}
+            return nodes
 
         sampler = self._depth_samplers[depth]
 
@@ -68,9 +72,7 @@ class ContextBuilder:
         # Distinguish the concepts found as roles-played
         connections = self._neighbour_finder.find(starting_thing.id, tx)
 
-        nodes = {}
-        if depth == 0:
-            nodes[0] = [Node(indices, starting_thing)]
+
 
         next_depth = depth + 1
 
