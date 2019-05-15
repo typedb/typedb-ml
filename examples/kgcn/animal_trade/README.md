@@ -29,7 +29,7 @@
 
     `./grakn console -k animaltrade_train`
 
-    `match $t isa traded-item; limit 1; get;`
+    `match $t isa traded-item; get; limit 1;`
 
     and then `exit`
 
