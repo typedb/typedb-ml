@@ -19,7 +19,7 @@
 
 import unittest
 
-import grakn
+import grakn.client
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 
@@ -32,7 +32,7 @@ class BaseGraknIntegrationTest:
 
         @classmethod
         def setUpClass(cls):
-            client = grakn.Grakn(uri="localhost:48555")
+            client = grakn.client.GraknClient(uri="localhost:48555")
             cls.session = client.session(keyspace=cls.keyspace)
 
         @classmethod
@@ -40,7 +40,7 @@ class BaseGraknIntegrationTest:
             cls.session.close()
 
         def setUp(self):
-            self._tx = self.session.transaction(grakn.TxType.WRITE)
+            self._tx = self.session.transaction().write()
             self._neighbour_finder = neighbour.NeighbourFinder()
 
 

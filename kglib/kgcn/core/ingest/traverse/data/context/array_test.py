@@ -114,13 +114,13 @@ class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
 
 class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
     def setUp(self):
-        import grakn
+        import grakn.client
         entity_query = "match $x isa company, has name 'Google'; get;"
         uri = "localhost:48555"
         keyspace = "test_schema"
-        client = grakn.Grakn(uri=uri)
+        client = grakn.client.GraknClient(uri=uri)
         session = client.session(keyspace=keyspace)
-        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = session.transaction().write()
 
         neighbour_sample_sizes = (6, 4, 4)
         sampling_method = ordered.ordered_sample

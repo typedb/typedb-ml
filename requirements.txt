@@ -4,7 +4,7 @@ absl-py==0.5.0
 astor==0.7.1
 decorator==4.3.0
 gast==0.2.0
-http://repo.grakn.ai/repository/test-pypi-group/packages/grakn-client/1.5.0-5459d5d88a30631c5ebdac3a9b0d5ea6f184c8ae/grakn-client-1.5.0-5459d5d88a30631c5ebdac3a9b0d5ea6f184c8ae.tar.gz
+grakn-client==1.5.3
 grpcio==1.15.0
 h5py==2.8.0
 Keras-Applications==1.0.6
