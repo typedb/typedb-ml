@@ -72,8 +72,6 @@ class ContextBuilder:
         # Distinguish the concepts found as roles-played
         connections = self._neighbour_finder.find(starting_thing.id, tx)
 
-
-
         next_depth = depth + 1
 
         # Sample the neighbourhood and iterate over the results
