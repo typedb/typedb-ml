@@ -16,18 +16,160 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import collections
 import datetime
 import unittest
 
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
-import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
+import kglib.kgcn.core.ingest.traverse.data.context.array as array
 import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
 import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mock
-import kglib.kgcn.core.ingest.traverse.data.context.array as array
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+
+"""
+Expected procedure:
+- Take in context as a dict of lists, for a single example
+- Convert to the values to put into the arrays, against the index to add at
+- Initialise the arrays at different depths, for the data categories with default values
+- Put the values for the example into the initialised array, without repetition (for simplicity, since this shouldn't 
+have a serious effect on the model
+- Combine with arrays to represent the list of examples
+"""
+
+# expected_output = collections.OrderedDict(
+#             [('role_type', np.array([['employee']], dtype='U50')),
+#              ('role_direction', np.array([[0]], dtype=np.int)),
+#              ('neighbour_type', np.array([['person']], dtype=np.dtype('U50'))),
+#              ('neighbour_data_type', np.array([['']], dtype=np.dtype('U10'))),
+#              ('neighbour_value_long', np.array([[0]], dtype=np.int)),
+#              ('neighbour_value_double', np.array([[0.0]], dtype=np.float)),
+#              ('neighbour_value_boolean', np.array([[-1]], dtype=np.int)),
+#              ('neighbour_value_date', np.array([['']], dtype='datetime64[s]')),
+#              ('neighbour_value_string', np.array([['']], dtype=np.dtype('U50')))])
+
+
+def mock_context():
+    return {
+        0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+        1: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
+                         "has", neighbour.NEIGHBOUR_PLAYS),
+            builder.Node((1,), neighbour.Thing("2", "employment", "relation"), "employee", neighbour.TARGET_PLAYS),
+            ],
+        2: [builder.Node((0, 0), neighbour.Thing("0", "person", "entity"), "has", neighbour.TARGET_PLAYS),
+            # Note that (0, 1) is reversed compared to the natural expectation
+            builder.Node((0, 1), neighbour.Thing("3", "company", "entity"), "employer", neighbour.NEIGHBOUR_PLAYS),
+            builder.Node((1, 1), neighbour.Thing("0", "person", "entity"), "employee", neighbour.NEIGHBOUR_PLAYS),
+            ]
+    }
+
+
+class TestContextToIndexedValues(unittest.TestCase):
+
+    def test_context_to_indexed_values_ias_as_expected(self):
+        context = mock_context()
+        expected_indexed_values = {
+            0: {(): {'neighbour_type': "person"}},
+            1: {(0,): {'role_type': "has", 'role_direction': neighbour.NEIGHBOUR_PLAYS, 'neighbour_type': "name",
+                       'neighbour_data_type': "string", 'neighbour_value_string': "Sundar Pichai"},
+                (1,): {'role_type': "employee", 'role_direction': neighbour.TARGET_PLAYS,
+                       'neighbour_type': "employment"},
+                },
+            2: {(0, 0): {'role_type': "has", 'role_direction': neighbour.TARGET_PLAYS, 'neighbour_type': "person"},
+                (0, 1): {'role_type': "employer", 'role_direction': neighbour.NEIGHBOUR_PLAYS,
+                         'neighbour_type': "company"},
+                (1, 1): {'role_type': "employee", 'role_direction': neighbour.NEIGHBOUR_PLAYS,
+                         'neighbour_type': "person"},
+                },
+        }
+        vals = array.get_context_values_to_put(context)
+        self.assertEqual(expected_indexed_values, vals)
+
+
+class TestInitialiseArraysWithDefaultValues(unittest.TestCase):
+
+    def test_arrays_are_initialised_as_expected(self):
+        array_shape = (2, 1)
+
+        initialised_arrays = array.initialise_arrays(array_shape,
+                                                     role_type=(np.dtype('U50'), ''),
+                                                     role_direction=(np.int, 0),
+                                                     neighbour_type=(np.dtype('U50'), ''),
+                                                     neighbour_data_type=(np.dtype('U10'), ''),
+                                                     neighbour_value_long=(np.int, 0),
+                                                     neighbour_value_double=(np.float, 0.0),
+                                                     neighbour_value_boolean=(np.int, -1),
+                                                     neighbour_value_date=('datetime64[s]', ''),
+                                                     neighbour_value_string=(np.dtype('U50'), ''))
+
+        expected_arrays_1_hop = {
+            'role_type': np.array([[''], ['']], dtype=np.dtype('U50')),
+            'role_direction': np.array([[0], [0]], dtype=np.int),
+            'neighbour_type': np.array([[''], ['']], dtype=np.dtype('U50')),
+            'neighbour_data_type': np.array([[''], ['']], dtype=np.dtype('U10')),
+            'neighbour_value_long': np.array([[0], [0]], dtype=np.int),
+            'neighbour_value_double': np.array([[0.0], [0.0]], dtype=np.int),
+            'neighbour_value_boolean': np.array([[-1], [-1]], dtype=np.int),
+            'neighbour_value_date': np.array([[''], ['']], dtype='datetime64[s]'),
+            'neighbour_value_string': np.array([[''], ['']], dtype=np.dtype('U50'))
+        }
+        np.testing.assert_equal(expected_arrays_1_hop, initialised_arrays)
+
+    def test_arrays_initialised_when_array_types_are_omitted(self):
+        array_shape = (2, 1)
+
+        initialised_arrays = array.initialise_arrays(array_shape,
+                                                     neighbour_type=(np.dtype('U50'), ''),
+                                                     )
+
+        expected_arrays_1_hop = {
+            'neighbour_type': np.array([[''], ['']], dtype=np.dtype('U50')),
+        }
+        np.testing.assert_equal(expected_arrays_1_hop, initialised_arrays)
+
+
+class TestInitialiseArraysAtAllDepthsWithDefaultValues(unittest.TestCase):
+
+    def test_arrays_are_initialised_at_all_depths_as_expected(self):
+        deepest_array_shape = (2, 1)
+        initialised_arrays = array.initialise_arrays_for_all_depths(deepest_array_shape,
+                                                                    role_type=(np.dtype('U50'), ''),
+                                                                    role_direction=(np.int, 0),
+                                                                    neighbour_type=(np.dtype('U50'), ''),
+                                                                    neighbour_data_type=(np.dtype('U10'), ''),
+                                                                    neighbour_value_long=(np.int, 0),
+                                                                    neighbour_value_double=(np.float, 0.0),
+                                                                    neighbour_value_boolean=(np.int, -1),
+                                                                    neighbour_value_date=('datetime64[s]', ''),
+                                                                    neighbour_value_string=(np.dtype('U50'), ''))
+
+        expected_arrays = {
+            0: {
+                'role_type': np.array([['']], dtype=np.dtype('U50')),
+                'role_direction': np.array([[0]], dtype=np.int),
+                'neighbour_type': np.array([['']], dtype=np.dtype('U50')),
+                'neighbour_data_type': np.array([['']], dtype=np.dtype('U10')),
+                'neighbour_value_long': np.array([[0]], dtype=np.int),
+                'neighbour_value_double': np.array([[0.0]], dtype=np.int),
+                'neighbour_value_boolean': np.array([[-1]], dtype=np.int),
+                'neighbour_value_date': np.array([['']], dtype='datetime64[s]'),
+                'neighbour_value_string': np.array([['']], dtype=np.dtype('U50'))
+            },
+            1: {
+                'role_type': np.array([[''], ['']], dtype=np.dtype('U50')),
+                'role_direction': np.array([[0], [0]], dtype=np.int),
+                'neighbour_type': np.array([[''], ['']], dtype=np.dtype('U50')),
+                'neighbour_data_type': np.array([[''], ['']], dtype=np.dtype('U10')),
+                'neighbour_value_long': np.array([[0], [0]], dtype=np.int),
+                'neighbour_value_double': np.array([[0.0], [0.0]], dtype=np.int),
+                'neighbour_value_boolean': np.array([[-1], [-1]], dtype=np.int),
+                'neighbour_value_date': np.array([[''], ['']], dtype='datetime64[s]'),
+                'neighbour_value_string': np.array([[''], ['']], dtype=np.dtype('U50'))
+            }
+        }
+
+        np.testing.assert_equal(expected_arrays, initialised_arrays)
 
 
 class TestDetermineValuesToPut(unittest.TestCase):
@@ -60,144 +202,6 @@ class TestDetermineValuesToPut(unittest.TestCase):
                            'neighbour_data_type': 'string',
                            'neighbour_value_string': neighbour_value}
         self.assertEqual(expected_result, values_dict)
-
-
-class TestContextArrayBuilderFromMockEntity(unittest.TestCase):
-
-    def setUp(self):
-        self._neighbourhood_sizes = (2, 3)
-        self._num_example_things = 2
-
-        self._builder = array.ArrayConverter(self._neighbourhood_sizes)
-
-        self._expected_dims = [self._num_example_things] + list(reversed(self._neighbourhood_sizes)) + [1]
-
-    def _check_dims(self, arrays):
-        # We expect dimensions:
-        # (2, 3, 2, 1)
-        # (2, 2, 1)
-        # (2, 1)
-        exp = [[self._expected_dims[0]] + list(self._expected_dims[i+1:]) for i in range(len(self._expected_dims)-1)]
-        for i in range(len(self._expected_dims) - 1):
-            with self.subTest(exp[i]):
-                self.assertEqual(arrays[i]['neighbour_type'].shape, tuple(exp[i]))
-
-    def _thing_contexts_factory(self):
-        return builder.convert_thing_contexts_to_neighbours(
-            [mock.mock_context(), mock.mock_context()])
-
-    def test_build_context_arrays(self):
-
-        depthwise_arrays = self._builder.convert_to_array(self._thing_contexts_factory())
-        self._check_dims(depthwise_arrays)
-        with self.subTest('spot-check thing type'):
-            self.assertEqual(depthwise_arrays[-1]['neighbour_type'][0, 0], 'person')
-        with self.subTest('spot-check role type'):
-            self.assertEqual(depthwise_arrays[0]['role_type'][0, 0, 0, 0], 'employer')
-        with self.subTest('check role_type absent in final arrays'):
-            self.assertFalse('role_type' in list(depthwise_arrays[-1].keys()))
-        with self.subTest('check role_direction absent in final arrays'):
-            self.assertFalse('role_direction' in list(depthwise_arrays[-1].keys()))
-
-    def test_initialised_array_sizes(self):
-
-        initialised_arrays = self._builder._initialise_arrays(self._num_example_things)
-        self._check_dims(initialised_arrays)
-
-    def test_array_values(self):
-        depthwise_arrays = self._builder.convert_to_array(self._thing_contexts_factory())
-        with self.subTest('role_type not empty'):
-            self.assertFalse('' in depthwise_arrays[0]['role_type'])
-        with self.subTest('neighbour_type not empty'):
-            self.assertFalse('' in depthwise_arrays[0]['neighbour_type'])
-
-
-class TestIntegrationsContextArrayBuilderFromEntity(unittest.TestCase):
-    def setUp(self):
-        import grakn.client
-        entity_query = "match $x isa company, has name 'Google'; get;"
-        uri = "localhost:48555"
-        keyspace = "test_schema"
-        client = grakn.client.GraknClient(uri=uri)
-        session = client.session(keyspace=keyspace)
-        self._tx = session.transaction().write()
-
-        neighbour_sample_sizes = (6, 4, 4)
-        sampling_method = ordered.ordered_sample
-
-        samplers = []
-        for sample_size in neighbour_sample_sizes:
-            samplers.append(samp.Sampler(sample_size, sampling_method, limit=sample_size * 2))
-
-        grakn_things = [answermap.get('x') for answermap in list(self._tx.query(entity_query))]
-
-        things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
-
-        context_builder = builder.ContextBuilder(samplers)
-
-        neighbourhood_depths = [context_builder.build(self._tx, thing) for thing in things]
-
-        neighbour_roles = builder.convert_thing_contexts_to_neighbours(neighbourhood_depths)
-
-        # flat = builder.flatten_tree(neighbour_roles)
-        # [builder.collect_to_tree(neighbourhood_depth) for neighbourhood_depth in neighbourhood_depths]
-
-        ################################################################################################################
-        # Context Array Building
-        ################################################################################################################
-
-        self._array_builder = array.ArrayConverter(neighbour_sample_sizes)
-        self._context_arrays = self._array_builder.convert_to_array(neighbour_roles)
-
-    def test_array_values(self):
-        with self.subTest('role_type not empty'):
-            self.assertFalse('' in self._context_arrays[0]['role_type'])
-        with self.subTest('neighbour_type not empty'):
-            self.assertFalse('' in self._context_arrays[0]['neighbour_type'])
-
-
-class TestIntegrationsContextArrayBuilderWithMock(unittest.TestCase):
-    def setUp(self):
-
-        self._neighbour_sample_sizes = (2, 3)
-
-        neighbourhood_depths = [mock.mock_context()]
-
-        neighbour_roles = builder.convert_thing_contexts_to_neighbours(neighbourhood_depths)
-
-        ################################################################################################################
-        # Context Array Building
-        ################################################################################################################
-
-        self._array_builder = array.ArrayConverter(self._neighbour_sample_sizes)
-        self._context_arrays = self._array_builder.convert_to_array(neighbour_roles)
-
-    def test_role_type_not_empty(self):
-        self.assertFalse('' in self._context_arrays[0]['role_type'])
-
-    def test_neighbour_type_not_empty(self):
-        self.assertFalse('' in self._context_arrays[0]['neighbour_type'])
-
-    def test_string_values_not_empty(self):
-        self.assertFalse('' in self._context_arrays[0]['neighbour_value_string'][0, :, 1, 0])
-
-    def test_data_type_values_not_empty(self):
-        self.assertFalse('' in self._context_arrays[0]['neighbour_data_type'][0, :, 1, 0])
-
-    def test_shapes_as_expected(self):
-        self.assertTupleEqual(self._context_arrays[0]['neighbour_type'].shape, (1, 3, 2, 1))
-        self.assertTupleEqual(self._context_arrays[1]['neighbour_type'].shape, (1, 2, 1))
-        self.assertTupleEqual(self._context_arrays[2]['neighbour_type'].shape, (1, 1))
-
-    # def test_all_indices_visited(self):
-    #     print(self._array_builder.indices_visited)
-    #     self.assertEqual(len(self._array_builder.indices_visited), 6+2+1)
-
-    def test_array_values(self):
-        with self.subTest('role_type not empty'):
-            self.assertFalse('' in self._context_arrays[0]['role_type'])
-        with self.subTest('neighbour_type not empty'):
-            self.assertFalse('' in self._context_arrays[0]['neighbour_type'])
 
 
 class TestAttributeTypes(unittest.TestCase):

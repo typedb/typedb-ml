@@ -134,6 +134,16 @@ py_test(
 )
 
 py_test(
+    name = "array_IT",
+    srcs = [
+        "kgcn/core/ingest/traverse/data/context/array_IT.py"
+    ],
+    deps = [
+        "kglib",
+    ]
+)
+
+py_test(
     name = "model_test",
     srcs = [
         "kgcn/core/model_test.py"

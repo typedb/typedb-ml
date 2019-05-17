@@ -25,6 +25,51 @@ import numpy as np
 import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
 
 
+def get_context_values_to_put(context):
+
+    context_values_to_put = {}
+
+    for depth, node_list in context.items():
+
+        values_to_put_at_this_depth = {}
+
+        for node in node_list:
+
+            values_to_put_for_this_node = {}
+
+            if node.role_label is not None:
+                values_to_put_for_this_node['role_type'] = node.role_label
+            if node.role_direction is not None:
+                values_to_put_for_this_node['role_direction'] = node.role_direction
+
+            values_to_put_for_this_node['neighbour_type'] = node.thing.type_label
+
+            if node.thing.data_type is not None:
+                values_to_put_for_this_node['neighbour_data_type'] = node.thing.data_type
+                values_to_put_for_this_node['neighbour_value_' + node.thing.data_type] = node.thing.value
+
+            values_to_put_at_this_depth[node.indices] = values_to_put_for_this_node
+
+        context_values_to_put[depth] = values_to_put_at_this_depth
+
+    return context_values_to_put
+
+
+def initialise_arrays(array_shape, **array_names_with_dtypes_and_default_values):
+
+    arrays = {}
+    for array_name, (array_data_type, default_value) in array_names_with_dtypes_and_default_values.items():
+
+        arrays[array_name] = np.full(shape=array_shape,
+                                     fill_value=default_value,
+                                     dtype=array_data_type)
+    return arrays
+
+
+def initialise_arrays_for_all_depths(deepest_array_shape, **array_names_with_dtypes_and_default_values):
+    pass
+
+
 def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):
     depthwise_arrays = []
     depth_shape = list(neighbourhood_sizes) + [1]
