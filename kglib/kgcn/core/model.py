@@ -17,15 +17,17 @@
 #  under the License.
 #
 
+import numpy as np
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.encode.encode as encode
-import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
-import kglib.kgcn.core.nn.embed as embed
-import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
-import kglib.kgcn.core.ingest.traverse.data.sample.sample as sample
 import kglib.kgcn.core.ingest.preprocess.preprocess as preprocess
 import kglib.kgcn.core.ingest.traverse.data.context.array as array
+import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sample.sample as sample
+import kglib.kgcn.core.nn.embed as embed
 
 
 class KGCN:
@@ -62,9 +64,8 @@ class KGCN:
         traversal_samplers = []
         for sample_size in neighbour_sample_sizes:
             traversal_samplers.append(
-                sample.Sampler(sample_size, neighbour_sampling_method, limit=int(sample_size * neighbour_sampling_limit_factor)))
-
-        self._array_builder = array.ArrayConverter(neighbour_sample_sizes)
+                sample.Sampler(sample_size, neighbour_sampling_method,
+                               limit=int(sample_size * neighbour_sampling_limit_factor)))
 
         self._context_builder = builder.ContextBuilder(traversal_samplers)
 
@@ -76,8 +77,21 @@ class KGCN:
                                                                                        **features_to_exclude)
 
     def input_fn(self, session, concepts):
-        context_batch = self._context_builder.build_batch(session, concepts)
-        context_arrays = self._array_builder.convert_to_array(context_batch)
+        example_things = map(neighbour.build_thing, concepts)
+        context_batch = self._context_builder.build_batch(session, example_things)
+
+        context_arrays = array.convert_context_batch_to_arrays(context_batch,
+                                                               self.neighbour_sample_sizes,
+                                                               role_type=(np.dtype('U50'), ''),
+                                                               role_direction=(np.int, -1),
+                                                               neighbour_type=(np.dtype('U50'), ''),
+                                                               neighbour_data_type=(np.dtype('U10'), ''),
+                                                               neighbour_value_long=(np.int, 0),
+                                                               neighbour_value_double=(np.float, 0.0),
+                                                               neighbour_value_boolean=(np.int, -1),
+                                                               neighbour_value_date=('datetime64[s]', ''),
+                                                               neighbour_value_string=(np.dtype('U50'), ''))
+
         formatted_neighbourhoods = preprocess.apply_operations(context_arrays, self._formatters)
         return formatted_neighbourhoods
 

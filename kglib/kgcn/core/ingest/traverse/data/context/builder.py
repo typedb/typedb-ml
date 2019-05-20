@@ -37,20 +37,18 @@ class ContextBuilder:
         self._depth_samplers = depth_samplers
         self._max_depth = len(self._depth_samplers)
 
-    def build_batch(self, session: grakn.client.Session, grakn_things: typ.List[neighbour.Thing]):
-        things = [neighbour.build_thing(grakn_thing) for grakn_thing in grakn_things]
+    def build_batch(self, session: grakn.client.Session, example_things: typ.Iterator[neighbour.Thing]):
 
         thing_contexts = []
-        for thing in things:
+        for thing in example_things:
             tx = session.transaction().write()
             print(f'Opening transaction {tx}')
             thing_context = self.build(tx, thing)
             thing_contexts.append(thing_context)
             print(f'closing transaction {tx}')
             tx.close()
-        context_batch = convert_thing_contexts_to_neighbours(thing_contexts)
 
-        return context_batch
+        return thing_contexts
 
     def build(self, tx: grakn.client.Transaction, example_thing: neighbour.Thing):
         depth = self._max_depth
@@ -92,23 +90,3 @@ class Node(utils.PropertyComparable):
         self.role_label = role_label
         self.role_direction = role_direction
         self.thing = thing
-
-
-# Could be renamed to a frame/situation/region/ROI(Region of Interest)/locale/zone
-class ThingContext(utils.PropertyComparable):
-    def __init__(self, thing: neighbour.Thing, neighbourhood: typ.List['Neighbour']):
-        self.thing = thing
-        self.neighbourhood = neighbourhood  # An iterator of `Neighbour`s
-
-
-class Neighbour(utils.PropertyComparable):
-    def __init__(self, role_label: (str, None), role_direction: (int, None), context: ThingContext):
-        self.role_label = role_label
-        self.role_direction = role_direction
-        self.context = context
-
-
-def convert_thing_contexts_to_neighbours(thing_contexts):
-    """Dummy Neighbours so that a consistent data structure can be used right from the top level"""
-    top_level_neighbours = [Neighbour(None, None, thing_context) for thing_context in thing_contexts]
-    return top_level_neighbours

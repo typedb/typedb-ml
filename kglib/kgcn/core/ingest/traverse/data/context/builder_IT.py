@@ -101,6 +101,22 @@ class ITContextBuilder(unittest.TestCase):
         }
         self.assertEqual(expected_context, thing_context)
 
+    def test_build_context_batch(self):
+        batch = [neighbour.Thing("0", "person", "entity"), neighbour.Thing("0", "person", "entity")]
+
+        samplers = []
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+
+        thing_context = context_builder.build_batch(mock.Mock(grakn.client.Session), batch)
+        expected_context_batch = [{
+            0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+        },
+            {
+                0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+            }
+        ]
+        self.assertEqual(expected_context_batch, thing_context)
+
 
 class ITContextBuilderWithRealGrakn(unittest.TestCase):
 
