@@ -18,10 +18,43 @@
 #
 
 import sklearn.metrics as metrics
+import numpy as np
 
 
 def format_list(list_to_format, formatting="%.2f"):
     return [formatting % e for e in list_to_format]
+
+
+def multilabel_confusion_matrix(labels, predictions):
+    """Generate multilabel confusion matrix by computing multiple binary
+    confusion matrices for each class
+    https://stackoverflow.com/questions/53886370/multi-class-multi-label-confusion-matrix-with-sklearn
+
+    Args:
+        labels (numpy.ndarray): ground truth
+        predictions (numpy.ndarray): model predictions
+    """
+    if isinstance(labels, list):
+        labels = np.array(labels)
+    if isinstance(predictions, list):
+        predictions = np.array(predictions)
+
+    assert isinstance(labels, np.ndarray) and \
+        isinstance(predictions, np.ndarray), \
+        "labels and predictions must be numpy arrays"
+
+    num_classes = labels.shape[1]
+    conf_mat_dict = {}
+
+    for label_col in range(num_classes):
+        actual_labels = labels[:, label_col]
+        predicted_labels = predictions[:, label_col]
+        conf_mat_dict[label_col] = metrics.confusion_matrix(
+            y_pred=predicted_labels, y_true=actual_labels)
+
+    for label, matrix in conf_mat_dict.items():
+        print("Confusion matrix for label {}:".format(label))
+        print(matrix)
 
 
 def report_multiclass_metrics(labels, predictions):
@@ -29,7 +62,8 @@ def report_multiclass_metrics(labels, predictions):
     print('Confusion matrix')
     print(skl_cm)
 
-    class_precisions = metrics.precision_score(labels, predictions, average=None)
+    class_precisions = metrics.precision_score(
+        labels, predictions, average=None)
     print(f'Class precisions:   {format_list(class_precisions)}')
 
     class_recalls = metrics.recall_score(labels, predictions, average=None)
@@ -40,3 +74,32 @@ def report_multiclass_metrics(labels, predictions):
 
     class_accuracies = metrics.accuracy_score(labels, predictions)
     print(f'Accuracy:           {class_accuracies:.2f}')
+
+
+def report_multilabel_metrics(labels, predictions):
+    if isinstance(labels, list):
+        labels = np.array(labels)
+    if isinstance(predictions, list):
+        predictions = np.array(predictions)
+
+    assert isinstance(labels, np.ndarray) and \
+        isinstance(predictions, np.ndarray), \
+        "labels and predictions must be numpy arrays"
+
+    multilabel_confusion_matrix(labels, predictions)
+
+    class_precisions = metrics.precision_score(
+        labels, predictions, average=None)
+    print(f'Class precisions:      {format_list(class_precisions)}')
+
+    class_recalls = metrics.recall_score(labels, predictions, average=None)
+    print(f'Class recalls:         {format_list(class_recalls)}')
+
+    class_f1s = metrics.f1_score(labels, predictions, average=None)
+    print(f'Class F1-scores:       {format_list(class_f1s)}')
+
+    class_accuracies = metrics.hamming_loss(labels, predictions)
+    print(f'Avg. class Accuracy:   {np.mean(class_accuracies):.2f}')
+
+    exact_match_score = metrics.accuracy_score(labels, predictions)
+    print(f'Exact match score:     {exact_match_score:.2f}')
