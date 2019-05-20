@@ -53,11 +53,11 @@ class ITContextBuilder(unittest.TestCase):
         thing_context = context_builder.build(mock.Mock(grakn.client.Transaction), starting_thing)
 
         expected_context = {
-            0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
-            1: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
+            0: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
                              "has", neighbour.NEIGHBOUR_PLAYS),
                 builder.Node((1,), neighbour.Thing("2", "employment", "relation"), "employee", neighbour.TARGET_PLAYS),
-                ]
+                ],
+            1: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
         }
         self.assertEqual(expected_context, thing_context)
 
@@ -71,12 +71,12 @@ class ITContextBuilder(unittest.TestCase):
         thing_context = context_builder.build(mock.Mock(grakn.client.Transaction), starting_thing)
 
         expected_context = {
-            0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+            2: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
             1: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
                              "has", neighbour.NEIGHBOUR_PLAYS),
                 builder.Node((1,), neighbour.Thing("2", "employment", "relation"), "employee", neighbour.TARGET_PLAYS),
                 ],
-            2: [builder.Node((0, 0), neighbour.Thing("0", "person", "entity"), "has", neighbour.TARGET_PLAYS),
+            0: [builder.Node((0, 0), neighbour.Thing("0", "person", "entity"), "has", neighbour.TARGET_PLAYS),
                 # Note that (0, 1) is reversed compared to the natural expectation
                 builder.Node((0, 1), neighbour.Thing("3", "company", "entity"), "employer", neighbour.NEIGHBOUR_PLAYS),
                 builder.Node((1, 1), neighbour.Thing("0", "person", "entity"), "employee", neighbour.NEIGHBOUR_PLAYS),
@@ -94,8 +94,8 @@ class ITContextBuilder(unittest.TestCase):
         thing_context = context_builder.build(mock.Mock(grakn.client.Transaction), starting_thing)
 
         expected_context = {
-            0: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
-            1: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
+            1: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+            0: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
                              "has", neighbour.NEIGHBOUR_PLAYS),
                 ]
         }
@@ -137,7 +137,7 @@ class ITContextBuilderWithRealGrakn(unittest.TestCase):
 
     def test_context_role_labels_not_absent(self):
         role_labels = []
-        for node_list in [self.context[1], self.context[2]]:
+        for node_list in [self.context[0], self.context[1]]:
             for node in node_list:
                 role_labels.append(node.role_label)
 

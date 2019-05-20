@@ -53,26 +53,26 @@ class ContextBuilder:
         return context_batch
 
     def build(self, tx: grakn.client.Transaction, example_thing: neighbour.Thing):
-        depth = 0
+        depth = self._max_depth
         return self._traverse_from_thing(example_thing, depth, (), tx)
 
     def _traverse_from_thing(self, starting_thing: neighbour.Thing, depth: int, indices: tuple, tx):
 
         nodes = {}
-        if depth == 0:
-            nodes[0] = [Node(indices, starting_thing)]
-
         if depth == self._max_depth:
+            nodes[self._max_depth] = [Node(indices, starting_thing)]
+
+        if depth == 0:
             # This marks the end of the recursion, so there are no neighbours in the neighbourhood
             return nodes
 
-        sampler = self._depth_samplers[depth]
+        sampler = self._depth_samplers[self._max_depth - depth]
 
         # Any concept could play a role in a relation if the schema permits it
         # Distinguish the concepts found as roles-played
         connections = self._neighbour_finder.find(starting_thing.id, tx)
 
-        next_depth = depth + 1
+        next_depth = depth - 1
 
         # Sample the neighbourhood and iterate over the results
         for i, connection in enumerate(sampler(connections)):
