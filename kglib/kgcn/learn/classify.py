@@ -38,10 +38,19 @@ import kglib.kgcn.core.model as model
 
 class SupervisedKGCNClassifier:
 
-    def __init__(self, kgcn: model.KGCN, optimizer, num_classes, log_dir, max_training_steps=10000,
-                 regularisation_weight=0.0, classification_dropout_keep_prob=0.7, use_bias=True,
-                 classification_activation=lambda x: x, classification_regularizer=layers.l2_regularizer(scale=0.1),
-                 classification_kernel_initializer=tf.contrib.layers.xavier_initializer()):
+    def __init__(
+            self,
+            kgcn: model.KGCN,
+            optimizer,
+            num_classes,
+            log_dir,
+            max_training_steps=10000,
+            regularisation_weight=0.0,
+            classification_dropout_keep_prob=0.7,
+            use_bias=True,
+            classification_activation=lambda x: x,
+            classification_regularizer=layers.l2_regularizer(scale=0.1),
+            classification_kernel_initializer=tf.contrib.layers.xavier_initializer()):
 
         self._log_dir = log_dir
         self._write_summary = self._log_dir is not None
@@ -59,10 +68,8 @@ class SupervisedKGCNClassifier:
         ################################################################################################################
         # KGCN Embeddings
         ################################################################################################################
-        self.labels_placeholder = tf.placeholder(
-            tf.float32, shape=(None, num_classes), name='labels_input')
-        labels_dataset = tf.data.Dataset.from_tensor_slices(
-            self.labels_placeholder)
+        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='labels_input')
+        labels_dataset = tf.data.Dataset.from_tensor_slices(self.labels_placeholder)
 
         self.embeddings, next_batch, self.dataset_initializer, self.neighbourhood_placeholders = self._kgcn.embed(
             labels_dataset)
@@ -71,7 +78,8 @@ class SupervisedKGCNClassifier:
         ################################################################################################################
         # Downstream of embeddings - classification
         ################################################################################################################
-        classification_layer = tf.layers.Dense(self._num_classes, activation=self._classification_activation,
+        classification_layer = tf.layers.Dense(self._num_classes,
+                                               activation=self._classification_activation,
                                                use_bias=self._use_bias,
                                                kernel_regularizer=self._classification_regularizer,
                                                kernel_initializer=self._classification_kernel_initializer,
@@ -84,17 +92,18 @@ class SupervisedKGCNClassifier:
         class_scores = classification_layer(self.embeddings)
         tf.summary.histogram('classification/dense/class_scores', class_scores)
 
-        regularised_class_scores = tf.nn.dropout(class_scores, self._classification_dropout_keep_prob,
+        regularised_class_scores = tf.nn.dropout(class_scores,
+                                                 self._classification_dropout_keep_prob,
                                                  name='classification_dropout')
 
-        tf.summary.histogram(
-            'evaluate/regularised_class_scores', regularised_class_scores)
+        tf.summary.histogram('evaluate/regularised_class_scores', regularised_class_scores)
 
         self._class_scores = regularised_class_scores
 
         self._labels_winners = tf.argmax(self.labels, -1)
         self._predictions_class_winners = tf.argmax(self._class_scores, -1)
-        self._confusion_matrix = tf.confusion_matrix(self._labels_winners, self._predictions_class_winners,
+        self._confusion_matrix = tf.confusion_matrix(self._labels_winners,
+                                                     self._predictions_class_winners,
                                                      num_classes=self._num_classes)
 
         self._loss_op = self.loss(class_scores, self.labels)
@@ -106,14 +115,12 @@ class SupervisedKGCNClassifier:
         self.tf_session = tf.Session()
         # Add the variable initializer Op.
         init_global = tf.global_variables_initializer()
-        # Added to initialise tf.metrics.recall
-        init_local = tf.local_variables_initializer()
+        init_local = tf.local_variables_initializer()  # Added to initialise tf.metrics.recall
         init_tables = tf.tables_initializer()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
         if self._write_summary:
-            self.summary_writer = tf.summary.FileWriter(
-                self._log_dir, self.tf_session.graph)
+            self.summary_writer = tf.summary.FileWriter(self._log_dir, self.tf_session.graph)
 
         # Run the Op to initialize the variables.
         self.tf_session.run(init_global)
@@ -125,13 +132,11 @@ class SupervisedKGCNClassifier:
 
         with tf.name_scope('loss') as scope:
             # Get the losses from the various layers
-            loss = tf.cast(self._regularisation_weight *
-                           tf.losses.get_regularization_loss(), tf.float32)
+            loss = tf.cast(self._regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
             tf.summary.scalar('regularisation_loss', loss)
 
             # classification loss
-            raw_loss = tf.nn.softmax_cross_entropy_with_logits(
-                logits=logits, labels=labels)
+            raw_loss = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels)
             tf.summary.histogram('loss/raw_loss', raw_loss)
             loss += tf.reduce_mean(raw_loss)
 
@@ -158,8 +163,7 @@ class SupervisedKGCNClassifier:
                     [self._train_op, self._loss_op, self._confusion_matrix, self._class_scores,
                      self._predictions_class_winners, self._labels_winners])
 
-            summary_str = self.tf_session.run(
-                self.summary, feed_dict=feed_dict)
+            summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
             if self._write_summary:
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
@@ -167,8 +171,7 @@ class SupervisedKGCNClassifier:
                 print(f'\n-----')
                 print(f'Step {step}')
                 print(f'Loss: {loss_value:.2f}')
-                metrics.report_multiclass_metrics(
-                    labels_winners_values, predictions_class_winners_values)
+                metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
         print("========= Training Complete =========\n\n")
 
     def eval(self, feed_dict):
@@ -181,8 +184,7 @@ class SupervisedKGCNClassifier:
                  self._labels_winners])
 
         print(f'Loss: {loss_value:.2f}')
-        metrics.report_multiclass_metrics(
-            labels_winners_values, predictions_class_winners_values)
+        metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
         print("========= Evaluation Complete =========\n\n")
 
     def predict(self, feed_dict):
@@ -190,8 +192,7 @@ class SupervisedKGCNClassifier:
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
 
         loss_value, class_scores_values, predictions_class_winners_values = \
-            self.tf_session.run(
-                [self._loss_op, self._class_scores, self._predictions_class_winners])
+            self.tf_session.run([self._loss_op, self._class_scores, self._predictions_class_winners])
         print(class_scores_values)
         print(f'Loss: {loss_value:.2f}')
         print("========= Evaluation Complete =========\n\n")
@@ -209,9 +210,15 @@ class SupervisedKGCNClassifier:
 class SupervisedKGCNMultiLabelClassifier:
 
     def __init__(
-            self, kgcn: model.KGCN, optimizer, num_classes, log_dir,
-            max_training_steps=10000, regularisation_weight=0.0,
-            classification_dropout_keep_prob=0.7, use_bias=True,
+            self,
+            kgcn: model.KGCN,
+            optimizer,
+            num_classes,
+            log_dir,
+            max_training_steps=10000,
+            regularisation_weight=0.0,
+            classification_dropout_keep_prob=0.7,
+            use_bias=True,
             classification_activation=lambda x: x,
             classification_regularizer=layers.l2_regularizer(scale=0.1),
             classification_kernel_initializer=tf.contrib.layers.xavier_initializer()):
@@ -232,15 +239,11 @@ class SupervisedKGCNMultiLabelClassifier:
         ################################################################################################################
         # KGCN Embeddings
         ################################################################################################################
-        self.labels_placeholder = tf.placeholder(
-            tf.float32, shape=(None, num_classes), name='labels_input')
-        labels_dataset = tf.data.Dataset.from_tensor_slices(
-            self.labels_placeholder)
+        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, num_classes), name='labels_input')
+        labels_dataset = tf.data.Dataset.from_tensor_slices(self.labels_placeholder)
 
-        self.embeddings, next_batch, \
-            self.dataset_initializer, \
-            self.neighbourhood_placeholders = self._kgcn.embed(
-                labels_dataset)
+        self.embeddings, next_batch, self.dataset_initializer, self.neighbourhood_placeholders = self._kgcn.embed(
+            labels_dataset)
         self.labels = next_batch[0]
 
         ################################################################################################################
@@ -265,15 +268,13 @@ class SupervisedKGCNMultiLabelClassifier:
                                                  self._classification_dropout_keep_prob,
                                                  name='classification_dropout')
 
-        tf.summary.histogram(
-            'evaluate/regularised_class_scores', regularised_class_scores)
+        tf.summary.histogram('evaluate/regularised_class_scores', regularised_class_scores)
 
         self._class_scores = regularised_class_scores
 
         predictions = tf.cast(self._class_scores, tf.float32)
         threshold = 0.5
-        self._predictions_class_winners = tf.cast(tf.greater(predictions,
-                                                             threshold), tf.int64)
+        self._predictions_class_winners = tf.cast(tf.greater(predictions, threshold), tf.int64)
 
         self._loss_op = self.loss(class_scores, self.labels)
         self._train_op = self.optimise(self._loss_op)
@@ -290,8 +291,7 @@ class SupervisedKGCNMultiLabelClassifier:
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
         if self._write_summary:
-            self.summary_writer = tf.summary.FileWriter(
-                self._log_dir, self.tf_session.graph)
+            self.summary_writer = tf.summary.FileWriter(self._log_dir, self.tf_session.graph)
 
         # Run the Op to initialize the variables.
         self.tf_session.run(init_global)
@@ -303,13 +303,11 @@ class SupervisedKGCNMultiLabelClassifier:
 
         with tf.name_scope('loss') as scope:
             # Get the losses from the various layers
-            loss = tf.cast(self._regularisation_weight *
-                           tf.losses.get_regularization_loss(), tf.float32)
+            loss = tf.cast(self._regularisation_weight * tf.losses.get_regularization_loss(), tf.float32)
             tf.summary.scalar('regularisation_loss', loss)
 
             # classification loss
-            raw_loss = tf.nn.sigmoid_cross_entropy_with_logits(
-                logits=logits, labels=labels)
+            raw_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels)
             tf.summary.histogram('loss/raw_loss', raw_loss)
 
             # the loss is summed across classes before it is averaged over
@@ -335,47 +333,42 @@ class SupervisedKGCNMultiLabelClassifier:
         print("========= Training =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
         for step in range(self._max_training_steps):
-            _, loss_value, class_scores_values, \
-                predictions_class_winners_values, \
-                labels_values = self.tf_session.run(
-                    [self._train_op, self._loss_op,
-                     self._class_scores, self._predictions_class_winners,
-                     self.labels])
+            _, loss_value, class_scores_values, predictions_class_winners_values, labels_values = self.tf_session.run(
+                [self._train_op, self._loss_op, self._class_scores, self._predictions_class_winners, self.labels])
 
-            summary_str = self.tf_session.run(
-                self.summary, feed_dict=feed_dict)
+            summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
+
             if self._write_summary:
                 self.summary_writer.add_summary(summary_str, step)
                 self.summary_writer.flush()
+
             if step % int(self._max_training_steps / 20) == 0:
+
                 print(f'\n-----')
                 print(f'Step {step}')
                 print(f'Loss: {loss_value:.2f}')
-                metrics.report_multilabel_metrics(
-                    labels_values, predictions_class_winners_values)
+
+                metrics.report_multilabel_metrics(labels_values, predictions_class_winners_values)
         print("========= Training Complete =========\n\n")
 
     def eval(self, feed_dict):
         print("========= Evaluation =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
 
-        loss_value, class_scores_values, predictions_class_winners_values,\
-            labels_values = \
-            self.tf_session.run([self._loss_op, self._class_scores,
-                                 self._predictions_class_winners, self.labels])
+        loss_value, class_scores_values, predictions_class_winners_values, labels_values = self.tf_session.run(
+            [self._loss_op, self._class_scores, self._predictions_class_winners, self.labels])
 
         print(f'Loss: {loss_value:.2f}')
-        metrics.report_multilabel_metrics(
-            labels_values, predictions_class_winners_values)
+        metrics.report_multilabel_metrics(labels_values, predictions_class_winners_values)
         print("========= Evaluation Complete =========\n\n")
 
     def predict(self, feed_dict):
         print("========= Evaluation =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
 
-        loss_value, class_scores_values, predictions_class_winners_values = \
-            self.tf_session.run([self._loss_op, self._class_scores,
-                                 self._predictions_class_winners])
+        loss_value, class_scores_values, predictions_class_winners_values = self.tf_session.run(
+            [self._loss_op, self._class_scores, self._predictions_class_winners])
+
         print(class_scores_values)
         print(f'Loss: {loss_value:.2f}')
         print("========= Evaluation Complete =========\n\n")
@@ -399,7 +392,6 @@ def build_feed_dict(context_array_placeholders, context_array_depths, labels_pla
 
     for context_array_placeholder, context_arrays_dict in zip(context_array_placeholders, context_array_depths):
         for feature_type_name in list(context_arrays_dict.keys()):
-            feed_dict[context_array_placeholder[feature_type_name]
-                      ] = context_arrays_dict[feature_type_name]
+            feed_dict[context_array_placeholder[feature_type_name]] = context_arrays_dict[feature_type_name]
 
     return feed_dict
