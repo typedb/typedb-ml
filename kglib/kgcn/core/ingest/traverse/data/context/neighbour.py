@@ -113,7 +113,6 @@ class NeighbourFinder:
 
     def _get_role_link(self, tx, base_query, relation_variable, thing_variable, thing_id):
         query = base_query['query'].format(thing_id)
-        print(query)
         link_iterator = self._query(query, tx)
 
         for answer in link_iterator:

@@ -41,7 +41,7 @@ In order to build a *useful* representation, a KGCN needs to perform some learni
 
 - kglib installed from pip: `pip install grakn-kglib`. 
 
-- A Grakn 1.5.2 server running locally on your machine.
+- A Grakn 1.5.3 server running locally on your machine.
 
 ### Usage
 

@@ -6,7 +6,10 @@
 
 - The requirements listed in the [KGCN quickstart](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn#quickstart)
 - The source code in order to access the example `git clone https://github.com/graknlabs/kglib.git`
-- The `grakn-1.5.2-animaltrade.zip` dataset from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a dataset that has been pre-loaded into Grakn 1.5.2 (so you don't have to run the data import yourself), with two keyspaces: `animaltrade_train` and `animaltrade_test`
+- The `grakn-core-all-mac-animaltrade1.5.3.zip` dataset from the [latest release](https://github.com/graknlabs/kglib/releases/latest)
+    - This is a dataset that has been pre-loaded into a distribution of Grakn 1.5.3 for Mac (this also works on Linux, but not on Windows). This data is pre-loaded so that you don't have to run the data import yourself. 
+    - This Grakn distribution contains two keyspaces: `animaltrade_train` and `animaltrade_test`
+- A Mac or Linux machine (only a requirement for this specific pre-loaded example dataset)
 
 **To use:**
 
@@ -14,11 +17,11 @@
 
   - If you already have an instance of Grakn running, make sure to stop it using `./grakn server stop`
   
-  - Download `grakn-1.5.2-animaltrade.zip` from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a Grakn distribution, pre-loaded with the CITES dataset
+  - Download `grakn-core-all-mac-animaltrade1.5.3.zip` from the [latest release](https://github.com/graknlabs/kglib/releases/latest). This is a Grakn distribution, pre-loaded with the CITES dataset
 
-  - Unzip the distribution `unzip grakn-1.5.2-animaltrade.zip`, where you store this doesn't matter
+  - Unzip the distribution `unzip grakn-core-all-mac-animaltrade1.5.3.zip`, where you store this doesn't matter
 
-  - cd into the distribution `cd grakn-1.5.2-animaltrade`
+  - cd into the distribution `cd grakn-core-all-mac-animaltrade1.5.3`
   
   - start Grakn `./grakn server start`
 
@@ -26,7 +29,7 @@
 
     `./grakn console -k animaltrade_train`
 
-    `match $t isa traded-item; limit 1; get;`
+    `match $t isa traded-item; get; limit 1;`
 
     and then `exit`
 
@@ -42,7 +45,7 @@
 
 The CITES dataset details exchanges of animal-based products between countries. In this example we aim to predict the value of `appendix` for a set of samples. This `appendix` can be thought of as the level of endangerment that a `traded-item` is subject to, where `1` represents the highest level of endangerment, and `3` the lowest.
 
-The [main](../../examples/kgcn/animal_trade/main.py) function will:
+The [main](../../../examples/kgcn/animal_trade/main.py) function will:
 
 - Search Grakn for 30 concepts (with attributes as labels) to use as the training set, 30 for the evaluation set, and 30 for the prediction set using queries such as (limiting the returned stream):
 
@@ -71,4 +74,4 @@ To re-generate the `feed_dicts`, delete the saved files in `dataset/10_concepts/
 ##### Picking new samples
 To pick different sample concepts to use for training/evaluation/prediction you need to:
 - Force the `feed-dict`s to re-generate by deleting the saved files (as above)
-- Use a fresh version of `grakn-1.5.2-animaltrade`, since the present one has had the supervised labels deleted!
+- Use a fresh version of `grakn-core-all-mac-animaltrade1.5.3`, since the present one has had the supervised labels deleted!

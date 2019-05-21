@@ -35,13 +35,17 @@ def _build_adjacency_matrix(schema_traversal):
 
 class MultiHotSchemaTypeEncoder:
     def __init__(self, schema_traversal, default_value=-1, dtype=tf.string, name=None):
+
+        if not schema_traversal:  # Check that schema_traversal isn't empty
+            raise ValueError('The schema traversal supplied cannot be empty')
+
         self._name = name
         if self._name is not None:
             name = self._name + '_init'
 
         with tf.name_scope(name) as scope:
             self._dtype = dtype
-            print(list(schema_traversal.keys()))
+            print(f'Schema elements to encode: {list(schema_traversal.keys())}')
             self._schema_concept_type_labels = tf.convert_to_tensor(list(schema_traversal.keys()), dtype=self._dtype)
             self._lookup_table = tf.contrib.lookup.index_table_from_tensor(mapping=self._schema_concept_type_labels,
                                                                            num_oov_buckets=0, default_value=default_value,

@@ -24,9 +24,13 @@ class TraversalExecutor:
     def __init__(self, grakn_tx):
         self._grakn_tx = grakn_tx
 
+    def _query(self, query):
+        print(query)
+        return self._grakn_tx.query(query)
+
     def get_schema_concept_types(self, get_types_query, include_implicit=False, include_metatypes=False):
 
-        for answer in self._grakn_tx.query(get_types_query):
+        for answer in self._query(get_types_query):
             t = answer.get('x')
 
             if not (((not include_implicit) and t.is_implicit()) or (
