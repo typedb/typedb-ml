@@ -99,10 +99,11 @@ class TestEncodeSchemaTypes(unittest.TestCase):
         # with self.subTest("Type indices correctness"):
         #     np.testing.assert_array_equal(type_indices.numpy(), expected_type_indices)
 
-    def test_integration(self):
-        array_data_types = collections.OrderedDict([('neighbour_type', ('U25', 'collie'))])
-        example_arrays = array.build_default_arrays((3, 2), 4, array_data_types)
-        example = np.array(example_arrays[0]['neighbour_type'], dtype=str)
+    def test_encoding_schema_for_an_input_array_works_as_expected(self):
+        array_shape = (3, 2, 1)
+        example_arrays = array.initialise_arrays(array_shape, neighbour_type=('U25', 'collie'))
+
+        example = np.array(example_arrays['neighbour_type'], dtype=str)
         tf.enable_eager_execution()
         encoder = se.MultiHotSchemaTypeEncoder(schema_traversal)
         embeddings = encoder(tf.convert_to_tensor(example, tf.string))
