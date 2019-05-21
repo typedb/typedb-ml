@@ -43,7 +43,7 @@ class TestMetricsReport(unittest.TestCase):
         # Confusion matrix for label 2:
         # [[1 0]
         #  [0 2]]
-        metrics.multilabel_confusion_matrix(y_true, y_pred)
+        metrics.report_multilabel_confusion_matrix(y_true, y_pred)
 
         # expected confusion matrix:
         # Confusion matrix for label 0:
@@ -54,7 +54,7 @@ class TestMetricsReport(unittest.TestCase):
         # Confusion matrix for label 2:
         # [[1 0]
         # [0 2]]
-        metrics.multilabel_confusion_matrix(y_true, y_true)
+        metrics.report_multilabel_confusion_matrix(y_true, y_true)
 
 
 if __name__ == "__main__":
