@@ -29,7 +29,6 @@ def multilabel_confusion_matrix(labels, predictions):
     """Generate multilabel confusion matrix by computing multiple binary
     confusion matrices for each class
     https://stackoverflow.com/questions/53886370/multi-class-multi-label-confusion-matrix-with-sklearn
-
     Args:
         labels (numpy.ndarray): ground truth
         predictions (numpy.ndarray): model predictions
@@ -39,8 +38,7 @@ def multilabel_confusion_matrix(labels, predictions):
     if isinstance(predictions, list):
         predictions = np.array(predictions)
 
-    assert isinstance(labels, np.ndarray) and \
-        isinstance(predictions, np.ndarray), \
+    assert isinstance(labels, np.ndarray) and isinstance(predictions, np.ndarray), \
         "labels and predictions must be numpy arrays"
 
     num_classes = labels.shape[1]
@@ -49,8 +47,7 @@ def multilabel_confusion_matrix(labels, predictions):
     for label_col in range(num_classes):
         actual_labels = labels[:, label_col]
         predicted_labels = predictions[:, label_col]
-        conf_mat_dict[label_col] = metrics.confusion_matrix(
-            y_pred=predicted_labels, y_true=actual_labels)
+        conf_mat_dict[label_col] = metrics.confusion_matrix(y_pred=predicted_labels, y_true=actual_labels)
 
     for label, matrix in conf_mat_dict.items():
         print("Confusion matrix for label {}:".format(label))
@@ -62,8 +59,7 @@ def report_multiclass_metrics(labels, predictions):
     print('Confusion matrix')
     print(skl_cm)
 
-    class_precisions = metrics.precision_score(
-        labels, predictions, average=None)
+    class_precisions = metrics.precision_score(labels, predictions, average=None)
     print(f'Class precisions:   {format_list(class_precisions)}')
 
     class_recalls = metrics.recall_score(labels, predictions, average=None)
@@ -82,14 +78,12 @@ def report_multilabel_metrics(labels, predictions):
     if isinstance(predictions, list):
         predictions = np.array(predictions)
 
-    assert isinstance(labels, np.ndarray) and \
-        isinstance(predictions, np.ndarray), \
+    assert isinstance(labels, np.ndarray) and isinstance(predictions, np.ndarray),\
         "labels and predictions must be numpy arrays"
 
     multilabel_confusion_matrix(labels, predictions)
 
-    class_precisions = metrics.precision_score(
-        labels, predictions, average=None)
+    class_precisions = metrics.precision_score(labels, predictions, average=None)
     print(f'Class precisions:      {format_list(class_precisions)}')
 
     class_recalls = metrics.recall_score(labels, predictions, average=None)
