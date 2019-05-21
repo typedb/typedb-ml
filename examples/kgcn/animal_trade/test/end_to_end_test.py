@@ -22,7 +22,7 @@ import subprocess as sub
 import time
 import unittest
 
-import grakn
+import grakn.client
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.traverse.data.sample.random_sampling as random_sampling
@@ -82,11 +82,11 @@ class TestEndToEnd(unittest.TestCase):
                           'external/animaltrade_dist/file/downloaded-unzipped'])
 
         # Start Grakn
-        sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-core-animaltrade-1.5.0/grakn', 'server', 'start'])
+        sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-core-all-mac-animaltrade1.5.3/grakn', 'server', 'start'])
 
         modes = (TRAIN, EVAL)
 
-        client = grakn.Grakn(uri=URI)
+        client = grakn.client.GraknClient(uri=URI)
         sessions = server_mgmt.get_sessions(client, KEYSPACES)
         transactions = server_mgmt.get_transactions(sessions)
 

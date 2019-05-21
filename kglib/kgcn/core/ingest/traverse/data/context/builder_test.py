@@ -19,7 +19,7 @@
 
 import unittest
 
-import grakn
+import grakn.client
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
@@ -45,7 +45,7 @@ class TestContextBuilderFromEntity(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        client = grakn.Grakn(uri="localhost:48555")
+        client = grakn.client.GraknClient(uri="localhost:48555")
         cls.session = client.session(keyspace="test_schema")
 
     @classmethod
@@ -53,7 +53,7 @@ class TestContextBuilderFromEntity(unittest.TestCase):
         cls.session.close()
 
     def setUp(self):
-        self._tx = self.session.transaction(grakn.TxType.WRITE)
+        self._tx = self.session.transaction().write()
 
         # identifier = "Jacob J. Niesz"
         # entity_query = "match $x isa person, has identifier '{}'; get $x;".format(identifier)
@@ -133,7 +133,7 @@ class TestIsolated(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        client = grakn.Grakn(uri="localhost:48555")
+        client = grakn.client.GraknClient(uri="localhost:48555")
         cls.session = client.session(keyspace="test_schema")
 
     @classmethod
@@ -141,7 +141,7 @@ class TestIsolated(unittest.TestCase):
         cls.session.close()
 
     def setUp(self):
-        self._tx = self.session.transaction(grakn.TxType.WRITE)
+        self._tx = self.session.transaction().write()
 
     def tearDown(self):
         self._tx.close()
@@ -203,9 +203,9 @@ class TestIntegrationFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         entity_query = "match $x isa company, has name 'Google'; get;"
         uri = "localhost:48555"
         keyspace = "test_schema"
-        client = grakn.Grakn(uri=uri)
+        client = grakn.client.GraknClient(uri=uri)
         session = client.session(keyspace=keyspace)
-        self._tx = session.transaction(grakn.TxType.WRITE)
+        self._tx = session.transaction().write()
 
         neighbour_sample_sizes = (4, 3)
 
@@ -234,7 +234,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
 
     @classmethod
     def setUpClass(cls):
-        client = grakn.Grakn(uri="localhost:48555")
+        client = grakn.client.GraknClient(uri="localhost:48555")
         cls.session = client.session(keyspace="test_schema")
 
     @classmethod
@@ -245,7 +245,7 @@ class TestIsolatedFlattened(BaseTestFlattenedTree.TestFlattenedTree):
         self._tx.close()
 
     def setUp(self):
-        self._tx = self.session.transaction(grakn.TxType.WRITE)
+        self._tx = self.session.transaction().write()
         neighbour_sample_sizes = (2, 3)
 
         samplers = [lambda x: x for sample_size in neighbour_sample_sizes]

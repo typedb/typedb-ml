@@ -23,7 +23,7 @@ import grakn
 def get_transactions(sessions):
     transactions = {}
     for keyspace_key, session in sessions.items():
-        transactions[keyspace_key] = session.transaction(grakn.TxType.WRITE)
+        transactions[keyspace_key] = session.transaction().write()
     return transactions
 
 
