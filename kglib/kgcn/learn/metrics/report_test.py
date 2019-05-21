@@ -31,6 +31,31 @@ class TestMetricsReport(unittest.TestCase):
         # expected_confusion_matrix = np.array([[2, 0, 0], [0, 1, 0], [0, 0, 1]])
         metrics.report_multiclass_metrics(y_true, y_pred)
 
+        y_pred = [[0, 0, 1], [1, 1, 0], [0, 1, 1]]
+        y_true = [[0, 1, 1], [1, 1, 0], [0, 1, 1]]
+        # expected confusion matix:
+        # Confusion matrix for label 0:
+        # [[2 0]
+        #  [0 1]]
+        # Confusion matrix for label 1:
+        # [[0 0]
+        #  [1 2]]
+        # Confusion matrix for label 2:
+        # [[1 0]
+        #  [0 2]]
+        metrics.multilabel_confusion_matrix(y_true, y_pred)
+
+        # expected confusion matrix:
+        # Confusion matrix for label 0:
+        # [[2 0]
+        #  [0 1]]
+        # Confusion matrix for label 1:
+        # [[3]]
+        # Confusion matrix for label 2:
+        # [[1 0]
+        # [0 2]]
+        metrics.multilabel_confusion_matrix(y_true, y_true)
+
 
 if __name__ == "__main__":
     unittest.main()
