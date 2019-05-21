@@ -25,7 +25,7 @@ def format_list(list_to_format, formatting="%.2f"):
     return [formatting % e for e in list_to_format]
 
 
-def multilabel_confusion_matrix(labels, predictions):
+def report_multilabel_confusion_matrix(labels, predictions):
     """Generate multilabel confusion matrix by computing multiple binary
     confusion matrices for each class
     https://stackoverflow.com/questions/53886370/multi-class-multi-label-confusion-matrix-with-sklearn
@@ -81,7 +81,7 @@ def report_multilabel_metrics(labels, predictions):
     assert isinstance(labels, np.ndarray) and isinstance(predictions, np.ndarray),\
         "labels and predictions must be numpy arrays"
 
-    multilabel_confusion_matrix(labels, predictions)
+    report_multilabel_confusion_matrix(labels, predictions)
 
     class_precisions = metrics.precision_score(labels, predictions, average=None)
     print(f'Class precisions:      {format_list(class_precisions)}')
