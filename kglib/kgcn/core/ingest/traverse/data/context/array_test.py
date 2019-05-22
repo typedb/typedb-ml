@@ -138,7 +138,7 @@ class TestInitialiseArraysWithDefaultValues(unittest.TestCase):
 
         initialised_arrays = array.initialise_arrays(array_shape,
                                                      role_type=(np.dtype('U50'), ''),
-                                                     role_direction=(np.int, 0),
+                                                     role_direction=(np.int, -1),
                                                      neighbour_type=(np.dtype('U50'), ''),
                                                      neighbour_data_type=(np.dtype('U10'), ''),
                                                      neighbour_value_long=(np.int, 0),
@@ -149,7 +149,7 @@ class TestInitialiseArraysWithDefaultValues(unittest.TestCase):
 
         expected_arrays_1_hop = {
             'role_type': np.array([[[''], ['']]], dtype=np.dtype('U50')),
-            'role_direction': np.array([[[0], [0]]], dtype=np.int),
+            'role_direction': np.array([[[-1], [-1]]], dtype=np.int),
             'neighbour_type': np.array([[[''], ['']]], dtype=np.dtype('U50')),
             'neighbour_data_type': np.array([[[''], ['']]], dtype=np.dtype('U10')),
             'neighbour_value_long': np.array([[[0], [0]]], dtype=np.int),
@@ -219,8 +219,6 @@ class TestInitialiseArraysAtAllDepthsWithDefaultValues(unittest.TestCase):
                 'neighbour_value_string': np.array([[[''], ['']]], dtype=np.dtype('U50'))
             },
             {
-                'role_type': np.array([['']], dtype=np.dtype('U50')),
-                'role_direction': np.array([[0]], dtype=np.int),
                 'neighbour_type': np.array([['']], dtype=np.dtype('U50')),
                 'neighbour_data_type': np.array([['']], dtype=np.dtype('U10')),
                 'neighbour_value_long': np.array([[0]], dtype=np.int),
@@ -238,36 +236,34 @@ class TestFillingArrays(unittest.TestCase):
     def test_array_filled_as_expected(self):
         initialised_arrays = [
             {
-                'role_type': np.array([[[''], ['']]], dtype=np.dtype('U50')),
-                'role_direction': np.array([[[-1], [-1]]], dtype=np.int),
-                'neighbour_type': np.array([[[''], ['']]], dtype=np.dtype('U50')),
-                'neighbour_data_type': np.array([[[''], ['']]], dtype=np.dtype('U10')),
-                'neighbour_value_long': np.array([[[0], [0]]], dtype=np.int),
-                'neighbour_value_double': np.array([[[0.0], [0.0]]], dtype=np.int),
-                'neighbour_value_boolean': np.array([[[-1], [-1]]], dtype=np.int),
-                'neighbour_value_date': np.array([[[''], ['']]], dtype='datetime64[s]'),
-                'neighbour_value_string': np.array([[[''], ['']]], dtype=np.dtype('U50'))
+                'role_type': np.full((1, 2, 1), fill_value='', dtype=np.dtype('U50')),
+                'role_direction': np.full((1, 2, 1), fill_value=-1, dtype=np.int),
+                'neighbour_type': np.full((1, 2, 1), fill_value='', dtype=np.dtype('U50')),
+                'neighbour_data_type': np.full((1, 2, 1), fill_value='', dtype=np.dtype('U10')),
+                'neighbour_value_long': np.full((1, 2, 1), fill_value=0, dtype=np.int),
+                'neighbour_value_double': np.full((1, 2, 1), fill_value=0.0, dtype=np.int),
+                'neighbour_value_boolean': np.full((1, 2, 1), fill_value=-1, dtype=np.int),
+                'neighbour_value_date': np.full((1, 2, 1), fill_value='', dtype='datetime64[s]'),
+                'neighbour_value_string': np.full((1, 2, 1), fill_value='', dtype=np.dtype('U50'))
             },
             {
-                'role_type': np.array([['']], dtype=np.dtype('U50')),
-                'role_direction': np.array([[-1]], dtype=np.int),
-                'neighbour_type': np.array([['']], dtype=np.dtype('U50')),
-                'neighbour_data_type': np.array([['']], dtype=np.dtype('U10')),
-                'neighbour_value_long': np.array([[0]], dtype=np.int),
-                'neighbour_value_double': np.array([[0.0]], dtype=np.int),
-                'neighbour_value_boolean': np.array([[-1]], dtype=np.int),
-                'neighbour_value_date': np.array([['']], dtype='datetime64[s]'),
-                'neighbour_value_string': np.array([['']], dtype=np.dtype('U50'))
+                'neighbour_type': np.full((1, 1), fill_value='', dtype=np.dtype('U50')),
+                'neighbour_data_type': np.full((1, 1), fill_value='', dtype=np.dtype('U10')),
+                'neighbour_value_long': np.full((1, 1), fill_value=0, dtype=np.int),
+                'neighbour_value_double': np.full((1, 1), fill_value=0.0, dtype=np.int),
+                'neighbour_value_boolean': np.full((1, 1), fill_value=-1, dtype=np.int),
+                'neighbour_value_date': np.full((1, 1), fill_value='', dtype='datetime64[s]'),
+                'neighbour_value_string': np.full((1, 1), fill_value='', dtype=np.dtype('U50'))
             }
         ]
 
         batch_values = {
             1: {(0,): {'neighbour_type': "person"},
                 },
-            0: {(0, 0,): {'role_type': "has", 'role_direction': neighbour.NEIGHBOUR_PLAYS, 'neighbour_type': "name",
-                          'neighbour_data_type': "string", 'neighbour_value_string': "Sundar Pichai"},
-                (0, 1,): {'role_type': "employee", 'role_direction': neighbour.TARGET_PLAYS,
-                          'neighbour_type': "employment"},
+            0: {(0, 0): {'role_type': "has", 'role_direction': neighbour.NEIGHBOUR_PLAYS, 'neighbour_type': "name",
+                         'neighbour_data_type': "string", 'neighbour_value_string': "Sundar Pichai"},
+                (0, 1): {'role_type': "employee", 'role_direction': neighbour.TARGET_PLAYS,
+                         'neighbour_type': "employment"},
                 }
         }
 
@@ -284,8 +280,6 @@ class TestFillingArrays(unittest.TestCase):
                 'neighbour_value_string': np.array([[['Sundar Pichai'], ['']]], dtype=np.dtype('U50'))
             },
             {
-                'role_type': np.array([['']], dtype=np.dtype('U50')),
-                'role_direction': np.array([[-1]], dtype=np.int),
                 'neighbour_type': np.array([['person']], dtype=np.dtype('U50')),
                 'neighbour_data_type': np.array([['']], dtype=np.dtype('U10')),
                 'neighbour_value_long': np.array([[0]], dtype=np.int),
@@ -293,6 +287,52 @@ class TestFillingArrays(unittest.TestCase):
                 'neighbour_value_boolean': np.array([[-1]], dtype=np.int),
                 'neighbour_value_date': np.array([['']], dtype='datetime64[s]'),
                 'neighbour_value_string': np.array([['']], dtype=np.dtype('U50'))
+            }
+        ]
+
+        filled_arrays = array.fill_arrays_at_all_depths(initialised_arrays, batch_values)
+        np.testing.assert_equal(filled_arrays, expected_filled_arrays)
+
+    def test_array_filled_as_expected_2_hop(self):
+
+        initialised_arrays = [
+            {
+                'neighbour_type': np.full((1, 3, 2, 1), fill_value='', dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.full((1, 2, 1), fill_value='', dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.full((1, 1), fill_value='', dtype=np.dtype('U50')),
+            }
+        ]
+
+        batch_values = {
+            0: {
+                (0, 0, 0): {'neighbour_type': "a"},
+                (0, 1, 0): {'neighbour_type': "a"},
+                (0, 2, 0): {'neighbour_type': "a"},
+                (0, 0, 1): {'neighbour_type': "a"},
+                (0, 1, 1): {'neighbour_type': "a"},
+                (0, 2, 1): {'neighbour_type': "a"},
+                },
+            1: {(0, 0,): {'neighbour_type': "name"},
+                (0, 1,): {'neighbour_type': "employment"},
+                },
+            2: {(0,): {'neighbour_type': "person"},
+                }
+
+        }
+
+        expected_filled_arrays = [
+            {
+                'neighbour_type': np.array([[[['a'], ['a']], [['a'], ['a']], [['a'], ['a']]]], dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.array([[['name'], ['employment']]], dtype=np.dtype('U50')),
+            },
+            {
+                'neighbour_type': np.array([['person']], dtype=np.dtype('U50')),
             }
         ]
 

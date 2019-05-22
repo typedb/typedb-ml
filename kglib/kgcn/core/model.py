@@ -80,8 +80,10 @@ class KGCN:
         example_things = map(neighbour.build_thing, concepts)
         context_batch = self._context_builder.build_batch(session, example_things)
 
+        max_hops_shape = (self.batch_size,) + tuple(reversed(self.neighbour_sample_sizes)) + (1,)
+
         context_arrays = array.convert_context_batch_to_arrays(context_batch,
-                                                               self.neighbour_sample_sizes,
+                                                               max_hops_shape,
                                                                role_type=(np.dtype('U50'), ''),
                                                                role_direction=(np.int, -1),
                                                                neighbour_type=(np.dtype('U50'), ''),

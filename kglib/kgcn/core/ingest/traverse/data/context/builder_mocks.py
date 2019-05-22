@@ -55,6 +55,10 @@ class MockNeighbourFinder:
         elif thing_id == "3":  # company name
 
             yield from gen([_build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
+                                        data_type='string', value="Google"),
+                            _build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
+                                        data_type='string', value="Google"),
+                            _build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
                                         data_type='string', value="Google")])
 
         else:

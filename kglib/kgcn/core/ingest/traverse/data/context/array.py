@@ -79,8 +79,16 @@ def initialise_arrays(array_shape: typ.Tuple[int], **array_names_with_dtypes_and
 
 def initialise_arrays_for_all_depths(max_hops_shape: typ.Tuple[int], **array_names_with_dtypes_and_default_values):
     initialised_depth_arrays = []
-    for array_shape in get_depth_array_sizes(max_hops_shape):
+    depth_array_sizes = get_depth_array_sizes(max_hops_shape)
+
+    for i, array_shape in enumerate(depth_array_sizes):
+        if i == len(depth_array_sizes) - 1:
+
+            array_names_with_dtypes_and_default_values.pop('role_type', None)
+            array_names_with_dtypes_and_default_values.pop('role_direction', None)
+
         initialised_depth_arrays.append(initialise_arrays(array_shape, **array_names_with_dtypes_and_default_values))
+
     return initialised_depth_arrays
 
 

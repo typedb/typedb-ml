@@ -84,6 +84,44 @@ class ITContextBuilder(unittest.TestCase):
         }
         self.assertEqual(expected_context, thing_context)
 
+    def test_build_context_for_3_hop(self):
+
+        starting_thing = neighbour.Thing("0", "person", "entity")
+
+        samplers = [samp.Sampler(2, ordered.ordered_sample, limit=2), samp.Sampler(2, ordered.ordered_sample, limit=2),
+                    samp.Sampler(3, ordered.ordered_sample, limit=3)]
+        context_builder = builder.ContextBuilder(samplers, neighbour_finder=mocks.MockNeighbourFinder())
+
+        thing_context = context_builder.build(mock.Mock(grakn.client.Transaction), starting_thing)
+
+        expected_context = {
+            3: [builder.Node((), neighbour.Thing("0", "person", "entity"))],
+            2: [builder.Node((0,), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
+                             "has", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((1,), neighbour.Thing("2", "employment", "relation"), "employee", neighbour.TARGET_PLAYS),
+                ],
+            1: [builder.Node((0, 0), neighbour.Thing("0", "person", "entity"), "has", neighbour.TARGET_PLAYS),
+                # Note that (0, 1) is reversed compared to the natural expectation
+                builder.Node((0, 1), neighbour.Thing("3", "company", "entity"), "employer", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((1, 1), neighbour.Thing("0", "person", "entity"), "employee", neighbour.NEIGHBOUR_PLAYS),
+                ],
+            0: [builder.Node((0, 0, 0), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
+                             "has", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((1, 0, 0), neighbour.Thing("2", "employment", "relation"), "employee", neighbour.TARGET_PLAYS),
+                builder.Node((0, 0, 1), neighbour.Thing("4", "name", "attribute", data_type='string', value='Google'),
+                             "has", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((1, 0, 1), neighbour.Thing("4", "name", "attribute", data_type='string', value='Google'),
+                             "has", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((2, 0, 1), neighbour.Thing("4", "name", "attribute", data_type='string', value='Google'),
+                             "has", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((0, 1, 1), neighbour.Thing("1", "name", "attribute", data_type='string', value='Sundar Pichai'),
+                             "has", neighbour.NEIGHBOUR_PLAYS),
+                builder.Node((1, 1, 1), neighbour.Thing("2", "employment", "relation"), "employee", neighbour.TARGET_PLAYS),
+            ]
+
+        }
+        self.assertEqual(expected_context, thing_context)
+
     def test_build_context_with_sampling_limit_for_1_hop__limits_context(self):
 
         starting_thing = neighbour.Thing("0", "person", "entity")
