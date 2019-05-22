@@ -61,8 +61,6 @@ class TestBuildingArraysFromContextBatch(unittest.TestCase):
                 'neighbour_value_string': np.array([[['Sundar Pichai'], ['']]], dtype=np.dtype('U50'))
             },
             {
-                'role_type': np.array([['']], dtype=np.dtype('U50')),
-                'role_direction': np.array([[-1]], dtype=np.int),
                 'neighbour_type': np.array([['person']], dtype=np.dtype('U50')),
                 'neighbour_data_type': np.array([['']], dtype=np.dtype('U10')),
                 'neighbour_value_long': np.array([[0]], dtype=np.int),
