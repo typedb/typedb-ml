@@ -18,7 +18,6 @@
 #
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
 
 
 def gen(elements):
@@ -26,61 +25,41 @@ def gen(elements):
         yield el
 
 
-def mock_traversal_output():
-    c = builder.ThingContext(
-        neighbour.Thing("0", "person", "entity"),
-        [
-            builder.Neighbour("employee", neighbour.TARGET_PLAYS, builder.ThingContext(
-                neighbour.Thing("1", "employment", "relation"),
-                [
-                    builder.Neighbour("employer", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
-                        neighbour.Thing("2", "company", "entity"), []
-                    )),
-                ]
-            )),
-            builder.Neighbour("@has-name-owner", neighbour.TARGET_PLAYS, builder.ThingContext(
-                neighbour.Thing("3", "@has-name", "relation"),
-                [
-                    builder.Neighbour("@has-name-value", neighbour.NEIGHBOUR_PLAYS, builder.ThingContext(
-                        neighbour.Thing("4", "name", "attribute", data_type='string', value="Employee Name"),
-                        []
-                    )),
-                ]
-            ))
-
-        ])
-    return c
-
-
 def _build_data(role_label, role_direction, neighbour_id, neighbour_type, neighbour_metatype, data_type=None,
                 value=None):
-    return {'role_label': role_label, 'role_direction': role_direction,
-            'neighbour_thing': neighbour.Thing(neighbour_id, neighbour_type, neighbour_metatype, data_type=data_type,
-                                               value=value)}
+    return neighbour.Connection(role_label, role_direction,
+                                neighbour.Thing(neighbour_id, neighbour_type, neighbour_metatype, data_type=data_type,
+                                                value=value))
 
 
 class MockNeighbourFinder:
 
     def find(self, thing_id, tx):
 
-        if thing_id == "0":
+        if thing_id == "0":  # person
 
-            role_direction = neighbour.TARGET_PLAYS
             yield from gen([
-                _build_data("employee", role_direction, "1", "employment", "relation"),
-                _build_data("@has-name-owner", role_direction, "3", "@has-name", "relation")
+                _build_data("has", neighbour.NEIGHBOUR_PLAYS, "1", "name", "attribute", data_type='string', value="Sundar Pichai"),
+                _build_data("employee", neighbour.TARGET_PLAYS, "2", "employment", "relation"),
             ])
 
-        elif thing_id == "1":
+        elif thing_id == "1":  # person's name
 
-            role_direction = neighbour.NEIGHBOUR_PLAYS
-            yield from gen([_build_data("employer", role_direction, "2", "company", "entity")])
+            yield from gen([_build_data("has", neighbour.TARGET_PLAYS, "0", "person", "entity")])
 
-        elif thing_id == "3":
+        elif thing_id == "2":  # employment relation
 
-            role_direction = neighbour.NEIGHBOUR_PLAYS
-            yield from gen([_build_data("@has-name-value", role_direction, "4", "name", "attribute",
-                                        data_type='string', value="Employee Name")])
+            yield from gen([_build_data("employer", neighbour.NEIGHBOUR_PLAYS, "3", "company", "entity"),
+                            _build_data("employee", neighbour.NEIGHBOUR_PLAYS, "0", "person", "entity")])
+
+        elif thing_id == "3":  # company name
+
+            yield from gen([_build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
+                                        data_type='string', value="Google"),
+                            _build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
+                                        data_type='string', value="Google"),
+                            _build_data("has", neighbour.NEIGHBOUR_PLAYS, "4", "name", "attribute",
+                                        data_type='string', value="Google")])
 
         else:
             raise ValueError("This concept id hasn't been mocked")

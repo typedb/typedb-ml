@@ -19,196 +19,122 @@
 
 import typing as typ
 
-import collections
-
 import numpy as np
 
-import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
+
+def get_context_values_to_put(context):
+
+    context_values_to_put = {}
+
+    for depth, node_list in context.items():
+
+        values_to_put_at_this_depth = {}
+
+        for node in node_list:
+
+            values_to_put_for_this_node = {}
+
+            if node.role_label is not None:
+                values_to_put_for_this_node['role_type'] = node.role_label
+            if node.role_direction is not None:
+                values_to_put_for_this_node['role_direction'] = node.role_direction
+
+            values_to_put_for_this_node['neighbour_type'] = node.thing.type_label
+
+            if node.thing.data_type is not None:
+                values_to_put_for_this_node['neighbour_data_type'] = node.thing.data_type
+                values_to_put_for_this_node['neighbour_value_' + node.thing.data_type] = node.thing.value
+
+            values_to_put_at_this_depth[node.indices] = values_to_put_for_this_node
+
+        context_values_to_put[depth] = values_to_put_at_this_depth
+
+    return context_values_to_put
 
 
-def build_default_arrays(neighbourhood_sizes, n_starting_things, array_data_types):
-    depthwise_arrays = []
-    depth_shape = list(neighbourhood_sizes) + [1]
+def batch_values_to_put(batch_values):
+    batched_values = {}
+    for batch_index, structure in enumerate(batch_values):
+        for depth, indexed_values_to_put in structure.items():
+            for index, values_to_put in indexed_values_to_put.items():
+                full_index = (batch_index,) + index
+                batched_values.setdefault(depth, {})[full_index] = values_to_put
 
-    for i in range(len(depth_shape)):
-        shape_at_this_depth = [n_starting_things] + depth_shape[i:]
-        arrays = {}
-        for array_name, (array_data_type, default_value) in array_data_types.items():
-
-            if not (i == len(depth_shape) - 1 and array_name in ['role_direction', 'role_type']):
-                # For the starting nodes we don't need to store roles
-                arrays[array_name] = np.full(shape=shape_at_this_depth,
-                                             fill_value=default_value,
-                                             dtype=array_data_type)
-
-        depthwise_arrays.append(arrays)
-    return depthwise_arrays
+    return batched_values
 
 
-def _get_indices(last_indices, n):
-    if len(last_indices) == 0:
-        current_indices = (n, 0)
-    else:
-        current_indices = list(last_indices)
-        current_indices.insert(1, n)
-        current_indices = tuple(current_indices)
-    return current_indices
+def initialise_arrays(array_shape: typ.Tuple[int], **array_names_with_dtypes_and_default_values):
+
+    if len(array_names_with_dtypes_and_default_values) == 0:
+        raise ValueError('At least one array dtype and default value must be provided')
+
+    arrays = {}
+    for array_name, (array_data_type, default_value) in array_names_with_dtypes_and_default_values.items():
+
+        arrays[array_name] = np.full(shape=array_shape,
+                                     fill_value=default_value,
+                                     dtype=array_data_type)
+    return arrays
 
 
-def _get_values_to_put(role_label, role_direction, neighbour_type_label, neighbour_data_type,
-                       neighbour_value):
-    values_to_put = {}
-    if role_label is not None:
-        values_to_put['role_type'] = role_label
-    if role_direction is not None:
-        values_to_put['role_direction'] = role_direction
+def initialise_arrays_for_all_depths(max_hops_shape: typ.Tuple[int], **array_names_with_dtypes_and_default_values):
+    initialised_depth_arrays = []
+    depth_array_sizes = get_depth_array_sizes(max_hops_shape)
 
-    values_to_put['neighbour_type'] = neighbour_type_label
+    for i, array_shape in enumerate(depth_array_sizes):
+        if i == len(depth_array_sizes) - 1:
 
-    if neighbour_data_type is not None:
-        # Potentially confusing to create an index of these arrays, since role type and direction will be omitted
-        #  for the starting things
-        # values_to_put['neighbour_data_type'] = list(self._array_data_types.keys()).index(
-        #     'neighbour_value_' + neighbour_data_type)
-        values_to_put['neighbour_data_type'] = neighbour_data_type
-        values_to_put['neighbour_value_' + neighbour_data_type] = neighbour_value
+            array_names_with_dtypes_and_default_values.pop('role_type', None)
+            array_names_with_dtypes_and_default_values.pop('role_direction', None)
 
-    return values_to_put
+        initialised_depth_arrays.append(initialise_arrays(array_shape, **array_names_with_dtypes_and_default_values))
+
+    return initialised_depth_arrays
 
 
-def _put_values_into_array(arrays_at_this_depth, current_indices, values_to_put):
-    for key, value in values_to_put.items():
-        # Ensure that the rank of the array is the same as the number of indices, or risk setting more than
-        # one value
-        assert len(arrays_at_this_depth[key].shape) == len(current_indices)
-        arrays_at_this_depth[key][current_indices] = value
-    return arrays_at_this_depth
+def get_depth_array_sizes(max_hops_shape: typ.Tuple[int]):
+    depth_array_sizes = []
+    max_hops_size_list = list(max_hops_shape)
+    for _ in max_hops_shape[1:]:
+
+        depth_array_sizes.append(tuple(max_hops_size_list))
+
+        max_hops_size_list.pop(1)
+    return depth_array_sizes
 
 
-def _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n):
-    # TODO This has side-effects, it modifies depthwise_arrays in-place
-    if n < expected_n:
-        boundary = n + 1
-        slice_to_repeat = list(current_indices)
-        slice_to_repeat[1] = slice(boundary)
-        slice_to_repeat.insert(1, ...)
-        slice_to_repeat = tuple(slice_to_repeat)
-
-        slice_to_replace = list(slice_to_repeat)
-        slice_to_replace[2] = slice(boundary, None)
-        slice_to_replace = tuple(slice_to_replace)
-
-        # For the current depth and deeper
-        for d in list(range(depth, -1, -1)):
-            for array in list(depthwise_arrays[d].values()):
-                fill_array_with_repeats(array, slice_to_repeat, slice_to_replace)
-    return depthwise_arrays
-
-
-def _add_neighbour_data_to_array(current_indices, depth, depthwise_arrays, neighbour):
-    # TODO This has side-effects, it modifies depthwise_arrays in-place
-    thing = neighbour.context.thing
-    values_to_put = _get_values_to_put(neighbour.role_label, neighbour.role_direction,
-                                       thing.type_label, thing.data_type, thing.value)
-    depthwise_arrays[depth] = _put_values_into_array(depthwise_arrays[depth], current_indices, values_to_put)
-    return depthwise_arrays
-
-
-class ArrayConverter:
+def fill_arrays_at_all_depths(initialised_arrays, batch_values: typ.Dict):
     """
-    Converts contexts into an array
+    Populates initialised arrays
+    :param initialised_arrays: Arrays for the different hops of the context, for the different datatypes needed,
+    initialised with default values
+    :param batch_values: The sparse values to use to populate the arrays
+    :return: Populated arrays
     """
 
-    def __init__(self, neighbourhood_sizes: typ.Tuple[int]):
-        """
+    for depth, indexed_values_to_put in batch_values.items():
+        for indices, values_to_put in indexed_values_to_put.items():
+            for array_name, value_to_put in values_to_put.items():
+                expanded_indices = indices + (0,)
+                initialised_arrays[depth][array_name][expanded_indices] = value_to_put
 
-        :param neighbourhood_sizes: The number of neighbours sampled at each recursion
-        """
-        self._neighbourhood_sizes = tuple(reversed(neighbourhood_sizes))
-
-        # Array types and default values
-        self._array_data_types = collections.OrderedDict(
-            [('role_type', (np.dtype('U50'), '')),
-             ('role_direction', (np.int, 0)),
-             ('neighbour_type', (np.dtype('U50'), '')),
-             ('neighbour_data_type', (np.dtype('U10'), '')),
-             ('neighbour_value_long', (np.int, 0)),
-             ('neighbour_value_double', (np.float, 0.0)),
-             ('neighbour_value_boolean', (np.int, -1)),
-             ('neighbour_value_date', ('datetime64[s]', '')),
-             ('neighbour_value_string', (np.dtype('U50'), ''))])
-        self.indices_visited = []
-
-    def _initialise_arrays(self, num_example_things):
-        #####################################################
-        # Make the empty arrays to fill
-        #####################################################
-
-        return build_default_arrays(self._neighbourhood_sizes, num_example_things, self._array_data_types)
-
-    def convert_to_array(self, thing_contexts: typ.List[builder.Neighbour]):
-        """
-        Build the arrays to represent the depths of neighbour traversals.
-        :param top_level_neighbours:
-        :return: a list of arrays, one for each depth, including one for the starting nodes of interest
-        """
-
-        nun_example_things = len(thing_contexts)
-        self.indices_visited = []
-        depthwise_arrays = self._initialise_arrays(nun_example_things)
-
-        #####################################################
-        # Populate the arrays from the neighbour contexts
-        #####################################################
-        depthwise_arrays = self._build_neighbours(thing_contexts, depthwise_arrays, tuple())
-        return depthwise_arrays
-
-    def _build_neighbours(self, neighbours: typ.List[builder.Neighbour],
-                          depthwise_arrays: typ.List[typ.Dict[str, np.ndarray]],
-                          last_indices: typ.Tuple):
-        # TODO This has side-effects, it modifies depthwise_arrays in-place
-
-        n = None
-        current_indices = None
-
-        for n, neighbour in enumerate(neighbours):
-            current_indices = _get_indices(last_indices, n)
-            self.indices_visited.append(current_indices)  # TODO Remove, but useful for debugging
-
-            depth = self._determine_depth(current_indices)
-
-            depthwise_arrays = _add_neighbour_data_to_array(current_indices, depth, depthwise_arrays, neighbour)
-
-            depthwise_arrays = self._build_neighbours(neighbour.context.neighbourhood, depthwise_arrays, current_indices)
-
-        print(f'n = {n}, last_indices = {current_indices}')
-
-        # Duplicate the sections of the arrays already built so that they are padded to be complete
-        if n is not None and depth < len(self._neighbourhood_sizes):
-            expected_n = self._neighbourhood_sizes[depth] - 1
-            depthwise_arrays = _repeat_until_full(current_indices, depth, depthwise_arrays, n, expected_n)
-
-        return depthwise_arrays
-
-    def _determine_depth(self, current_indices):
-        # depth = len(self._neighbourhood_sizes) + 2 - (len(last_indices) + 1)
-        depth = len(self._neighbourhood_sizes) + 2 - len(current_indices)
-        return depth
+    return initialised_arrays
 
 
-def fill_array_with_repeats(array, slice_to_repeat, slice_to_replace):
-    to_repeat = array[slice_to_repeat]
-    to_fill = array[slice_to_replace]
+def convert_context_batch_to_arrays(context_batch, max_hops_shape: typ.Tuple,
+                                    **array_names_with_dtypes_and_default_values: typ.Tuple):
+    indexed_values = map(get_context_values_to_put, context_batch)
 
-    num_repeats = -(-to_fill.shape[0] // to_repeat.shape[0])
+    batch_values = batch_values_to_put(indexed_values)
 
-    tile_axes = [1] * len(to_fill.shape)
-    tile_axes[0] = num_repeats + 1
+    # Now we have a data structure like this:
+    # {
+    #     depth: {
+    #         index: { values to put}
+    #     }
+    # }
+    # Where the index now includes the number within the batch as its first element
 
-    filler = np.tile(to_repeat, tile_axes)
+    initialised_arrays = initialise_arrays_for_all_depths(max_hops_shape, **array_names_with_dtypes_and_default_values)
 
-    filler_axes = tuple(slice(None, i) for i in to_fill.shape)
-
-    curtailed_filler = filler[filler_axes]
-
-    array[slice_to_replace] = curtailed_filler
+    return fill_arrays_at_all_depths(initialised_arrays, batch_values)
