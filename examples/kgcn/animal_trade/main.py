@@ -99,8 +99,8 @@ def main(modes=(TRAIN, EVAL, PREDICT)):
                       neighbour_sampling_limit_factor=4)
 
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-    classifier = classify.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
-                                                   max_training_steps=FLAGS.max_training_steps)
+    classifier = classify.SupervisedKGCNMultiClassSingleLabelClassifier(kgcn, optimizer, FLAGS.num_classes, FLAGS.log_dir,
+                                                                        max_training_steps=FLAGS.max_training_steps)
 
     feed_dicts = {}
     feed_dict_storer = persistence.FeedDictStorer(BASE_PATH + 'input/')
