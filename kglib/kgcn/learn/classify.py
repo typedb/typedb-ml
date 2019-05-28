@@ -153,16 +153,48 @@ class SupervisedKGCNMultiClassClassifier(abc.ABC):
 
         return opt_op
 
+    @abc.abstractmethod
+    def _report_metrics(self, labels, predictions):
+        return
 
+    def train(self, feed_dict):
+        print("========= Training =========")
+        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
+        for step in range(self._max_training_steps):
+            _, loss_value, class_scores, predictions, labels = self.tf_session.run(
+                [self._train_op, self._loss_op, self._class_scores, self._predictions, self._labels_for_testing])
+
+            summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
+            if self._write_summary:
+                self.summary_writer.add_summary(summary_str, step)
+                self.summary_writer.flush()
+            if step % int(self._max_training_steps / 20) == 0:
+                print(f'\n-----')
+                print(f'Step {step}')
+                print(f'Loss: {loss_value:.2f}')
+
+                self._report_metrics(labels, predictions)
+        print("========= Training Complete =========\n\n")
+
+    def eval(self, feed_dict):
+        print("========= Evaluation =========")
+        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
+
+        loss_value, class_scores, predictions, labels = self.tf_session.run(
+            [self._loss_op, self._class_scores, self._predictions, self._labels_for_testing])
+
+        print(f'Loss: {loss_value:.2f}')
+        self._report_metrics(labels, predictions)
+        print("========= Evaluation Complete =========\n\n")
 
     def predict(self, feed_dict):
         print("========= Evaluation =========")
         _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
 
-        loss_value, class_scores_values, predictions_class_winners_values = self.tf_session.run(
+        loss_value, class_scores, predictions = self.tf_session.run(
             [self._loss_op, self._class_scores, self._predictions])
 
-        print(class_scores_values)
+        print(class_scores)
         print(f'Loss: {loss_value:.2f}')
         print("========= Evaluation Complete =========\n\n")
 
@@ -183,12 +215,8 @@ class SupervisedKGCNMultiClassSingleLabelClassifier(SupervisedKGCNMultiClassClas
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._labels_winners = tf.argmax(self.labels, -1)
+        self._labels_for_testing = tf.argmax(self.labels, -1)
         self._predictions = tf.argmax(self._class_scores, -1)
-        self._confusion_matrix = tf.confusion_matrix(self._labels_winners,
-                                                     self._predictions,
-                                                     num_classes=self._num_classes)
-
         self._initialise_computation_graph_components()
 
     def _per_class_loss(self, logits, labels):
@@ -197,38 +225,8 @@ class SupervisedKGCNMultiClassSingleLabelClassifier(SupervisedKGCNMultiClassClas
     def _objective_loss(self, per_class_loss):
         return tf.reduce_mean(per_class_loss)
 
-    def train(self, feed_dict):
-        print("========= Training =========")
-        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
-        for step in range(self._max_training_steps):
-            _, loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, \
-                labels_winners_values = self.tf_session.run(
-                    [self._train_op, self._loss_op, self._confusion_matrix, self._class_scores,
-                     self._predictions, self._labels_winners])
-
-            summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
-            if self._write_summary:
-                self.summary_writer.add_summary(summary_str, step)
-                self.summary_writer.flush()
-            if step % int(self._max_training_steps / 20) == 0:
-                print(f'\n-----')
-                print(f'Step {step}')
-                print(f'Loss: {loss_value:.2f}')
-                metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
-        print("========= Training Complete =========\n\n")
-
-    def eval(self, feed_dict):
-        print("========= Evaluation =========")
-        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
-
-        loss_value, confusion_matrix, class_scores_values, predictions_class_winners_values, labels_winners_values = \
-            self.tf_session.run(
-                [self._loss_op, self._confusion_matrix, self._class_scores, self._predictions,
-                 self._labels_winners])
-
-        print(f'Loss: {loss_value:.2f}')
-        metrics.report_multiclass_metrics(labels_winners_values, predictions_class_winners_values)
-        print("========= Evaluation Complete =========\n\n")
+    def _report_metrics(self, labels, predictions):
+        return metrics.report_multiclass_metrics(labels, predictions)
 
 
 class SupervisedKGCNMultiClassMultiLabelClassifier(SupervisedKGCNMultiClassClassifier):
@@ -239,6 +237,7 @@ class SupervisedKGCNMultiClassMultiLabelClassifier(SupervisedKGCNMultiClassClass
         predictions = tf.cast(self._class_scores, tf.float32)
         threshold = 0.5
         self._predictions = tf.cast(tf.greater(predictions, threshold), tf.int64)
+        self._labels_for_testing = self.labels
 
         self._initialise_computation_graph_components()
 
@@ -250,38 +249,8 @@ class SupervisedKGCNMultiClassMultiLabelClassifier(SupervisedKGCNMultiClassClass
         # https://github.com/tensorflow/skflow/issues/113#issuecomment-397631386
         return tf.reduce_mean(tf.reduce_sum(per_class_loss, axis=1))
 
-    def train(self, feed_dict):
-        print("========= Training =========")
-        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
-        for step in range(self._max_training_steps):
-            _, loss_value, class_scores_values, predictions_class_winners_values, labels_values = self.tf_session.run(
-                [self._train_op, self._loss_op, self._class_scores, self._predictions, self.labels])
-
-            summary_str = self.tf_session.run(self.summary, feed_dict=feed_dict)
-
-            if self._write_summary:
-                self.summary_writer.add_summary(summary_str, step)
-                self.summary_writer.flush()
-
-            if step % int(self._max_training_steps / 20) == 0:
-
-                print(f'\n-----')
-                print(f'Step {step}')
-                print(f'Loss: {loss_value:.2f}')
-
-                metrics.report_multilabel_metrics(labels_values, predictions_class_winners_values)
-        print("========= Training Complete =========\n\n")
-
-    def eval(self, feed_dict):
-        print("========= Evaluation =========")
-        _ = self.tf_session.run(self.dataset_initializer, feed_dict=feed_dict)
-
-        loss_value, class_scores_values, predictions_class_winners_values, labels_values = self.tf_session.run(
-            [self._loss_op, self._class_scores, self._predictions, self.labels])
-
-        print(f'Loss: {loss_value:.2f}')
-        metrics.report_multilabel_metrics(labels_values, predictions_class_winners_values)
-        print("========= Evaluation Complete =========\n\n")
+    def _report_metrics(self, labels, predictions):
+        return metrics.report_multilabel_metrics(labels, predictions)
 
 
 def build_feed_dict(context_array_placeholders, context_array_depths, labels_placeholder=None, labels=None):
