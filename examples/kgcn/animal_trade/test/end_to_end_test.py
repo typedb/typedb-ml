@@ -76,13 +76,18 @@ NEIGHBOUR_SAMPLE_SIZES = (2, 1)
 
 class TestEndToEnd(unittest.TestCase):
 
-    def test_end_to_end(self):
+    @classmethod
+    def setUpClass(cls):
+
         # Unzip the Grakn distribution containing our data
         sub.run(['unzip', 'external/animaltrade_dist/file/downloaded', '-d',
                           'external/animaltrade_dist/file/downloaded-unzipped'])
 
         # Start Grakn
         sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-core-all-mac-animaltrade1.5.3/grakn', 'server', 'start'])
+
+    def test_multi_class_single_label_classification_end_to_end(self):
+        tf.reset_default_graph()
 
         modes = (TRAIN, EVAL)
 
@@ -102,7 +107,64 @@ class TestEndToEnd(unittest.TestCase):
                           neighbour_sampling_limit_factor=4)
 
         optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
-        classifier = classify.SupervisedKGCNClassifier(kgcn, optimizer, FLAGS.num_classes, None,
+        classifier = classify.SupervisedKGCNMultiClassSingleLabelClassifier(kgcn, optimizer, FLAGS.num_classes, None,
+                                                                            max_training_steps=FLAGS.max_training_steps)
+
+        feed_dicts = {}
+
+        sampling_params = {
+            TRAIN: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
+            EVAL: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
+            PREDICT: {'sample_size': NUM_PER_CLASS, 'population_size': POPULATION_SIZE_PER_CLASS},
+        }
+        concepts, labels = thing_mgmt.compile_labelled_concepts(EXAMPLES_QUERY, EXAMPLE_CONCEPT_TYPE,
+                                                                LABEL_ATTRIBUTE_TYPE, ATTRIBUTE_VALUES,
+                                                                transactions[TRAIN], transactions[PREDICT],
+                                                                sampling_params)
+
+        for mode in modes:
+            mode_labels = labels[mode]
+            feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=mode_labels)
+
+        # Note: The ground-truth attribute labels haven't been removed from Grakn, so the results found here are
+        # invalid, and used as an end-to-end test only
+
+        # Train
+        if TRAIN in modes:
+            print("\n\n********** TRAIN Keyspace **********")
+            classifier.train(feed_dicts[TRAIN])
+
+        # Eval
+        if EVAL in modes:
+            print("\n\n********** EVAL Keyspace **********")
+            # Presently, eval keyspace is the same as the TRAIN keyspace
+            classifier.eval(feed_dicts[EVAL])
+
+        server_mgmt.close(sessions)
+        server_mgmt.close(transactions)
+
+    def test_multi_class_multi_label_classification_end_to_end(self):
+        tf.reset_default_graph()
+
+        modes = (TRAIN, EVAL)
+
+        client = grakn.client.GraknClient(uri=URI)
+        sessions = server_mgmt.get_sessions(client, KEYSPACES)
+        transactions = server_mgmt.get_transactions(sessions)
+
+        batch_size = NUM_PER_CLASS * FLAGS.num_classes
+        kgcn = model.KGCN(NEIGHBOUR_SAMPLE_SIZES,
+                          FLAGS.features_size,
+                          FLAGS.starting_concepts_features_size,
+                          FLAGS.aggregated_size,
+                          FLAGS.embedding_size,
+                          transactions[TRAIN],
+                          batch_size,
+                          neighbour_sampling_method=random_sampling.random_sample,
+                          neighbour_sampling_limit_factor=4)
+
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=FLAGS.learning_rate)
+        classifier = classify.SupervisedKGCNMultiClassMultiLabelClassifier(kgcn, optimizer, FLAGS.num_classes, None,
                                                        max_training_steps=FLAGS.max_training_steps)
 
         feed_dicts = {}
@@ -118,7 +180,8 @@ class TestEndToEnd(unittest.TestCase):
                                                                 sampling_params)
 
         for mode in modes:
-            feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=labels[mode])
+            mode_labels = [[0, 1, 1]] * len(labels[mode])
+            feed_dicts[mode] = classifier.get_feed_dict(sessions[mode], concepts[mode], labels=mode_labels)
 
         # Note: The ground-truth attribute labels haven't been removed from Grakn, so the results found here are
         # invalid, and used as an end-to-end test only

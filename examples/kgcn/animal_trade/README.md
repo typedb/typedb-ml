@@ -61,7 +61,7 @@ The [main](../../../examples/kgcn/animal_trade/main.py) function will:
 
 - Search Grakn for the k-hop neighbours of the selected examples, and store information about them as arrays, denoted in the code as `context_arrays`. This data is saved to file so that subsequent steps can be re-run without recomputing these data
 
-- Build the TensorFlow computation graph using `model.KGCN`, including a multi-class classification step and learning procedure defined by `classify.SupervisedKGCNClassifier`
+- Build the TensorFlow computation graph using `model.KGCN`, including a multi-class classification step and learning procedure defined by `classify.SupervisedKGCNMultiClassSingleLabelClassifier`
 
 - Feed the `context_arrays` to the TensorFlow graph, and perform learning
 

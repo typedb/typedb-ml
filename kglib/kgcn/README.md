@@ -69,7 +69,7 @@ kgcn = model.KGCN(neighbour_sample_sizes,
 
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
 
-classifier = classify.SupervisedKGCNClassifier(kgcn,
+classifier = classify.SupervisedKGCNMultiClassSingleLabelClassifier(kgcn,
                                                optimizer, 
                                                num_classes, 
                                                log_dir,
