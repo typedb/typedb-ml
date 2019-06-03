@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import itertools
 
 import networkx as nx
@@ -23,7 +24,7 @@ import networkx as nx
 import experiment.plotting
 
 
-def generate_graph(num_people):
+def generate_graph(num_people: int) -> nx.DiGraph:
     """
     Create a graph of people, where all people are connected to all others as:
     - the parent in a parentship
@@ -59,6 +60,46 @@ def generate_graph(num_people):
     return G
 
 
+def add_base_labels(G, attribute='input'):
+    """
+    Add basic input labels to the Graph to indicate whether nodes and edges are known to exist in the input. These are
+    indicated with `attribute` set to 1. Elements that are not known to exist are indicated with `attribute` set to 0.
+    :param attribute: where to store the labelling
+    :param G: the graph to label
+    """
+    for node in G.nodes:
+        if G.nodes[node]['type'] == 'person':
+            G.nodes[node][attribute] = 1
+        else:
+            G.nodes[node][attribute] = 0
+
+    for edge in G.edges:
+        G.edges[edge][attribute] = 0
+
+
+def add_parentship(G, parent_node, child_node, attribute='input'):
+    parentship = find_parentship(G, parent_node, child_node)
+    G.nodes[parentship][attribute] = 1
+    G.edges[parentship, parent_node][attribute] = 1
+    G.edges[parentship, child_node][attribute] = 1
+
+
+def find_parentship(G, parent_node, child_node):
+    """
+    Find the parentship that relates two people
+    :param G: The graph to search
+    :param parent_node: the node of the parent person
+    :param child_node: the node of the child person
+    :return: the parentship node
+    """
+    for node in set(G.predecessors(parent_node)).intersection(G.predecessors(child_node)):
+
+        if G.nodes[node]['type'] == 'parentship' \
+                and G.edges[node, parent_node]['type'] == 'parent' \
+                and G.edges[node, child_node]['type'] == 'child':
+            return node
+
+
 if __name__ == "__main__":
-    G = generate_graph(4)
-    experiment.plotting.plot_with_matplotlib(G)
+    g = generate_graph(3)
+    experiment.plotting.plot_with_matplotlib(g)

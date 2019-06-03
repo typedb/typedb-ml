@@ -53,3 +53,53 @@ class TestDataGeneration(unittest.TestCase):
             if G.nodes[node]['type'] == 'siblingship':
                 role_types = [roleplayer_data['type'] for roleplayer, roleplayer_data in G[node].items()]
                 self.assertListEqual(role_types, ['sibling', 'sibling'])
+
+
+class TestBaseLabelling(unittest.TestCase):
+    def test_node_labels_added_correctly(self):
+        num_people = 3
+        G = data.generate_graph(num_people)
+        data.add_base_labels(G, 'input')
+        expected_node_input_labels = [0] * len(list(G.nodes))
+        expected_node_input_labels[:num_people] = [1] * num_people
+
+        input_labels = [G.nodes[node]['input'] for node in G.nodes]
+
+        self.assertListEqual(input_labels, expected_node_input_labels)
+
+    def test_edge_labels_added_correctly(self):
+        num_people = 3
+        G = data.generate_graph(num_people)
+        data.add_base_labels(G, 'input')
+        expected_edge_input_labels = [0] * len(list(G.edges))
+
+        input_labels = [G.edges[edge]['input'] for edge in G.edges]
+
+        self.assertListEqual(input_labels, expected_edge_input_labels)
+
+
+class TestFindParentship(unittest.TestCase):
+    def test_parentship_found_correctly(self):
+        num_people = 3
+        G = data.generate_graph(num_people)
+        data.add_base_labels(G, 'input')
+
+        parentship_node = data.find_parentship(G, parent_node=0, child_node=1)
+        self.assertEqual(parentship_node, 3)
+
+
+class TestAddParentship(unittest.TestCase):
+    def test_parentship_node_and_role_edges_labelled(self):
+        num_people = 3
+        G = data.generate_graph(num_people)
+        data.add_base_labels(G, 'input')
+
+        self.assertEqual(G.nodes[3]['input'], 0)
+        self.assertEqual(G.edges[3, 0]['input'], 0)
+        self.assertEqual(G.edges[3, 1]['input'], 0)
+
+        data.add_parentship(G, 0, 1, attribute='input')
+
+        self.assertEqual(G.nodes[3]['input'], 1)
+        self.assertEqual(G.edges[3, 0]['input'], 1)
+        self.assertEqual(G.edges[3, 1]['input'], 1)
