@@ -60,7 +60,7 @@ def generate_graph(num_people: int) -> nx.DiGraph:
     return G
 
 
-def add_base_labels(G, attribute='input'):
+def add_base_labels(G, *attributes):
     """
     Add basic input labels to the Graph to indicate whether nodes and edges are known to exist in the input. These are
     indicated with `attribute` set to 1. Elements that are not known to exist are indicated with `attribute` set to 0.
@@ -69,35 +69,169 @@ def add_base_labels(G, attribute='input'):
     """
     for node in G.nodes:
         if G.nodes[node]['type'] == 'person':
-            G.nodes[node][attribute] = 1
+            value = 1
         else:
-            G.nodes[node][attribute] = 0
+            value = 0
+
+        for attribute in attributes:
+            G.nodes[node][attribute] = value
 
     for edge in G.edges:
-        G.edges[edge][attribute] = 0
+        for attribute in attributes:
+            G.edges[edge][attribute] = 0
 
 
-def add_parentship(G, parent_node, child_node, attribute='input'):
-    parentship = find_parentship(G, parent_node, child_node)
-    G.nodes[parentship][attribute] = 1
-    G.edges[parentship, parent_node][attribute] = 1
-    G.edges[parentship, child_node][attribute] = 1
+def find_relation_node(G, relation_type, roles, roleplayers):
+    for node in set(G.predecessors(roleplayers[0])).intersection(G.predecessors(roleplayers[1])):
 
-
-def find_parentship(G, parent_node, child_node):
-    """
-    Find the parentship that relates two people
-    :param G: The graph to search
-    :param parent_node: the node of the parent person
-    :param child_node: the node of the child person
-    :return: the parentship node
-    """
-    for node in set(G.predecessors(parent_node)).intersection(G.predecessors(child_node)):
-
-        if G.nodes[node]['type'] == 'parentship' \
-                and G.edges[node, parent_node]['type'] == 'parent' \
-                and G.edges[node, child_node]['type'] == 'child':
+        if G.nodes[node]['type'] == relation_type \
+                and G.edges[node, roleplayers[0]]['type'] == roles[0] \
+                and G.edges[node, roleplayers[1]]['type'] == roles[1]:
             return node
+
+
+def add_relation_label(G, relation_type, roles, roleplayers, *attributes):
+    relation = find_relation_node(G, relation_type, roles, roleplayers)
+    for attribute in attributes:
+        G.nodes[relation][attribute] = 1
+        G.edges[relation, roleplayers[0]][attribute] = 1
+        G.edges[relation, roleplayers[1]][attribute] = 1
+
+
+# def find_parentship(G, parent_node, child_node):
+#     """
+#     Find the parentship that relates two people
+#     :param G: The graph to search
+#     :param parent_node: the node of the parent person
+#     :param child_node: the node of the child person
+#     :return: the parentship node
+#     """
+#
+#     return find_relation_node(G, 'parentship', ['parent', 'child'], [parent_node, child_node])
+
+
+# def find_siblingship(G, sibling_nodes):
+#     return find_relation_node(G, 'siblingship', ['sibling', 'sibling'], [sibling_nodes[0], sibling_nodes[1]])
+
+
+def add_parentship(G, parent_node, child_node, *attributes):
+    add_relation_label(G, 'parentship', ['parent', 'child'], [parent_node, child_node], *attributes)
+
+
+def add_siblingship(G, sibling_node_1, sibling_node_2, *attributes):
+    add_relation_label(G, 'siblingship', ['sibling', 'sibling'], (sibling_node_1, sibling_node_2), *attributes)
+
+
+def create_graph(i):
+
+    G = None
+
+    def base_graph(num_people):
+        G = generate_graph(num_people)
+        add_base_labels(G, 'input', 'solution')
+        return G
+
+    # ---- 3-person graphs ----
+
+    if i == 0:
+        G = base_graph(3)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 0, 2, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'solution')
+
+    elif i == 1:
+        # All mutual siblings, no parents
+        G = base_graph(3)
+        add_siblingship(G, 0, 1, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'input', 'solution')
+        add_siblingship(G, 0, 2, 'solution')
+
+    elif i == 2:
+        G = base_graph(3)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 1, 2, 'input', 'solution')
+
+    elif i == 3:
+        G = base_graph(3)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'input', 'solution')
+
+    # elif i == 4:
+        # # Infers a parentship
+        # G = base_graph(num_people)
+        # add_parentship(G, 0, 1, 'input', 'solution')
+        # add_parentship(G, 0, 2, 'solution')
+        # add_siblingship(G, 1, 2, 'input', 'solution')
+
+    # ---- 4-person graphs ----
+    elif i == 5:
+        G = base_graph(4)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 0, 2, 'input', 'solution')
+        add_parentship(G, 2, 3, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'solution')
+
+    elif i == 6:
+        G = base_graph(4)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 0, 2, 'input', 'solution')
+        add_parentship(G, 2, 3, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'solution')
+
+    elif i == 7:
+        G = base_graph(4)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 0, 2, 'input', 'solution')
+        add_parentship(G, 3, 0, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'solution')
+
+    elif i == 8:
+        G = base_graph(4)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 1, 2, 'input', 'solution')
+        add_parentship(G, 2, 3, 'input', 'solution')
+
+    elif i == 9:
+        # 1 parent to 3 siblings
+        G = base_graph(4)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 0, 2, 'input', 'solution')
+        add_parentship(G, 0, 3, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'solution')
+        add_siblingship(G, 2, 3, 'solution')
+        add_siblingship(G, 1, 3, 'solution')
+
+    elif i == 10:
+        # All mutual siblings, no parents
+        G = base_graph(4)
+        add_siblingship(G, 0, 1, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'input', 'solution')
+        add_siblingship(G, 2, 3, 'input', 'solution')
+        add_siblingship(G, 0, 2, 'solution')
+        add_siblingship(G, 0, 3, 'solution')
+        add_siblingship(G, 1, 3, 'solution')
+
+    elif i == 11:
+        G = base_graph(4)
+        add_siblingship(G, 0, 1, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'input', 'solution')
+        add_siblingship(G, 2, 3, 'input', 'solution')
+        add_siblingship(G, 0, 2, 'solution')
+        add_siblingship(G, 0, 3, 'solution')
+        add_siblingship(G, 1, 3, 'solution')
+
+    elif i == 12:
+        G = base_graph(4)
+        add_parentship(G, 0, 1, 'input', 'solution')
+        add_parentship(G, 0, 2, 'input', 'solution')
+        add_parentship(G, 3, 1, 'input', 'solution')
+        add_siblingship(G, 1, 2, 'solution')
+
+    return G
+
+
+def create_graphs_tuple():
+    return tuple(create_graph(i) for i in [0, 1, 2, 3, 5, 6, 7, 8, 9, 10])
 
 
 if __name__ == "__main__":

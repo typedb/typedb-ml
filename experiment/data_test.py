@@ -78,13 +78,13 @@ class TestBaseLabelling(unittest.TestCase):
         self.assertListEqual(input_labels, expected_edge_input_labels)
 
 
-class TestFindParentship(unittest.TestCase):
+class TestFindRelationNode(unittest.TestCase):
     def test_parentship_found_correctly(self):
         num_people = 3
         G = data.generate_graph(num_people)
         data.add_base_labels(G, 'input')
 
-        parentship_node = data.find_parentship(G, parent_node=0, child_node=1)
+        parentship_node = data.find_relation_node(G, 'parentship', ['parent', 'child'], [0, 1])
         self.assertEqual(parentship_node, 3)
 
 
@@ -98,8 +98,29 @@ class TestAddParentship(unittest.TestCase):
         self.assertEqual(G.edges[3, 0]['input'], 0)
         self.assertEqual(G.edges[3, 1]['input'], 0)
 
-        data.add_parentship(G, 0, 1, attribute='input')
+        data.add_parentship(G, 0, 1, 'input')
 
         self.assertEqual(G.nodes[3]['input'], 1)
         self.assertEqual(G.edges[3, 0]['input'], 1)
         self.assertEqual(G.edges[3, 1]['input'], 1)
+
+
+class TestAddSiblingship(unittest.TestCase):
+    def test_siblingship_node_and_role_edges_labelled(self):
+        num_people = 3
+        G = data.generate_graph(num_people)
+        data.add_base_labels(G, 'input')
+
+        self.assertEqual(G.nodes[9]['input'], 0)
+        self.assertEqual(G.edges[9, 0]['input'], 0)
+        self.assertEqual(G.edges[9, 1]['input'], 0)
+
+        data.add_siblingship(G, 0, 1, 'input')
+
+        self.assertEqual(G.nodes[9]['input'], 1)
+        self.assertEqual(G.edges[9, 0]['input'], 1)
+        self.assertEqual(G.edges[9, 1]['input'], 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
