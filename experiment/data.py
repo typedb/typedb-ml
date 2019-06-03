@@ -98,22 +98,6 @@ def add_relation_label(G, relation_type, roles, roleplayers, *attributes):
         G.edges[relation, roleplayers[1]][attribute] = 1
 
 
-# def find_parentship(G, parent_node, child_node):
-#     """
-#     Find the parentship that relates two people
-#     :param G: The graph to search
-#     :param parent_node: the node of the parent person
-#     :param child_node: the node of the child person
-#     :return: the parentship node
-#     """
-#
-#     return find_relation_node(G, 'parentship', ['parent', 'child'], [parent_node, child_node])
-
-
-# def find_siblingship(G, sibling_nodes):
-#     return find_relation_node(G, 'siblingship', ['sibling', 'sibling'], [sibling_nodes[0], sibling_nodes[1]])
-
-
 def add_parentship(G, parent_node, child_node, *attributes):
     add_relation_label(G, 'parentship', ['parent', 'child'], [parent_node, child_node], *attributes)
 
