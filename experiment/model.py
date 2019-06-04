@@ -19,8 +19,10 @@
 
 import time
 
-from graph_nets.demos import models
+import matplotlib.pyplot as plt
+import numpy as np
 import tensorflow as tf
+from graph_nets.demos import models
 
 import experiment.input as ip
 
@@ -138,3 +140,37 @@ for iteration in range(last_iteration, num_training_iterations):
               " {:.4f}, Cge {:.4f}, Sge {:.4f}".format(
                   iteration, elapsed, train_values["loss"], test_values["loss"],
                   correct_tr, solved_tr, correct_ge, solved_ge))
+
+# Plot results curves.
+fig = plt.figure(1, figsize=(18, 3))
+fig.clf()
+x = np.array(logged_iterations)
+# Loss.
+y_tr = losses_tr
+y_ge = losses_ge
+ax = fig.add_subplot(1, 3, 1)
+ax.plot(x, y_tr, "k", label="Training")
+ax.plot(x, y_ge, "k--", label="Test/generalization")
+ax.set_title("Loss across training")
+ax.set_xlabel("Training iteration")
+ax.set_ylabel("Loss (binary cross-entropy)")
+ax.legend()
+# Correct.
+y_tr = corrects_tr
+y_ge = corrects_ge
+ax = fig.add_subplot(1, 3, 2)
+ax.plot(x, y_tr, "k", label="Training")
+ax.plot(x, y_ge, "k--", label="Test/generalization")
+ax.set_title("Fraction correct across training")
+ax.set_xlabel("Training iteration")
+ax.set_ylabel("Fraction nodes/edges correct")
+# Solved.
+y_tr = solveds_tr
+y_ge = solveds_ge
+ax = fig.add_subplot(1, 3, 3)
+ax.plot(x, y_tr, "k", label="Training")
+ax.plot(x, y_ge, "k--", label="Test/generalization")
+ax.set_title("Fraction solved across training")
+ax.set_xlabel("Training iteration")
+ax.set_ylabel("Fraction examples solved")
+plt.show()

@@ -64,11 +64,13 @@ def graph_to_input_target(graph):
 
     for receiver, sender, edge_features in graph.edges(data=True):
         input_graph.add_edge(receiver, sender, features=create_feature(edge_features, input_edge_fields))
+        input_graph.add_edge(sender, receiver, features=create_feature(edge_features, input_edge_fields))
         target_edge = to_one_hot(create_feature(edge_features, target_edge_fields).astype(int), 2)[0]
         target_graph.add_edge(receiver, sender, features=target_edge)
+        target_graph.add_edge(sender, receiver, features=target_edge)
 
-    input_graph.graph["features"] = np.array([0.0])
-    target_graph.graph["features"] = np.array([0.0])
+    input_graph.graph["features"] = np.array([0.0]*5)
+    target_graph.graph["features"] = np.array([0.0]*5)
 
     return input_graph, target_graph
 
@@ -131,7 +133,7 @@ def create_feed_dict(input_ph, target_ph):
     return feed_dict, raw_graphs
 
 
-def compute_accuracy(target, output, use_nodes=True, use_edges=False):
+def compute_accuracy(target, output, use_nodes=True, use_edges=True):
     """Calculate model accuracy.
 
     Returns the number of elements correctly predicted to exist, and the number of completely correct graphs
