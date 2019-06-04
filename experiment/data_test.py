@@ -23,6 +23,8 @@ import networkx as nx
 
 import experiment.data as data
 
+import numpy as np
+
 
 class TestDataGeneration(unittest.TestCase):
     def test_all_people_are_in_3_different_relations_with_each_other_person(self):
@@ -60,7 +62,7 @@ class TestBaseLabelling(unittest.TestCase):
         num_people = 3
         G = data.generate_graph(num_people)
         data.add_base_labels(G, 'input')
-        expected_node_input_labels = [0] * len(list(G.nodes))
+        expected_node_input_labels = [0] * G.number_of_nodes()
         expected_node_input_labels[:num_people] = [1] * num_people
 
         input_labels = [G.nodes[node]['input'] for node in G.nodes]
@@ -71,7 +73,7 @@ class TestBaseLabelling(unittest.TestCase):
         num_people = 3
         G = data.generate_graph(num_people)
         data.add_base_labels(G, 'input')
-        expected_edge_input_labels = [0] * len(list(G.edges))
+        expected_edge_input_labels = [0] * G.number_of_edges()
 
         input_labels = [G.edges[edge]['input'] for edge in G.edges]
 
@@ -120,6 +122,35 @@ class TestAddSiblingship(unittest.TestCase):
         self.assertEqual(G.nodes[9]['input'], 1)
         self.assertEqual(G.edges[9, 0]['input'], 1)
         self.assertEqual(G.edges[9, 1]['input'], 1)
+
+
+class TestOneHotEncodeTypes(unittest.TestCase):
+    def test_type_encoding_is_as_expected(self):
+        num_people = 2
+        G = data.generate_graph(num_people)
+        all_node_types = ['person', 'parentship', 'siblingship']
+        all_edge_types = ['parent', 'child', 'sibling']
+        data.encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type')
+
+        for node_index, node_feature in G.nodes(data=True):
+            if node_feature['type'] == 'person':
+                np.testing.assert_array_equal(node_feature['one_hot_type'], np.array([1, 0, 0]))
+            elif node_feature['type'] == 'parentship':
+                np.testing.assert_array_equal(node_feature['one_hot_type'], np.array([0, 1, 0]))
+            elif node_feature['type'] == 'siblingship':
+                np.testing.assert_array_equal(node_feature['one_hot_type'], np.array([0, 0, 1]))
+            else:
+                raise ValueError(f'All nodes should have a type in {all_node_types}')
+
+        for receiver, sender, edge_feature in G.edges(data=True):
+            if edge_feature['type'] == 'parent':
+                np.testing.assert_array_equal(edge_feature['one_hot_type'], np.array([1, 0, 0]))
+            elif edge_feature['type'] == 'child':
+                np.testing.assert_array_equal(edge_feature['one_hot_type'], np.array([0, 1, 0]))
+            elif edge_feature['type'] == 'sibling':
+                np.testing.assert_array_equal(edge_feature['one_hot_type'], np.array([0, 0, 1]))
+            else:
+                raise ValueError(f'All edges should have a type in {all_edge_types}')
 
 
 if __name__ == "__main__":
