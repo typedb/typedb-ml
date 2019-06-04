@@ -30,8 +30,8 @@ tf.reset_default_graph()
 
 # Model parameters.
 # Number of processing (message-passing) steps.
-num_processing_steps_tr = 10
-num_processing_steps_ge = 10
+num_processing_steps_tr = 6
+num_processing_steps_ge = 6
 
 # Data / training parameters.
 num_training_iterations = 10000
