@@ -219,10 +219,6 @@ def create_graph(i):
     return G
 
 
-def create_graphs(graph_ids=(0, 1, 2, 3, 5, 6, 7, 8, 9, 10)):
-    return tuple(create_graph(i) for i in graph_ids)
-
-
 def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):
     """
     Creates a one-hot encoding for every element in the graph, based on the "type" attribute of each element.
