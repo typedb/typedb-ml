@@ -27,11 +27,13 @@ import numpy as np
 
 
 class TestDataGeneration(unittest.TestCase):
-    def test_all_people_are_in_3_different_relations_with_each_other_person(self):
+    def test_all_people_are_play_roles_in_each_relation(self):
         num_people = 3
         G = data.generate_graph(num_people)
-        expected_relation_types = ['parentship'] * 4
-        expected_relation_types.extend(['siblingship'] * 2)
+        expected_relation_types = ['parentship'] * 4 * 2
+        # We multiply by 2 since we duplicate the number of roleplayer links by creating another link in the reverse
+        # direction, so that message passing can travel in both directions
+        expected_relation_types.extend(['siblingship'] * 2 * 2)
         for node in G.nodes:
             if G.nodes[node]['type'] == 'person':
                 neighbours = nx.all_neighbors(G, node)

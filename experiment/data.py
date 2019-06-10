@@ -51,6 +51,10 @@ def generate_graph(num_people: int) -> nx.DiGraph:
         G.add_edge(parentship_node, node_1, type="parent")
         G.add_edge(parentship_node, node_2, type="child")
 
+        # Also add directed edges going in the opposite direction
+        G.add_edge(node_1, parentship_node, type="parent")
+        G.add_edge(node_2, parentship_node, type="child")
+
     last_id = G.number_of_nodes()
 
     for i, (node_1, node_2) in enumerate(itertools.combinations(range(num_people), 2)):
@@ -58,6 +62,10 @@ def generate_graph(num_people: int) -> nx.DiGraph:
         G.add_node(siblingship_node, type="siblingship")
         G.add_edge(siblingship_node, node_1, type="sibling")
         G.add_edge(siblingship_node, node_2, type="sibling")
+
+        # Also add directed edges going in the opposite direction
+        G.add_edge(node_1, siblingship_node, type="sibling")
+        G.add_edge(node_2, siblingship_node, type="sibling")
 
     return G
 
@@ -98,6 +106,10 @@ def add_relation_label(G, relation_type, roles, roleplayers, *attributes):
         G.nodes[relation][attribute] = 1
         G.edges[relation, roleplayers[0]][attribute] = 1
         G.edges[relation, roleplayers[1]][attribute] = 1
+
+        # Also label directed edges going in the opposite direction
+        G.edges[roleplayers[0], relation][attribute] = 1
+        G.edges[roleplayers[1], relation][attribute] = 1
 
 
 def add_parentship(G, parent_node, child_node, *attributes):
