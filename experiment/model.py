@@ -25,6 +25,7 @@ import tensorflow as tf
 from graph_nets.demos import models
 
 import experiment.input as ip
+import experiment.plotting
 
 tf.reset_default_graph()
 
@@ -35,8 +36,10 @@ num_processing_steps_ge = 6
 
 # Data / training parameters.
 num_training_iterations = 10000
-batch_size_tr = 9
-batch_size_ge = 3
+# batch_size_tr = 9
+# batch_size_ge = 3
+tr_ge_split = (9, 3)
+
 # Number of nodes per graph sampled uniformly from this range.
 # num_nodes_min_max_tr = (8, 17)
 # num_nodes_min_max_ge = (16, 33)
@@ -105,7 +108,7 @@ start_time = time.time()
 last_log_time = start_time
 for iteration in range(last_iteration, num_training_iterations):
     last_iteration = iteration
-    feed_dict, _ = ip.create_feed_dict(input_ph, target_ph)
+    feed_dict, _ = ip.create_feed_dict("tr", input_ph, target_ph)
     train_values = sess.run({
         "step": step_op,
         "target": target_ph,
@@ -117,7 +120,7 @@ for iteration in range(last_iteration, num_training_iterations):
     elapsed_since_last_log = the_time - last_log_time
     if elapsed_since_last_log > log_every_seconds:
         last_log_time = the_time
-        feed_dict, raw_graphs = ip.create_feed_dict(input_ph, target_ph)
+        feed_dict, raw_graphs = ip.create_feed_dict("ge", input_ph, target_ph)
         test_values = sess.run({
             "target": target_ph,
             "loss": loss_op_ge,
@@ -173,4 +176,7 @@ ax.plot(x, y_ge, "k--", label="Test/generalization")
 ax.set_title("Fraction solved across training")
 ax.set_xlabel("Training iteration")
 ax.set_ylabel("Fraction examples solved")
+plt.show()
+
+experiment.plotting.plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
 plt.show()
