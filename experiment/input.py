@@ -128,10 +128,10 @@ def create_feed_dict(tr_or_ge, input_ph, target_ph):
     """
     if tr_or_ge == "tr":
         start = 0
-        end = 8
+        end = 9
     elif tr_or_ge == "ge":
         start = 9
-        end = 11
+        end = 12
 
     inputs, targets, raw_graphs = create_graphs()
     input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[start:end])
