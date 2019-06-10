@@ -61,26 +61,34 @@ def get_node_dict(graph, attr):
 def softmax_prob_last_dim(x):  # pylint: disable=redefined-outer-name
     e = np.exp(x)
     return e[:, -1] / np.sum(e, axis=-1)
+    # return x[:, 0]
 
 
-def above_base(val, base=0.3):
+def above_base(val, base=0.0):
     return val * (1.0 - base) + base
 
 
-def colors_array(probabilities, n):
-    return np.array([above_base(1.0 - probabilities[n]), 0.0, above_base(probabilities[n]), above_base(probabilities[n], base=0.1)])
+def colors_array(probability):
+    """
+    Determine the color values to use for a node/edge
+    :param probability: the score for the node
+    :return: array of rgba color values to use
+    """
+    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
 
 
 def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob):
     ax = fig.add_subplot(h, w, iax)
     node_color = {}
     edge_color = {}
-    for i, n in enumerate(graph.nodes):
-        node_color[n] = colors_array(node_prob, n)
 
+    # Draw the nodes
+    for i, n in enumerate(graph.nodes):
+        node_color[n] = colors_array(node_prob[n])
+
+    # Draw the edges
     for n, (sender, receiver) in enumerate(graph.edges):
-            # edge_color[(sender, receiver)] = np.array([0.0, 1.0, 0.0, 1.0])
-            edge_color[(sender, receiver)] = colors_array(edge_prob, n)
+            edge_color[(sender, receiver)] = colors_array(edge_prob[n])
     draw_graph(graph, pos, ax, node_size=node_size, node_color=node_color, edge_color=edge_color)
     return ax
 

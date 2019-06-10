@@ -35,7 +35,7 @@ num_processing_steps_tr = 6
 num_processing_steps_ge = 6
 
 # Data / training parameters.
-num_training_iterations = 100
+num_training_iterations = 10
 # batch_size_tr = 9
 # batch_size_ge = 3
 tr_ge_split = (9, 3)
@@ -95,7 +95,7 @@ solveds_ge = []
 # training by simply executing this cell again.
 
 # How much time between logging and printing the current results.
-log_every_seconds = 2
+log_every_seconds = 1
 
 print("# (iteration number), T (elapsed seconds), "
       "Ltr (training loss), Lge (test/generalization loss), "
