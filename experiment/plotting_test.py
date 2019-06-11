@@ -31,8 +31,8 @@ class TestPlotInputVsOutput(unittest.TestCase):
         num_processing_steps_ge = 6
         num_graphs = 3
         inputs, targets, raw_graphs = input.create_graphs()
-        input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[:num_graphs])
+        # input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[:num_graphs])
         target_graphs = utils_np.networkxs_to_graphs_tuple(targets[:num_graphs])
-        test_values = {"target": target_graphs, "outputs": [input_graphs for _ in range(6)]}
+        test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}
         plotting.plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
         plt.show()

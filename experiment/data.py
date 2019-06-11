@@ -157,7 +157,7 @@ def create_graph(i):
         add_parentship(G, 0, 1, *existing_elements)
         add_siblingship(G, 1, 2, *existing_elements)
 
-    # elif i == 4:
+    # elif i == ?:
         # # Infers a parentship
         # G = base_graph(num_people)
         # add_parentship(G, 0, 1, *existing_elements)
@@ -165,6 +165,13 @@ def create_graph(i):
         # add_siblingship(G, 1, 2, *existing_elements)
 
     # ---- 4-person graphs ----
+    elif i == 4:
+        G = base_graph(4)
+        add_parentship(G, 0, 1, *existing_elements)
+        add_parentship(G, 0, 2, *existing_elements)
+        add_parentship(G, 2, 3, *existing_elements)
+        add_siblingship(G, 1, 2, *to_induce)
+
     elif i == 5:
         G = base_graph(4)
         add_parentship(G, 0, 1, *existing_elements)
@@ -176,23 +183,16 @@ def create_graph(i):
         G = base_graph(4)
         add_parentship(G, 0, 1, *existing_elements)
         add_parentship(G, 0, 2, *existing_elements)
-        add_parentship(G, 2, 3, *existing_elements)
+        add_parentship(G, 3, 0, *existing_elements)
         add_siblingship(G, 1, 2, *to_induce)
 
     elif i == 7:
         G = base_graph(4)
         add_parentship(G, 0, 1, *existing_elements)
-        add_parentship(G, 0, 2, *existing_elements)
-        add_parentship(G, 3, 0, *existing_elements)
-        add_siblingship(G, 1, 2, *to_induce)
-
-    elif i == 8:
-        G = base_graph(4)
-        add_parentship(G, 0, 1, *existing_elements)
         add_parentship(G, 1, 2, *existing_elements)
         add_parentship(G, 2, 3, *existing_elements)
 
-    elif i == 9:
+    elif i == 8:
         # 1 parent to 3 siblings
         G = base_graph(4)
         add_parentship(G, 0, 1, *existing_elements)
@@ -202,7 +202,7 @@ def create_graph(i):
         add_siblingship(G, 2, 3, *to_induce)
         add_siblingship(G, 1, 3, *to_induce)
 
-    elif i == 10:
+    elif i == 9:
         # All mutual siblings, no parents
         G = base_graph(4)
         add_siblingship(G, 0, 1, *existing_elements)
@@ -212,7 +212,7 @@ def create_graph(i):
         add_siblingship(G, 0, 3, *to_induce)
         add_siblingship(G, 1, 3, *to_induce)
 
-    elif i == 11:
+    elif i == 10:
         G = base_graph(4)
         add_siblingship(G, 0, 1, *existing_elements)
         add_siblingship(G, 1, 2, *existing_elements)
@@ -221,7 +221,7 @@ def create_graph(i):
         add_siblingship(G, 0, 3, *to_induce)
         add_siblingship(G, 1, 3, *to_induce)
 
-    elif i == 12:
+    elif i == 11:
         G = base_graph(4)
         add_parentship(G, 0, 1, *existing_elements)
         add_parentship(G, 0, 2, *existing_elements)

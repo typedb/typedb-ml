@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+import random
 
 from graph_nets import utils_np
 from graph_nets import utils_tf
@@ -79,8 +80,10 @@ def create_graphs():
     Builds graphs ready to be used for training
     :return: the input graphs, the target (desired output) graphs, and the original_graphs
     """
-    # graph_ids = (0, 1, 2, 3, 5, 6, 7, 8, 9, 10)
-    graph_ids = (6, 0, 8, 10, 3, 9, 2, 7, 1, 5,)
+    graph_ids = list(range(12))
+    random.seed(1)
+    random.shuffle(graph_ids)
+    print(f'Graphs are used in the order {graph_ids}')
     all_node_types = ['person', 'parentship', 'siblingship']
     all_edge_types = ['parent', 'child', 'sibling']
 
@@ -136,7 +139,7 @@ def create_feed_dict(tr_or_ge, input_ph, target_ph):
     input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[start:end])
     target_graphs = utils_np.networkxs_to_graphs_tuple(targets[start:end])
     feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
-    return feed_dict, raw_graphs
+    return feed_dict, raw_graphs[start:end]
 
 
 def compute_accuracy(target, output, use_nodes=True, use_edges=True):
