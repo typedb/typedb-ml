@@ -16,15 +16,23 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-import collections
+
+import math
 
 import graph_nets.utils_np as utils_np
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
+import experiment.custom_nx as custom_nx
+
 
 def plot_with_matplotlib(G):
+    """
+    Really basic plotting function for input graphs
+    :param G:
+    :return:
+    """
 
     attribute = 'solution'
     edges = []
@@ -53,46 +61,6 @@ def plot_with_matplotlib(G):
     plt.show()
 
 
-def get_node_dict(graph, attr):
-    """Return a `dict` of node:attribute pairs from a graph."""
-    return {k: v[attr] for k, v in graph.node.items()}
-
-
-def softmax_prob_last_dim(x):  # pylint: disable=redefined-outer-name
-    e = np.exp(x)
-    return e[:, -1] / np.sum(e, axis=-1)
-    # return x[:, 0]
-
-
-def above_base(val, base=0.0):
-    return val * (1.0 - base) + base
-
-
-def colors_array(probability):
-    """
-    Determine the color values to use for a node/edge
-    :param probability: the score for the node
-    :return: array of rgba color values to use
-    """
-    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
-
-
-def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob):
-    ax = fig.add_subplot(h, w, iax)
-    node_color = {}
-    edge_color = {}
-
-    # Draw the nodes
-    for i, n in enumerate(graph.nodes):
-        node_color[n] = colors_array(node_prob[n])
-
-    # Draw the edges
-    for n, (sender, receiver) in enumerate(graph.edges):
-            edge_color[(sender, receiver)] = colors_array(edge_prob[n])
-    draw_graph(graph, pos, ax, node_size=node_size, node_color=node_color, edge_color=edge_color)
-    return ax
-
-
 def plot_input_vs_output(raw_graphs,
                          test_values,
                          num_processing_steps_ge):
@@ -104,7 +72,7 @@ def plot_input_vs_output(raw_graphs,
     # shortest path, and purplish colors mean the model isn't sure.
 
     max_graphs_to_plot = 6
-    num_steps_to_plot = 4
+    num_steps_to_plot = 3
     node_size = 120
 
     num_graphs = len(raw_graphs)
@@ -122,7 +90,12 @@ def plot_input_vs_output(raw_graphs,
     for j, (graph, target, output) in enumerate(zip(raw_graphs, targets, outputs)):
         if j >= h:
             break
-        pos = nx.circular_layout(graph)
+        for s, r, d in graph.edges(data=True):
+            # d['weight'] = 1 - (d['solution']-0.5)  # Looks good with k = 3
+            d['weight'] = (d['solution']-0.5)  # Looks good with high k
+            # d['weight'] = d['solution']  # Looks good with k=3 but spacing is small
+        pos = nx.spring_layout(graph, k=3 / math.sqrt(graph.number_of_nodes()), seed=1, weight='weight', iterations=50)
+        # pos = nx.circular_layout(graph, scale=2)
         ground_truth_node_prob = target["nodes"][:, -1]
         ground_truth_edge_prob = target["edges"][:, -1]
 
@@ -150,14 +123,69 @@ def plot_input_vs_output(raw_graphs,
                 step_indices[k] + 1, step_indices[-1] + 1))
 
 
+def softmax_prob_last_dim(x):  # pylint: disable=redefined-outer-name
+    e = np.exp(x)
+    return e[:, -1] / np.sum(e, axis=-1)
+    # return x[:, 0]
+
+
+def above_base(val, base=0.0):
+    return val * (1.0 - base) + base
+
+
+def colors_array(probability):
+    """
+    Determine the color values to use for a node/edge
+    :param probability: the score for the node
+    :return: array of rgba color values to use
+    """
+    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
+
+
+def label_colors_array(probability):
+    """
+    Determine the color values to use for a node/edge
+    :param probability: the score for the node
+    :return: array of rgba color values to use
+    """
+    return np.array([0.0, 0.0, 0.0, above_base(probability, base=0.0)])
+
+
+def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob):
+    ax = fig.add_subplot(h, w, iax)
+    node_color = {}
+    node_label_color = {}
+    edge_color = {}
+    edge_label_color = {}
+
+    for i, n in enumerate(graph.nodes):
+        # Determine the nodes colors
+        node_color[n] = colors_array(node_prob[n])
+        # Determine the node label colors
+        node_label_color[n] = label_colors_array(node_prob[n])
+
+    for n, (sender, receiver) in enumerate(graph.edges):
+        # Determine the edge colors
+        edge_color[(sender, receiver)] = colors_array(edge_prob[n])
+        # Determine the edge label colors
+        edge_label_color[(sender, receiver)] = label_colors_array(edge_prob[n])
+
+    draw_graph(graph, pos, ax, node_size=node_size, node_color=node_color, node_label_color=node_label_color,
+               edge_color=edge_color, edge_label_color=edge_label_color)
+    return ax
+
+
 def draw_graph(graph,
                pos,
                ax,
                node_size=200,
                node_color=(0.4, 0.8, 0.4),
+               node_label_color=None,
                edge_color=(0.0, 0.0, 0.0),
+               edge_label_color=None,
                node_linewidth=1.0,
-               edge_width=1.0):
+               edge_width=1.0,
+               font_size=6):
 
     def _draw(draw_function, zorder=None, **kwargs):
         # draw_kwargs = self._make_draw_kwargs(**kwargs)
@@ -180,13 +208,34 @@ def draw_graph(graph,
           node_color=c,
           linewidths=node_linewidth,
           alpha=[node_color[n][-1] for n in graph.nodes()],
-          zorder=20)
+          zorder=-10)
 
     # Plot edges.
     e = [edge_color[(s, r)] for s, r in graph.edges]
     _draw(nx.draw_networkx_edges,
           edgelist=graph.edges,
           width=edge_width,
-          zorder=10,
+          zorder=-20,
           edge_color=e
           )
+
+    bbox_props = dict(boxstyle="square,pad=0.0", fc="none", ec="none", lw=1)
+    labels_dict = {node_id: graph.nodes[node_id]['type'] for node_id in graph.nodes}
+    edge_labels_dict = {(edge_id[0], edge_id[1]): graph.edges[edge_id]['type'] for edge_id in graph.edges}
+
+    custom_nx.draw_networkx_labels(graph,
+                                   pos,
+                                   labels=labels_dict,
+                                   font_size=font_size,
+                                   font_color=node_label_color,
+                                   alpha=[node_label_color[n][-1] for n in graph.nodes()])
+
+    custom_nx.draw_networkx_edge_labels(graph,
+                                        pos,
+                                        edge_labels=edge_labels_dict,
+                                        font_size=font_size,
+                                        # font_color=np.array([0.0, 0.5, 0.0, 0.1]),
+                                        font_color=edge_label_color,
+                                        # alpha=0.2,
+                                        alpha={n: edge_label_color[n][-1] for n in graph.edges()},
+                                        bbox=bbox_props)
