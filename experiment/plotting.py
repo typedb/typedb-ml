@@ -98,6 +98,7 @@ def plot_input_vs_output(raw_graphs,
         # pos = nx.circular_layout(graph, scale=2)
         ground_truth_node_prob = target["nodes"][:, -1]
         ground_truth_edge_prob = target["edges"][:, -1]
+        # ground_truth_node_prob, ground_truth_edge_prob = determine_node_score(target)
 
         # Ground truth.
         iax = j * (1 + num_steps_to_plot) + 1
@@ -106,10 +107,10 @@ def plot_input_vs_output(raw_graphs,
         ax.set_axis_on()
         ax.set_xticks([])
         ax.set_yticks([])
-        try:
-            ax.set_facecolor([0.9] * 3 + [1.0])
-        except AttributeError:
-            ax.set_axis_bgcolor([0.9] * 3 + [1.0])
+        # try:
+        #     ax.set_facecolor([0.9] * 3 + [1.0])
+        # except AttributeError:
+        #     ax.set_axis_bgcolor([0.9] * 3 + [1.0])
         ax.grid(None)
         ax.set_title("Ground truth")
 
@@ -118,15 +119,21 @@ def plot_input_vs_output(raw_graphs,
             iax = j * (1 + num_steps_to_plot) + 2 + k
             node_prob = softmax_prob_last_dim(outp["nodes"])
             edge_prob = softmax_prob_last_dim(outp["edges"])
+            # node_prob, edge_prob = determine_node_score(outp)
             ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
 
 
+# def determine_node_score(graph_tuple):
+#     node_prob = softmax_prob_last_dim(graph_tuple["nodes"])
+#     edge_prob = softmax_prob_last_dim(graph_tuple["edges"])
+#     return node_prob, edge_prob
+
+
 def softmax_prob_last_dim(x):  # pylint: disable=redefined-outer-name
     e = np.exp(x)
     return e[:, -1] / np.sum(e, axis=-1)
-    # return x[:, 0]
 
 
 def above_base(val, base=0.0):
@@ -139,7 +146,7 @@ def colors_array(probability):
     :param probability: the score for the node
     :return: array of rgba color values to use
     """
-    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
+    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.0)])
 
 
 def label_colors_array(probability):

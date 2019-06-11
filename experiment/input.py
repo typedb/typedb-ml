@@ -80,10 +80,11 @@ def create_graphs():
     Builds graphs ready to be used for training
     :return: the input graphs, the target (desired output) graphs, and the original_graphs
     """
-    graph_ids = list(range(12))
-    random.seed(1)
-    random.shuffle(graph_ids)
-    print(f'Graphs are used in the order {graph_ids}')
+    # graph_ids = list(range(12))
+    # random.seed(1)
+    # random.shuffle(graph_ids)
+    # print(f'Graphs are used in the order {graph_ids}')
+    graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
     all_node_types = ['person', 'parentship', 'siblingship']
     all_edge_types = ['parent', 'child', 'sibling']
 
