@@ -135,7 +135,7 @@ def create_feed_dict(tr_or_ge, tr_ge_split, input_ph, target_ph):
         end = tr_ge_split
     elif tr_or_ge == "ge":
         start = tr_ge_split
-        end = -1
+        end = None
 
     inputs, targets, raw_graphs = create_graphs()
     input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[start:end])
