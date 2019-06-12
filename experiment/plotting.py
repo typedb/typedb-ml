@@ -135,7 +135,7 @@ def plot_input_vs_output(raw_graphs,
 
         # Ground truth.
         iax = j * (1 + num_steps_to_plot) + 1
-        ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, ground_truth_node_prob, ground_truth_edge_prob)
+        ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, ground_truth_node_prob, ground_truth_edge_prob, True)
 
         # Format the ground truth plot axes
         ax.set_axis_on()
@@ -153,7 +153,7 @@ def plot_input_vs_output(raw_graphs,
             iax = j * (1 + num_steps_to_plot) + 2 + k
             node_prob = softmax_prob_last_dim(outp["nodes"])
             edge_prob = softmax_prob_last_dim(outp["edges"])
-            ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob)
+            ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
     plt.show()
@@ -168,13 +168,17 @@ def above_base(val, base=0.0):
     return val * (1.0 - base) + base
 
 
-def colors_array(probability):
+def colors_array(probability, to_infer=False):
     """
     Determine the color values to use for a node/edge
     :param probability: the score for the node
+    :param to_infer: whether this color should represent a key outcome of the learner
     :return: array of rgba color values to use
     """
-    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
+    if not to_infer:
+        return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
+    else:
+        return np.array([0.0, above_base(probability), 0.0, above_base(probability, base=0.1)])
 
 
 def label_colors_array(probability):
@@ -186,22 +190,24 @@ def label_colors_array(probability):
     return np.array([0.0, 0.0, 0.0, above_base(probability, base=0.1)])
 
 
-def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob):
+def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, gt_plot):
     ax = fig.add_subplot(h, w, iax)
     node_color = {}
     node_label_color = {}
     edge_color = {}
     edge_label_color = {}
 
-    for i, n in enumerate(graph.nodes):
+    for i, (n, props) in enumerate(graph.nodes(data=True)):
         # Determine the nodes colors
-        node_color[n] = colors_array(node_prob[n])
+        show_nodes_to_infer = props.get('to_infer', False) and gt_plot
+        node_color[n] = colors_array(node_prob[n], show_nodes_to_infer)
         # Determine the node label colors
         node_label_color[n] = label_colors_array(node_prob[n])
 
-    for n, (sender, receiver) in enumerate(graph.edges):
+    for n, (sender, receiver, props) in enumerate(graph.edges(data=True)):
         # Determine the edge colors
-        edge_color[(sender, receiver)] = colors_array(edge_prob[n])
+        show_edges_to_infer = props.get('to_infer', False) and gt_plot
+        edge_color[(sender, receiver)] = colors_array(edge_prob[n], show_edges_to_infer)
         # Determine the edge label colors
         edge_label_color[(sender, receiver)] = label_colors_array(edge_prob[n])
 
