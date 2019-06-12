@@ -36,3 +36,7 @@ class TestPlotInputVsOutput(unittest.TestCase):
         test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}
         plotting.plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
         plt.show()
+
+
+if __name__ == "__main__":
+    unittest.main()

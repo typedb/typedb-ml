@@ -49,3 +49,6 @@ class TestGraphToInputTarget(unittest.TestCase):
         input_graph, target_graph = input.graph_to_input_target(graph)
         self.assertEqual(expected_n_edges, input_graph.number_of_edges())
         self.assertEqual(expected_n_edges, target_graph.number_of_edges())
+
+if __name__ == "__main__":
+    unittest.main()

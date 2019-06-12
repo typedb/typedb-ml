@@ -118,7 +118,7 @@ def create_placeholders():
     return input_ph, target_ph
 
 
-def create_feed_dict(tr_or_ge, input_ph, target_ph):
+def create_feed_dict(tr_or_ge, tr_ge_split, input_ph, target_ph):
     """Creates the feed dict for the placeholders for the model training and evaluation.
 
     Args:
@@ -128,13 +128,14 @@ def create_feed_dict(tr_or_ge, input_ph, target_ph):
     Returns:
     feed_dict: The feed `dict` of input and target placeholders and data.
     raw_graphs: The `dict` of raw networkx graphs.
+    :param tr_ge_split:
     """
     if tr_or_ge == "tr":
         start = 0
-        end = 9
+        end = tr_ge_split
     elif tr_or_ge == "ge":
-        start = 9
-        end = 12
+        start = tr_ge_split
+        end = -1
 
     inputs, targets, raw_graphs = create_graphs()
     input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[start:end])

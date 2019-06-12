@@ -27,6 +27,42 @@ import numpy as np
 import experiment.custom_nx as custom_nx
 
 
+def plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge):
+    # Plot results curves.
+    fig = plt.figure(1, figsize=(18, 3))
+    fig.clf()
+    x = np.array(logged_iterations)
+    # Loss.
+    y_tr = losses_tr
+    y_ge = losses_ge
+    ax = fig.add_subplot(1, 3, 1)
+    ax.plot(x, y_tr, "k", label="Training")
+    ax.plot(x, y_ge, "k--", label="Test/generalization")
+    ax.set_title("Loss across training")
+    ax.set_xlabel("Training iteration")
+    ax.set_ylabel("Loss (binary cross-entropy)")
+    ax.legend()
+    # Correct.
+    y_tr = corrects_tr
+    y_ge = corrects_ge
+    ax = fig.add_subplot(1, 3, 2)
+    ax.plot(x, y_tr, "k", label="Training")
+    ax.plot(x, y_ge, "k--", label="Test/generalization")
+    ax.set_title("Fraction correct across training")
+    ax.set_xlabel("Training iteration")
+    ax.set_ylabel("Fraction nodes/edges correct")
+    # Solved.
+    y_tr = solveds_tr
+    y_ge = solveds_ge
+    ax = fig.add_subplot(1, 3, 3)
+    ax.plot(x, y_tr, "k", label="Training")
+    ax.plot(x, y_ge, "k--", label="Test/generalization")
+    ax.set_title("Fraction solved across training")
+    ax.set_xlabel("Training iteration")
+    ax.set_ylabel("Fraction examples solved")
+    plt.show()
+
+
 def plot_with_matplotlib(G):
     """
     Really basic plotting function for input graphs
@@ -120,6 +156,7 @@ def plot_input_vs_output(raw_graphs,
             ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
+    plt.show()
 
 
 def softmax_prob_last_dim(x):
