@@ -35,13 +35,13 @@ def main():
     num_processing_steps_ge = 6
 
     # Data / training parameters.
-    num_training_iterations = 100
+    num_training_iterations = 10000
 
     # The value at which to split the data into training and evaluation sets
     tr_ge_split = 9
 
     # How much time between logging and printing the current results.
-    log_every_seconds = 2
+    log_every_seconds = 20
 
     # Data.
     # Input and target placeholders.
@@ -95,24 +95,26 @@ def main():
     last_log_time = start_time
     for iteration in range(last_iteration, num_training_iterations):
         feed_dict, _ = ip.create_feed_dict("tr", tr_ge_split, input_ph, target_ph)
-        train_values = sess.run({
-            "step": step_op,
-            "target": target_ph,
-            "loss": loss_op_tr,
-            "outputs": output_ops_tr
-        },
-                              feed_dict=feed_dict)
+        train_values = sess.run(
+            {
+                "step": step_op,
+                "target": target_ph,
+                "loss": loss_op_tr,
+                "outputs": output_ops_tr
+            },
+            feed_dict=feed_dict)
         the_time = time.time()
         elapsed_since_last_log = the_time - last_log_time
         if elapsed_since_last_log > log_every_seconds:
             last_log_time = the_time
             feed_dict, raw_graphs = ip.create_feed_dict("ge", tr_ge_split, input_ph, target_ph)
-            test_values = sess.run({
-                "target": target_ph,
-                "loss": loss_op_ge,
-                "outputs": output_ops_ge
-            },
-                               feed_dict=feed_dict)
+            test_values = sess.run(
+                {
+                    "target": target_ph,
+                    "loss": loss_op_ge,
+                    "outputs": output_ops_ge
+                },
+                feed_dict=feed_dict)
             correct_tr, solved_tr = ip.compute_accuracy(
                 train_values["target"], train_values["outputs"][-1], use_edges=True)
             correct_ge, solved_ge = ip.compute_accuracy(
