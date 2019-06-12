@@ -47,12 +47,10 @@ def plot_with_matplotlib(G):
 
     labels_dict = {node_id: G.nodes[node_id]['type'] for node_id in nodes}
     edge_labels_dict = {(edge_id[0], edge_id[1]): G.edges[edge_id]['type'] for edge_id in edges}
-    # pos = nx.spring_layout(G, k=6 / math.sqrt(G.number_of_nodes()))
     pos = nx.circular_layout(G)
     nx.draw_networkx_nodes(G, pos,
                            nodelist=nodes,
                            cmap=plt.get_cmap('jet'),
-                           # node_color=values,
                            node_size=500
                            )
     nx.draw_networkx_labels(G, pos, labels=labels_dict)
@@ -98,19 +96,19 @@ def plot_input_vs_output(raw_graphs,
         # pos = nx.circular_layout(graph, scale=2)
         ground_truth_node_prob = target["nodes"][:, -1]
         ground_truth_edge_prob = target["edges"][:, -1]
-        # ground_truth_node_prob, ground_truth_edge_prob = determine_node_score(target)
 
         # Ground truth.
         iax = j * (1 + num_steps_to_plot) + 1
         ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, ground_truth_node_prob, ground_truth_edge_prob)
 
+        # Format the ground truth plot axes
         ax.set_axis_on()
         ax.set_xticks([])
         ax.set_yticks([])
-        # try:
-        #     ax.set_facecolor([0.9] * 3 + [1.0])
-        # except AttributeError:
-        #     ax.set_axis_bgcolor([0.9] * 3 + [1.0])
+        ax.spines['bottom'].set_color('blue')
+        ax.spines['top'].set_color('blue')
+        ax.spines['right'].set_color('blue')
+        ax.spines['left'].set_color('blue')
         ax.grid(None)
         ax.set_title("Ground truth")
 
@@ -119,19 +117,12 @@ def plot_input_vs_output(raw_graphs,
             iax = j * (1 + num_steps_to_plot) + 2 + k
             node_prob = softmax_prob_last_dim(outp["nodes"])
             edge_prob = softmax_prob_last_dim(outp["edges"])
-            # node_prob, edge_prob = determine_node_score(outp)
             ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
 
 
-# def determine_node_score(graph_tuple):
-#     node_prob = softmax_prob_last_dim(graph_tuple["nodes"])
-#     edge_prob = softmax_prob_last_dim(graph_tuple["edges"])
-#     return node_prob, edge_prob
-
-
-def softmax_prob_last_dim(x):  # pylint: disable=redefined-outer-name
+def softmax_prob_last_dim(x):
     e = np.exp(x)
     return e[:, -1] / np.sum(e, axis=-1)
 
@@ -146,7 +137,7 @@ def colors_array(probability):
     :param probability: the score for the node
     :return: array of rgba color values to use
     """
-    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.0)])
+    return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
 
 
 def label_colors_array(probability):
@@ -155,7 +146,7 @@ def label_colors_array(probability):
     :param probability: the score for the node
     :return: array of rgba color values to use
     """
-    return np.array([0.0, 0.0, 0.0, above_base(probability, base=0.0)])
+    return np.array([0.0, 0.0, 0.0, above_base(probability, base=0.1)])
 
 
 def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob):
