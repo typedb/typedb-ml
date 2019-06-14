@@ -19,8 +19,10 @@
 
 from functools import reduce
 
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 
-def conceptdicts_from_query(query, tx):
+
+def concept_dicts_from_query(query, tx):
     """
     Given a query, build a dictionary of the variables present and the concepts they refer to, locally storing any 
     information required about those concepts.
@@ -28,15 +30,21 @@ def conceptdicts_from_query(query, tx):
     :param tx: A live Grakn transaction
     :return: A dictionary of concepts keyed by query variables
     """
-    pass
+    concept_maps = tx.query(query)
+    concept_dicts = []
+    for concept_map in concept_maps:
+        concept_dict = {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.items()}
+        concept_dicts.append(concept_dict)
+
+    return concept_dicts
 
 
-def create_thing_graph(conceptdict, variablegraph):
+def create_thing_graph(concept_dict, variable_graph):
     """
-    Create a new graph, based on a `variablegraph` that describes the interactions of variables in a query,
-    and a `conceptdict` that holds objects that satisfy the query
-    :param conceptdict:
-    :param variablegraph:
+    Create a new graph, based on a `variable_graph` that describes the interactions of variables in a query,
+    and a `concept_dict` that holds objects that satisfy the query
+    :param concept_dict:
+    :param variable_graph:
     :return:
     """
     pass
@@ -52,16 +60,16 @@ def combine_graphs(graph1, graph2):
     pass
 
 
-def networkx_from_query_variablegraph_tuples(query_variablegraph_tuples, grakn_session):
-    query_conceptgraphs = []
+def networkx_from_query_variable_graph_tuples(query_variable_graph_tuples, grakn_session):
+    query_concept_graphs = []
 
-    for query, variablegraph in query_variablegraph_tuples:
+    for query, variable_graph in query_variable_graph_tuples:
 
-        conceptdicts = conceptdicts_from_query(query, tx)
+        concept_dicts = concept_dicts_from_query(query, tx)
 
-        answer_conceptgraphs = [create_thing_graph(conceptdict, variablegraph) for conceptdict in conceptdicts]
-        query_conceptgraph = reduce(lambda x, y: combine_graphs(x, y), answer_conceptgraphs)
-        query_conceptgraphs.append(query_conceptgraph)
+        answer_concept_graphs = [create_thing_graph(concept_dict, variable_graph) for concept_dict in concept_dicts]
+        query_concept_graph = reduce(lambda x, y: combine_graphs(x, y), answer_concept_graphs)
+        query_concept_graphs.append(query_concept_graph)
 
-    conceptgraph = reduce(lambda x, y: combine_graphs(x, y), query_conceptgraphs)
-    return conceptgraph
+    concept_graph = reduce(lambda x, y: combine_graphs(x, y), query_concept_graphs)
+    return concept_graph

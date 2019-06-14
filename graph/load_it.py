@@ -20,6 +20,8 @@
 import unittest
 import networkx as nx
 
+import graph.load as load
+
 
 class ITNetworkxFromQueryVariablegraphTuples(unittest.TestCase):
     def test_graph_is_built_as_expected(self):
@@ -46,4 +48,4 @@ class ITNetworkxFromQueryVariablegraphTuples(unittest.TestCase):
                                    # ('match $x sub $y; get;', g5),
                                    ]
 
-        networkx_from_query_variablegraph_tuples(query_variablegraph_tuples, session)
+        load.networkx_from_query_variable_graph_tuples(query_variablegraph_tuples, session)
