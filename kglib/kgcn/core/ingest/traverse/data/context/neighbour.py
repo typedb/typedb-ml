@@ -190,6 +190,12 @@ class Thing(utils.PropertyComparable):
         self.data_type = data_type
         self.value = value
 
+    def __str__(self):
+        string = f'{self.type_label}, {self.id}'
+        if self.base_type_label == 'attribute':
+            string += f': {self.value}'
+        return string
+
 
 class Connection:
     def __init__(self, role_label, role_direction, neighbour_thing):

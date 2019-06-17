@@ -22,7 +22,6 @@ import unittest.mock as mock
 
 import grakn.client as client
 import networkx as nx
-import networkx.algorithms.isomorphism as iso
 
 import graph.load as load
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
@@ -80,12 +79,12 @@ class TestCreateThingGraph(unittest.TestCase):
         variable_graph = nx.DiGraph()
         variable_graph.add_node('x')
 
-        thing = neighbour.Thing('V123', 'person', 'entity')
-        concept_dict = {'x': thing}
+        person = neighbour.Thing('V123', 'person', 'entity')
+        concept_dict = {'x': person}
 
         thing_graph = load.create_thing_graph(concept_dict, variable_graph)
         expected_thing_graph = nx.DiGraph()
-        expected_thing_graph.add_node(0, thing=thing)
+        expected_thing_graph.add_node(person)
 
         # Requires all of these checks to ensure graphs compare as expected
         self.assertEqual(expected_thing_graph.nodes, thing_graph.nodes)
@@ -100,15 +99,15 @@ class TestCreateThingGraph(unittest.TestCase):
         variable_graph.add_node('y')
         variable_graph.add_edge('y', 'x', type='employee')
 
-        thing1 = neighbour.Thing('V123', 'person', 'entity')
-        thing2 = neighbour.Thing('V123', 'employment', 'relation')
-        concept_dict = {'x': thing1, 'y': thing2}
+        person = neighbour.Thing('V123', 'person', 'entity')
+        employment = neighbour.Thing('V123', 'employment', 'relation')
+        concept_dict = {'x': person, 'y': employment}
 
         thing_graph = load.create_thing_graph(concept_dict, variable_graph)
         expected_thing_graph = nx.DiGraph()
-        expected_thing_graph.add_node(0, thing=thing1)
-        expected_thing_graph.add_node(1, thing=thing2)
-        expected_thing_graph.add_edge(1, 0, type='employee')
+        expected_thing_graph.add_node(person)
+        expected_thing_graph.add_node(employment)
+        expected_thing_graph.add_edge(employment, person, type='employee')
 
         # Requires all of these checks to ensure graphs compare as expected
         self.assertEqual(expected_thing_graph.nodes, thing_graph.nodes)
@@ -133,13 +132,30 @@ class TestCreateThingGraph(unittest.TestCase):
         thing_graph = load.create_thing_graph(concept_dict, variable_graph)
 
         expected_thing_graph = nx.DiGraph()
-        expected_thing_graph.add_node(2, thing=person)
-        expected_thing_graph.add_node(1, thing=company)
-        expected_thing_graph.add_node(0, thing=employment)
-        expected_thing_graph.add_edge(0, 2, type='employee')
-        expected_thing_graph.add_edge(0, 1, type='employer')
+        expected_thing_graph.add_node(person)
+        expected_thing_graph.add_node(company)
+        expected_thing_graph.add_node(employment)
+        expected_thing_graph.add_edge(employment, person, type='employee')
+        expected_thing_graph.add_edge(employment, company, type='employer')
 
-        # Requires all of these checks to ensure graphs compare as expected
+        self.assertTrue(nx.is_isomorphic(expected_thing_graph, thing_graph,
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
+
+    def test_same_thing_occurs_in_two_different_variables(self):
+        variable_graph = nx.DiGraph()
+        variable_graph.add_node('x')
+        variable_graph.add_node('y')
+
+        person = neighbour.Thing('V123', 'person', 'entity')
+        person2 = neighbour.Thing('V123', 'person', 'entity')
+        concept_dict = {'x': person,
+                        'y': person2}
+
+        thing_graph = load.create_thing_graph(concept_dict, variable_graph)
+        expected_thing_graph = nx.DiGraph()
+        expected_thing_graph.add_node(person)
+
         self.assertTrue(nx.is_isomorphic(expected_thing_graph, thing_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
@@ -192,3 +208,42 @@ class TestCreateThingGraph(unittest.TestCase):
 
         self.assertEqual('The variables in the variable_graph must match those in the concept_dict',
                          str(context.exception))
+
+
+class TestCombineGraphs(unittest.TestCase):
+
+    def test_graph_combined_as_expected(self):
+
+        person = neighbour.Thing('V123', 'person', 'entity')
+        employment = neighbour.Thing('V567', 'employment', 'relation')
+        thing_graph_a = nx.DiGraph()
+        thing_graph_a.add_node(person)
+        thing_graph_a.add_node(employment)
+        thing_graph_a.add_edge(employment, person, type='employee')
+
+        person_b = neighbour.Thing('V123', 'person', 'entity')
+        name = neighbour.Thing('V1234', 'name', 'attribute')
+        thing_graph_b = nx.DiGraph()
+        thing_graph_b.add_node(person_b)
+        thing_graph_b.add_node(name)
+        thing_graph_b.add_edge(person_b, name, type='has')
+
+        combined_graph = load.combine_graphs(thing_graph_a, thing_graph_b)
+
+        person_ex = neighbour.Thing('V123', 'person', 'entity')
+        employment_ex = neighbour.Thing('V567', 'employment', 'relation')
+        name_ex = neighbour.Thing('V1234', 'name', 'attribute')
+        expected_combined_graph = nx.DiGraph()
+        expected_combined_graph.add_node(person_ex)
+        expected_combined_graph.add_node(name_ex)
+        expected_combined_graph.add_node(employment_ex)
+        expected_combined_graph.add_edge(employment_ex, person_ex, type='employee')
+        expected_combined_graph.add_edge(person_ex, name_ex, type='has')
+
+        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
+
+
+if __name__ == "__main__":
+    unittest.main()

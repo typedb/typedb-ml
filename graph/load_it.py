@@ -49,3 +49,7 @@ class ITNetworkxFromQueryVariablegraphTuples(unittest.TestCase):
                                    ]
 
         load.networkx_from_query_variable_graph_tuples(query_variablegraph_tuples, session)
+
+
+if __name__ == "__main__":
+    unittest.main()

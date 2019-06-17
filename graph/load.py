@@ -57,18 +57,18 @@ def create_thing_graph(concept_dict, variable_graph):
         raise ValueError('The variables in the variable_graph must match those in the concept_dict')
 
     # This assumes that all variables are nodes, which would not be the case for variable roles
-    for i, (variable, thing) in enumerate(concept_dict.items()):
-        thing_graph.add_node(i, thing=thing)
+    for variable, thing in concept_dict.items():
+        thing_graph.add_node(thing)
 
-        # Record the maping of nodes from one graph to the other
+        # Record the mapping of nodes from one graph to the other
         assert variable not in node_to_var
-        node_to_var[variable] = i
+        node_to_var[variable] = thing
 
     for sending_var, receiving_var, data in variable_graph.edges(data=True):
         sender = node_to_var[sending_var]
         receiver = node_to_var[receiving_var]
 
-        if thing_graph.nodes[sender]['thing'].base_type_label != 'relation':
+        if sender.base_type_label != 'relation':
             raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
 
         thing_graph.add_edge(sender, receiver, type=data['type'])
@@ -83,7 +83,7 @@ def combine_graphs(graph1, graph2):
     :param graph2: Graph to compare
     :return: Combined graph
     """
-    pass
+    return nx.compose(graph1, graph2)
 
 
 def networkx_from_query_variable_graph_tuples(query_variable_graph_tuples, grakn_session):
