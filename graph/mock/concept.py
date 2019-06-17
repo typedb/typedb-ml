@@ -19,41 +19,55 @@
 
 
 class MockConcept:
-    def __init__(self, id, base_type):
+    def __init__(self, id):
         self.id = id
-        assert base_type in {'ENTITY', 'RELATION', 'ATTRIBUTE'}
-        self.base_type = base_type
 
 
 class MockType(MockConcept):
-    def __init__(self, id, base_type, label):
-        super().__init__(id, base_type)
+    def __init__(self, id, label, base_type):
+        super().__init__(id)
         self._label = label
+        assert base_type in {'ENTITY', 'RELATION', 'ATTRIBUTE'}
+        self.base_type = base_type
 
     def label(self):
         return self._label
 
 
+class DataType:
+    def __init__(self, name):
+        self.name = name
+
+
+class MockAttributeType(MockType):
+    def __init__(self, id, label, base_type, data_type):
+        super().__init__(id, label, base_type)
+        assert data_type in {'STRING', 'LONG', 'DOUBLE', 'DATE', 'BOOLEAN'}
+        self._data_type = DataType(data_type)
+
+    def data_type(self):
+        return self._data_type
+
+
 class MockThing(MockConcept):
-    def __init__(self, id, base_type, type):
-        super().__init__(id, base_type)
+    def __init__(self, id, type):
+        super().__init__(id)
         assert(isinstance(type, MockType))
-        assert(type.base_type == self.base_type)
         self._type = type
 
     def type(self):
         return self._type
 
+    @property
+    def base_type(self):
+        return self._type.base_type
+
 
 class MockAttribute(MockThing):
-    def __init__(self, id, base_type, type, data_type, value):
-        super().__init__(id, base_type, type)
+    def __init__(self, id, value, type):
+        super().__init__(id, type)
         self._value = value
-        assert data_type in {'STRING', 'LONG', 'DOUBLE', 'DATE', 'BOOLEAN'}
-        self._data_type = data_type
-
-    def data_type(self):
-        return self._data_type
+        assert isinstance(type, MockAttributeType)
 
     def value(self):
-        return self.value()
+        return self._value

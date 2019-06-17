@@ -18,37 +18,84 @@
 #
 
 import unittest
+
 import networkx as nx
 
 import graph.load as load
+import graph.load_test
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+from graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 
 
-class ITNetworkxFromQueryVariablegraphTuples(unittest.TestCase):
+def mock_sampler(input_iter):
+    return input_iter
+
+
+class MockTransaction:
+    def query(self, query):
+
+        if query == 'match $x id V123; get;':
+            return [{'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))}]
+        elif query == 'match $x id V123, has name $n; get;':
+            return [
+                {
+                    'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
+                    'n': MockAttribute('V987', 'Bob', MockAttributeType('V555', 'name', 'ATTRIBUTE', 'STRING'))
+                }]
+        elif query == 'match $x id V123; $r(child: $x, parent: $y); get;':
+            return [
+                {
+                    'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
+                    'y': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
+                    'r': MockThing('V567', MockType('V9876', 'parentship', 'RELATION'))
+                }]
+        else:
+            raise NotImplementedError
+
+
+class ITNetworkxFromQueryVariableGraphTuples(unittest.TestCase):
     def test_graph_is_built_as_expected(self):
-        g1 = nx.DiGraph()
+        g1 = nx.MultiDiGraph()
         g1.add_node('x')
 
-        g2 = nx.DiGraph()
+        g2 = nx.MultiDiGraph()
         g2.add_node('x')
         g2.add_node('n')
         g2.add_edge('x', 'n', type='has')
 
-        g3 = nx.DiGraph()
+        g3 = nx.MultiDiGraph()
         g3.add_node('x')
         g3.add_node('r')
         g3.add_node('y')
-        g3.add_edge('r', 'x', type_var='role1')
+        g3.add_edge('r', 'x', type='child')
         g3.add_edge('r', 'y', type='parent')
 
-        query_variablegraph_tuples = [('match $x id V123; get;', g1),
-                                   ('match $x id V123, has name $n; get;', g2),
-                                   ('match $x id V123; $r($role1: $x, parent: $y); get;', g3),
-                                   # TODO Add functionality for loading schema at a later date
-                                   # ('match $x sub person; $x sub $type; get;', g4),
-                                   # ('match $x sub $y; get;', g5),
-                                   ]
+        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1),
+                                               ('match $x id V123, has name $n; get;', mock_sampler, g2),
+                                               ('match $x id V123; $r(child: $x, parent: $y); get;', mock_sampler, g3),
+                                               # TODO Add functionality for loading schema at a later date
+                                               # ('match $x sub person; $x sub $type; get;', g4),
+                                               # ('match $x sub $y; get;', g5),
+                                               ]
 
-        load.networkx_from_query_variable_graph_tuples(query_variablegraph_tuples, session)
+        mock_tx = MockTransaction()
+
+        combined_graph = load.build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
+
+        person_exp = neighbour.Thing('V123', 'person', 'entity')
+        employment_exp = neighbour.Thing('V567', 'parentship', 'relation')
+        name_exp = neighbour.Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
+        expected_combined_graph = nx.MultiDiGraph()
+        expected_combined_graph.add_node(person_exp)
+        expected_combined_graph.add_node(name_exp)
+        expected_combined_graph.add_node(employment_exp)
+        expected_combined_graph.add_edge(employment_exp, person_exp, type='child')
+        expected_combined_graph.add_edge(employment_exp, person_exp, type='parent')
+        expected_combined_graph.add_edge(person_exp, name_exp, type='has')
+
+        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
+                                         node_match=graph.load_test.match_node_things,
+                                         edge_match=graph.load_test.match_edge_types))
 
 
 if __name__ == "__main__":

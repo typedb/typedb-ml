@@ -24,21 +24,14 @@ import networkx as nx
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 
 
-def concept_dicts_from_query(query, tx):
+def concept_dict_from_concept_map(concept_map):
     """
-    Given a query, build a dictionary of the variables present and the concepts they refer to, locally storing any 
+    Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
     information required about those concepts.
-    :param query: The query to make
-    :param tx: A live Grakn transaction
+    :param concept_map: A dict of Concepts provided by Grakn keyed by query variables
     :return: A dictionary of concepts keyed by query variables
     """
-    concept_maps = tx.query(query)
-    concept_dicts = []
-    for concept_map in concept_maps:
-        concept_dict = {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.items()}
-        concept_dicts.append(concept_dict)
-
-    return concept_dicts
+    return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.items()}
 
 
 def create_thing_graph(concept_dict, variable_graph):
@@ -50,7 +43,7 @@ def create_thing_graph(concept_dict, variable_graph):
     :return: A graph with consecutive integers as node ids, with concept information stored in the data. Edges
     connecting the nodes have only Role type information in their data
     """
-    thing_graph = nx.DiGraph()
+    thing_graph = nx.MultiDiGraph()
     node_to_var = {}
 
     if set(variable_graph.nodes()) != set(concept_dict.keys()):
@@ -68,7 +61,8 @@ def create_thing_graph(concept_dict, variable_graph):
         sender = node_to_var[sending_var]
         receiver = node_to_var[receiving_var]
 
-        if sender.base_type_label != 'relation':
+        if sender.base_type_label != 'relation' and not (
+                receiver.base_type_label == 'attribute' and data['type'] == 'has'):
             raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
 
         thing_graph.add_edge(sender, receiver, type=data['type'])
@@ -86,12 +80,21 @@ def combine_graphs(graph1, graph2):
     return nx.compose(graph1, graph2)
 
 
-def networkx_from_query_variable_graph_tuples(query_variable_graph_tuples, grakn_session):
+def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction):
+    """
+    Builds a graph of Things, interconnected by roles (and *has*), from a set of queries over a Grakn transaction
+    :param query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
+    and a variable_graph
+    :param grakn_transaction: A Grakn transaction
+    :return:
+    """
     query_concept_graphs = []
 
-    for query, variable_graph in query_variable_graph_tuples:
+    for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
 
-        concept_dicts = concept_dicts_from_query(query, tx)
+        concept_maps = sampler(grakn_transaction.query(query))
+
+        concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
 
         answer_concept_graphs = [create_thing_graph(concept_dict, variable_graph) for concept_dict in concept_dicts]
         query_concept_graph = reduce(lambda x, y: combine_graphs(x, y), answer_concept_graphs)

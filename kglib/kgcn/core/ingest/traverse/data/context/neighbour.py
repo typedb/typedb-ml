@@ -190,6 +190,13 @@ class Thing(utils.PropertyComparable):
         self.data_type = data_type
         self.value = value
 
+        # TODO Make attribute a separate class
+        if self.base_type_label == 'attribute':
+            if self.data_type is None:
+                raise ValueError('Attribute data_type must be provided')
+            if self.value is None:
+                raise ValueError('Attribute value must be provided')
+
     def __str__(self):
         string = f'{self.type_label}, {self.id}'
         if self.base_type_label == 'attribute':
