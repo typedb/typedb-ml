@@ -19,6 +19,8 @@
 
 from functools import reduce
 
+import networkx as nx
+
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 
 
@@ -43,11 +45,35 @@ def create_thing_graph(concept_dict, variable_graph):
     """
     Create a new graph, based on a `variable_graph` that describes the interactions of variables in a query,
     and a `concept_dict` that holds objects that satisfy the query
-    :param concept_dict:
-    :param variable_graph:
-    :return:
+    :param concept_dict: A dictionary with variable names as keys
+    :param variable_graph: A graph with variable names as nodes
+    :return: A graph with consecutive integers as node ids, with concept information stored in the data. Edges
+    connecting the nodes have only Role type information in their data
     """
-    pass
+    thing_graph = nx.DiGraph()
+    node_to_var = {}
+
+    if set(variable_graph.nodes()) != set(concept_dict.keys()):
+        raise ValueError('The variables in the variable_graph must match those in the concept_dict')
+
+    # This assumes that all variables are nodes, which would not be the case for variable roles
+    for i, (variable, thing) in enumerate(concept_dict.items()):
+        thing_graph.add_node(i, thing=thing)
+
+        # Record the maping of nodes from one graph to the other
+        assert variable not in node_to_var
+        node_to_var[variable] = i
+
+    for sending_var, receiving_var, data in variable_graph.edges(data=True):
+        sender = node_to_var[sending_var]
+        receiver = node_to_var[receiving_var]
+
+        if thing_graph.nodes[sender]['thing'].base_type_label != 'relation':
+            raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
+
+        thing_graph.add_edge(sender, receiver, type=data['type'])
+
+    return thing_graph
 
 
 def combine_graphs(graph1, graph2):
