@@ -26,10 +26,18 @@ def concept_dict_to_grakn_math_graph(concept_dict, variable_graph):
     return concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_as_casting_node)
 
 
-def add_role_as_casting_node(grakn_graph, sender, receiver, data):
-    role = Role(sender, receiver, data['type'])
+def add_role_as_casting_node(grakn_graph, relation, roleplayer, data):
+    """
+    When adding roles to the graph, here we insert the role as a node, represented by a Role object. This role node
+    is connected via a 'relates' edge to its relation, and 'plays' edge to its roleplayer.
+    :param grakn_graph: The graph to add roles to
+    :param relation: The relation node
+    :param roleplayer: The roleplayer node
+    :param data: The data dict, containing the type of the role edge
+    """
+    role = Role(relation, roleplayer, data['type'])
     grakn_graph.add_node(role)
-    grakn_graph.add_edge(sender, role, type='relates')
-    grakn_graph.add_edge(receiver, role, type='plays')
+    grakn_graph.add_edge(relation, role, type='relates')
+    grakn_graph.add_edge(roleplayer, role, type='plays')
 
 
