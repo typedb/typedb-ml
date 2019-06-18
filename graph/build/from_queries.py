@@ -17,11 +17,13 @@
 #  under the License.
 #
 
+
 from functools import reduce
 
 import networkx as nx
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+from graph.build.model.standard.convert import concept_dict_to_grakn_standard_graph
 
 
 def concept_dict_from_concept_map(concept_map):
@@ -32,42 +34,6 @@ def concept_dict_from_concept_map(concept_map):
     :return: A dictionary of concepts keyed by query variables
     """
     return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.items()}
-
-
-def concept_dict_to_grakn_graph(concept_dict, variable_graph):
-    """
-    Create a new graph, based on a `variable_graph` that describes the interactions of variables in a query,
-    and a `concept_dict` that holds objects that satisfy the query
-    :param concept_dict: A dictionary with variable names as keys
-    :param variable_graph: A graph with variable names as nodes
-    :return: A graph with consecutive integers as node ids, with concept information stored in the data. Edges
-    connecting the nodes have only Role type information in their data
-    """
-    thing_graph = nx.MultiDiGraph()
-    node_to_var = {}
-
-    if set(variable_graph.nodes()) != set(concept_dict.keys()):
-        raise ValueError('The variables in the variable_graph must match those in the concept_dict')
-
-    # This assumes that all variables are nodes, which would not be the case for variable roles
-    for variable, thing in concept_dict.items():
-        thing_graph.add_node(thing)
-
-        # Record the mapping of nodes from one graph to the other
-        assert variable not in node_to_var
-        node_to_var[variable] = thing
-
-    for sending_var, receiving_var, data in variable_graph.edges(data=True):
-        sender = node_to_var[sending_var]
-        receiver = node_to_var[receiving_var]
-
-        if sender.base_type_label != 'relation' and not (
-                receiver.base_type_label == 'attribute' and data['type'] == 'has'):
-            raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
-
-        thing_graph.add_edge(sender, receiver, type=data['type'])
-
-    return thing_graph
 
 
 def combine_graphs(graph1, graph2):
@@ -81,7 +47,7 @@ def combine_graphs(graph1, graph2):
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
-                             concept_dict_converter=concept_dict_to_grakn_graph):
+                             concept_dict_converter=concept_dict_to_grakn_standard_graph):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries over a Grakn transaction
     :param query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,

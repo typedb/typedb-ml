@@ -22,10 +22,9 @@ import unittest
 
 import networkx as nx
 
-import graph.math.math_model as model
-import kglib.kgcn.core.ingest.traverse.data.context.neighbour
-from graph.load_test import match_edge_types, match_node_things
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+from graph.build.from_queries_test import match_edge_types, match_node_things
+from graph.build.model.math.convert import concept_dict_to_grakn_math_graph
 
 
 class TestConceptDictToGraknMathGraph(unittest.TestCase):
@@ -36,14 +35,14 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         person = neighbour.Thing('V123', 'person', 'entity')
         concept_dict = {'x': person}
 
-        thing_graph = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
-        expected_thing_graph = nx.MultiDiGraph()
-        expected_thing_graph.add_node(person)
+        grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+        expected_grakn_graph = nx.MultiDiGraph()
+        expected_grakn_graph.add_node(person)
 
         # Requires all of these checks to ensure graphs compare as expected
-        self.assertEqual(expected_thing_graph.nodes, thing_graph.nodes)
-        self.assertEqual(expected_thing_graph.edges, thing_graph.edges)
-        self.assertTrue(nx.is_isomorphic(expected_thing_graph, thing_graph,
+        self.assertEqual(expected_grakn_graph.nodes, grakn_graph.nodes)
+        self.assertEqual(expected_grakn_graph.edges, grakn_graph.edges)
+        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
 
@@ -57,19 +56,19 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         employment = neighbour.Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        thing_graph = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
-        employee = kglib.kgcn.core.ingest.traverse.data.context.neighbour.Role(employment, person, 'employee')
+        employee = neighbour.Role(employment, person, 'employee')
 
-        expected_thing_graph = nx.MultiDiGraph()
-        expected_thing_graph.add_node(person)
-        expected_thing_graph.add_node(employee)
-        expected_thing_graph.add_node(employment)
-        expected_thing_graph.add_edge(employment, employee, type='relates')
-        expected_thing_graph.add_edge(person, employee, type='plays')
+        expected_grakn_graph = nx.MultiDiGraph()
+        expected_grakn_graph.add_node(person)
+        expected_grakn_graph.add_node(employee)
+        expected_grakn_graph.add_node(employment)
+        expected_grakn_graph.add_edge(employment, employee, type='relates')
+        expected_grakn_graph.add_edge(person, employee, type='plays')
 
         # Requires all of these checks to ensure graphs compare as expected
-        self.assertTrue(nx.is_isomorphic(expected_thing_graph, thing_graph,
+        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
 
@@ -86,25 +85,25 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         employment = neighbour.Thing('V12345', 'employment', 'relation')
         concept_dict = {'x': person, 'y': company, 'r': employment}
 
-        thing_graph = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
-        employee = kglib.kgcn.core.ingest.traverse.data.context.neighbour.Role(employment, person, 'employee')
-        employer = kglib.kgcn.core.ingest.traverse.data.context.neighbour.Role(employment, company, 'employer')
+        employee = neighbour.Role(employment, person, 'employee')
+        employer = neighbour.Role(employment, company, 'employer')
 
-        expected_thing_graph = nx.MultiDiGraph()
-        expected_thing_graph.add_node(person)
-        expected_thing_graph.add_node(company)
-        expected_thing_graph.add_node(employment)
+        expected_grakn_graph = nx.MultiDiGraph()
+        expected_grakn_graph.add_node(person)
+        expected_grakn_graph.add_node(company)
+        expected_grakn_graph.add_node(employment)
 
-        expected_thing_graph.add_node(employee)
-        expected_thing_graph.add_edge(employment, employee, type='relates')
-        expected_thing_graph.add_edge(person, employee, type='plays')
+        expected_grakn_graph.add_node(employee)
+        expected_grakn_graph.add_edge(employment, employee, type='relates')
+        expected_grakn_graph.add_edge(person, employee, type='plays')
 
-        expected_thing_graph.add_node(employer)
-        expected_thing_graph.add_edge(employment, employer, type='relates')
-        expected_thing_graph.add_edge(company, employer, type='plays')
+        expected_grakn_graph.add_node(employer)
+        expected_grakn_graph.add_edge(employment, employer, type='relates')
+        expected_grakn_graph.add_edge(company, employer, type='plays')
 
-        self.assertTrue(nx.is_isomorphic(expected_thing_graph, thing_graph,
+        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
 
@@ -118,11 +117,11 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         concept_dict = {'x': person,
                         'y': person2}
 
-        thing_graph = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
-        expected_thing_graph = nx.MultiDiGraph()
-        expected_thing_graph.add_node(person)
+        grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+        expected_grakn_graph = nx.MultiDiGraph()
+        expected_grakn_graph.add_node(person)
 
-        self.assertTrue(nx.is_isomorphic(expected_thing_graph, thing_graph,
+        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
 
@@ -137,7 +136,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         concept_dict = {'x': person, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
-            _ = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
         self.assertEqual('An edge in the variable_graph originates from a non-relation, check the variable_graph!',
                          str(context.exception))
@@ -153,7 +152,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         concept_dict = {'x': name, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
-            _ = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
         self.assertEqual('An edge in the variable_graph originates from a non-relation, check the variable_graph!',
                          str(context.exception))
@@ -170,7 +169,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
                         'a': thing}
 
         with self.assertRaises(ValueError) as context:
-            _ = model.concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
         self.assertEqual('The variables in the variable_graph must match those in the concept_dict',
                          str(context.exception))

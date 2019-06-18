@@ -19,11 +19,17 @@
 
 import networkx as nx
 
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Role
 
-
-def concept_dict_to_grakn_math_graph(concept_dict, variable_graph):
-    grakn_math_graph = nx.MultiDiGraph()
+def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None):
+    """
+    Create a new graph, based on a `variable_graph` that describes the interactions of variables in a query,
+    and a `concept_dict` that holds objects that satisfy the query
+    :param concept_dict: A dictionary with variable names as keys
+    :param variable_graph: A graph with variable names as nodes
+    :return: A graph with consecutive integers as node ids, with concept information stored in the data. Edges
+    connecting the nodes have only Role type information in their data
+    """
+    grakn_graph = nx.MultiDiGraph()
     node_to_var = {}
 
     if set(variable_graph.nodes()) != set(concept_dict.keys()):
@@ -31,14 +37,13 @@ def concept_dict_to_grakn_math_graph(concept_dict, variable_graph):
 
     # This assumes that all variables are nodes, which would not be the case for variable roles
     for variable, thing in concept_dict.items():
-        grakn_math_graph.add_node(thing)
+        grakn_graph.add_node(thing)
 
         # Record the mapping of nodes from one graph to the other
         assert variable not in node_to_var
         node_to_var[variable] = thing
 
     for sending_var, receiving_var, data in variable_graph.edges(data=True):
-
         sender = node_to_var[sending_var]
         receiver = node_to_var[receiving_var]
 
@@ -47,13 +52,16 @@ def concept_dict_to_grakn_math_graph(concept_dict, variable_graph):
             raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
 
         if data['type'] == 'has':
-            grakn_math_graph.add_edge(sender, receiver, type=data['type'])
+            grakn_graph.add_edge(sender, receiver, type=data['type'])
         else:
-            role = Role(sender, receiver, data['type'])
-            grakn_math_graph.add_node(role)
-            grakn_math_graph.add_edge(sender, role, type='relates')
-            grakn_math_graph.add_edge(receiver, role, type='plays')
+            add_role_func(grakn_graph, sender, receiver, data)
 
-    return grakn_math_graph
+    return grakn_graph
 
 
+def concept_dict_to_grakn_standard_graph(concept_dict, variable_graph, ):
+    return concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=add_role_as_direct_edge)
+
+
+def add_role_as_direct_edge(grakn_graph, sender, receiver, data):
+    grakn_graph.add_edge(sender, receiver, type=data['type'])
