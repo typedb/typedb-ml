@@ -34,7 +34,7 @@ def concept_dict_from_concept_map(concept_map):
     return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.items()}
 
 
-def create_thing_graph(concept_dict, variable_graph):
+def concept_dict_to_grakn_graph(concept_dict, variable_graph):
     """
     Create a new graph, based on a `variable_graph` that describes the interactions of variables in a query,
     and a `concept_dict` that holds objects that satisfy the query
@@ -80,13 +80,16 @@ def combine_graphs(graph1, graph2):
     return nx.compose(graph1, graph2)
 
 
-def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction):
+def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
+                             concept_dict_converter=concept_dict_to_grakn_graph):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries over a Grakn transaction
     :param query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
     and a variable_graph
     :param grakn_transaction: A Grakn transaction
-    :return:
+    :param concept_dict_converter: The function to use to convert from concept_dicts to a Grakn model. This could be
+    a typical model or a mathematical model
+    :return: A networkx graph
     """
     query_concept_graphs = []
 
@@ -96,7 +99,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
         concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
 
-        answer_concept_graphs = [create_thing_graph(concept_dict, variable_graph) for concept_dict in concept_dicts]
+        answer_concept_graphs = [concept_dict_converter(concept_dict, variable_graph) for concept_dict in concept_dicts]
         query_concept_graph = reduce(lambda x, y: combine_graphs(x, y), answer_concept_graphs)
         query_concept_graphs.append(query_concept_graph)
 

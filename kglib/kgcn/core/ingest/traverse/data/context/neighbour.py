@@ -204,6 +204,16 @@ class Thing(utils.PropertyComparable):
         return string
 
 
+class Role(utils.PropertyComparable):
+    def __init__(self, u, v, type_label):
+        self.type = type_label
+        self.id = (u.id, v.id)
+
+    def __str__(self):
+        string = f'{self.type_label}, {self.id}'
+        return string
+
+
 class Connection:
     def __init__(self, role_label, role_direction, neighbour_thing):
         self.role_label = role_label
@@ -227,3 +237,5 @@ def build_thing(grakn_thing):
         return Thing(id, type_label, base_type_label, data_type, value)
 
     return Thing(id, type_label, base_type_label)
+
+
