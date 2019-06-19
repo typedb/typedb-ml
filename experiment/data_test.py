@@ -47,7 +47,7 @@ class TestDataGeneration(unittest.TestCase):
         G = data.generate_graph(num_people)
         for node in G.nodes:
             if G.nodes[node]['type'] == 'parentship':
-                role_types = [roleplayer_data['type'] for roleplayer, roleplayer_data in G[node].items()]
+                role_types = [roleplayer_data[0]['type'] for roleplayer, roleplayer_data in G[node].items()]
                 self.assertListEqual(sorted(role_types), sorted(['parent', 'child']))
 
     def test__all_siblingships_have_correct_roles(self):
@@ -55,7 +55,7 @@ class TestDataGeneration(unittest.TestCase):
         G = data.generate_graph(num_people)
         for node in G.nodes:
             if G.nodes[node]['type'] == 'siblingship':
-                role_types = [roleplayer_data['type'] for roleplayer, roleplayer_data in G[node].items()]
+                role_types = [roleplayer_data[0]['type'] for roleplayer, roleplayer_data in G[node].items()]
                 self.assertListEqual(role_types, ['sibling', 'sibling'])
 
 
@@ -99,14 +99,14 @@ class TestAddParentship(unittest.TestCase):
         data.add_base_labels(G, 'input')
 
         self.assertEqual(G.nodes[3]['input'], 0)
-        self.assertEqual(G.edges[3, 0]['input'], 0)
-        self.assertEqual(G.edges[3, 1]['input'], 0)
+        self.assertEqual(G.edges[3, 0, 0]['input'], 0)
+        self.assertEqual(G.edges[3, 1, 0]['input'], 0)
 
         data.add_parentship(G, 0, 1, 'input')
 
         self.assertEqual(G.nodes[3]['input'], 1)
-        self.assertEqual(G.edges[3, 0]['input'], 1)
-        self.assertEqual(G.edges[3, 1]['input'], 1)
+        self.assertEqual(G.edges[3, 0, 0]['input'], 1)
+        self.assertEqual(G.edges[3, 1, 0]['input'], 1)
 
 
 class TestAddSiblingship(unittest.TestCase):
@@ -116,14 +116,14 @@ class TestAddSiblingship(unittest.TestCase):
         data.add_base_labels(G, 'input')
 
         self.assertEqual(G.nodes[9]['input'], 0)
-        self.assertEqual(G.edges[9, 0]['input'], 0)
-        self.assertEqual(G.edges[9, 1]['input'], 0)
+        self.assertEqual(G.edges[9, 0, 0]['input'], 0)
+        self.assertEqual(G.edges[9, 1, 0]['input'], 0)
 
         data.add_siblingship(G, 0, 1, 'input')
 
         self.assertEqual(G.nodes[9]['input'], 1)
-        self.assertEqual(G.edges[9, 0]['input'], 1)
-        self.assertEqual(G.edges[9, 1]['input'], 1)
+        self.assertEqual(G.edges[9, 0, 0]['input'], 1)
+        self.assertEqual(G.edges[9, 1, 0]['input'], 1)
 
 
 class TestOneHotEncodeTypes(unittest.TestCase):

@@ -24,7 +24,7 @@ import experiment.input as input
 
 
 class TestGraphToInputTarget(unittest.TestCase):
-    def test_number_of_nodes_in_putputs_is_correct(self):
+    def test_number_of_nodes_in_outputs_is_correct(self):
         all_node_types = ['person', 'parentship', 'siblingship']
         all_edge_types = ['parent', 'child', 'sibling']
         graph = data.create_graph(1)
@@ -37,7 +37,7 @@ class TestGraphToInputTarget(unittest.TestCase):
         self.assertEqual(expected_n_nodes, input_graph.number_of_nodes())
         self.assertEqual(expected_n_nodes, target_graph.number_of_nodes())
 
-    def test_number_of_edges_in_putputs_is_correct(self):
+    def test_number_of_edges_in_outputs_is_correct(self):
         all_node_types = ['person', 'parentship', 'siblingship']
         all_edge_types = ['parent', 'child', 'sibling']
         graph = data.create_graph(1)
@@ -49,6 +49,7 @@ class TestGraphToInputTarget(unittest.TestCase):
         input_graph, target_graph = input.graph_to_input_target(graph)
         self.assertEqual(expected_n_edges, input_graph.number_of_edges())
         self.assertEqual(expected_n_edges, target_graph.number_of_edges())
+
 
 if __name__ == "__main__":
     unittest.main()

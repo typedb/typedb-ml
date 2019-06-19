@@ -26,7 +26,7 @@ import experiment.plotting
 import numpy as np
 
 
-def generate_graph(num_people: int) -> nx.DiGraph:
+def generate_graph(num_people: int) -> nx.MultiDiGraph:
     """
     Create a graph of people, where all people are connected to all others as:
     - the parent in a parentship
@@ -40,7 +40,7 @@ def generate_graph(num_people: int) -> nx.DiGraph:
     :return: the graph
     """
 
-    G = nx.DiGraph()
+    G = nx.MultiDiGraph()
 
     G.add_nodes_from(range(num_people), type="person")
 
@@ -95,8 +95,8 @@ def find_relation_node(G, relation_type, roles, roleplayers):
     for node in set(G.predecessors(roleplayers[0])).intersection(G.predecessors(roleplayers[1])):
 
         if G.nodes[node]['type'] == relation_type \
-                and G.edges[node, roleplayers[0]]['type'] == roles[0] \
-                and G.edges[node, roleplayers[1]]['type'] == roles[1]:
+                and G.edges[node, roleplayers[0], 0]['type'] == roles[0] \
+                and G.edges[node, roleplayers[1], 0]['type'] == roles[1]:
             return node
 
 
@@ -104,12 +104,12 @@ def add_relation_label(G, relation_type, roles, roleplayers, *attributes):
     relation = find_relation_node(G, relation_type, roles, roleplayers)
     for attribute in attributes:
         G.nodes[relation][attribute] = 1
-        G.edges[relation, roleplayers[0]][attribute] = 1
-        G.edges[relation, roleplayers[1]][attribute] = 1
+        G.edges[relation, roleplayers[0], 0][attribute] = 1
+        G.edges[relation, roleplayers[1], 0][attribute] = 1
 
         # Also label directed edges going in the opposite direction
-        G.edges[roleplayers[0], relation][attribute] = 1
-        G.edges[roleplayers[1], relation][attribute] = 1
+        G.edges[roleplayers[0], relation, 0][attribute] = 1
+        G.edges[roleplayers[1], relation, 0][attribute] = 1
 
 
 def add_parentship(G, parent_node, child_node, *attributes):
@@ -253,7 +253,7 @@ def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_t
         one_hot = np.zeros(len(all_edge_types), dtype=np.int)
         index_to_one_hot = all_edge_types.index(edge_feature[type_attribute])
         one_hot[index_to_one_hot] = 1
-        G.edges[sender, receiver][attribute] = one_hot
+        G.edges[sender, receiver, 0][attribute] = one_hot
 
 
 if __name__ == "__main__":

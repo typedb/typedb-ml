@@ -37,11 +37,11 @@ def graph_to_input_target(graph):
     """Returns 2 graphs with input and target feature vectors for training.
 
     Args:
-    graph: An `nx.DiGraph` instance.
+    graph: An `nx.MultiDiGraph` instance.
 
     Returns:
-    The input `nx.DiGraph` instance.
-    The target `nx.DiGraph` instance.
+    The input `nx.MultiDiGraph` instance.
+    The target `nx.MultiDiGraph` instance.
 
     Raises:
     ValueError: unknown node type
@@ -59,15 +59,15 @@ def graph_to_input_target(graph):
     target_graph = graph.copy()
 
     for node_index, node_feature in graph.nodes(data=True):
-        input_graph.add_node(node_index, features=create_feature(node_feature, input_node_fields))
+        input_graph.nodes[node_index]['features'] = create_feature(node_feature, input_node_fields)
         target_node = to_one_hot(create_feature(node_feature, target_node_fields).astype(int), 2)[0]
-        target_graph.add_node(node_index, features=target_node)
+        target_graph.nodes[node_index]['features'] = target_node
 
     for receiver, sender, edge_features in graph.edges(data=True):
-        input_graph.add_edge(receiver, sender, features=create_feature(edge_features, input_edge_fields))
+        input_graph.edges[receiver, sender, 0]['features'] = create_feature(edge_features, input_edge_fields)
 
         target_edge = to_one_hot(create_feature(edge_features, target_edge_fields).astype(int), 2)[0]
-        target_graph.add_edge(receiver, sender, features=target_edge)
+        target_graph.edges[receiver, sender, 0]['features'] = target_edge
 
     input_graph.graph["features"] = np.array([0.0]*5)
     target_graph.graph["features"] = np.array([0.0]*5)

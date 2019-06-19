@@ -252,7 +252,7 @@ def draw_graph(graph,
           zorder=-10)
 
     # Plot edges.
-    e = [edge_color[(s, r)] for s, r in graph.edges]
+    e = [edge_color[(s, r)] for s, r, k in graph.edges]
     _draw(nx.draw_networkx_edges,
           edgelist=graph.edges,
           width=edge_width,
