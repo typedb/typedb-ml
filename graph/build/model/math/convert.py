@@ -19,7 +19,7 @@
 
 
 from graph.build.model.standard.convert import concept_dict_to_grakn_graph
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Role
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge
 
 
 def concept_dict_to_grakn_math_graph(concept_dict, variable_graph):
@@ -35,7 +35,7 @@ def add_role_as_casting_node(grakn_graph, relation, roleplayer, data):
     :param roleplayer: The roleplayer node
     :param data: The data dict, containing the type of the role edge
     """
-    role = Role(relation, roleplayer, data['type'])
+    role = GraknEdge(relation, roleplayer, data['type'])
     grakn_graph.add_node(role)
     grakn_graph.add_edge(relation, role, type='relates')
     grakn_graph.add_edge(roleplayer, role, type='plays')

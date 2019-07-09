@@ -58,7 +58,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
 
         grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
-        employee = neighbour.Role(employment, person, 'employee')
+        employee = neighbour.GraknEdge(employment, person, 'employee')
 
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person)
@@ -87,8 +87,8 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
 
         grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
 
-        employee = neighbour.Role(employment, person, 'employee')
-        employer = neighbour.Role(employment, company, 'employer')
+        employee = neighbour.GraknEdge(employment, person, 'employee')
+        employer = neighbour.GraknEdge(employment, company, 'employer')
 
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person)

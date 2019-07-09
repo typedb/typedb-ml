@@ -19,7 +19,6 @@
 
 import kglib.kgcn.core.ingest.traverse.data.context.utils as utils
 
-
 TARGET_PLAYS = 0  # In this case, the neighbour is a relation in which this thing plays a role
 NEIGHBOUR_PLAYS = 1  # In this case the target
 
@@ -204,14 +203,19 @@ class Thing(utils.PropertyComparable):
         return string
 
 
-class Role(utils.PropertyComparable):
-    def __init__(self, u, v, type_label):
-        self.type = type_label
-        self.id = (u.id, v.id)
+class GraknEdge(utils.PropertyComparable):
+    """
+    This is a Role in a standard Grakn model, but not in a Grakn math model, where a Role is represented as a node
+    with "plays" and "relates" edges directed towards it
+    """
+    def __init__(self, sender, receiver, label):
+        self.sender = sender
+        self.receiver = receiver
+        self.type = label
+        self.id = (sender.id, receiver.id)
 
     def __str__(self):
-        string = f'{self.type_label}, {self.id}'
-        return string
+        return f'{self.type}, {self.id}'
 
 
 class Connection:
@@ -237,5 +241,3 @@ def build_thing(grakn_thing):
         return Thing(id, type_label, base_type_label, data_type, value)
 
     return Thing(id, type_label, base_type_label)
-
-
