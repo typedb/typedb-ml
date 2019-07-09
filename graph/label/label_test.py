@@ -23,11 +23,11 @@ import unittest
 import networkx as nx
 
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing, GraknEdge
-from graph.label.label import label_nodes, label_direct_roles
+from graph.label.label import label_concepts, label_direct_roles
 
 
-class TestLabelNodes(unittest.TestCase):
-    def test_standard_graph_nodes_labelled_as_expected(self):
+class TestLabelConcepts(unittest.TestCase):
+    def test_standard_graph_concepts_labelled_as_expected(self):
         person = Thing('V123', 'person', 'entity')
         parentship = Thing('V567', 'parentship', 'relation')
         name = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
@@ -38,12 +38,12 @@ class TestLabelNodes(unittest.TestCase):
 
         labels_to_apply = {'gt': 1}
         elements_to_label = [person, name]
-        label_nodes(grakn_graph, elements_to_label, labels_to_apply=labels_to_apply)
+        label_concepts(grakn_graph, elements_to_label, labels_to_apply=labels_to_apply)
 
         self.assertDictEqual(grakn_graph.nodes[person], labels_to_apply)
         self.assertDictEqual(grakn_graph.nodes[name], labels_to_apply)
 
-    def test_math_graph_nodes_labelled_as_expected(self):
+    def test_math_graph_concepts_labelled_as_expected(self):
         person = Thing('V123', 'person', 'entity')
         parentship = Thing('V567', 'parentship', 'relation')
         name = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
@@ -59,7 +59,7 @@ class TestLabelNodes(unittest.TestCase):
 
         labels_to_apply = {'gt': 1}
         elements_to_label = [person, name, parent, parentship]
-        label_nodes(grakn_graph, elements_to_label, labels_to_apply=labels_to_apply)
+        label_concepts(grakn_graph, elements_to_label, labels_to_apply=labels_to_apply)
 
         self.assertDictEqual(grakn_graph.nodes[person], labels_to_apply)
         self.assertDictEqual(grakn_graph.nodes[name], labels_to_apply)

@@ -41,12 +41,24 @@ hypothetical Type to discriminate between the positive and negative examples
 """
 
 
-def label_nodes(graph, nodes_to_label, labels_to_apply):
-    for node in nodes_to_label:
+def label_concepts(graph, concepts_to_label, labels_to_apply):
+    """
+    Labels Concepts in a graph
+    :param graph: The graph to update
+    :param concepts_to_label: The Concepts (nodes) in the graph to label
+    :param labels_to_apply: The labels to update with
+    """
+    for node in concepts_to_label:
         graph.nodes[node].update(labels_to_apply)
 
 
 def label_direct_roles(graph, roles_to_label, labels_to_apply):
+    """
+    Labels Role edges as found in a standard Grakn model
+    :param graph: The graph to update
+    :param roles_to_label: The Role edges in the graph to label
+    :param labels_to_apply: The labels to update with
+    """
 
     for role in roles_to_label:
         for sender, receiver, data in graph.edges(data=True):
