@@ -22,11 +22,11 @@ import unittest
 
 import networkx as nx
 
-import kglib.graph.build.from_queries_test
-import kglib.graph.build.model.math.convert as math_convert
-import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 from kglib.graph.build.from_queries import build_graph_from_queries
+from kglib.graph.build.from_queries_test import match_node_things, match_edge_types
+from kglib.graph.build.model.math.convert import concept_dict_to_grakn_math_graph
 from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing
 
 
 def mock_sampler(input_iter):
@@ -84,9 +84,9 @@ class ITBuildGraphFromQueries(unittest.TestCase):
 
         combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
 
-        person_exp = neighbour.Thing('V123', 'person', 'entity')
-        employment_exp = neighbour.Thing('V567', 'parentship', 'relation')
-        name_exp = neighbour.Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
+        person_exp = Thing('V123', 'person', 'entity')
+        employment_exp = Thing('V567', 'parentship', 'relation')
+        name_exp = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp)
         expected_combined_graph.add_node(name_exp)
@@ -96,8 +96,8 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
         self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=kglib.graph.build.from_queries_test.match_node_things,
-                                         edge_match=kglib.graph.build.from_queries_test.match_edge_types))
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
 
     def test_math_graph_is_built_as_expected(self):
         g1 = nx.MultiDiGraph()
@@ -126,13 +126,13 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         mock_tx = MockTransaction()
 
         combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx,
-                                                  concept_dict_converter=math_convert.concept_dict_to_grakn_math_graph)
+                                                  concept_dict_converter=concept_dict_to_grakn_math_graph)
 
-        person_exp = neighbour.Thing('V123', 'person', 'entity')
-        parentship_exp = neighbour.Thing('V567', 'parentship', 'relation')
-        name_exp = neighbour.Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
-        parent = neighbour.GraknEdge(parentship_exp, person_exp, 'parent')
-        child = neighbour.GraknEdge(parentship_exp, person_exp, 'child')
+        person_exp = Thing('V123', 'person', 'entity')
+        parentship_exp = Thing('V567', 'parentship', 'relation')
+        name_exp = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
+        parent = GraknEdge(parentship_exp, person_exp, 'parent')
+        child = GraknEdge(parentship_exp, person_exp, 'child')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp)
         expected_combined_graph.add_node(name_exp)
@@ -148,8 +148,8 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
         self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=kglib.graph.build.from_queries_test.match_node_things,
-                                         edge_match=kglib.graph.build.from_queries_test.match_edge_types))
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
 
 
 if __name__ == "__main__":
