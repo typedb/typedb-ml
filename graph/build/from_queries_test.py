@@ -94,5 +94,56 @@ class TestCombineGraphs(unittest.TestCase):
                                          edge_match=match_edge_types))
 
 
+class TestConceptGraphToIndexedGraph(unittest.TestCase):
+    def test_standard_graph_converted_as_expected(self):
+        person = neighbour.Thing('V123', 'person', 'entity')
+        employment = neighbour.Thing('V567', 'employment', 'relation')
+        grakn_graph = nx.MultiDiGraph()
+        grakn_graph.add_node(person)
+        grakn_graph.add_node(employment)
+        grakn_graph.add_edge(employment, person, type='employee')
+
+        person_exp = neighbour.Thing('V123', 'person', 'entity')
+        employment_exp = neighbour.Thing('V567', 'employment', 'relation')
+        expected_indexed_graph = nx.MultiDiGraph()
+        expected_indexed_graph.add_node(0, concept=person_exp, type=person_exp.type_label)
+        expected_indexed_graph.add_node(1, concept=employment_exp, type=employment_exp.type_label)
+        expected_indexed_graph.add_edge(1, 0, type='employee')
+
+        indexed_graph = load.concept_graph_to_indexed_graph(grakn_graph)
+
+        self.assertTrue(nx.is_isomorphic(expected_indexed_graph, indexed_graph,
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
+
+    def test_math_graph_converted_as_expected(self):
+        person = neighbour.Thing('V123', 'person', 'entity')
+        employment = neighbour.Thing('V567', 'employment', 'relation')
+        employee = neighbour.GraknEdge(employment, person, 'employee')
+        grakn_graph = nx.MultiDiGraph()
+        grakn_graph.add_node(person)
+        grakn_graph.add_node(employment)
+        grakn_graph.add_node(employee)
+
+        grakn_graph.add_edge(employment, employee, type='relates')
+        grakn_graph.add_edge(person, employee, type='plays')
+
+        person_exp = neighbour.Thing('V123', 'person', 'entity')
+        employment_exp = neighbour.Thing('V567', 'employment', 'relation')
+        employee_exp = neighbour.GraknEdge(employment, person, 'employee')
+        expected_indexed_graph = nx.MultiDiGraph()
+        expected_indexed_graph.add_node(0, concept=person_exp, type=person_exp.type_label)
+        expected_indexed_graph.add_node(1, concept=employment_exp, type=employment_exp.type_label)
+        expected_indexed_graph.add_node(2, concept=employee_exp, type=employee_exp.type_label)
+        expected_indexed_graph.add_edge(1, 2, type='relates')
+        expected_indexed_graph.add_edge(0, 2, type='plays')
+
+        indexed_graph = load.concept_graph_to_indexed_graph(grakn_graph)
+
+        self.assertTrue(nx.is_isomorphic(expected_indexed_graph, indexed_graph,
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -63,5 +63,5 @@ def label_direct_roles(graph, roles_to_label, labels_to_apply):
     for role in roles_to_label:
         for sender, receiver, data in graph.edges(data=True):
             if role.sender == sender and role.receiver == receiver \
-                    and graph.edges[sender, receiver, 0]['type'] == role.type:
+                    and graph.edges[sender, receiver, 0]['type'] == role.type_label:
                 data.update(labels_to_apply)
