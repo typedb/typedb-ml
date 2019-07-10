@@ -5,6 +5,7 @@ py_library(
     srcs = glob(['__init__.py', 'kgcn/**/*.py']),
     deps = [
         '//kglib/kgcn',
+        '//kglib/graph',
     ],
     visibility=['//visibility:public']
 )

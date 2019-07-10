@@ -58,19 +58,3 @@ def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None
             add_role_func(grakn_graph, sender, receiver, data)
 
     return grakn_graph
-
-
-def concept_dict_to_grakn_standard_graph(concept_dict, variable_graph):
-    return concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=add_role_as_direct_edge)
-
-
-def add_role_as_direct_edge(grakn_graph, relation, roleplayer, data):
-    """
-    When adding roles to the graph, here we insert the role as a direct edge, with the type of the role stored in the
-    edge data as 'type'
-    :param grakn_graph: The graph to add roles to
-    :param relation: The relation node
-    :param roleplayer: The roleplayer node
-    :param data: The data dict, containing the type of the role edge
-    """
-    grakn_graph.add_edge(relation, roleplayer, type=data['type'])

@@ -22,9 +22,9 @@ import unittest
 
 import networkx as nx
 
-from kglib.graph.build.from_queries import build_graph_from_queries
-from kglib.graph.build.from_queries_test import match_node_things, match_edge_types
-from kglib.graph.build.model.math.convert import concept_dict_to_grakn_math_graph
+from kglib.graph.create.from_queries import build_graph_from_queries
+from kglib.graph.utils.test.match import match_node_things, match_edge_types
+from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
 from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing
 

@@ -1,0 +1,13 @@
+load("@io_bazel_rules_python//python:python.bzl", "py_library")
+load("@pypi_dependencies//:requirements.bzl", "requirement")
+
+
+py_library(
+    name = "common",
+    srcs = glob(['**/*.py']),
+    deps = [
+        requirement('networkx'),
+        requirement('decorator'),
+    ],
+    visibility=['//visibility:public']
+)

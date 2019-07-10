@@ -21,7 +21,9 @@ import unittest
 
 import networkx as nx
 
-from kglib.graph.build.from_queries import concept_dict_from_concept_map, combine_graphs, concept_graph_to_indexed_graph
+from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_graphs, concept_graph_to_indexed_graph
+
+from kglib.graph.utils.test.match import match_node_things, match_edge_types
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing
 from kglib.graph.mock.concept import MockType, MockThing
 
@@ -49,14 +51,6 @@ class TestConceptDictsFromQuery(unittest.TestCase):
         }
 
         self.assertEqual(expected_concept_dict, concept_dicts)
-
-
-def match_node_things(data1, data2):
-    return data1 == data2
-
-
-def match_edge_types(data1, data2):
-    return data1 == data2
 
 
 class TestCombineGraphs(unittest.TestCase):
