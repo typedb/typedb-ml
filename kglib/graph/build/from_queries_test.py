@@ -21,9 +21,9 @@ import unittest
 
 import networkx as nx
 
-import graph.build.from_queries as load
+import kglib.graph.build.from_queries as load
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from graph.mock.concept import MockType, MockThing
+from kglib.graph.mock.concept import MockType, MockThing
 
 
 class TestConceptDictsFromQuery(unittest.TestCase):

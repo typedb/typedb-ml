@@ -18,7 +18,7 @@
 #
 
 
-from graph.build.model.standard.convert import concept_dict_to_grakn_graph
+from kglib.graph.build.model.standard.convert import concept_dict_to_grakn_graph
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge
 
 

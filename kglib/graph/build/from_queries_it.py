@@ -22,11 +22,11 @@ import unittest
 
 import networkx as nx
 
-import graph.build.from_queries_test
-import graph.build.model.math.convert as math_convert
+import kglib.graph.build.from_queries_test
+import kglib.graph.build.model.math.convert as math_convert
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from graph.build.from_queries import build_graph_from_queries
-from graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
+from kglib.graph.build.from_queries import build_graph_from_queries
+from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 
 
 def mock_sampler(input_iter):
@@ -96,8 +96,8 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
         self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=graph.build.from_queries_test.match_node_things,
-                                         edge_match=graph.build.from_queries_test.match_edge_types))
+                                         node_match=kglib.graph.build.from_queries_test.match_node_things,
+                                         edge_match=kglib.graph.build.from_queries_test.match_edge_types))
 
     def test_math_graph_is_built_as_expected(self):
         g1 = nx.MultiDiGraph()
@@ -148,8 +148,8 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
         self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=graph.build.from_queries_test.match_node_things,
-                                         edge_match=graph.build.from_queries_test.match_edge_types))
+                                         node_match=kglib.graph.build.from_queries_test.match_node_things,
+                                         edge_match=kglib.graph.build.from_queries_test.match_edge_types))
 
 
 if __name__ == "__main__":

@@ -22,8 +22,8 @@ import unittest
 import networkx as nx
 from kglib.kgcn.core.ingest.traverse.data.context import neighbour as neighbour
 
-from graph.build.from_queries_test import match_node_things, match_edge_types
-from graph.build.model.standard.convert import concept_dict_to_grakn_standard_graph
+from kglib.graph.build.from_queries_test import match_node_things, match_edge_types
+from kglib.graph.build.model.standard.convert import concept_dict_to_grakn_standard_graph
 
 
 class TestConceptDictToGraknGraph(unittest.TestCase):

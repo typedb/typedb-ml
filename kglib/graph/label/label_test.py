@@ -23,7 +23,7 @@ import unittest
 import networkx as nx
 
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing, GraknEdge
-from graph.label.label import label_concepts, label_direct_roles
+from kglib.graph.label.label import label_concepts, label_direct_roles
 
 
 class TestLabelConcepts(unittest.TestCase):
