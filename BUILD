@@ -39,26 +39,6 @@ assemble_pip(
 
     description = "A Machine Learning Library for the Grakn knowledge graph.",
     long_description_file = "//:README.md",
-#    deps = [
-#        deployment_requirement("twine"),
-#        deployment_requirement("setuptools"),
-#        deployment_requirement("wheel"),
-#        deployment_requirement("requests"),
-#        deployment_requirement("urllib3"),
-#        deployment_requirement("chardet"),
-#        deployment_requirement("certifi"),
-#        deployment_requirement("idna"),
-#        deployment_requirement("tqdm"),
-#        deployment_requirement("requests_toolbelt"),
-#        deployment_requirement("pkginfo"),
-#        deployment_requirement("readme_renderer"),
-#        deployment_requirement("pygments"),
-#        deployment_requirement("docutils"),
-#        deployment_requirement("bleach"),
-#        deployment_requirement("webencodings"),
-#        deployment_requirement("six"),
-#    ],
-
 )
 
 deploy_pip(
