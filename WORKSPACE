@@ -3,6 +3,7 @@ workspace(
     name = "kglib"
 )
 
+
 ########################################################################################################################
 # Load Bazel Rules
 ########################################################################################################################
@@ -28,16 +29,19 @@ pip_repositories()
 git_repository(
     name="graknlabs_bazel_distribution",
     remote="https://github.com/graknlabs/bazel-distribution",
-    commit="27c8bf9e5d9f9b11b2a70dc2697da196d69f799c"
+    commit="7e10632c91626a6e9e31787bacc3b0352f907f68"
 )
 
+load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
+github_dependencies_for_deployment()
+
 pip3_import(
-    name = "pypi_deployment_dependencies",
+    name = "graknlabs_bazel_distribution_pip",
     requirements = "@graknlabs_bazel_distribution//pip:requirements.txt"
 )
 
-load("@pypi_deployment_dependencies//:requirements.bzl", pip_install_deployment_requirements = "pip_install")
-pip_install_deployment_requirements()
+load("@graknlabs_bazel_distribution_pip//:requirements.bzl", graknlabs_bazel_distribution_pip_install = "pip_install")
+graknlabs_bazel_distribution_pip_install()
 
 ########################################################################################################################
 # Load KGLIB's PyPi requirements
@@ -91,8 +95,8 @@ graknlabs_protocol()
 graknlabs_client_java()
 graknlabs_benchmark()
 
-load("@graknlabs_build_tools//distribution:dependencies.bzl", "graknlabs_bazel_distribution")
-graknlabs_bazel_distribution()
+#load("@graknlabs_build_tools//distribution:dependencies.bzl", "graknlabs_bazel_distribution")
+#graknlabs_bazel_distribution()
 
 ###########################
 # Load Bazel dependencies #
@@ -116,9 +120,6 @@ sonarcloud_dependencies()
 
 load("@graknlabs_build_tools//bazel:dependencies.bzl", "bazel_rules_python")
 bazel_rules_python()
-
-#load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip_import")
-#pip_repositories()
 
 pip3_import(
     name = "graknlabs_build_tools_ci_pip",
@@ -183,8 +184,8 @@ java_grpc_compile()
 ##################################
 
 # TODO: rename the macro we load here to deploy_github_dependencies
-load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
-github_dependencies_for_deployment()
+#load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
+#github_dependencies_for_deployment()
 
 load("@graknlabs_build_tools//bazel:dependencies.bzl", "bazel_rules_docker")
 bazel_rules_docker()
