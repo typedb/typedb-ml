@@ -22,6 +22,7 @@ import unittest
 
 import networkx as nx
 
+from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.create.from_queries import build_graph_from_queries
 from kglib.graph.utils.test.match import match_node_things, match_edge_types
 from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
@@ -37,20 +38,20 @@ class MockTransaction:
     def query(self, query):
 
         if query == 'match $x id V123; get;':
-            return [{'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))}]
+            return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
         elif query == 'match $x id V123, has name $n; get;':
             return [
-                {
+                MockConceptMap({
                     'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
                     'n': MockAttribute('V987', 'Bob', MockAttributeType('V555', 'name', 'ATTRIBUTE', 'STRING'))
-                }]
+                })]
         elif query == 'match $x id V123; $r(child: $x, parent: $y); get;':
             return [
-                {
+                MockConceptMap({
                     'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
                     'y': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
                     'r': MockThing('V567', MockType('V9876', 'parentship', 'RELATION'))
-                }]
+                })]
         else:
             raise NotImplementedError
 

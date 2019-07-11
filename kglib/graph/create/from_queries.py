@@ -33,7 +33,7 @@ def concept_dict_from_concept_map(concept_map):
     :param concept_map: A dict of Concepts provided by Grakn keyed by query variables
     :return: A dictionary of concepts keyed by query variables
     """
-    return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.items()}
+    return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
 
 
 def combine_graphs(graph1, graph2):

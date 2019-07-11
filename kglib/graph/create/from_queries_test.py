@@ -21,6 +21,7 @@ import unittest
 
 import networkx as nx
 
+from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_graphs, concept_graph_to_indexed_graph
 
 from kglib.graph.utils.test.match import match_node_things, match_edge_types
@@ -30,7 +31,7 @@ from kglib.graph.mock.concept import MockType, MockThing
 
 class TestConceptDictsFromQuery(unittest.TestCase):
     def test_concept_dicts_are_built_as_expected(self):
-        concept_map = {'x': MockThing('V123', MockType('V456', 'person', 'ENTITY'))}
+        concept_map = MockConceptMap({'x': MockThing('V123', MockType('V456', 'person', 'ENTITY'))})
         concept_dicts = concept_dict_from_concept_map(concept_map)
 
         expected_concept_dicts = {'x': Thing('V123', 'person', 'entity')}
@@ -38,10 +39,10 @@ class TestConceptDictsFromQuery(unittest.TestCase):
         self.assertEqual(expected_concept_dicts, concept_dicts)
 
     def test_concept_dicts_are_built_as_expected_with_2_concepts(self):
-        concept_map = {
+        concept_map = MockConceptMap({
             'x': MockThing('V123', MockType('V456', 'person', 'ENTITY')),
             'y': MockThing('V789', MockType('V765', 'employment', 'RELATION')),
-        }
+        })
 
         concept_dicts = concept_dict_from_concept_map(concept_map)
 
