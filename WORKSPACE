@@ -11,6 +11,7 @@ workspace(
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
+# We require loading bazel_rules from the graknlabs fork, not from bazel, since we've patched the python rules to work with TensorFlow
 git_repository(
     name = "io_bazel_rules_python",
     # Grakn python rules
@@ -22,15 +23,19 @@ git_repository(
 load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
 pip_repositories()
 
+
 ########################################################################################################################
 # Load Bazel Distribution
 ########################################################################################################################
 
+# Load Bazel Distribution here, since it is required for kglib and for grakn
 git_repository(
     name="graknlabs_bazel_distribution",
     remote="https://github.com/graknlabs/bazel-distribution",
     commit="62a9a6343e9f2a1aeed7c935e9092c0fd1e8e8ac"
 )
+
+# --- Load the dependencies of graknlabs_bazel_distribution ---
 
 load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
 github_dependencies_for_deployment()
@@ -55,6 +60,7 @@ node_repositories()
 load("@io_bazel_rules_sass//:defs.bzl", "sass_repositories")
 sass_repositories()
 
+# Skip these graknlabs_bazel_distribution dependencies since they are already present
 #git_repository(
 #    name = "io_bazel_rules_python",
 #    remote = "https://github.com/bazelbuild/rules_python.git",
@@ -71,18 +77,6 @@ pip3_import(
 load("@graknlabs_bazel_distribution_pip//:requirements.bzl", graknlabs_bazel_distribution_pip_install = "pip_install")
 graknlabs_bazel_distribution_pip_install()
 
-
-###########################
-#load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
-#github_dependencies_for_deployment()
-#
-#pip3_import(
-#    name = "graknlabs_bazel_distribution_pip",
-#    requirements = "@graknlabs_bazel_distribution//pip:requirements.txt"
-#)
-#
-#load("@graknlabs_bazel_distribution_pip//:requirements.bzl", graknlabs_bazel_distribution_pip_install = "pip_install")
-#graknlabs_bazel_distribution_pip_install()
 
 ########################################################################################################################
 # Load KGLIB's PyPi requirements
@@ -108,6 +102,7 @@ http_file(
   ]
 )
 
+
 ########################################################################################################################
 # Load Grakn
 ########################################################################################################################
@@ -117,6 +112,7 @@ git_repository(
     remote="https://github.com/graknlabs/grakn",
     commit="2845bb009876a74896bd479a7e49955c7fa1c7ca"
 )
+
 
 ################################
 # Load Grakn Labs dependencies #
@@ -136,6 +132,7 @@ graknlabs_protocol()
 graknlabs_client_java()
 graknlabs_benchmark()
 
+# Skip since these are already present above
 #load("@graknlabs_build_tools//distribution:dependencies.bzl", "graknlabs_bazel_distribution")
 #graknlabs_bazel_distribution()
 
@@ -224,6 +221,7 @@ java_grpc_compile()
 # Load Distribution dependencies #
 ##################################
 
+# Skip since these are already present above
 # TODO: rename the macro we load here to deploy_github_dependencies
 #load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
 #github_dependencies_for_deployment()
