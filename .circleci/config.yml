@@ -25,18 +25,17 @@ jobs:
       - run: cd grakn-core-all-mac-1.5.3 && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
       - run: bazel test //kglib/... --test_output=streamed --python_version PY3 --python_path $(which python)
 
-  test-deploy-pip:
+  deploy-pip-snapshot:
     machine: true
     working_directory: ~/kglib
     steps:
       - checkout
       - bazel_install
-      - run: sudo apt-get update
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: date +%s > VERSION
-      - run: cat VERSION
-      - run: bazel run //:deploy-pip -- test $PYPI_TEST_SERVER_USERNAME $PYPI_TEST_SERVER_PASSWORD
+      - run: |
+          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
+          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
+          bazel run //:deploy-pip -- snapshot
 
   end-to-end-test:
     machine: true
@@ -62,28 +61,28 @@ jobs:
            VERSION_TAG="v"$(cat "VERSION")
            curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"Draft\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
 
-  deploy-pip:
+  deploy-pip-release:
     machine: true
     working_directory: ~/kglib
     steps:
       - checkout
       - bazel_install
-      - run: sudo apt-get update
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: bazel run //:deploy-pip -- pypi $PYPI_USERNAME $PYPI_PASSWORD
+      - run: |
+          export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
+          export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
+          bazel run //:deploy-pip -- release
 
 workflows:
   version: 2
   kglib:
     jobs:
       - test
-      - test-deploy-pip:
+      - deploy-pip-snapshot:
           requires:
             - test
       - end-to-end-test:
           requires:
-            - test-deploy-pip
+            - deploy-pip-snapshot
       - approve-deploy-git:
           type: approval
           requires:
@@ -91,10 +90,10 @@ workflows:
       - deploy-git:
           requires:
             - approve-deploy-git
-      - approve-deploy-pip:
+      - approve-deploy-pip-release:
           type: approval
           requires:
             - deploy-git
-      - deploy-pip:
+      - deploy-pip-release:
           requires:
-            - approve-deploy-pip
+            - approve-deploy-pip-release
