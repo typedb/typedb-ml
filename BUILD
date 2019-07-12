@@ -2,14 +2,15 @@ exports_files(["requirements.txt"])
 
 load("@io_bazel_rules_python//python:python.bzl", "py_library", "py_test")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
-load("@pypi_deployment_dependencies//:requirements.bzl", deployment_requirement = "requirement")
+load("@graknlabs_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
 
-load("@graknlabs_bazel_distribution//pip:rules.bzl", "deploy_pip")
+load("@graknlabs_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
 
-deploy_pip(
-    name = "deploy-pip",
-    package_name = "grakn-kglib",
+assemble_pip(
+    name = "assemble-pip",
+    target = "//kglib:kglib",
     version_file = "//:VERSION",
+    package_name = "grakn-kglib",
     classifiers = [
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
@@ -35,27 +36,13 @@ deploy_pip(
                       'grpcio==1.16.0', 'protobuf==3.6.1', 'six==1.11.0', 'enum34==1.1.6', 'twine==1.12.1', 'requests==2.21.0'],
     keywords = ["machine learning", "logical reasoning", "knowledege graph", "grakn", "database", "graph",
                 "knowledgebase", "knowledge-engineering"],
-    deployment_properties = "//:deployment.properties",
+
     description = "A Machine Learning Library for the Grakn knowledge graph.",
     long_description_file = "//:README.md",
-    deps = [
-        deployment_requirement("twine"),
-        deployment_requirement("setuptools"),
-        deployment_requirement("wheel"),
-        deployment_requirement("requests"),
-        deployment_requirement("urllib3"),
-        deployment_requirement("chardet"),
-        deployment_requirement("certifi"),
-        deployment_requirement("idna"),
-        deployment_requirement("tqdm"),
-        deployment_requirement("requests_toolbelt"),
-        deployment_requirement("pkginfo"),
-        deployment_requirement("readme_renderer"),
-        deployment_requirement("pygments"),
-        deployment_requirement("docutils"),
-        deployment_requirement("bleach"),
-        deployment_requirement("webencodings"),
-        deployment_requirement("six"),
-    ],
-    target = "//kglib:kglib"
+)
+
+deploy_pip(
+    name = "deploy-pip",
+    target = ":assemble-pip",
+    deployment_properties = "@graknlabs_build_tools//:deployment.properties",
 )
