@@ -31,6 +31,8 @@ jobs:
     steps:
       - checkout
       - bazel_install
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
       - run: |
           echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
           export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
@@ -67,6 +69,8 @@ jobs:
     steps:
       - checkout
       - bazel_install
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
       - run: |
           export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
