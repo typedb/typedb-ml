@@ -25,11 +25,8 @@ pip_repositories()
 ########################################################################################################################
 
 # Load Bazel Distribution here, since it is required for kglib and for grakn
-git_repository(
-    name="graknlabs_bazel_distribution",
-    remote="https://github.com/graknlabs/bazel-distribution",
-    commit="62a9a6343e9f2a1aeed7c935e9092c0fd1e8e8ac"
-)
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_bazel_distribution")
+graknlabs_bazel_distribution()
 
 # --- Load the dependencies of graknlabs_bazel_distribution ---
 
@@ -74,6 +71,24 @@ load("@graknlabs_bazel_distribution_pip//:requirements.bzl", graknlabs_bazel_dis
 graknlabs_bazel_distribution_pip_install()
 
 
+
+###################################
+# Load Client Python Dependencies #
+###################################
+
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_client_python")
+graknlabs_client_python()
+
+pip3_import(
+    name = "graknlabs_client_python_pip",
+    requirements = "@graknlabs_client_python//:requirements.txt",
+)
+
+load("@graknlabs_client_python_pip//:requirements.bzl",
+graknlabs_client_python_pip_install = "pip_install")
+graknlabs_client_python_pip_install()
+
+
 ########################################################################################################################
 # Load KGLIB's PyPi requirements
 ########################################################################################################################
@@ -103,12 +118,8 @@ http_file(
 # Load Grakn
 ########################################################################################################################
 
-git_repository(
-    name="graknlabs_grakn_core",
-    remote="https://github.com/graknlabs/grakn",
-    commit="2845bb009876a74896bd479a7e49955c7fa1c7ca"
-)
-
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_grakn_core")
+graknlabs_grakn_core()
 
 ################################
 # Load Grakn Labs dependencies #
