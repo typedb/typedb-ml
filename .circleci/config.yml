@@ -23,7 +23,7 @@ jobs:
       - run: unzip grakn-core-all-mac-1.5.3.zip
       - run: nohup grakn-core-all-mac-1.5.3/grakn server start
       - run: cd grakn-core-all-mac-1.5.3 && ./grakn console -k test_schema -f ../kglib/kgcn/test_data/schema.gql
-      - run: bazel test //kglib/... --test_output=streamed --force_python PY3 --python_path $(which python)
+      - run: bazel test //kglib/... --test_output=streamed --python_version PY3 --python_path $(which python)
 
   test-deploy-pip:
     machine: true
@@ -47,7 +47,7 @@ jobs:
       - run: sudo apt-get update
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
-      - run: bazel test //examples:test_pypi_end_to_end_test --test_output=streamed --force_python PY3 --python_path $(which python) --spawn_strategy=standalone
+      - run: bazel test //examples:test_pypi_end_to_end_test --test_output=streamed --python_version PY3 --python_path $(which python) --spawn_strategy=standalone
 
   deploy-git:
     machine: true
