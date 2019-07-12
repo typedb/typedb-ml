@@ -20,6 +20,7 @@
 
 import unittest
 
+from grakn.client import GraknClient
 import networkx as nx
 
 from kglib.graph.mock.answer import MockConceptMap
@@ -27,7 +28,7 @@ from kglib.graph.create.from_queries import build_graph_from_queries
 from kglib.graph.utils.test.match import match_node_things, match_edge_types
 from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
 from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing, build_thing
 
 
 def mock_sampler(input_iter):
@@ -99,6 +100,8 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
+        self.assertSetEqual(set(expected_combined_graph.nodes()), set(combined_graph.nodes()))
+        self.assertSetEqual(set(expected_combined_graph.edges()), set(combined_graph.edges()))
 
     def test_math_graph_is_built_as_expected(self):
         g1 = nx.MultiDiGraph()
@@ -151,6 +154,82 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
                                          node_match=match_node_things,
                                          edge_match=match_edge_types))
+        self.assertSetEqual(set(expected_combined_graph.nodes()), set(combined_graph.nodes()))
+        self.assertSetEqual(set(expected_combined_graph.edges()), set(combined_graph.edges()))
+
+
+class ITBuildGraphFromQueriesWithRealGrakn(unittest.TestCase):
+
+    KEYSPACE = "it_build_graph_from_queries"
+    SCHEMA = ("define "
+              "person sub entity, has name, plays parent, plays child;"
+              "name sub attribute, datatype string;"
+              "parentship sub relation, relates parent, relates child;")
+    DATA = ('insert '
+            '$p isa person, has name "Bob";'
+            '$r(parent: $p, child: $p) isa parentship;')
+
+    def setUp(self):
+        self._keyspace = type(self).__name__.lower()  # Use the name of this test class as the keyspace name
+        print(self._keyspace)
+        self._client = GraknClient(uri="localhost:48555")
+
+    def tearDown(self):
+        self._client.keyspaces().delete(self._keyspace)
+        self._client.close()
+
+    def test_standard_graph_is_built_from_grakn_as_expected(self):
+
+        g1 = nx.MultiDiGraph()
+        g1.add_node('x')
+
+        g2 = nx.MultiDiGraph()
+        g2.add_node('x')
+        g2.add_node('n')
+        g2.add_edge('x', 'n', type='has')
+
+        g3 = nx.MultiDiGraph()
+        g3.add_node('x')
+        g3.add_node('r')
+        g3.add_node('y')
+        g3.add_edge('r', 'x', type='child')
+        g3.add_edge('r', 'y', type='parent')
+
+        query_sampler_variable_graph_tuples = [('match $x isa person; get;', mock_sampler, g1),
+                                               ('match $x isa person, has name $n; get;', mock_sampler, g2),
+                                               ('match $x isa person; $r(child: $x, parent: $y); get;', mock_sampler, g3),
+                                               # TODO Add functionality for loading schema at a later date
+                                               # ('match $x sub person; $x sub $type; get;', g4),
+                                               # ('match $x sub $y; get;', g5),
+                                               ]
+
+        with self._client.session(keyspace=self._keyspace) as session:
+
+            with session.transaction().write() as tx:
+                tx.query(ITBuildGraphFromQueriesWithRealGrakn.SCHEMA)
+                tx.query(ITBuildGraphFromQueriesWithRealGrakn.DATA)
+                tx.commit()
+
+            with session.transaction().read() as tx:
+                combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
+
+                person_exp = build_thing(tx.query('match $x isa person; get;').collect_concepts()[0])
+                name_exp = build_thing(tx.query('match $x isa name; get;').collect_concepts()[0])
+                employment_exp = build_thing(tx.query('match $x isa parentship; get;').collect_concepts()[0])
+
+        expected_combined_graph = nx.MultiDiGraph()
+        expected_combined_graph.add_node(person_exp)
+        expected_combined_graph.add_node(name_exp)
+        expected_combined_graph.add_node(employment_exp)
+        expected_combined_graph.add_edge(employment_exp, person_exp, type='child')
+        expected_combined_graph.add_edge(employment_exp, person_exp, type='parent')
+        expected_combined_graph.add_edge(person_exp, name_exp, type='has')
+
+        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
+                                         node_match=match_node_things,
+                                         edge_match=match_edge_types))
+        self.assertSetEqual(set(expected_combined_graph.nodes()), set(combined_graph.nodes()))
+        self.assertSetEqual(set(expected_combined_graph.edges()), set(combined_graph.edges()))
 
 
 if __name__ == "__main__":
