@@ -7,6 +7,5 @@ py_library(
     deps = [
         '//kglib/kgcn',
     ],
-    imports = ["."],
     visibility=['//visibility:public']
 )
