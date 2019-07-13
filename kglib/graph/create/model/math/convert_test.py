@@ -23,11 +23,11 @@ import unittest
 import networkx as nx
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from kglib.graph.test.case import match_node_things, match_edge_types
+from kglib.graph.test.case import match_node_things, match_edge_types, GraphTestCase
 from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
 
 
-class TestConceptDictToGraknMathGraph(unittest.TestCase):
+class TestConceptDictToGraknMathGraph(GraphTestCase):
     def test_single_entity_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
         variable_graph.add_node('x')
@@ -39,12 +39,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person)
 
-        # Requires all of these checks to ensure graphs compare as expected
-        self.assertEqual(expected_grakn_graph.nodes, grakn_graph.nodes)
-        self.assertEqual(expected_grakn_graph.edges, grakn_graph.edges)
-        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
     def test_single_entity_single_relation_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
@@ -67,10 +62,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         expected_grakn_graph.add_edge(employment, employee, type='relates')
         expected_grakn_graph.add_edge(person, employee, type='plays')
 
-        # Requires all of these checks to ensure graphs compare as expected
-        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
     def test_two_entity_single_relation_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
@@ -103,9 +95,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         expected_grakn_graph.add_edge(employment, employer, type='relates')
         expected_grakn_graph.add_edge(company, employer, type='plays')
 
-        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
     def test_same_thing_occurs_in_two_different_variables(self):
         variable_graph = nx.MultiDiGraph()
@@ -121,9 +111,7 @@ class TestConceptDictToGraknMathGraph(unittest.TestCase):
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person)
 
-        self.assertTrue(nx.is_isomorphic(expected_grakn_graph, grakn_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
     def test_edge_starting_from_entity_throws_exception(self):
         variable_graph = nx.MultiDiGraph()

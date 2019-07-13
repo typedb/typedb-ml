@@ -21,12 +21,12 @@ import unittest
 
 import networkx as nx
 
+from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_graphs, \
+    concept_graph_to_indexed_graph
 from kglib.graph.mock.answer import MockConceptMap
-from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_graphs, concept_graph_to_indexed_graph
-
-from kglib.graph.test.case import match_node_things, match_edge_types
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing
 from kglib.graph.mock.concept import MockType, MockThing
+from kglib.graph.test.case import GraphTestCase
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing
 
 
 class TestConceptDictsFromQuery(unittest.TestCase):
@@ -54,7 +54,7 @@ class TestConceptDictsFromQuery(unittest.TestCase):
         self.assertEqual(expected_concept_dict, concept_dicts)
 
 
-class TestCombineGraphs(unittest.TestCase):
+class TestCombineGraphs(GraphTestCase):
 
     def test_graph_combined_as_expected(self):
 
@@ -84,12 +84,10 @@ class TestCombineGraphs(unittest.TestCase):
         expected_combined_graph.add_edge(employment_ex, person_ex, type='employee')
         expected_combined_graph.add_edge(person_ex, name_ex, type='has')
 
-        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertGraphsEqual(expected_combined_graph, combined_graph)
 
 
-class TestConceptGraphToIndexedGraph(unittest.TestCase):
+class TestConceptGraphToIndexedGraph(GraphTestCase):
     def test_standard_graph_converted_as_expected(self):
         person = Thing('V123', 'person', 'entity')
         employment = Thing('V567', 'employment', 'relation')
@@ -107,9 +105,7 @@ class TestConceptGraphToIndexedGraph(unittest.TestCase):
 
         indexed_graph = concept_graph_to_indexed_graph(grakn_graph)
 
-        self.assertTrue(nx.is_isomorphic(expected_indexed_graph, indexed_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertIsIsomorphic(expected_indexed_graph, indexed_graph)
 
     def test_math_graph_converted_as_expected(self):
         person = Thing('V123', 'person', 'entity')
@@ -135,9 +131,7 @@ class TestConceptGraphToIndexedGraph(unittest.TestCase):
 
         indexed_graph = concept_graph_to_indexed_graph(grakn_graph)
 
-        self.assertTrue(nx.is_isomorphic(expected_indexed_graph, indexed_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
+        self.assertIsIsomorphic(expected_indexed_graph, indexed_graph)
 
 
 if __name__ == "__main__":
