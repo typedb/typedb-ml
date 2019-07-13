@@ -22,7 +22,7 @@ import unittest
 import networkx as nx
 from kglib.kgcn.core.ingest.traverse.data.context import neighbour as neighbour
 
-from kglib.graph.utils.test.match import match_node_things, match_edge_types
+from kglib.graph.test.case import match_node_things, match_edge_types
 from kglib.graph.create.model.standard.convert import concept_dict_to_grakn_standard_graph
 
 

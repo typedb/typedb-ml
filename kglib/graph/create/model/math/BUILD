@@ -9,7 +9,7 @@ py_test(
     ],
     deps = [
         "math",
-        "//kglib/graph/utils/test"
+        "//kglib/graph/test"
     ]
 )
 

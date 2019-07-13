@@ -9,7 +9,7 @@ py_test(
     ],
     deps = [
         "create",
-        "//kglib/graph/utils/test",
+        "//kglib/graph/test",
         "//kglib/graph/mock"
     ]
 )
@@ -21,7 +21,7 @@ py_test(
     ],
     deps = [
         "create",
-        "//kglib/graph/utils/test",
+        "//kglib/graph/test",
         "//kglib/graph/mock"
     ]
 )

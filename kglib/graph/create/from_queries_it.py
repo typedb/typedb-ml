@@ -25,7 +25,7 @@ import networkx as nx
 
 from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.create.from_queries import build_graph_from_queries
-from kglib.graph.utils.test.match import match_node_things, match_edge_types
+from kglib.graph.test.case import GraphTestCase
 from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
 from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing, build_thing
@@ -55,35 +55,6 @@ class MockTransaction:
                 })]
         else:
             raise NotImplementedError
-
-
-class GraphTestCase(unittest.TestCase):
-
-    def assertNodesEqual(self, graph_1, graph_2):
-        try:
-            self.assertCountEqual(list(graph_1.nodes()), list(graph_2.nodes()))
-        except AssertionError as e:
-            raise AssertionError('Node counts do not match. ' + str(e))
-
-    def assertEdgesEqual(self, graph_1, graph_2):
-        try:
-            self.assertCountEqual(list(graph_1.edges()), list(graph_2.edges()))
-        except AssertionError as e:
-            raise AssertionError('Edge counts do not match. ' + str(e))
-
-    def assertIsIsomorphic(self, graph_1, graph_2):
-        try:
-            self.assertTrue(nx.is_isomorphic(graph_1, graph_2,
-                                             node_match=match_node_things,
-                                             edge_match=match_edge_types))
-        except AssertionError:
-            raise AssertionError(
-                "The two graphs are not isomorphic based on the data attached to the nodes and/or edges")
-
-    def assertGraphsEqual(self, graph_1, graph_2):
-        self.assertNodesEqual(graph_1, graph_2)
-        self.assertEdgesEqual(graph_1, graph_2)
-        self.assertIsIsomorphic(graph_1, graph_2)
 
 
 class ITBuildGraphFromQueries(GraphTestCase):
@@ -242,7 +213,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
         expected_combined_graph.add_node(person_exp)
         expected_combined_graph.add_node(name_exp)
         expected_combined_graph.add_node(employment_exp)
-        # expected_combined_graph.add_edge(employment_exp, person_exp, type='child')
+        expected_combined_graph.add_edge(employment_exp, person_exp, type='child')
         expected_combined_graph.add_edge(employment_exp, person_exp, type='parent')
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
