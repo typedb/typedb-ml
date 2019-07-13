@@ -57,7 +57,36 @@ class MockTransaction:
             raise NotImplementedError
 
 
-class ITBuildGraphFromQueries(unittest.TestCase):
+class GraphTestCase(unittest.TestCase):
+
+    def assertNodesEqual(self, graph_1, graph_2):
+        try:
+            self.assertCountEqual(list(graph_1.nodes()), list(graph_2.nodes()))
+        except AssertionError as e:
+            raise AssertionError('Node counts do not match. ' + str(e))
+
+    def assertEdgesEqual(self, graph_1, graph_2):
+        try:
+            self.assertCountEqual(list(graph_1.edges()), list(graph_2.edges()))
+        except AssertionError as e:
+            raise AssertionError('Edge counts do not match. ' + str(e))
+
+    def assertIsIsomorphic(self, graph_1, graph_2):
+        try:
+            self.assertTrue(nx.is_isomorphic(graph_1, graph_2,
+                                             node_match=match_node_things,
+                                             edge_match=match_edge_types))
+        except AssertionError:
+            raise AssertionError(
+                "The two graphs are not isomorphic based on the data attached to the nodes and/or edges")
+
+    def assertGraphsEqual(self, graph_1, graph_2):
+        self.assertNodesEqual(graph_1, graph_2)
+        self.assertEdgesEqual(graph_1, graph_2)
+        self.assertIsIsomorphic(graph_1, graph_2)
+
+
+class ITBuildGraphFromQueries(GraphTestCase):
     def test_standard_graph_is_built_as_expected(self):
         g1 = nx.MultiDiGraph()
         g1.add_node('x')
@@ -97,11 +126,7 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         expected_combined_graph.add_edge(employment_exp, person_exp, type='parent')
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
-        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
-        self.assertSetEqual(set(expected_combined_graph.nodes()), set(combined_graph.nodes()))
-        self.assertSetEqual(set(expected_combined_graph.edges()), set(combined_graph.edges()))
+        self.assertGraphsEqual(expected_combined_graph, combined_graph)
 
     def test_math_graph_is_built_as_expected(self):
         g1 = nx.MultiDiGraph()
@@ -151,14 +176,10 @@ class ITBuildGraphFromQueries(unittest.TestCase):
         expected_combined_graph.add_edge(person_exp, child, type='plays')
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
-        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
-        self.assertSetEqual(set(expected_combined_graph.nodes()), set(combined_graph.nodes()))
-        self.assertSetEqual(set(expected_combined_graph.edges()), set(combined_graph.edges()))
+        self.assertGraphsEqual(expected_combined_graph, combined_graph)
 
 
-class ITBuildGraphFromQueriesWithRealGrakn(unittest.TestCase):
+class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
     KEYSPACE = "it_build_graph_from_queries"
     SCHEMA = ("define "
@@ -221,15 +242,11 @@ class ITBuildGraphFromQueriesWithRealGrakn(unittest.TestCase):
         expected_combined_graph.add_node(person_exp)
         expected_combined_graph.add_node(name_exp)
         expected_combined_graph.add_node(employment_exp)
-        expected_combined_graph.add_edge(employment_exp, person_exp, type='child')
+        # expected_combined_graph.add_edge(employment_exp, person_exp, type='child')
         expected_combined_graph.add_edge(employment_exp, person_exp, type='parent')
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
-        self.assertTrue(nx.is_isomorphic(expected_combined_graph, combined_graph,
-                                         node_match=match_node_things,
-                                         edge_match=match_edge_types))
-        self.assertSetEqual(set(expected_combined_graph.nodes()), set(combined_graph.nodes()))
-        self.assertSetEqual(set(expected_combined_graph.edges()), set(combined_graph.edges()))
+        self.assertGraphsEqual(expected_combined_graph, combined_graph)
 
 
 if __name__ == "__main__":

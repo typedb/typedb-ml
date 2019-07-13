@@ -197,10 +197,13 @@ class Thing(utils.PropertyComparable):
                 raise ValueError('Attribute value must be provided')
 
     def __str__(self):
-        string = f'{self.type_label}, {self.id}'
+        string = f'<{self.type_label}, {self.id}'
         if self.base_type_label == 'attribute':
             string += f': {self.value}'
-        return string
+        return string + '>'
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class GraknEdge(utils.PropertyComparable):
@@ -215,7 +218,10 @@ class GraknEdge(utils.PropertyComparable):
         self.id = (sender.id, receiver.id)
 
     def __str__(self):
-        return f'{self.type_label}, {self.id}'
+        return f'<{self.type_label}, {self.id}>'
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Connection:
