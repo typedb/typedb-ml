@@ -20,14 +20,14 @@
 
 import unittest
 
-from grakn.client import GraknClient
 import networkx as nx
+from grakn.client import GraknClient
 
-from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.create.from_queries import build_graph_from_queries
-from kglib.graph.test.case import GraphTestCase
 from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
+from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
+from kglib.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing, build_thing
 
 

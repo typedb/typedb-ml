@@ -23,8 +23,8 @@ import unittest
 import networkx as nx
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from kglib.graph.test.case import match_node_things, match_edge_types, GraphTestCase
 from kglib.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
+from kglib.graph.test.case import GraphTestCase
 
 
 class TestConceptDictToGraknMathGraph(GraphTestCase):
