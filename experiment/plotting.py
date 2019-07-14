@@ -199,14 +199,14 @@ def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, gt
 
     for i, (n, props) in enumerate(graph.nodes(data=True)):
         # Determine the nodes colors
-        show_nodes_to_infer = props.get('to_infer', False) and gt_plot
+        show_nodes_to_infer = (not props.get('input', False)) and props.get('solution', False) and gt_plot
         node_color[n] = colors_array(node_prob[n], show_nodes_to_infer)
         # Determine the node label colors
         node_label_color[n] = label_colors_array(node_prob[n])
 
     for n, (sender, receiver, props) in enumerate(graph.edges(data=True)):
         # Determine the edge colors
-        show_edges_to_infer = props.get('to_infer', False) and gt_plot
+        show_edges_to_infer = (not props.get('input', False)) and props.get('solution', False) and gt_plot
         edge_color[(sender, receiver)] = colors_array(edge_prob[n], show_edges_to_infer)
         # Determine the edge label colors
         edge_label_color[(sender, receiver)] = label_colors_array(edge_prob[n])

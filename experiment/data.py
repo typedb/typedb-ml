@@ -124,7 +124,7 @@ def create_graph(i):
     G = None
 
     existing_elements = ('input', 'solution')
-    to_induce = ('solution', 'to_infer')
+    to_induce = ('solution',)
 
     def base_graph(num_people):
         G = generate_graph(num_people)
