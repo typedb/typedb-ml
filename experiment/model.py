@@ -20,10 +20,27 @@
 import time
 
 import tensorflow as tf
+from graph_nets import utils_tf
 from graph_nets.demos import models
 
-import experiment.input as ip
-import experiment.plotting as plotting
+from experiment.feed import create_feed_dict, create_placeholders
+from experiment.data import create_graphs
+from experiment.metrics import compute_accuracy
+from experiment.plotting import plot_input_vs_output, plot_across_training
+
+
+def create_loss_ops(target_op, output_ops):
+    loss_ops = [
+      tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
+      tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
+      for output_op in output_ops
+    ]
+    return loss_ops
+
+
+def make_all_runnable_in_session(*args):
+    """Lets an iterable of TF graphs be output from a session as NP graphs."""
+    return [utils_tf.make_runnable_in_session(a) for a in args]
 
 
 def main():
@@ -45,7 +62,8 @@ def main():
 
     # Data.
     # Input and target placeholders.
-    input_ph, target_ph = ip.create_placeholders()
+    input_graphs, target_graphs, raw_graphs = create_graphs()
+    input_ph, target_ph = create_placeholders(input_graphs, target_graphs)
 
     # Connect the data to the model.
     # Instantiate the model.
@@ -55,11 +73,11 @@ def main():
     output_ops_ge = model(input_ph, num_processing_steps_ge)
 
     # Training loss.
-    loss_ops_tr = ip.create_loss_ops(target_ph, output_ops_tr)
+    loss_ops_tr = create_loss_ops(target_ph, output_ops_tr)
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
     # Test/generalization loss.
-    loss_ops_ge = ip.create_loss_ops(target_ph, output_ops_ge)
+    loss_ops_ge = create_loss_ops(target_ph, output_ops_ge)
     loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
 
     # Optimizer.
@@ -68,7 +86,7 @@ def main():
     step_op = optimizer.minimize(loss_op_tr)
 
     # Lets an iterable of TF graphs be output from a session as NP graphs.
-    input_ph, target_ph = ip.make_all_runnable_in_session(input_ph, target_ph)
+    input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
 
     # Reset the Tensorflow session, but keep the same computational graph.
 
@@ -94,7 +112,7 @@ def main():
     start_time = time.time()
     last_log_time = start_time
     for iteration in range(last_iteration, num_training_iterations):
-        feed_dict, _ = ip.create_feed_dict("tr", tr_ge_split, input_ph, target_ph)
+        feed_dict, _ = create_feed_dict("tr", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
         train_values = sess.run(
             {
                 "step": step_op,
@@ -107,7 +125,7 @@ def main():
         elapsed_since_last_log = the_time - last_log_time
         if elapsed_since_last_log > log_every_seconds:
             last_log_time = the_time
-            feed_dict, raw_graphs = ip.create_feed_dict("ge", tr_ge_split, input_ph, target_ph)
+            feed_dict, raw_graphs = create_feed_dict("ge", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
             test_values = sess.run(
                 {
                     "target": target_ph,
@@ -115,9 +133,9 @@ def main():
                     "outputs": output_ops_ge
                 },
                 feed_dict=feed_dict)
-            correct_tr, solved_tr = ip.compute_accuracy(
+            correct_tr, solved_tr = compute_accuracy(
                 train_values["target"], train_values["outputs"][-1], use_edges=True)
-            correct_ge, solved_ge = ip.compute_accuracy(
+            correct_ge, solved_ge = compute_accuracy(
                 test_values["target"], test_values["outputs"][-1], use_edges=True)
             elapsed = time.time() - start_time
             losses_tr.append(train_values["loss"])
@@ -132,8 +150,8 @@ def main():
                       iteration, elapsed, train_values["loss"], test_values["loss"],
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
-    plotting.plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-    plotting.plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
+    plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
+    plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
 
 
 if __name__ == "__main__":

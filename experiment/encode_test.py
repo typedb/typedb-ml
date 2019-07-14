@@ -19,34 +19,32 @@
 
 import unittest
 
-import experiment.data as data
-import experiment.input as input
+from experiment.data import create_graph
+from experiment.encode import encode_types_one_hot, graph_to_input_target
 
 
 class TestGraphToInputTarget(unittest.TestCase):
     def test_number_of_nodes_in_outputs_is_correct(self):
         all_node_types = ['person', 'parentship', 'siblingship']
         all_edge_types = ['parent', 'child', 'sibling']
-        graph = data.create_graph(1)
-        data.encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type',
-                                  type_attribute='type')
+        graph = create_graph(1)
+        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
 
         expected_n_nodes = graph.number_of_nodes()
 
-        input_graph, target_graph = input.graph_to_input_target(graph)
+        input_graph, target_graph = graph_to_input_target(graph)
         self.assertEqual(expected_n_nodes, input_graph.number_of_nodes())
         self.assertEqual(expected_n_nodes, target_graph.number_of_nodes())
 
     def test_number_of_edges_in_outputs_is_correct(self):
         all_node_types = ['person', 'parentship', 'siblingship']
         all_edge_types = ['parent', 'child', 'sibling']
-        graph = data.create_graph(1)
-        data.encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type',
-                                  type_attribute='type')
+        graph = create_graph(1)
+        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
 
         expected_n_edges = graph.number_of_edges()
 
-        input_graph, target_graph = input.graph_to_input_target(graph)
+        input_graph, target_graph = graph_to_input_target(graph)
         self.assertEqual(expected_n_edges, input_graph.number_of_edges())
         self.assertEqual(expected_n_edges, target_graph.number_of_edges())
 

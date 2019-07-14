@@ -22,8 +22,7 @@ import itertools
 import networkx as nx
 
 import experiment.plotting
-
-import numpy as np
+from experiment.encode import encode_types_one_hot, graph_to_input_target
 
 
 def generate_graph(num_people: int) -> nx.MultiDiGraph:
@@ -231,29 +230,32 @@ def create_graph(i):
     return G
 
 
-def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):
+def create_graphs():
     """
-    Creates a one-hot encoding for every element in the graph, based on the "type" attribute of each element.
-    Adds this one-hot vector to each element as `attribute`
-    :param G: The graph to encode
-    :param all_node_types: The list of node types to encode from
-    :param all_edge_types: The list of edge types to encode from
-    :param attribute: The attribute to store the encodings on
-    :param type_attribute: The pre-existing attribute that indicates the type of the element
+    Builds graphs ready to be used for training
+    :return: the input graphs, the target (desired output) graphs, and the original_graphs
     """
+    # graph_ids = list(range(12))
+    # random.seed(1)
+    # random.shuffle(graph_ids)
+    # print(f'Graphs are used in the order {graph_ids}')
+    graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
+    all_node_types = ['person', 'parentship', 'siblingship']
+    all_edge_types = ['parent', 'child', 'sibling']
 
-    # TODO Catch the case where all types haven't been given correctly
-    for node_index, node_feature in G.nodes(data=True):
-        one_hot = np.zeros(len(all_node_types), dtype=np.int)
-        index_to_one_hot = all_node_types.index(node_feature[type_attribute])
-        one_hot[index_to_one_hot] = 1
-        G.nodes[node_index][attribute] = one_hot
+    input_graphs = []
+    target_graphs = []
+    graphs = []
+    for i in graph_ids:
+        graph = create_graph(i)
+        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
 
-    for sender, receiver, edge_feature in G.edges(data=True):
-        one_hot = np.zeros(len(all_edge_types), dtype=np.int)
-        index_to_one_hot = all_edge_types.index(edge_feature[type_attribute])
-        one_hot[index_to_one_hot] = 1
-        G.edges[sender, receiver, 0][attribute] = one_hot
+        input_graph, target_graph = graph_to_input_target(graph)
+        input_graphs.append(input_graph)
+        target_graphs.append(target_graph)
+        graphs.append(graph)
+
+    return input_graphs, target_graphs, graphs
 
 
 if __name__ == "__main__":

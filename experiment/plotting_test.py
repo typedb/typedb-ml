@@ -19,22 +19,22 @@
 
 import unittest
 
-import graph_nets.utils_np as utils_np
 import matplotlib.pyplot as plt
+from graph_nets.utils_np import networkxs_to_graphs_tuple
 
-import experiment.input as input
-import experiment.plotting as plotting
+from experiment.data import create_graphs
+from experiment.plotting import plot_input_vs_output
 
 
 class TestPlotInputVsOutput(unittest.TestCase):
     def test_plotting(self):
         num_processing_steps_ge = 6
         num_graphs = 3
-        inputs, targets, raw_graphs = input.create_graphs()
+        inputs, targets, raw_graphs = create_graphs()
         # input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[:num_graphs])
-        target_graphs = utils_np.networkxs_to_graphs_tuple(targets[:num_graphs])
+        target_graphs = networkxs_to_graphs_tuple(targets[:num_graphs])
         test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}
-        plotting.plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
+        plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
         plt.show()
 
 
