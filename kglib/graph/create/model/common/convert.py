@@ -38,7 +38,8 @@ def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None
 
     # This assumes that all variables are nodes, which would not be the case for variable roles
     for variable, thing in concept_dict.items():
-        grakn_graph.add_node(thing)
+        data = variable_graph.nodes[variable]
+        grakn_graph.add_node(thing, **data)
 
         # Record the mapping of nodes from one graph to the other
         assert variable not in node_to_var
@@ -53,7 +54,7 @@ def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None
             raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
 
         if data['type'] == 'has':
-            grakn_graph.add_edge(sender, receiver, type=data['type'])
+            grakn_graph.add_edge(sender, receiver, **data)
         else:
             add_role_func(grakn_graph, sender, receiver, data)
 

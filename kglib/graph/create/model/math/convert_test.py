@@ -162,6 +162,29 @@ class TestConceptDictToGraknMathGraph(GraphTestCase):
         self.assertEqual('The variables in the variable_graph must match those in the concept_dict',
                          str(context.exception))
 
+    def test_variable_graph_properties_are_transferred_to_graph(self):
+        variable_graph = nx.MultiDiGraph()
+        variable_graph.add_node('x', input=1, solution=1)
+        variable_graph.add_node('y', input=1, solution=1)
+        variable_graph.add_edge('y', 'x', type='employee', input=0, solution=1)
+
+        person = neighbour.Thing('V123', 'person', 'entity')
+        employment = neighbour.Thing('V123', 'employment', 'relation')
+        concept_dict = {'x': person, 'y': employment}
+
+        grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+
+        employee = neighbour.GraknEdge(employment, person, 'employee')
+
+        expected_grakn_graph = nx.MultiDiGraph()
+        expected_grakn_graph.add_node(person, input=1, solution=1)
+        expected_grakn_graph.add_node(employee, input=0, solution=1)
+        expected_grakn_graph.add_node(employment, input=1, solution=1)
+        expected_grakn_graph.add_edge(employment, employee, type='relates', input=0, solution=1)
+        expected_grakn_graph.add_edge(person, employee, type='plays', input=0, solution=1)
+
+        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+
 
 if __name__ == "__main__":
     unittest.main()

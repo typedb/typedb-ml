@@ -36,8 +36,13 @@ def add_role_as_casting_node(grakn_graph, relation, roleplayer, data):
     :param data: The data dict, containing the type of the role edge
     """
     role = GraknEdge(relation, roleplayer, data['type'])
-    grakn_graph.add_node(role)
-    grakn_graph.add_edge(relation, role, type='relates')
-    grakn_graph.add_edge(roleplayer, role, type='plays')
+    relates_data = dict(data)
+    relates_data['type'] = 'relates'
+    plays_data = dict(data)
+    plays_data['type'] = 'plays'
+    del data['type']
+    grakn_graph.add_node(role, **data)
+    grakn_graph.add_edge(relation, role, **relates_data)
+    grakn_graph.add_edge(roleplayer, role, **plays_data)
 
 

@@ -33,4 +33,4 @@ def add_role_as_direct_edge(grakn_graph, relation, roleplayer, data):
     :param roleplayer: The roleplayer node
     :param data: The data dict, containing the type of the role edge
     """
-    grakn_graph.add_edge(relation, roleplayer, type=data['type'])
+    grakn_graph.add_edge(relation, roleplayer, **data)
