@@ -125,7 +125,7 @@ def main():
         elapsed_since_last_log = the_time - last_log_time
         if elapsed_since_last_log > log_every_seconds:
             last_log_time = the_time
-            feed_dict, raw_graphs = create_feed_dict("ge", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
+            feed_dict, ge_raw_graphs = create_feed_dict("ge", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
             test_values = sess.run(
                 {
                     "target": target_ph,
@@ -151,7 +151,7 @@ def main():
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
     plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-    plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
+    plot_input_vs_output(ge_raw_graphs, test_values, num_processing_steps_ge)
 
 
 if __name__ == "__main__":

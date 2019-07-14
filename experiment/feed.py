@@ -19,8 +19,6 @@
 
 from graph_nets import utils_tf, utils_np
 
-import experiment.data
-
 
 def create_placeholders(input_graphs, target_graphs):
     """
@@ -53,7 +51,6 @@ def create_feed_dict(tr_or_ge, tr_ge_split, input_ph, target_ph, inputs, targets
         start = tr_ge_split
         end = None
 
-    input_graphs, target_graphs, raw_graphs = experiment.data.create_graphs()
     input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[start:end])
     target_graphs = utils_np.networkxs_to_graphs_tuple(targets[start:end])
     feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
