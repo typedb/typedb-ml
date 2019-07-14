@@ -22,7 +22,7 @@ import unittest
 import matplotlib.pyplot as plt
 from graph_nets.utils_np import networkxs_to_graphs_tuple
 
-from experiment.data import create_graphs
+from experiment.data import create_input_target_graphs
 from experiment.plotting import plot_input_vs_output
 
 
@@ -30,7 +30,10 @@ class TestPlotInputVsOutput(unittest.TestCase):
     def test_plotting(self):
         num_processing_steps_ge = 6
         num_graphs = 3
-        inputs, targets, raw_graphs = create_graphs()
+        graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
+        all_node_types = ['person', 'parentship', 'siblingship']
+        all_edge_types = ['parent', 'child', 'sibling']
+        inputs, targets, raw_graphs = create_input_target_graphs(graph_ids, all_node_types, all_edge_types)
         # input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[:num_graphs])
         target_graphs = networkxs_to_graphs_tuple(targets[:num_graphs])
         test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}

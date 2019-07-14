@@ -230,32 +230,25 @@ def create_graph(i):
     return G
 
 
-def create_graphs():
+def create_input_target_graphs(graphs, all_node_types, all_edge_types):
     """
     Builds graphs ready to be used for training
+    :param graph: The list of graphs to use
+    :param all_node_types: All of the types that can occur at nodes, for encoding purposes
+    :param all_edge_types: All of the types that can occur at edges, for encoding purposes
     :return: the input graphs, the target (desired output) graphs, and the original_graphs
     """
-    # graph_ids = list(range(12))
-    # random.seed(1)
-    # random.shuffle(graph_ids)
-    # print(f'Graphs are used in the order {graph_ids}')
-    graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
-    all_node_types = ['person', 'parentship', 'siblingship']
-    all_edge_types = ['parent', 'child', 'sibling']
 
     input_graphs = []
     target_graphs = []
-    graphs = []
-    for i in graph_ids:
-        graph = create_graph(i)
+    for graph in graphs:
         encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
 
         input_graph, target_graph = graph_to_input_target(graph)
         input_graphs.append(input_graph)
         target_graphs.append(target_graph)
-        graphs.append(graph)
 
-    return input_graphs, target_graphs, graphs
+    return input_graphs, target_graphs
 
 
 if __name__ == "__main__":
