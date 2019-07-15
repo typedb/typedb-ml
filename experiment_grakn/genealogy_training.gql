@@ -3,26 +3,20 @@ define
 
 example-id sub attribute, datatype long;
 
-family sub entity,
-    has example-id,
-    plays family-group;
-
-family-membership sub relation,
-    relates family-group,
-    relates family-member;
-
 person sub entity,
+    has example-id,
     plays parent,
     plays child,
     plays sibling,
-    plays candidate-sibling,
-    plays family-member;
+    plays candidate-sibling;
 
 parentship sub relation,
+    has example-id,
     relates parent,
     relates child;
 
 siblingship sub relation,
+    has example-id,
     relates sibling;
 
 candidate-siblingship sub relation,
@@ -35,7 +29,7 @@ when {
     $p1 != $p2;
     not{(sibling: $p1, sibling: $p2) isa siblingship;};
 }, then {
-    (sibling: $p1, sibling: $p2) isa candidate-siblingship;
+    (candidate-sibling: $p1, candidate-sibling: $p2) isa candidate-siblingship;
 };
 
 when-people-share-parents-they-are-siblings sub rule,
@@ -69,12 +63,8 @@ when {
 
 # Case 1
 insert
-$f isa family, has example-id 0;
-$p1 isa person;
-$p2 isa person;
-$p3 isa person;
-(parent: $p1, child: $p2) isa parentship;
-(parent: $p1, child: $p3) isa parentship;
-(family-member: $p1, family-group: $f) isa family-membership;
-(family-member: $p2, family-group: $f) isa family-membership;
-(family-member: $p3, family-group: $f) isa family-membership;
+$p1 isa person, has example-id 0;
+$p2 isa person, has example-id 0;
+$p3 isa person, has example-id 0;
+(parent: $p1, child: $p2) isa parentship, has example-id 0;
+(parent: $p1, child: $p3) isa parentship, has example-id 0;

@@ -20,7 +20,8 @@
 import networkx as nx
 from grakn.client import GraknClient
 
-from kglib.graph.create.from_queries import build_graph_from_queries
+from  kglib.graph.label.label import label_nodes_by_property, label_edges_by_property
+from kglib.graph.create.from_queries import build_graph_from_queries, concept_graph_to_indexed_graph
 
 
 def create_graphs(example_indices):
@@ -39,16 +40,26 @@ def create_graphs(example_indices):
 
                 with session.transaction().write() as tx:
 
-                    combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
-                    graphs.append(combined_graph)
+                    # Build a graph from the queries, samplers, and query graphs
+                    graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
+
+                    # Remove label leakage - change type labels that indicate candidates into non-candidates
+                    label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type', 'siblingship'})
+                    label_edges_by_property(graph, 'type', 'candidate-sibling', {'type', 'sibling'})
+
+                    # Change the graph to be indexed by integers
+                    indexed_graph = concept_graph_to_indexed_graph(graph)
+
+                    graphs.append(indexed_graph)
+
+    return graphs
 
 
 def get_example_graph_query_sampler_query_graph_tuples(example_id):
     parentship_query = (
         f'match '
-        f'$f isa family, has example-id {example_id}; '
-        f'$p1 isa person; ($p1, $f);'
-        f'$p2 isa person; ($p2, $f);'
+        f'$p1 isa person, has example-id {example_id};'
+        f'$p2 isa person, has example-id {example_id};'
         f'$r(parent: $p1, child: $p2) isa parentship;'
         f'get $p1, $p2, $r;'
     )
@@ -73,8 +84,7 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
 
     siblingship_query = (
         f'match '
-        f'$f isa family, has example-id {example_id}; '
-        f'$p1 isa person; ($p1, $f);'
+        f'$p1 isa person, has example-id {example_id};'
         f'$r(sibling: $p1) isa siblingship;'
         f'get $p1, $r;'
     )
@@ -90,8 +100,7 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
 
     candidate_siblingship_query = (
         f'match '
-        f'$f isa family, has example-id {example_id}; '
-        f'$p1 isa person; ($p1, $f);'
+        f'$p1 isa person, has example-id {example_id};'
         f'$r(sibling: $p1) isa candidate-siblingship;'
         f'get $p1, $r;'
     )
