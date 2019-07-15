@@ -46,15 +46,21 @@ def combine_2_graphs(graph1, graph2):
 
     for node, data in graph1.nodes(data=True):
         if graph2.has_node(node):
-            if graph2.nodes[node] != data:
+            data2 = graph2.nodes[node]
+            if data2 != data:
                 raise ValueError((f'Found non-matching node properties for node {node} '
-                                  f'between graphs {graph1} and {graph2}'))
+                                  f'between graphs {graph1} and {graph2}:\n'
+                                  f'In graph {graph1}: {data}\n'
+                                  f'In graph {graph2}: {data2}'))
 
     for sender, receiver, keys, data in graph1.edges(data=True, keys=True):
         if graph2.has_edge(sender, receiver, keys):
-            if graph2.edges[sender, receiver, keys] != data:
+            data2 = graph2.edges[sender, receiver, keys]
+            if data2 != data:
                 raise ValueError((f'Found non-matching edge properties for edge {sender, receiver, keys} '
-                                  f'between graphs {graph1} and {graph2}'))
+                                  f'between graphs {graph1} and {graph2}:\n'
+                                  f'In graph {graph1}: {data}\n'
+                                  f'In graph {graph2}: {data2}'))
 
     return nx.compose(graph1, graph2)
 

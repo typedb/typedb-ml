@@ -105,7 +105,9 @@ class TestCombineGraphs(GraphTestCase):
             combine_2_graphs(grakn_graph_a, grakn_graph_b)
 
         self.assertEqual(('Found non-matching node properties for node <name, V1234: Bob> '
-                          'between graphs a and b'), str(context.exception))
+                          'between graphs a and b:\n'
+                          'In graph a: {\'input\': 1, \'solution\': 1}\n'
+                          'In graph b: {\'input\': 0, \'solution\': 1}'), str(context.exception))
 
     def test_when_graph_edge_properties_are_mismatched_exception_is_raised(self):
         person_a = Thing('V123', 'person', 'entity')
@@ -126,7 +128,9 @@ class TestCombineGraphs(GraphTestCase):
             combine_2_graphs(grakn_graph_a, grakn_graph_b)
 
         self.assertEqual(('Found non-matching edge properties for edge (<person, V123>, <name, V1234: Bob>, 0) '
-                          'between graphs a and b'), str(context.exception))
+                          'between graphs a and b:\n'
+                          'In graph a: {\'type\': \'has\', \'input\': 0, \'solution\': 1}\n'
+                          'In graph b: {\'type\': \'has\', \'input\': 1, \'solution\': 0}'), str(context.exception))
 
 
 class TestConceptGraphToIndexedGraph(GraphTestCase):
