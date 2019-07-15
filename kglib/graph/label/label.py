@@ -65,3 +65,15 @@ def label_direct_roles(graph, roles_to_label, labels_to_apply):
             if role.sender == sender and role.receiver == receiver \
                     and graph.edges[sender, receiver, 0]['type'] == role.type_label:
                 data.update(labels_to_apply)
+
+
+def label_nodes_by_property(graph, prop, prop_value, labels_to_apply):
+    for node, data in graph.nodes(data=True):
+        if data[prop] == prop_value:
+            data.update(labels_to_apply)
+
+
+def label_edges_by_property(graph, prop, prop_value, labels_to_apply):
+    for sender, receiver, keys, data in graph.edges(data=True, keys=True):
+        if data[prop] == prop_value:
+            data.update(labels_to_apply)

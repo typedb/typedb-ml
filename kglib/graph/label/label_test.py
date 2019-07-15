@@ -22,7 +22,7 @@ import unittest
 
 import networkx as nx
 
-from kglib.graph.label.label import label_concepts, label_direct_roles
+from kglib.graph.label.label import label_concepts, label_direct_roles, label_nodes_by_property, label_edges_by_property
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing, GraknEdge
 
 
@@ -87,6 +87,47 @@ class TestLabelEdges(unittest.TestCase):
 
         self.assertDictEqual(grakn_graph.edges[parentship, person, 0], {'type': 'parent', 'gt': 1})
         self.assertDictEqual(grakn_graph.edges[parentship, person, 1], {'type': 'child', 'gt': 1})
+
+
+class TestLabelNodesByProperty(unittest.TestCase):
+    def test_standard_graph_concepts_labelled_as_expected(self):
+        person = Thing('V123', 'person', 'entity')
+        name = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
+        grakn_graph = nx.MultiDiGraph()
+        grakn_graph.add_node(person, type='person')
+        grakn_graph.add_node(name, type='name')
+        grakn_graph.add_edge(person, name, type='has')
+
+        labels_to_apply = {'gt': 1}
+
+        prop = 'type'
+
+        label_nodes_by_property(grakn_graph, prop, 'person', labels_to_apply)
+        label_nodes_by_property(grakn_graph, prop, 'name', labels_to_apply)
+
+        self.assertDictEqual(grakn_graph.nodes[person], {'type': 'person', 'gt': 1})
+        self.assertDictEqual(grakn_graph.nodes[name], {'type': 'name', 'gt': 1})
+
+
+class TestLabelEdgesByProperty(unittest.TestCase):
+    def test_standard_graph_concepts_labelled_as_expected(self):
+        person = Thing('V123', 'person', 'entity')
+        parentship = Thing('V567', 'parentship', 'relation')
+        grakn_graph = nx.MultiDiGraph()
+        grakn_graph.add_node(person, type='person')
+        grakn_graph.add_node(parentship, type='parentship')
+        grakn_graph.add_edge(parentship, person, type='child')
+        grakn_graph.add_edge(parentship, person, type='parent')
+
+        labels_to_apply = {'gt': 1}
+
+        prop = 'type'
+
+        label_edges_by_property(grakn_graph, prop, 'child', labels_to_apply)
+        label_edges_by_property(grakn_graph, prop, 'parent', labels_to_apply)
+
+        self.assertDictEqual(grakn_graph.edges[parentship, person, 0], {'type': 'child', 'gt': 1})
+        self.assertDictEqual(grakn_graph.edges[parentship, person, 1], {'type': 'parent', 'gt': 1})
 
 
 if __name__ == "__main__":
