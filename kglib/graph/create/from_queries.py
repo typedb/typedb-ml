@@ -93,7 +93,12 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
         concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
 
-        answer_concept_graphs = [concept_dict_converter(concept_dict, variable_graph) for concept_dict in concept_dicts]
+        answer_concept_graphs = []
+        for concept_dict in concept_dicts:
+            try:
+                answer_concept_graphs.append(concept_dict_converter(concept_dict, variable_graph))
+            except ValueError as e:
+                raise ValueError(str(e) + f'Encountered processing query:\n \"{query}\"')
         query_concept_graph = combine_n_graphs(answer_concept_graphs)
         query_concept_graphs.append(query_concept_graph)
 

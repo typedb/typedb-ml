@@ -142,8 +142,11 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         with self.assertRaises(ValueError) as context:
             _ = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
 
-        self.assertEqual('The variables in the variable_graph must match those in the concept_dict',
-                         str(context.exception))
+        self.assertEqual(
+            'The variables in the variable_graph must match those in the concept_dict\n'
+            'In the variable graph but not in the concept dict: {\'z\'}\n'
+            'In the concept dict but not in the variable graph: {\'a\'}',
+            str(context.exception))
 
     def test_variable_graph_properties_are_transferred_to_graph(self):
         variable_graph = nx.MultiDiGraph()

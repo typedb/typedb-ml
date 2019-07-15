@@ -34,7 +34,13 @@ def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None
     node_to_var = {}
 
     if set(variable_graph.nodes()) != set(concept_dict.keys()):
-        raise ValueError('The variables in the variable_graph must match those in the concept_dict')
+
+        in_var_graph_not_in_concept_dict = set(variable_graph).difference(set(concept_dict.keys()))
+        in_concept_dict_not_in_var_graph = set(concept_dict.keys()).difference(set(variable_graph))
+
+        raise ValueError(f'The variables in the variable_graph must match those in the concept_dict\n'
+                         f'In the variable graph but not in the concept dict: {in_var_graph_not_in_concept_dict}\n'
+                         f'In the concept dict but not in the variable graph: {in_concept_dict_not_in_var_graph}')
 
     # This assumes that all variables are nodes, which would not be the case for variable roles
     for variable, thing in concept_dict.items():
