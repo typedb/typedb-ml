@@ -56,14 +56,6 @@ def create_graphs(example_indices):
 
 
 def get_example_graph_query_sampler_query_graph_tuples(example_id):
-    parentship_query = (
-        f'match '
-        f'$p1 isa person, has example-id {example_id};'
-        f'$p2 isa person, has example-id {example_id};'
-        f'$r(parent: $p1, child: $p2) isa parentship;'
-        f'get $p1, $p2, $r;'
-    )
-    print(parentship_query)
 
     # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
     existing = dict(input=1, solution=1)
@@ -74,6 +66,16 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
     # Candidates are neither present in the input nor in the solution, they are negative examples
     candidate = dict(input=0, solution=0)
 
+    # parentship
+    parentship_query = (
+        f'match '
+        f'$p1 isa person, has example-id {example_id};'
+        f'$p2 isa person, has example-id {example_id};'
+        f'$r(parent: $p1, child: $p2) isa parentship;'
+        f'get $p1, $p2, $r;'
+    )
+    print(parentship_query)
+
     g = nx.MultiDiGraph()
     g.add_node('p1', **existing)
     g.add_node('p2', **existing)
@@ -82,6 +84,7 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
     g.add_edge('r', 'p2', type='child', **existing)
     parentship_query_graph = g
 
+    # siblingship
     siblingship_query = (
         f'match '
         f'$p1 isa person, has example-id {example_id};'
@@ -92,12 +95,11 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
 
     g2 = nx.MultiDiGraph()
     g2.add_node('p1', **existing)
-    g2.add_node('p2', **existing)
     g2.add_node('r', **to_infer)
     g2.add_edge('r', 'p1', type='sibling', **to_infer)
-    g2.add_edge('r', 'p2', type='sibling', **to_infer)
     siblingship_query_graph = g2
 
+    # candidate siblingship
     candidate_siblingship_query = (
         f'match '
         f'$p1 isa person, has example-id {example_id};'
@@ -108,10 +110,8 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
 
     g3 = nx.MultiDiGraph()
     g3.add_node('p1', **existing)
-    g3.add_node('p2', **existing)
     g3.add_node('r', **candidate)
     g3.add_edge('r', 'p1', type='candidate-sibling', **candidate)
-    g3.add_edge('r', 'p2', type='candidate-sibling', **candidate)
 
     candidate_siblingship_query_graph = g3
 
