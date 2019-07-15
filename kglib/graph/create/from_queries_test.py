@@ -21,7 +21,7 @@ import unittest
 
 import networkx as nx
 
-from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_graphs, \
+from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_2_graphs, \
     concept_graph_to_indexed_graph
 from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.mock.concept import MockType, MockThing
@@ -72,7 +72,7 @@ class TestCombineGraphs(GraphTestCase):
         grakn_graph_b.add_node(name)
         grakn_graph_b.add_edge(person_b, name, type='has')
 
-        combined_graph = combine_graphs(grakn_graph_a, grakn_graph_b)
+        combined_graph = combine_2_graphs(grakn_graph_a, grakn_graph_b)
 
         person_ex = Thing('V123', 'person', 'entity')
         employment_ex = Thing('V567', 'employment', 'relation')
@@ -85,6 +85,48 @@ class TestCombineGraphs(GraphTestCase):
         expected_combined_graph.add_edge(person_ex, name_ex, type='has')
 
         self.assertGraphsEqual(expected_combined_graph, combined_graph)
+
+    def test_when_graph_node_properties_are_mismatched_exception_is_raised(self):
+        person_a = Thing('V123', 'person', 'entity')
+        name_a = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        grakn_graph_a = nx.MultiDiGraph(name='a')
+        grakn_graph_a.add_node(person_a, input=1, solution=1)
+        grakn_graph_a.add_node(name_a, input=1, solution=1)
+        grakn_graph_a.add_edge(person_a, name_a, type='has', input=0, solution=1)
+
+        person_b = Thing('V123', 'person', 'entity')
+        name_b = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        grakn_graph_b = nx.MultiDiGraph(name='b')
+        grakn_graph_b.add_node(person_b, input=1, solution=1)
+        grakn_graph_b.add_node(name_b, input=0, solution=1)
+        grakn_graph_b.add_edge(person_b, name_b, type='has', input=0, solution=1)
+
+        with self.assertRaises(ValueError) as context:
+            combine_2_graphs(grakn_graph_a, grakn_graph_b)
+
+        self.assertEqual(('Found non-matching node properties for node <name, V1234: Bob> '
+                          'between graphs a and b'), str(context.exception))
+
+    def test_when_graph_edge_properties_are_mismatched_exception_is_raised(self):
+        person_a = Thing('V123', 'person', 'entity')
+        name_a = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        grakn_graph_a = nx.MultiDiGraph(name='a')
+        grakn_graph_a.add_node(person_a, input=1, solution=1)
+        grakn_graph_a.add_node(name_a, input=1, solution=1)
+        grakn_graph_a.add_edge(person_a, name_a, type='has', input=0, solution=1)
+
+        person_b = Thing('V123', 'person', 'entity')
+        name_b = Thing('V1234', 'name', 'attribute', data_type='string', value='Bob')
+        grakn_graph_b = nx.MultiDiGraph(name='b')
+        grakn_graph_b.add_node(person_b, input=1, solution=1)
+        grakn_graph_b.add_node(name_b, input=1, solution=1)
+        grakn_graph_b.add_edge(person_b, name_b, type='has', input=1, solution=0)
+
+        with self.assertRaises(ValueError) as context:
+            combine_2_graphs(grakn_graph_a, grakn_graph_b)
+
+        self.assertEqual(('Found non-matching edge properties for edge (<person, V123>, <name, V1234: Bob>, 0) '
+                          'between graphs a and b'), str(context.exception))
 
 
 class TestConceptGraphToIndexedGraph(GraphTestCase):

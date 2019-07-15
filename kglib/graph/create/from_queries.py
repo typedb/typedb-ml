@@ -36,14 +36,36 @@ def concept_dict_from_concept_map(concept_map):
     return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
 
 
-def combine_graphs(graph1, graph2):
+def combine_2_graphs(graph1, graph2):
     """
     Combine two graphs into one. Do this by recognising common nodes between the two.
     :param graph1: Graph to compare
     :param graph2: Graph to compare
     :return: Combined graph
     """
+
+    for node, data in graph1.nodes(data=True):
+        if graph2.has_node(node):
+            if graph2.nodes[node] != data:
+                raise ValueError((f'Found non-matching node properties for node {node} '
+                                  f'between graphs {graph1} and {graph2}'))
+
+    for sender, receiver, keys, data in graph1.edges(data=True, keys=True):
+        if graph2.has_edge(sender, receiver, keys):
+            if graph2.edges[sender, receiver, keys] != data:
+                raise ValueError((f'Found non-matching edge properties for edge {sender, receiver, keys} '
+                                  f'between graphs {graph1} and {graph2}'))
+
     return nx.compose(graph1, graph2)
+
+
+def combine_n_graphs(graphs_list):
+    """
+    Combine N graphs into one. Do this by recognising common nodes between the two.
+    :param graphs_list: List of graphs to combine
+    :return: Combined graph
+    """
+    return reduce(lambda x, y: combine_2_graphs(x, y), graphs_list)
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
@@ -66,10 +88,10 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
         concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
 
         answer_concept_graphs = [concept_dict_converter(concept_dict, variable_graph) for concept_dict in concept_dicts]
-        query_concept_graph = reduce(lambda x, y: combine_graphs(x, y), answer_concept_graphs)
+        query_concept_graph = combine_n_graphs(answer_concept_graphs)
         query_concept_graphs.append(query_concept_graph)
 
-    concept_graph = reduce(lambda x, y: combine_graphs(x, y), query_concept_graphs)
+    concept_graph = combine_n_graphs(query_concept_graphs)
     return concept_graph
 
 
