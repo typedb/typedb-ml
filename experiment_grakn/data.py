@@ -18,10 +18,29 @@
 #
 
 import networkx as nx
+from grakn.client import GraknClient
+
+from kglib.graph.create.from_queries import build_graph_from_queries
 
 
-def get_examples():
-    return [get_example_graph_query_sampler_query_graph_tuples(example_id) for example_id in [0]]
+def create_graphs(example_indices):
+    """
+
+    :param example_indices:
+    :return:
+    """
+    graphs = []
+    examples = [get_example_graph_query_sampler_query_graph_tuples(example_id) for example_id in example_indices]
+
+    with GraknClient(uri="localhost:48555") as client:
+        with client.session(keyspace="genealogy") as session:
+
+            for query_sampler_variable_graph_tuples in examples:
+
+                with session.transaction().write() as tx:
+
+                    combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
+                    graphs.append(combined_graph)
 
 
 def get_example_graph_query_sampler_query_graph_tuples(example_id):
@@ -35,12 +54,21 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
     )
     print(parentship_query)
 
+    # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
+    existing = dict(input=1, solution=1)
+
+    # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive examples
+    to_infer = dict(input=0, solution=1)
+
+    # Candidates are neither present in the input nor in the solution, they are negative examples
+    candidate = dict(input=0, solution=0)
+
     g = nx.MultiDiGraph()
-    g.add_node('p1')
-    g.add_node('p2')
-    g.add_node('r')
-    g.add_edge('r', 'p1', type='parent')
-    g.add_edge('r', 'p2', type='child')
+    g.add_node('p1', **existing)
+    g.add_node('p2', **existing)
+    g.add_node('r', **existing)
+    g.add_edge('r', 'p1', type='parent', **existing)
+    g.add_edge('r', 'p2', type='child', **existing)
     parentship_query_graph = g
 
     siblingship_query = (
@@ -52,13 +80,13 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
     )
     print(siblingship_query)
 
-    g = nx.MultiDiGraph()
-    g.add_node('p1')
-    g.add_node('p2')
-    g.add_node('r')
-    g.add_edge('r', 'p1', type='sibling')
-    g.add_edge('r', 'p2', type='sibling')
-    siblingship_query_graph = g
+    g2 = nx.MultiDiGraph()
+    g2.add_node('p1', **existing)
+    g2.add_node('p2', **existing)
+    g2.add_node('r', **to_infer)
+    g2.add_edge('r', 'p1', type='sibling', **to_infer)
+    g2.add_edge('r', 'p2', type='sibling', **to_infer)
+    siblingship_query_graph = g2
 
     candidate_siblingship_query = (
         f'match '
@@ -69,7 +97,14 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
     )
     print(candidate_siblingship_query)
 
-    candidate_siblingship_query_graph = siblingship_query_graph
+    g3 = nx.MultiDiGraph()
+    g3.add_node('p1', **existing)
+    g3.add_node('p2', **existing)
+    g3.add_node('r', **candidate)
+    g3.add_edge('r', 'p1', type='candidate-sibling', **candidate)
+    g3.add_edge('r', 'p2', type='candidate-sibling', **candidate)
+
+    candidate_siblingship_query_graph = g3
 
     query_sampler_query_graph_tuples = [
         (parentship_query, lambda x: x, parentship_query_graph),
