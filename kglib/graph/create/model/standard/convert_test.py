@@ -18,7 +18,7 @@
 #
 
 import networkx as nx
-from kglib.kgcn.core.ingest.traverse.data.context import neighbour as neighbour
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 
 from kglib.graph.create.model.standard.convert import concept_dict_to_grakn_standard_graph
 from kglib.graph.test.case import GraphTestCase
@@ -29,7 +29,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph = nx.MultiDiGraph()
         variable_graph.add_node('x')
 
-        person = neighbour.Thing('V123', 'person', 'entity')
+        person = Thing('V123', 'person', 'entity')
         concept_dict = {'x': person}
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
@@ -44,8 +44,8 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('y')
         variable_graph.add_edge('y', 'x', type='employee')
 
-        person = neighbour.Thing('V123', 'person', 'entity')
-        employment = neighbour.Thing('V123', 'employment', 'relation')
+        person = Thing('V123', 'person', 'entity')
+        employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
@@ -64,9 +64,9 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_edge('r', 'x', type='employee')
         variable_graph.add_edge('r', 'y', type='employer')
 
-        person = neighbour.Thing('V123', 'person', 'entity')
-        company = neighbour.Thing('V1234', 'person', 'entity')
-        employment = neighbour.Thing('V12345', 'employment', 'relation')
+        person = Thing('V123', 'person', 'entity')
+        company = Thing('V1234', 'person', 'entity')
+        employment = Thing('V12345', 'employment', 'relation')
         concept_dict = {'x': person, 'y': company, 'r': employment}
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
@@ -85,8 +85,8 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('x')
         variable_graph.add_node('y')
 
-        person = neighbour.Thing('V123', 'person', 'entity')
-        person2 = neighbour.Thing('V123', 'person', 'entity')
+        person = Thing('V123', 'person', 'entity')
+        person2 = Thing('V123', 'person', 'entity')
         concept_dict = {'x': person,
                         'y': person2}
 
@@ -102,8 +102,8 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('y')
         variable_graph.add_edge('x', 'y', type='employee')
 
-        person = neighbour.Thing('V123', 'person', 'entity')
-        employment = neighbour.Thing('V123', 'employment', 'relation')
+        person = Thing('V123', 'person', 'entity')
+        employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
@@ -118,8 +118,8 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('y')
         variable_graph.add_edge('x', 'y', type='employee')
 
-        name = neighbour.Thing('V123', 'name', 'attribute', data_type='string', value='Bob')
-        employment = neighbour.Thing('V123', 'employment', 'relation')
+        name = Thing('V123', 'name', 'attribute', data_type='string', value='Bob')
+        employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': name, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
@@ -134,7 +134,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('y')
         variable_graph.add_node('z')
 
-        thing = neighbour.Thing('V123', 'person', 'entity')
+        thing = Thing('V123', 'person', 'entity')
         concept_dict = {'x': thing,
                         'y': thing,
                         'a': thing}
@@ -151,8 +151,8 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('y', input=1, solution=1)
         variable_graph.add_edge('y', 'x', type='employee', input=0, solution=1)
 
-        person = neighbour.Thing('V123', 'person', 'entity')
-        employment = neighbour.Thing('V123', 'employment', 'relation')
+        person = Thing('V123', 'person', 'entity')
+        employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
