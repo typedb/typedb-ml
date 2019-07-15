@@ -108,6 +108,9 @@ class TestLabelNodesByProperty(unittest.TestCase):
         self.assertDictEqual(grakn_graph.nodes[person], {'type': 'person', 'gt': 1})
         self.assertDictEqual(grakn_graph.nodes[name], {'type': 'name', 'gt': 1})
 
+        label_nodes_by_property(grakn_graph, prop, 'name', {'type': 'name2'})
+        self.assertDictEqual(grakn_graph.nodes[name], {'type': 'name2', 'gt': 1})
+
 
 class TestLabelEdgesByProperty(unittest.TestCase):
     def test_standard_graph_concepts_labelled_as_expected(self):
@@ -128,6 +131,9 @@ class TestLabelEdgesByProperty(unittest.TestCase):
 
         self.assertDictEqual(grakn_graph.edges[parentship, person, 0], {'type': 'child', 'gt': 1})
         self.assertDictEqual(grakn_graph.edges[parentship, person, 1], {'type': 'parent', 'gt': 1})
+
+        label_edges_by_property(grakn_graph, prop, 'parent', {'type': 'parent2'})
+        self.assertDictEqual(grakn_graph.edges[parentship, person, 1], {'type': 'parent2', 'gt': 1})
 
 
 if __name__ == "__main__":
