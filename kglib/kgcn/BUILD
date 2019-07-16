@@ -158,8 +158,7 @@ py_library(
     srcs = glob(['**/*.py']),
     deps = [
         # Grakn deps
-        requirement('grakn-client'),
-        requirement('grpcio'),
+        "@graknlabs_client_python//:client_python",
 
         # TensorFlow deps
         requirement('tensorflow'),
