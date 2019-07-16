@@ -18,17 +18,21 @@
 #
 
 import unittest
+from pathlib import Path
 
 import grakn.client
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+from kglib.kgcn.test.base import GraknServer
+
+TEST_KEYSPACE = "test_schema"
 
 
 class BaseGraknIntegrationTest:
     class GraknIntegrationTest(unittest.TestCase):
 
         session = None
-        keyspace = "test_schema"
+        keyspace = TEST_KEYSPACE
 
         @classmethod
         def setUpClass(cls):
@@ -219,4 +223,12 @@ class TestBuildThingForStringAttribute(BaseTestBuildThingForAttribute.TestBuildT
 
 
 if __name__ == "__main__":
-    unittest.main()
+    with GraknServer():
+        with grakn.client.GraknClient(uri="localhost:48555") as client:
+            with client.session(keyspace=TEST_KEYSPACE) as session:
+                with session.transaction().write() as tx:
+                    contents = Path('schema.gql').read_text()
+                    tx.query(contents)
+                    tx.commit()
+
+        unittest.main()

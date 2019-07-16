@@ -69,7 +69,8 @@ py_test(
     ],
     deps = [
         "kgcn",
-    ]
+    ],
+    data = ["@graknlabs_grakn_core//:assemble-mac-zip"]
 )
 
 py_test(
@@ -99,7 +100,8 @@ py_test(
     ],
     deps = [
         "kgcn",
-    ]
+    ],
+    data = ["@graknlabs_grakn_core//:assemble-mac-zip"]
 )
 
 py_test(
@@ -109,7 +111,8 @@ py_test(
     ],
     deps = [
         "kgcn",
-    ]
+    ],
+    data = ["@graknlabs_grakn_core//:assemble-mac-zip"]
 )
 
 py_test(
@@ -120,7 +123,8 @@ py_test(
     ],
     deps = [
         "kgcn",
-    ]
+    ],
+    data = ["@graknlabs_grakn_core//:assemble-mac-zip"]
 )
 
 py_test(
