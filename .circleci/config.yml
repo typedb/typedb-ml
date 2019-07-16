@@ -39,16 +39,24 @@ jobs:
           export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
           bazel run //:deploy-pip -- snapshot
 
-  end-to-end-test:
-    machine: true
-    working_directory: ~/kglib
-    steps:
-      - checkout
-      - bazel_install
-      - run: sudo apt-get update
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: bazel test //examples:test_pypi_end_to_end_test --test_output=streamed --python_version PY3 --python_path $(which python) --spawn_strategy=standalone
+  test-deployment:
+      machine: true
+      working_directory: ~/kglib
+      steps:
+        - checkout
+        - run: pyenv install 3.6.3
+        - run: pyenv global 3.6.3
+        - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip
+        - run: unzip grakn-core-all-mac-animaltrade1.5.3.zip
+        - run: nohup grakn-core-all-mac-animaltrade1.5.3/grakn server start
+        - run:
+            name: Run test-deployment for kglib
+            command: |
+              echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" deployment/requirements.txt
+              cat deployment/requirements.txt
+              pip install -r deployment/requirements.txt
+              python -m unittest examples.kgcn.animal_trade.test.end_to_end_test
 
   deploy-git:
     machine: true
@@ -84,13 +92,13 @@ workflows:
       - deploy-pip-snapshot:
           requires:
             - test
-      - end-to-end-test:
+      - test-deployment:
           requires:
             - deploy-pip-snapshot
       - approve-deploy-git:
           type: approval
           requires:
-            - end-to-end-test
+            - test-deployment
       - deploy-git:
           requires:
             - approve-deploy-git

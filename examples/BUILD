@@ -33,11 +33,7 @@ py_library(
     name = "test-pypi-kglib",
     deps = [
         # Import kglib from PyPi, not from local source
-        requirement('grakn-kglib'),
-
-        # Grakn deps
-        requirement('grakn-client'),
-        requirement('grpcio'),
+        "@graknlabs_client_python//:client_python",
 
         # TensorFlow deps
         requirement('tensorflow'),
