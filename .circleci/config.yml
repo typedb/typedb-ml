@@ -39,7 +39,7 @@ jobs:
           export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
           bazel run //:deploy-pip -- snapshot
 
-  test-deployment:
+  test-deployment-pip:
       machine: true
       working_directory: ~/kglib
       steps:
@@ -50,7 +50,7 @@ jobs:
         - run: unzip grakn-core-all-mac-animaltrade1.5.3.zip
         - run: nohup grakn-core-all-mac-animaltrade1.5.3/grakn server start
         - run:
-            name: Run test-deployment for kglib
+            name: Run test-deployment-pip for kglib
             command: |
               echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
               sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" deployment/requirements.txt
@@ -92,13 +92,13 @@ workflows:
       - deploy-pip-snapshot:
           requires:
             - test
-      - test-deployment:
+      - test-deployment-pip:
           requires:
             - deploy-pip-snapshot
       - approve-deploy-git:
           type: approval
           requires:
-            - test-deployment
+            - test-deployment-pip
       - deploy-git:
           requires:
             - approve-deploy-git
