@@ -19,7 +19,6 @@
 import os
 import subprocess as sp
 import unittest
-from pathlib import Path
 
 import grakn.client
 
@@ -27,6 +26,7 @@ import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 from kglib.kgcn.test.base import GraknServer
 
 TEST_KEYSPACE = "test_schema"
+TEST_URI = "localhost:48555"
 
 
 class BaseGraknIntegrationTest:
@@ -37,7 +37,7 @@ class BaseGraknIntegrationTest:
 
         @classmethod
         def setUpClass(cls):
-            client = grakn.client.GraknClient(uri="localhost:48555")
+            client = grakn.client.GraknClient(uri=TEST_URI)
             cls.session = client.session(keyspace=cls.keyspace)
 
         @classmethod
