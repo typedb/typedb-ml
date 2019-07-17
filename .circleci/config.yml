@@ -48,9 +48,9 @@ jobs:
             name: Run test-deployment-pip for kglib
             command: |
               echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
-              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" deployment/requirements.txt
-              cat deployment/requirements.txt
-              pip install -r deployment/requirements.txt
+              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" test/deployment/requirements.txt
+              cat test/deployment/requirements.txt
+              pip install -r test/deployment/requirements.txt
               python -m unittest examples.kgcn.animal_trade.test.end_to_end_test
 
   deploy-git:
