@@ -78,15 +78,20 @@ class GraknServer(object):
         sp.check_call([
             'grakn', 'server', 'start'
         ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         sp.check_call([
             'grakn', 'server', 'stop'
         ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
-        # shutil.rmtree(self.__unpacked_dir)
+        shutil.rmtree(self.__unpacked_dir)
+        return self
 
     def _unpack(self):
         self.__unpacked_dir = tempfile.mkdtemp(prefix='grakn')
-        print(f'unpacked dir = {self.__unpacked_dir}')
         with ZipFile(GraknServer.DISTRIBUTION_LOCATION) as zf:
             zf.extractall(self.__unpacked_dir)
+
+    @property
+    def grakn_binary_location(self):
+        return os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR)
