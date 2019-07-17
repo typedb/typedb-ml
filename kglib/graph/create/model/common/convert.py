@@ -45,6 +45,7 @@ def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None
     # This assumes that all variables are nodes, which would not be the case for variable roles
     for variable, thing in concept_dict.items():
         data = variable_graph.nodes[variable]
+        data.update(type=thing.type_label)
         grakn_graph.add_node(thing, **data)
 
         # Record the mapping of nodes from one graph to the other

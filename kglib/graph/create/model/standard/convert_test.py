@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import unittest
 import networkx as nx
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 
@@ -34,7 +34,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person)
+        expected_grakn_graph.add_node(person, type='person')
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
@@ -50,8 +50,8 @@ class TestConceptDictToGraknGraph(GraphTestCase):
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person)
-        expected_grakn_graph.add_node(employment)
+        expected_grakn_graph.add_node(person, type='person')
+        expected_grakn_graph.add_node(employment, type='employment')
         expected_grakn_graph.add_edge(employment, person, type='employee')
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
@@ -65,16 +65,16 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_edge('r', 'y', type='employer')
 
         person = Thing('V123', 'person', 'entity')
-        company = Thing('V1234', 'person', 'entity')
+        company = Thing('V1234', 'company', 'entity')
         employment = Thing('V12345', 'employment', 'relation')
         concept_dict = {'x': person, 'y': company, 'r': employment}
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
 
         expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person)
-        expected_grakn_graph.add_node(company)
-        expected_grakn_graph.add_node(employment)
+        expected_grakn_graph.add_node(person, type='person')
+        expected_grakn_graph.add_node(company, type='company')
+        expected_grakn_graph.add_node(employment, type='employment')
         expected_grakn_graph.add_edge(employment, person, type='employee')
         expected_grakn_graph.add_edge(employment, company, type='employer')
 
@@ -92,7 +92,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person)
+        expected_grakn_graph.add_node(person, type='person')
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
@@ -160,8 +160,11 @@ class TestConceptDictToGraknGraph(GraphTestCase):
 
         grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person, input=1, solution=1)
-        expected_grakn_graph.add_node(employment, input=1, solution=1)
+        expected_grakn_graph.add_node(person, type='person', input=1, solution=1)
+        expected_grakn_graph.add_node(employment, type='employment', input=1, solution=1)
         expected_grakn_graph.add_edge(employment, person, type='employee', input=0, solution=1)
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+
+if __name__ == "__main__":
+    unittest.main()
