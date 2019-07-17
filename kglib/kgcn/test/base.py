@@ -23,19 +23,46 @@ import subprocess as sp
 import tempfile
 import zipfile
 
+# # Working solution that extends the implementation in client-python to work with python 3.6
+# class ZipFile(zipfile.ZipFile):
+#     def extract(self, member, path=None, pwd=None):
+#         if not isinstance(member, zipfile.ZipInfo):
+#             member = self.getinfo(member)
+#
+#         if path is None:
+#             path = os.getcwd()
+#
+#         ret_val = self._extract_member(member, path, pwd)
+#         attr = member.external_attr >> 16
+#         os.chmod(ret_val, attr)
+#         return ret_val
+#
+#     def extractall(self, path=None, members=None, pwd=None):
+#         if members is None:
+#             members = self.namelist()
+#
+#         if path is None:
+#             path = os.getcwd()
+#         else:
+#             path = os.fspath(path)
+#
+#         for zipinfo in members:
+#             self.extract(zipinfo, path, pwd)
 
+
+# Working solution for python3.6 from https://stackoverflow.com/a/54748564
 class ZipFile(zipfile.ZipFile):
-    def extract(self, member, path=None, pwd=None):
+    """ Custom ZipFile class handling file permissions. """
+    def _extract_member(self, member, targetpath, pwd):
         if not isinstance(member, zipfile.ZipInfo):
             member = self.getinfo(member)
 
-        if path is None:
-            path = os.getcwd()
+        targetpath = super()._extract_member(member, targetpath, pwd)
 
-        ret_val = self._extract_member(member, path, pwd)
         attr = member.external_attr >> 16
-        os.chmod(ret_val, attr)
-        return ret_val
+        if attr != 0:
+            os.chmod(targetpath, attr)
+        return targetpath
 
 
 class GraknServer(object):
@@ -56,9 +83,10 @@ class GraknServer(object):
         sp.check_call([
             'grakn', 'server', 'stop'
         ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
-        shutil.rmtree(self.__unpacked_dir)
+        # shutil.rmtree(self.__unpacked_dir)
 
     def _unpack(self):
         self.__unpacked_dir = tempfile.mkdtemp(prefix='grakn')
+        print(f'unpacked dir = {self.__unpacked_dir}')
         with ZipFile(GraknServer.DISTRIBUTION_LOCATION) as zf:
             zf.extractall(self.__unpacked_dir)

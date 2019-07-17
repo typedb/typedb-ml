@@ -16,7 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import os
 import unittest
 from pathlib import Path
 
@@ -223,12 +223,13 @@ class TestBuildThingForStringAttribute(BaseTestBuildThingForAttribute.TestBuildT
 
 
 if __name__ == "__main__":
+
     with GraknServer():
         with grakn.client.GraknClient(uri="localhost:48555") as client:
             with client.session(keyspace=TEST_KEYSPACE) as session:
                 with session.transaction().write() as tx:
-                    contents = Path('schema.gql').read_text()
-                    tx.query(contents)
-                    tx.commit()
+                    contents = Path(os.getenv("TEST_SRCDIR") + '/kglib/kglib/kgcn/test_data/schema.gql').read_text()
+                    # tx.query(contents)
+                    # tx.commit()
 
-        unittest.main()
+    # unittest.main()
