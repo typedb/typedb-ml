@@ -19,6 +19,7 @@
 
 
 import unittest
+import warnings
 
 import networkx as nx
 from grakn.client import GraknClient
@@ -148,6 +149,45 @@ class ITBuildGraphFromQueries(GraphTestCase):
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
         self.assertGraphsEqual(expected_combined_graph, combined_graph)
+
+    def test_warning_given_when_one_query_gives_no_results(self):
+        g1 = nx.MultiDiGraph()
+        g1.add_node('x')
+        g2 = nx.MultiDiGraph()
+        g2.add_node('y')
+        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1),
+                                               ('match $y id V123; get;', mock_sampler, g2)]
+
+        class MockTransaction2:
+            def query(self, query):
+                if query == 'match $x id V123; get;':
+                    return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
+                elif query == 'match $y id V123; get;':
+                    return []
+
+        mock_tx = MockTransaction2()
+
+        with self.assertWarns(UserWarning) as context:
+            build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
+
+        self.assertEqual(f'There were no results for query: \n\"match $y id V123; get;\"\nand so nothing will be added to the graph for this query', str(context.warning))
+
+    def test_exception_is_raised_when_there_are_no_results_for_any_query(self):
+        g1 = nx.MultiDiGraph()
+        g1.add_node('x')
+        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1)]
+
+        class MockTransactionEmpty:
+            def query(self, query):
+                return []
+
+        mock_tx = MockTransactionEmpty()
+
+        with self.assertRaises(RuntimeError) as context:
+            build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
+
+        self.assertEqual(f'The graph from queries: {[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in query_sampler_variable_graph_tuples]}\n'
+                         f'could not be created, since none of these queries returned results', str(context.exception))
 
 
 class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):

@@ -16,8 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
-
+import warnings
 from functools import reduce
 
 import networkx as nx
@@ -99,8 +98,21 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
                 answer_concept_graphs.append(concept_dict_converter(concept_dict, variable_graph))
             except ValueError as e:
                 raise ValueError(str(e) + f'Encountered processing query:\n \"{query}\"')
-        query_concept_graph = combine_n_graphs(answer_concept_graphs)
-        query_concept_graphs.append(query_concept_graph)
+
+        if len(answer_concept_graphs) > 1:
+            query_concept_graph = combine_n_graphs(answer_concept_graphs)
+            query_concept_graphs.append(query_concept_graph)
+        else:
+            if len(answer_concept_graphs) > 0:
+                query_concept_graphs.append(answer_concept_graphs[0])
+            else:
+                warnings.warn(f'There were no results for query: \n\"{query}\"\nand so nothing will be added to the '
+                              f'graph for this query')
+
+    if len(query_concept_graphs) == 0:
+        # Raise exception when none of the queries returned any results
+        raise RuntimeError(f'The graph from queries: {[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in query_sampler_variable_graph_tuples]}\n'
+                           f'could not be created, since none of these queries returned results')
 
     concept_graph = combine_n_graphs(query_concept_graphs)
     return concept_graph
