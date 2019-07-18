@@ -61,10 +61,103 @@ when {
 
 # Data
 
-# Case 1
+# Case 0
 insert
+$p0 isa person, has example-id 0;
 $p1 isa person, has example-id 0;
 $p2 isa person, has example-id 0;
-$p3 isa person, has example-id 0;
-(parent: $p1, child: $p2) isa parentship, has example-id 0;
-(parent: $p1, child: $p3) isa parentship, has example-id 0;
+(parent: $p0, child: $p1) isa parentship, has example-id 0;
+(parent: $p0, child: $p2) isa parentship, has example-id 0;
+
+
+# Case 1
+insert
+$p0 isa person, has example-id 1;
+$p1 isa person, has example-id 1;
+$p2 isa person, has example-id 1;
+(sibling: $p0, sibling: $p1) isa siblingship, has example-id 1;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 1;
+
+
+# Case 2
+insert
+$p0 isa person, has example-id 2;
+$p1 isa person, has example-id 2;
+$p2 isa person, has example-id 2;
+(parent: $p0, child: $p1) isa parentship, has example-id 2;
+(parent: $p1, child: $p2) isa parentship, has example-id 2;
+
+
+# Case 3
+insert
+$p0 isa person, has example-id 3;
+$p1 isa person, has example-id 3;
+$p2 isa person, has example-id 3;
+(parent: $p0, child: $p1) isa parentship, has example-id 3;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 3;
+
+
+# Case 4
+insert
+$p0 isa person, has example-id 4;
+$p1 isa person, has example-id 4;
+$p2 isa person, has example-id 4;
+$p3 isa person, has example-id 4;
+(parent: $p0, child: $p1) isa parentship, has example-id 4;
+(parent: $p0, child: $p2) isa parentship, has example-id 4;
+(parent: $p2, child: $p3) isa parentship, has example-id 4;
+
+
+# Case 5
+insert
+$p0 isa person, has example-id 5;
+$p1 isa person, has example-id 5;
+$p2 isa person, has example-id 5;
+$p3 isa person, has example-id 5;
+(parent: $p0, child: $p1) isa parentship, has example-id 5;
+(parent: $p0, child: $p2) isa parentship, has example-id 5;
+(parent: $p3, child: $p1) isa parentship, has example-id 5;
+
+
+# Case 6
+insert
+$p0 isa person, has example-id 6;
+$p1 isa person, has example-id 6;
+$p2 isa person, has example-id 6;
+$p3 isa person, has example-id 6;
+(parent: $p0, child: $p1) isa parentship, has example-id 6;
+(parent: $p0, child: $p2) isa parentship, has example-id 6;
+(parent: $p3, child: $p0) isa parentship, has example-id 6;
+
+
+# Case 7
+insert
+$p0 isa person, has example-id 7;
+$p1 isa person, has example-id 7;
+$p2 isa person, has example-id 7;
+$p3 isa person, has example-id 7;
+(parent: $p0, child: $p1) isa parentship, has example-id 7;
+(parent: $p1, child: $p2) isa parentship, has example-id 7;
+(parent: $p2, child: $p3) isa parentship, has example-id 7;
+
+
+# Case 8
+insert
+$p0 isa person, has example-id 8;
+$p1 isa person, has example-id 8;
+$p2 isa person, has example-id 8;
+$p3 isa person, has example-id 8;
+(parent: $p0, child: $p1) isa parentship, has example-id 8;
+(parent: $p0, child: $p2) isa parentship, has example-id 8;
+(parent: $p0, child: $p3) isa parentship, has example-id 8;
+
+
+# Case 9
+insert
+$p0 isa person, has example-id 9;
+$p1 isa person, has example-id 9;
+$p2 isa person, has example-id 9;
+$p3 isa person, has example-id 9;
+(sibling: $p0, sibling: $p1) isa siblingship, has example-id 9;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 9;
+(sibling: $p2, sibling: $p3) isa siblingship, has example-id 9;
