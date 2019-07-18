@@ -16,7 +16,8 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import os
+import subprocess as sp
 import unittest
 
 import grakn.client
@@ -24,13 +25,17 @@ import grakn.client
 import kglib.kgcn.core.ingest.encode.encode as encode
 import kglib.kgcn.core.ingest.traverse.schema.executor as ex
 import kglib.kgcn.core.ingest.traverse.schema.traversal as trv
+from kglib.kgcn.test.base import GraknServer
+
+TEST_KEYSPACE = "test_schema"
+TEST_URI = "localhost:48555"
 
 
 class TestGetSchemaConceptTypes(unittest.TestCase):
 
     def setUp(self):
-        client = grakn.client.GraknClient(uri="localhost:48555")
-        session = client.session(keyspace="test_schema")
+        client = grakn.client.GraknClient(uri=TEST_URI)
+        session = client.session(keyspace=TEST_KEYSPACE)
         self._tx = session.transaction().write()
 
     def tearDown(self):
@@ -72,8 +77,8 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
         self._filtering(encode.GET_ROLE_TYPES_QUERY, 16)
 
     def test_integration(self):
-        client = grakn.client.GraknClient(uri="localhost:48555")
-        session = client.session(keyspace="test_schema")
+        client = grakn.client.GraknClient(uri=TEST_URI)
+        session = client.session(keyspace=TEST_KEYSPACE)
         tx = session.transaction().write()
 
         print("================= THINGS ======================")
@@ -103,4 +108,12 @@ class TestGetSchemaConceptTypes(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+
+    with GraknServer() as gs:
+
+        sp.check_call([
+            'grakn', 'console', '-k', TEST_KEYSPACE, '-f',
+            os.getenv("TEST_SRCDIR") + '/kglib/kglib/kgcn/test_data/schema.gql'
+        ], cwd=gs.grakn_binary_location)
+
+        unittest.main()

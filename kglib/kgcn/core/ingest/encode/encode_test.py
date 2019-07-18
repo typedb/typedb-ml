@@ -16,7 +16,8 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import os
+import subprocess as sp
 import unittest
 
 import grakn.client
@@ -24,15 +25,17 @@ import numpy as np
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.encode.encode as encode
+from kglib.kgcn.test.base import GraknServer
+
+TEST_KEYSPACE = "test_schema"
+TEST_URI = "localhost:48555"
 
 
 class TestEncode(unittest.TestCase):
 
     def test_encode(self):
-        keyspace="test_schema"
-        uri="localhost:48555"
-        client = grakn.client.GraknClient(uri=uri)
-        session = client.session(keyspace=keyspace)
+        client = grakn.client.GraknClient(uri=TEST_URI)
+        session = client.session(keyspace=TEST_KEYSPACE)
         tx = session.transaction().write()
         encoder = encode.Encoder(tx)
 
@@ -77,4 +80,12 @@ class TestEncode(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+
+    with GraknServer() as gs:
+
+        sp.check_call([
+            'grakn', 'console', '-k', TEST_KEYSPACE, '-f',
+            os.getenv("TEST_SRCDIR") + '/kglib/kglib/kgcn/test_data/schema.gql'
+        ], cwd=gs.grakn_binary_location)
+
+        unittest.main()
