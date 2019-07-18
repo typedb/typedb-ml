@@ -20,15 +20,15 @@
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import build_thing
 import networkx as nx
 
-from experiment_grakn.data import create_graphs
+from experiment_grakn.data import create_concept_graphs
 from kglib.graph.test.case import GraphTestCase
 from grakn.client import GraknClient
 
 
-class TestCreateGraphs(GraphTestCase):
+class TestCreateConceptGraphs(GraphTestCase):
     def test_graphs_are_created_as_expected(self):
         example_id = 0
-        graphs = create_graphs([example_id])
+        graphs = create_concept_graphs([example_id])
         graph = graphs[example_id]
 
         with GraknClient(uri="localhost:48555") as client:

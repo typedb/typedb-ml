@@ -23,8 +23,9 @@ import tensorflow as tf
 from graph_nets import utils_tf
 from graph_nets.demos import models
 
+from experiment_grakn.data import create_indexed_graphs
 from experiment.feed import create_feed_dict, create_placeholders
-from experiment.data import create_input_target_graphs, create_graph
+from experiment.data import create_input_target_graphs
 from experiment.metrics import compute_accuracy
 from experiment.plotting import plot_input_vs_output, plot_across_training
 
@@ -68,9 +69,12 @@ def main():
     # random.shuffle(graph_ids)
     # print(f'Graphs are used in the order {graph_ids}')
     graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
+    # graph_ids = [0]
     all_node_types = ['person', 'parentship', 'siblingship']
     all_edge_types = ['parent', 'child', 'sibling']
-    raw_graphs = [create_graph(i) for i in graph_ids]
+    # raw_graphs = [create_graph(i) for i in graph_ids]
+    raw_graphs = create_indexed_graphs(graph_ids)
+
     input_graphs, target_graphs = create_input_target_graphs(raw_graphs, all_node_types, all_edge_types)
     input_ph, target_ph = create_placeholders(input_graphs, target_graphs)
 
