@@ -24,8 +24,8 @@ candidate-siblingship sub relation,
 
 add-candidate-siblingships sub rule,
 when {
-    $p1 isa person;
-    $p2 isa person;
+    $p1 isa person, has example-id $e;
+    $p2 isa person, has example-id $e;
     $p1 != $p2;
     not{(sibling: $p1, sibling: $p2) isa siblingship;};
 }, then {
