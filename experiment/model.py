@@ -19,11 +19,12 @@
 
 import time
 
+import networkx as nx
 import tensorflow as tf
 from graph_nets import utils_tf
 from graph_nets.demos import models
 
-from experiment_grakn.data import create_indexed_graphs
+from experiment_grakn.data import create_concept_graphs
 from experiment.feed import create_feed_dict, create_placeholders
 from experiment.data import create_input_target_graphs
 from experiment.metrics import compute_accuracy
@@ -56,7 +57,7 @@ def main():
     num_training_iterations = 100
 
     # The value at which to split the data into training and evaluation sets
-    tr_ge_split = 9
+    tr_ge_split = 7
 
     # How much time between logging and printing the current results.
     log_every_seconds = 2
@@ -68,12 +69,11 @@ def main():
     # random.seed(1)
     # random.shuffle(graph_ids)
     # print(f'Graphs are used in the order {graph_ids}')
-    graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
-    # graph_ids = [0]
+    graph_ids = [7, 0, 8, 5, 6, 3, 4, 1, 9, 2]
     all_node_types = ['person', 'parentship', 'siblingship']
     all_edge_types = ['parent', 'child', 'sibling']
-    # raw_graphs = [create_graph(i) for i in graph_ids]
-    raw_graphs = create_indexed_graphs(graph_ids)
+    raw_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in
+                  create_concept_graphs(graph_ids)]
 
     input_graphs, target_graphs = create_input_target_graphs(raw_graphs, all_node_types, all_edge_types)
     input_ph, target_ph = create_placeholders(input_graphs, target_graphs)

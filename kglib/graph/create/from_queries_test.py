@@ -21,8 +21,7 @@ import unittest
 
 import networkx as nx
 
-from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_2_graphs, \
-    concept_graph_to_indexed_graph
+from kglib.graph.create.from_queries import concept_dict_from_concept_map, combine_2_graphs
 from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.mock.concept import MockType, MockThing
 from kglib.graph.test.case import GraphTestCase
@@ -131,53 +130,6 @@ class TestCombineGraphs(GraphTestCase):
                           'between graphs a and b:\n'
                           'In graph a: {\'type\': \'has\', \'input\': 0, \'solution\': 1}\n'
                           'In graph b: {\'type\': \'has\', \'input\': 1, \'solution\': 0}'), str(context.exception))
-
-
-class TestConceptGraphToIndexedGraph(GraphTestCase):
-    def test_standard_graph_converted_as_expected(self):
-        person = Thing('V123', 'person', 'entity')
-        employment = Thing('V567', 'employment', 'relation')
-        grakn_graph = nx.MultiDiGraph()
-        grakn_graph.add_node(person)
-        grakn_graph.add_node(employment)
-        grakn_graph.add_edge(employment, person, type='employee')
-
-        person_exp = Thing('V123', 'person', 'entity')
-        employment_exp = Thing('V567', 'employment', 'relation')
-        expected_indexed_graph = nx.MultiDiGraph()
-        expected_indexed_graph.add_node(0, concept=person_exp, type=person_exp.type_label)
-        expected_indexed_graph.add_node(1, concept=employment_exp, type=employment_exp.type_label)
-        expected_indexed_graph.add_edge(1, 0, type='employee')
-
-        indexed_graph = concept_graph_to_indexed_graph(grakn_graph)
-
-        self.assertIsIsomorphic(expected_indexed_graph, indexed_graph)
-
-    def test_math_graph_converted_as_expected(self):
-        person = Thing('V123', 'person', 'entity')
-        employment = Thing('V567', 'employment', 'relation')
-        employee = GraknEdge(employment, person, 'employee')
-        grakn_graph = nx.MultiDiGraph()
-        grakn_graph.add_node(person)
-        grakn_graph.add_node(employment)
-        grakn_graph.add_node(employee)
-
-        grakn_graph.add_edge(employment, employee, type='relates')
-        grakn_graph.add_edge(person, employee, type='plays')
-
-        person_exp = Thing('V123', 'person', 'entity')
-        employment_exp = Thing('V567', 'employment', 'relation')
-        employee_exp = GraknEdge(employment, person, 'employee')
-        expected_indexed_graph = nx.MultiDiGraph()
-        expected_indexed_graph.add_node(0, concept=person_exp, type=person_exp.type_label)
-        expected_indexed_graph.add_node(1, concept=employment_exp, type=employment_exp.type_label)
-        expected_indexed_graph.add_node(2, concept=employee_exp, type=employee_exp.type_label)
-        expected_indexed_graph.add_edge(1, 2, type='relates')
-        expected_indexed_graph.add_edge(0, 2, type='plays')
-
-        indexed_graph = concept_graph_to_indexed_graph(grakn_graph)
-
-        self.assertIsIsomorphic(expected_indexed_graph, indexed_graph)
 
 
 if __name__ == "__main__":

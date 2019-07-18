@@ -20,12 +20,8 @@
 import networkx as nx
 from grakn.client import GraknClient
 
-from  kglib.graph.label.label import label_nodes_by_property, label_edges_by_property
-from kglib.graph.create.from_queries import build_graph_from_queries, concept_graph_to_indexed_graph
-
-
-def create_indexed_graphs(example_indices):
-    return [concept_graph_to_indexed_graph(graph) for graph in create_concept_graphs(example_indices)]
+from kglib.graph.label.label import label_nodes_by_property, label_edges_by_property
+from kglib.graph.create.from_queries import build_graph_from_queries
 
 
 def create_concept_graphs(example_indices):

@@ -116,18 +116,3 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
     concept_graph = combine_n_graphs(query_concept_graphs)
     return concept_graph
-
-
-def concept_graph_to_indexed_graph(concept_graph):
-    """
-    Takes in a graph:
-      Standard model: Concepts as nodes and Roles described as edges with a 'type' field in the edge data
-      Math model:  Concepts as nodes and Roles as nodes
-    :param concept_graph: A graph where Concepts are used to identify the nodes
-    :return: A graph where zero-indexed integers are used to identify the nodes, with types stored in the 'type'
-    field of the node and edge data, and original concept information stored as `concept` in the node data
-    """
-    indexed_graph = nx.convert_node_labels_to_integers(concept_graph, label_attribute='concept')
-    for node, data in indexed_graph.nodes(data=True):
-        indexed_graph.nodes[node]['type'] = data['concept'].type_label
-    return indexed_graph
