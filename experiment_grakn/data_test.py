@@ -40,8 +40,9 @@ class TestCreateGraphs(GraphTestCase):
                         f'$p0 isa person, has example-id {example_id}; '
                         f'$p1 isa person, has example-id {example_id}; '
                         f'$p2 isa person, has example-id {example_id}; '
-                        f'$par0(parent: $p0, child: $p1) isa parentship;, has example-id {example_id};'
-                        f'$par1(parent: $p0, child: $p2) isa parentship;, has example-id {example_id};'
+                        f'$par0(parent: $p0, child: $p1) isa parentship, has example-id {example_id};'
+                        f'$par1(parent: $p0, child: $p2) isa parentship, has example-id {example_id};'
+                        f'$p1 != $p2;'
                         f'get;'))
 
                     p0 = build_thing(conceptmap.get('p0'))
@@ -60,32 +61,32 @@ class TestCreateGraphs(GraphTestCase):
         expected_graph = nx.MultiDiGraph(name=0)
 
         # people
-        expected_graph.add_node(0, concept=p0, type='person', input=1, solution=1)
-        expected_graph.add_node(1, concept=p1, type='person', input=1, solution=1)
-        expected_graph.add_node(2, concept=p2, type='person', input=1, solution=1)
+        expected_graph.add_node(p0, type='person', input=1, solution=1)
+        expected_graph.add_node(p1, type='person', input=1, solution=1)
+        expected_graph.add_node(p2, type='person', input=1, solution=1)
 
         # parentships
-        expected_graph.add_node(3, concept=par0, type='parentship', input=1, solution=1)
-        expected_graph.add_edge(3, 0, type='parent', input=1, solution=1)
-        expected_graph.add_edge(3, 1, type='child', input=1, solution=1)
+        expected_graph.add_node(par0, type='parentship', input=1, solution=1)
+        expected_graph.add_edge(par0, p0, type='parent', input=1, solution=1)
+        expected_graph.add_edge(par0, p1, type='child', input=1, solution=1)
 
-        expected_graph.add_node(4, concept=par1, type='parentship', input=1, solution=1)
-        expected_graph.add_edge(4, 0, type='parent', input=1, solution=1)
-        expected_graph.add_edge(4, 2, type='child', input=1, solution=1)
+        expected_graph.add_node(par1, type='parentship', input=1, solution=1)
+        expected_graph.add_edge(par1, p0, type='parent', input=1, solution=1)
+        expected_graph.add_edge(par1, p2, type='child', input=1, solution=1)
 
         # siblingships
 
-        expected_graph.add_node(5, concept=real_sib, type='siblingship', input=0, solution=1)
-        expected_graph.add_edge(5, 1, type='sibling', input=0, solution=1)
-        expected_graph.add_edge(5, 2, type='sibling', input=0, solution=1)
+        expected_graph.add_node(real_sib, type='siblingship', input=0, solution=1)
+        expected_graph.add_edge(real_sib, p1, type='sibling', input=0, solution=1)
+        expected_graph.add_edge(real_sib, p2, type='sibling', input=0, solution=1)
 
         # candidate siblingships
-        expected_graph.add_node(6, concept=cand_sib_0, type='siblingship', input=0, solution=0)
-        expected_graph.add_edge(6, 0, type='sibling', input=0, solution=0)
-        expected_graph.add_edge(6, 1, type='sibling', input=0, solution=0)
+        expected_graph.add_node(cand_sib_0, type='siblingship', input=0, solution=0)
+        expected_graph.add_edge(cand_sib_0, p0, type='sibling', input=0, solution=0)
+        expected_graph.add_edge(cand_sib_0, p1, type='sibling', input=0, solution=0)
 
-        expected_graph.add_node(7, concept=cand_sib_1, type='siblingship', input=0, solution=0)
-        expected_graph.add_edge(7, 0, type='sibling', input=0, solution=0)
-        expected_graph.add_edge(7, 2, type='sibling', input=0, solution=0)
+        expected_graph.add_node(cand_sib_1, type='siblingship', input=0, solution=0)
+        expected_graph.add_edge(cand_sib_1, p0, type='sibling', input=0, solution=0)
+        expected_graph.add_edge(cand_sib_1, p2, type='sibling', input=0, solution=0)
 
         self.assertIsIsomorphic(expected_graph, graph)

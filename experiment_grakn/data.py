@@ -24,7 +24,6 @@ from  kglib.graph.label.label import label_nodes_by_property, label_edges_by_pro
 from kglib.graph.create.from_queries import build_graph_from_queries, concept_graph_to_indexed_graph
 
 
-
 def create_graphs(example_indices):
     """
 
@@ -45,13 +44,10 @@ def create_graphs(example_indices):
                     graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
 
                     # Remove label leakage - change type labels that indicate candidates into non-candidates
-                    label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type', 'siblingship'})
-                    label_edges_by_property(graph, 'type', 'candidate-sibling', {'type', 'sibling'})
+                    label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type': 'siblingship'})
+                    label_edges_by_property(graph, 'type', 'candidate-sibling', {'type': 'sibling'})
 
-                    # Change the graph to be indexed by integers
-                    indexed_graph = concept_graph_to_indexed_graph(graph)
-
-                    graphs.append(indexed_graph)
+                    graphs.append(graph)
 
     return graphs
 
@@ -104,7 +100,7 @@ def get_example_graph_query_sampler_query_graph_tuples(example_id):
     candidate_siblingship_query = (
         f'match '
         f'$p1 isa person, has example-id {example_id};'
-        f'$r(sibling: $p1) isa candidate-siblingship;'
+        f'$r(candidate-sibling: $p1) isa candidate-siblingship;'
         f'get $p1, $r;'
     )
     print(candidate_siblingship_query)
