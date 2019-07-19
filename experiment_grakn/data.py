@@ -74,6 +74,7 @@ def create_concept_graphs(example_indices):
                 label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type': 'siblingship'})
                 label_edges_by_property(graph, 'type', 'candidate-sibling', {'type': 'sibling'})
 
+                graph.name = example_id
                 graphs.append(graph)
 
     return graphs

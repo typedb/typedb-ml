@@ -56,8 +56,7 @@ def main():
     # Data / training parameters.
     num_training_iterations = 10000
 
-    # The value at which to split the data into training and evaluation sets
-    tr_ge_split = 6
+
 
     # How much time between logging and printing the current results.
     log_every_seconds = 2
@@ -72,7 +71,11 @@ def main():
     # graph_ids = [7, 0, 8, 5, 6, 3, 4, 1, 9, 2]
     # graph_ids = [7, 0, 8, 5, 6, 4, 2]
     # graph_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-    graph_ids = [0, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    graph_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+    # The value at which to split the data into training and evaluation sets
+    tr_ge_split = int(len(graph_ids)/2)
+
     random.seed(0)
     random.shuffle(graph_ids)
     print(f'Graphs used: {graph_ids}')

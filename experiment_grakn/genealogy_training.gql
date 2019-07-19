@@ -71,12 +71,12 @@ $p2 isa person, has example-id 0;
 
 
 ## Case 1
-#insert
-#$p0 isa person, has example-id 1;
-#$p1 isa person, has example-id 1;
-#$p2 isa person, has example-id 1;
-#(sibling: $p0, sibling: $p1) isa siblingship, has example-id 1;
-#(sibling: $p1, sibling: $p2) isa siblingship, has example-id 1;
+insert
+$p0 isa person, has example-id 1;
+$p1 isa person, has example-id 1;
+$p2 isa person, has example-id 1;
+(sibling: $p0, sibling: $p1) isa siblingship, has example-id 1;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 1;
 
 
 # Case 2
@@ -89,12 +89,12 @@ $p2 isa person, has example-id 2;
 
 
 ## Case 3
-#insert
-#$p0 isa person, has example-id 3;
-#$p1 isa person, has example-id 3;
-#$p2 isa person, has example-id 3;
-#(parent: $p0, child: $p1) isa parentship, has example-id 3;
-#(sibling: $p1, sibling: $p2) isa siblingship, has example-id 3;
+insert
+$p0 isa person, has example-id 3;
+$p1 isa person, has example-id 3;
+$p2 isa person, has example-id 3;
+(parent: $p0, child: $p1) isa parentship, has example-id 3;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 3;
 
 
 # Case 4
@@ -215,3 +215,27 @@ $p4 isa person, has example-id 13;
 (parent: $p0, child: $p2) isa parentship, has example-id 13;
 (parent: $p2, child: $p3) isa parentship, has example-id 13;
 (parent: $p2, child: $p4) isa parentship, has example-id 13;
+
+
+# Case 14
+insert
+$p0 isa person, has example-id 14;
+$p1 isa person, has example-id 14;
+$p2 isa person, has example-id 14;
+$p3 isa person, has example-id 14;
+(sibling: $p0, sibling: $p1) isa siblingship, has example-id 14;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 14;
+(sibling: $p2, sibling: $p3) isa siblingship, has example-id 14;
+
+
+# Case 15
+insert
+$p0 isa person, has example-id 15;
+$p1 isa person, has example-id 15;
+$p2 isa person, has example-id 15;
+$p3 isa person, has example-id 15;
+$p4 isa person, has example-id 15;
+(sibling: $p0, sibling: $p1) isa siblingship, has example-id 15;
+(sibling: $p1, sibling: $p2) isa siblingship, has example-id 15;
+(sibling: $p2, sibling: $p3) isa siblingship, has example-id 15;
+(sibling: $p3, sibling: $p4) isa siblingship, has example-id 15;
