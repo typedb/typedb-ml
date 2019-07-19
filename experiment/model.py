@@ -50,14 +50,14 @@ def main():
 
     # Model parameters.
     # Number of processing (message-passing) steps.
-    num_processing_steps_tr = 6
-    num_processing_steps_ge = 6
+    num_processing_steps_tr = 10
+    num_processing_steps_ge = 10
 
     # Data / training parameters.
     num_training_iterations = 10000
 
     # The value at which to split the data into training and evaluation sets
-    tr_ge_split = 9
+    tr_ge_split = 6
 
     # How much time between logging and printing the current results.
     log_every_seconds = 2
