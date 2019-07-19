@@ -74,9 +74,10 @@ def combine_n_graphs(graphs_list):
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
-                             concept_dict_converter=concept_dict_to_grakn_standard_graph):
+                             concept_dict_converter=concept_dict_to_grakn_standard_graph, infer=True):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries over a Grakn transaction
+    :param infer:
     :param query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
     and a variable_graph
     :param grakn_transaction: A Grakn transaction
@@ -88,7 +89,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
     for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
 
-        concept_maps = sampler(grakn_transaction.query(query))
+        concept_maps = sampler(grakn_transaction.query(query, infer=infer))
 
         concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
 

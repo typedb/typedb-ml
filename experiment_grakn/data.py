@@ -24,6 +24,10 @@ from kglib.graph.label.label import label_nodes_by_property, label_edges_by_prop
 from kglib.graph.create.from_queries import build_graph_from_queries
 
 
+KEYSPACE = "genealogy"
+URI = "localhost:48555"
+
+
 def duplicate_edges_in_reverse(graph):
     """
     Takes in a directed multi graph, and creates duplicates of all edges, the duplicates having reversed direction to
@@ -37,101 +41,124 @@ def duplicate_edges_in_reverse(graph):
 
 
 def create_concept_graphs(example_indices):
-    """
-
-    :param example_indices:
-    :return:
-    """
     graphs = []
-    examples = [get_example_graph_query_sampler_query_graph_tuples(example_id) for example_id in example_indices]
+    qh = QueryHandler()
 
-    with GraknClient(uri="localhost:48555") as client:
-        with client.session(keyspace="genealogy") as session:
+    with GraknClient(uri=URI) as client:
+        with client.session(keyspace=KEYSPACE) as session:
 
-            for query_sampler_variable_graph_tuples in examples:
-
-                with session.transaction().write() as tx:
-
+            material_graphs = dict()
+            infer = False
+            for example_id in example_indices:
+                print(f'Creating material graph for example {example_id}')
+                material_graph_query_handles = qh.get_initial_query_handles(example_id)
+                with session.transaction().read() as tx:
                     # Build a graph from the queries, samplers, and query graphs
-                    graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
+                    graph = build_graph_from_queries(material_graph_query_handles, tx, infer=infer)
+                material_graphs[example_id] = graph
 
-                    # Remove label leakage - change type labels that indicate candidates into non-candidates
-                    label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type': 'siblingship'})
-                    label_edges_by_property(graph, 'type', 'candidate-sibling', {'type': 'sibling'})
+            # Make any changes or additions to the graph. This could include making match-insert queries or adding
+            # rules in order to add candidates for prediction, and/or positive or negative examples
+            infer = True
 
-                    graphs.append(graph)
+            for example_id in example_indices:
+                print(f'Creating inferred graph for example {example_id}')
+                inferred_graph_query_handles = qh.get_query_handles_with_inference(example_id)
+                with session.transaction().read() as tx:
+                    # Build a graph from the queries, samplers, and query graphs
+                    inferred_graph = build_graph_from_queries(inferred_graph_query_handles, tx, infer=infer)
+                print(f'Creating combined graph for example {example_id}')
+                graph = nx.compose(inferred_graph, material_graphs[example_id])
+
+                # Remove label leakage - change type labels that indicate candidates into non-candidates
+                label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type': 'siblingship'})
+                label_edges_by_property(graph, 'type', 'candidate-sibling', {'type': 'sibling'})
+
+                graphs.append(graph)
 
     return graphs
 
 
-def get_example_graph_query_sampler_query_graph_tuples(example_id):
+class QueryHandler:
 
-    # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
-    existing = dict(input=1, solution=1)
+    def __init__(self):
+        # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to
+        # exist
+        self.existing = dict(input=1, solution=1)
 
-    # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive examples
-    to_infer = dict(input=0, solution=1)
+        # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive
+        # examples
+        self.to_infer = dict(input=0, solution=1)
 
-    # Candidates are neither present in the input nor in the solution, they are negative examples
-    candidate = dict(input=0, solution=0)
+        # Candidates are neither present in the input nor in the solution, they are negative examples
+        self.candidate = dict(input=0, solution=0)
 
-    # parentship
-    parentship_query = (
-        f'match '
-        f'$p1 isa person, has example-id {example_id};'
-        f'$p2 isa person, has example-id {example_id};'
-        f'$r(parent: $p1, child: $p2) isa parentship;'
-        f'get $p1, $p2, $r;'
-    )
-    print(parentship_query)
+    def parentship_query(self, example_id):
+        return (
+            f'match '
+            f'$p1 isa person, has example-id {example_id};'
+            f'$p2 isa person, has example-id {example_id};'
+            f'$r(parent: $p1, child: $p2) isa parentship;'
+            f'get $p1, $p2, $r;'
+        )
 
-    g = nx.MultiDiGraph()
-    g.add_node('p1', **existing)
-    g.add_node('p2', **existing)
-    g.add_node('r', **existing)
-    g.add_edge('r', 'p1', type='parent', **existing)
-    g.add_edge('r', 'p2', type='child', **existing)
-    parentship_query_graph = g
+    def parentship_query_graph(self):
+        g = nx.MultiDiGraph()
+        g.add_node('p1', **self.existing)
+        g.add_node('p2', **self.existing)
+        g.add_node('r', **self.existing)
+        g.add_edge('r', 'p1', type='parent', **self.existing)
+        g.add_edge('r', 'p2', type='child', **self.existing)
+        return g
 
-    # siblingship
-    siblingship_query = (
-        f'match '
-        f'$p1 isa person, has example-id {example_id};'
-        f'$r(sibling: $p1) isa siblingship;'
-        f'get $p1, $r;'
-    )
-    print(siblingship_query)
+    def siblingship_query(self, example_id):
+        return (
+            f'match '
+            f'$p1 isa person, has example-id {example_id};'
+            f'$r(sibling: $p1) isa siblingship;'
+            f'get $p1, $r;'
+        )
 
-    g2 = nx.MultiDiGraph()
-    g2.add_node('p1', **existing)
-    g2.add_node('r', **to_infer)
-    g2.add_edge('r', 'p1', type='sibling', **to_infer)
-    siblingship_query_graph = g2
+    def material_siblingship_query_graph(self):
+        g = nx.MultiDiGraph()
+        g.add_node('p1', **self.existing)
+        g.add_node('r', **self.existing)
+        g.add_edge('r', 'p1', type='sibling', **self.existing)
+        return g
 
-    # candidate siblingship
-    candidate_siblingship_query = (
-        f'match '
-        f'$p1 isa person, has example-id {example_id};'
-        f'$r(candidate-sibling: $p1) isa candidate-siblingship;'
-        f'get $p1, $r;'
-    )
-    print(candidate_siblingship_query)
+    def siblingship_query_graph(self):
+        g = nx.MultiDiGraph()
+        g.add_node('p1', **self.existing)
+        g.add_node('r', **self.to_infer)
+        g.add_edge('r', 'p1', type='sibling', **self.to_infer)
+        return g
 
-    g3 = nx.MultiDiGraph()
-    g3.add_node('p1', **existing)
-    g3.add_node('r', **candidate)
-    g3.add_edge('r', 'p1', type='candidate-sibling', **candidate)
+    def candidate_siblingship_query(self, example_id):
+        return (
+            f'match '
+            f'$p1 isa person, has example-id {example_id};'
+            f'$r(candidate-sibling: $p1) isa candidate-siblingship;'
+            f'get $p1, $r;'
+        )
 
-    candidate_siblingship_query_graph = g3
+    def candidate_siblingship_query_graph(self):
+        g = nx.MultiDiGraph()
+        g.add_node('p1', **self.existing)
+        g.add_node('r', **self.candidate)
+        g.add_edge('r', 'p1', type='candidate-sibling', **self.candidate)
+        return g
 
-    query_sampler_query_graph_tuples = [
-        (parentship_query, lambda x: x, parentship_query_graph),
-        (siblingship_query, lambda x: x, siblingship_query_graph),
-        (candidate_siblingship_query, lambda x: x, candidate_siblingship_query_graph)
-    ]
+    def get_initial_query_handles(self, example_id):
 
-    return query_sampler_query_graph_tuples
+        return [
+            (self.parentship_query(example_id), lambda x: x, self.parentship_query_graph()),
+            (self.siblingship_query(example_id), lambda x: x, self.material_siblingship_query_graph()),
+        ]
 
+    def get_query_handles_with_inference(self, example_id):
 
-if __name__ == "__main__":
-    get_example_graph_query_sampler_query_graph_tuples(0)
+        return [
+            (self.siblingship_query(example_id), lambda x: x, self.siblingship_query_graph()),
+            (self.candidate_siblingship_query(example_id), lambda x: x,
+             self.candidate_siblingship_query_graph())
+        ]
