@@ -20,25 +20,38 @@
 import unittest
 
 import matplotlib.pyplot as plt
+import networkx as nx
 from graph_nets.utils_np import networkxs_to_graphs_tuple
 
-from experiment.data import create_input_target_graphs, create_graph
+from experiment.data import create_input_target_graphs
 from experiment.plotting import plot_input_vs_output
 
 
 class TestPlotInputVsOutput(unittest.TestCase):
     def test_plotting(self):
         num_processing_steps_ge = 6
-        num_graphs = 3
-        graph_ids = [7, 11, 0, 8, 5, 6, 3, 10, 4, 1, 9, 2]
         all_node_types = ['person', 'parentship', 'siblingship']
         all_edge_types = ['parent', 'child', 'sibling']
-        raw_graphs = [create_graph(i) for i in graph_ids]
-        inputs, targets = create_input_target_graphs(raw_graphs, all_node_types, all_edge_types)
-        # input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[:num_graphs])
-        target_graphs = networkxs_to_graphs_tuple(targets[:num_graphs])
+
+        graph = nx.MultiDiGraph(name=0)
+
+        existing = dict(input=1, solution=1)
+        to_infer = dict(input=0, solution=1)
+        candidate = dict(input=0, solution=0)
+
+        # people
+        graph.add_node(0, type='person', **existing)
+        graph.add_node(1, type='person', **candidate)
+
+        # parentships
+        graph.add_node(2, type='parentship', **to_infer)
+        graph.add_edge(2, 0, type='parent', **to_infer)
+        graph.add_edge(2, 1, type='child', **candidate)
+
+        inputs, targets = create_input_target_graphs([graph], all_node_types, all_edge_types)
+        target_graphs = networkxs_to_graphs_tuple(targets)
         test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}
-        plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge)
+        plot_input_vs_output([graph], test_values, num_processing_steps_ge)
         plt.show()
 
 

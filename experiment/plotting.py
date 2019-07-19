@@ -95,9 +95,7 @@ def plot_with_matplotlib(G):
     plt.show()
 
 
-def plot_input_vs_output(raw_graphs,
-                         test_values,
-                         num_processing_steps_ge):
+def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge):
 
     # # Plot graphs and results after each processing step.
     # The white node is the start, and the black is the end. Other nodes are colored
@@ -168,26 +166,48 @@ def above_base(val, base=0.0):
     return val * (1.0 - base) + base
 
 
-def colors_array(probability, to_infer=False):
+def element_color(gt_plot, probability, element_props):
     """
-    Determine the color values to use for a node/edge
-    :param probability: the score for the node
-    :param to_infer: whether this color should represent a key outcome of the learner
-    :return: array of rgba color values to use
+    Determine the color values to use for a node/edge and its label
+    gt plot:
+    blue for existing elements, green for those to infer, red and transparent for candidates (as there could be many)
+
+    output plot:
+    blue for existing elements, green for those to infer, red for candidates, all with transparency
     """
-    if not to_infer:
-        return np.array([above_base(1.0 - probability), 0.0, above_base(probability), above_base(probability, base=0.1)])
+
+    existing = dict(input=1, solution=1)
+    to_infer = dict(input=0, solution=1)
+    candidate = dict(input=0, solution=0)
+
+    to_infer = all([element_props.get(key) == value for key, value in to_infer.items()])
+    candidate = all([element_props.get(key) == value for key, value in candidate.items()])
+    existing = all([element_props.get(key) == value for key, value in existing.items()])
+
+    default_gt_label_color = np.array([0.0, 0.0, 0.0, 1.0])
+    output_label_color = np.array([0.0, 0.0, 0.0, above_base(probability, base=0.0)])
+
+    if gt_plot:
+        if to_infer:
+            return dict(element=np.array([0.0, 1.0, 0.0, 1.0]), label=default_gt_label_color)
+        elif existing:
+            return dict(element=np.array([0.0, 0.0, 1.0, 1.0]), label=default_gt_label_color)
+        elif candidate:
+            return dict(element=np.array([1.0, 0.0, 0.0, 0.1]), label=np.array([0.0, 0.0, 0.0, 0.1]))
+        else:
+            raise ValueError('Node to colour did not fit any category')
     else:
-        return np.array([0.0, above_base(probability), 0.0, above_base(probability, base=0.1)])
-
-
-def label_colors_array(probability):
-    """
-    Determine the color values to use for a node/edge
-    :param probability: the score for the node
-    :return: array of rgba color values to use
-    """
-    return np.array([0.0, 0.0, 0.0, above_base(probability, base=0.1)])
+        if to_infer:
+            return dict(element=np.array([0.0, above_base(probability), 0.0, above_base(probability, base=0.0)]),
+                        label=output_label_color)
+        elif existing:
+            return dict(element=np.array([0.0, 0.0, above_base(probability), above_base(probability, base=0.0)]),
+                        label=output_label_color)
+        elif candidate:
+            return dict(element=np.array([above_base(probability), 0.0, 0.0, above_base(probability, base=0.0)]),
+                        label=output_label_color)
+        else:
+            raise ValueError('Node to colour did not fit any category')
 
 
 def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, gt_plot):
@@ -198,18 +218,16 @@ def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, gt
     edge_label_color = {}
 
     for i, (n, props) in enumerate(graph.nodes(data=True)):
-        # Determine the nodes colors
-        show_nodes_to_infer = (not props.get('input', False)) and props.get('solution', False) and gt_plot
-        node_color[n] = colors_array(node_prob[n], show_nodes_to_infer)
-        # Determine the node label colors
-        node_label_color[n] = label_colors_array(node_prob[n])
+        colors = element_color(gt_plot, node_prob[n], props)
+
+        node_color[n] = colors['element']
+        node_label_color[n] = colors['label']
 
     for n, (sender, receiver, props) in enumerate(graph.edges(data=True)):
-        # Determine the edge colors
-        show_edges_to_infer = (not props.get('input', False)) and props.get('solution', False) and gt_plot
-        edge_color[(sender, receiver)] = colors_array(edge_prob[n], show_edges_to_infer)
-        # Determine the edge label colors
-        edge_label_color[(sender, receiver)] = label_colors_array(edge_prob[n])
+        colors = element_color(gt_plot, edge_prob[n], props)
+
+        edge_color[(sender, receiver)] = colors['element']
+        edge_label_color[(sender, receiver)] = colors['label']
 
     draw_graph(graph, pos, ax, node_size=node_size, node_color=node_color, node_label_color=node_label_color,
                edge_color=edge_color, edge_label_color=edge_label_color)
