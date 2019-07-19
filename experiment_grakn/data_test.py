@@ -16,13 +16,49 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import build_thing
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import build_thing, Thing
 import networkx as nx
 
-from experiment_grakn.data import create_concept_graphs
+from experiment_grakn.data import create_concept_graphs, duplicate_edges_in_reverse
 from kglib.graph.test.case import GraphTestCase
 from grakn.client import GraknClient
+
+
+class TestDuplicateEdgesInReverse(GraphTestCase):
+
+    def test_edges_are_duplicated_as_expected(self):
+        graph = nx.MultiDiGraph(name=0)
+
+        p0 = Thing('V123', 'person', 'entity')
+        p1 = Thing('V456', 'person', 'entity')
+        par0 = Thing('V789', 'parentship', 'relation')
+
+        # people
+        graph.add_node(p0, type='person', input=1, solution=1)
+        graph.add_node(p1, type='person', input=1, solution=1)
+
+        # parentships
+        graph.add_node(par0, type='parentship', input=1, solution=1)
+        graph.add_edge(par0, p0, type='parent', input=1, solution=1)
+        graph.add_edge(par0, p1, type='child', input=1, solution=1)
+
+        duplicate_edges_in_reverse(graph)
+
+        expected_graph = nx.MultiDiGraph(name=0)
+
+        # people
+        expected_graph.add_node(p0, type='person', input=1, solution=1)
+        expected_graph.add_node(p1, type='person', input=1, solution=1)
+
+        # parentships
+        expected_graph.add_node(par0, type='parentship', input=1, solution=1)
+        expected_graph.add_edge(par0, p0, type='parent', input=1, solution=1)
+        expected_graph.add_edge(par0, p1, type='child', input=1, solution=1)
+
+        # Duplicates
+        expected_graph.add_edge(p0, par0, type='parent', input=1, solution=1)
+        expected_graph.add_edge(p1, par0, type='child', input=1, solution=1)
+        self.assertGraphsEqual(expected_graph, graph)
 
 
 class TestCreateConceptGraphs(GraphTestCase):

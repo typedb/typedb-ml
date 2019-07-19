@@ -24,6 +24,18 @@ from kglib.graph.label.label import label_nodes_by_property, label_edges_by_prop
 from kglib.graph.create.from_queries import build_graph_from_queries
 
 
+def duplicate_edges_in_reverse(graph):
+    """
+    Takes in a directed multi graph, and creates duplicates of all edges, the duplicates having reversed direction to
+    the originals. This is useful since directed edges constrain the direction of messages passed. We want to permit
+    omni-directional message passing.
+    :param graph: The graph
+    :return: The graph with duplicated edges, reversed, with all original edge properties attached to the duplicates
+    """
+    for sender, receiver, keys, data in graph.edges(data=True, keys=True):
+        graph.add_edge(receiver, sender, keys, **data)
+
+
 def create_concept_graphs(example_indices):
     """
 
