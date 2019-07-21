@@ -112,6 +112,24 @@ class QueryHandler:
         g.add_edge('r', 'p2', type='child', **self.existing)
         return g
 
+    def grandparentship_query(self, example_id):
+        return (
+            f'match '
+            f'$p1 isa person, has example-id {example_id};'
+            f'$p2 isa person, has example-id {example_id};'
+            f'$r(grandparent: $p1, grandchild: $p2) isa grandparentship;'
+            f'get $p1, $p2, $r;'
+        )
+
+    def grandparentship_query_graph(self):
+        g = nx.MultiDiGraph()
+        g.add_node('p1', **self.existing)
+        g.add_node('p2', **self.existing)
+        g.add_node('r', **self.existing)
+        g.add_edge('r', 'p1', type='grandparent', **self.existing)
+        g.add_edge('r', 'p2', type='grandchild', **self.existing)
+        return g
+
     def siblingship_query(self, example_id):
         return (
             f'match '
@@ -159,6 +177,7 @@ class QueryHandler:
     def get_query_handles_with_inference(self, example_id):
 
         return [
+            (self.grandparentship_query(example_id), lambda x: x, self.grandparentship_query_graph()),
             (self.siblingship_query(example_id), lambda x: x, self.siblingship_query_graph()),
             (self.candidate_siblingship_query(example_id), lambda x: x,
              self.candidate_siblingship_query_graph())

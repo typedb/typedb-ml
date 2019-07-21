@@ -56,8 +56,6 @@ def main():
     # Data / training parameters.
     num_training_iterations = 10000
 
-
-
     # How much time between logging and printing the current results.
     log_every_seconds = 2
 
@@ -79,8 +77,8 @@ def main():
     random.seed(0)
     random.shuffle(graph_ids)
     print(f'Graphs used: {graph_ids}')
-    all_node_types = ['person', 'parentship', 'siblingship']
-    all_edge_types = ['parent', 'child', 'sibling']
+    all_node_types = ['person', 'parentship', 'grandparentship', 'siblingship']
+    all_edge_types = ['parent', 'child', 'grandparent', 'grandchild', 'sibling']
     # raw_graphs = [create_graph(i) for i in graph_ids]
 
     def prepare(graph):

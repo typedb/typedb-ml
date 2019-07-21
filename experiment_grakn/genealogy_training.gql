@@ -7,6 +7,8 @@ person sub entity,
     has example-id,
     plays parent,
     plays child,
+    plays grandparent,
+    plays grandchild,
     plays sibling,
     plays candidate-sibling;
 
@@ -14,6 +16,10 @@ parentship sub relation,
     has example-id,
     relates parent,
     relates child;
+
+grandparentship sub relation,
+    relates grandparent,
+    relates grandchild;
 
 siblingship sub relation,
     has example-id,
@@ -56,6 +62,18 @@ when {
     $p1 != $p3;
 }, then {
     (sibling: $p1, sibling: $p3) isa siblingship;
+};
+
+
+parent-of-parent-is-grandparent sub rule,
+when {
+    $p1 isa person;
+    $p2 isa person;
+    $p3 isa person;
+    (parent: $p1, child: $p2) isa parentship;
+    (parent: $p2, child: $p3) isa parentship;
+}, then {
+    (grandparent: $p1, grandchild: $p3) isa grandparentship;
 };
 
 
