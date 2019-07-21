@@ -87,8 +87,8 @@ def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_t
         one_hot[index_to_one_hot] = 1
         G.nodes[node_index][attribute] = one_hot
 
-    for sender, receiver, edge_feature in G.edges(data=True):
+    for sender, receiver, keys, edge_feature in G.edges(data=True, keys=True):
         one_hot = np.zeros(len(all_edge_types), dtype=np.int)
         index_to_one_hot = all_edge_types.index(edge_feature[type_attribute])
         one_hot[index_to_one_hot] = 1
-        G.edges[sender, receiver, 0][attribute] = one_hot
+        G.edges[sender, receiver, keys][attribute] = one_hot
