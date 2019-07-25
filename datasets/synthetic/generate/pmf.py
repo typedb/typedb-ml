@@ -33,6 +33,9 @@ class PMF:
                 `variables`. Each variable is represented by a dimension of the array. For example, when there are 3
                 variables, element (0, 0, 0) indicates the probability that all variables take the first value given
                 for them in `variables`
+
+        Raises:
+            IndexError if `variables` and `pmf_array` are inconsistent
         """
         self._variables = variables
         self._pmf_array = pmf_array
