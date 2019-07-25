@@ -17,6 +17,7 @@
 #  under the License.
 #
 
+
 import numpy as np
 
 
@@ -35,6 +36,14 @@ class PMF:
         """
         self._variables = variables
         self._pmf_array = pmf_array
+
+        # Check that `self._variables` and `self._pmf_array` are consistent
+        values_shape = tuple(
+            len(discrete_values) for i, (variable, discrete_values) in enumerate(self._variables.items()))
+
+        if values_shape != self._pmf_array.shape:
+            raise IndexError(f'Variable values have combined shape {values_shape}, whereas the PMF array given has '
+                             f'shape {self._pmf_array.shape}')
 
     def select(self):
         """

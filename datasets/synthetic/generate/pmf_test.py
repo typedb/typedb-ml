@@ -36,3 +36,15 @@ class TestPMF(unittest.TestCase):
         choice = pmf.select()
         expected_choice = {'Flu': False, 'Meningitis': True, 'Light Sensitivity': True, 'Fever': True}
         self.assertDictEqual(expected_choice, choice)
+
+    def test_exception_raised_if_probabilities_and_values_inconsistent(self):
+
+        a = np.zeros([2, 2, 2, 1], dtype=np.float)
+
+        with self.assertRaises(IndexError) as context:
+            PMF({'Flu': [False, True], 'Meningitis': [False, True], 'Light Sensitivity': [False, True],
+                 'Fever': [False, True]}, a)
+
+        self.assertEqual(str(context.exception), ('Variable values have combined shape (2, 2, 2, 2), whereas the PMF '
+                                                  'array given has shape (2, 2, 2, 1)'))
+
