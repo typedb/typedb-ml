@@ -20,6 +20,7 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
 from datasets.synthetic.generate.pmf import PMF
 
@@ -48,3 +49,22 @@ class TestPMF(unittest.TestCase):
         self.assertEqual(str(context.exception), ('Variable values have combined shape (2, 2, 2, 2), whereas the PMF '
                                                   'array given has shape (2, 2, 2, 1)'))
 
+    def test_to_dataframe_is_as_expected(self):
+        features = ['Flu', 'Meningitis', 'Light Sensitivity', 'Fever']
+        feat_values = [[False, True], [False, True], [False, True], [False, True]]
+        index = pd.MultiIndex.from_product(feat_values, names=features)
+
+        a = np.zeros([2, 2, 2, 2])
+        a[0, 1, 1, 1] = 1.0
+
+        pmf = PMF({'Flu': [False, True], 'Meningitis': [False, True], 'Light Sensitivity': [False, True],
+                   'Fever': [False, True]}, a)
+
+        df = pmf.to_dataframe()
+
+        expected_df = pd.DataFrame(a.flatten(), index=index)
+        pd.testing.assert_frame_equal(expected_df, df)
+
+
+if __name__ == '__main__':
+    unittest.main()
