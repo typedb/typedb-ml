@@ -18,21 +18,28 @@
 #
 
 
-class ExampleGenerator:
-    def __init__(self, query_feature_fns, pmf):
-        self._pmf = pmf
-        self._query_feature_fns = query_feature_fns
-        self._example_id = 0
+def generate_example_queries(feature_value_selector, query_feature_fns, example_id):
+    """
+    Generates Graql queries that can be used to create an example, where an example is a subgraph intended to be
+    taken as input training/test data to ML algorithms.
 
-    def generate_example(self):
-        variable_values = self._pmf.select()
+    Args:
+        feature_value_selector: An object used to select the values of all of the features
+        query_feature_fns: A list of functions that all accept `variable_values` and `example_id`, and based on these
+            return a list of queries
+        example_id: The unique id to use for this example, likely used by the `query_feature_fns` to uniquely identify
+            concepts belonging to a particular example
 
-        feature_queries = []
+    Returns: A list of Graql queries which when executed sequentially will create an example
+    """
 
-        for feature_fn in self._query_feature_fns:
-            queries = feature_fn(variable_values, self._example_id)
-            if queries:
-                feature_queries.extend(queries)
+    variable_values = feature_value_selector.select()
 
-        self._example_id += 1
-        return feature_queries
+    feature_queries = []
+
+    for feature_fn in query_feature_fns:
+        queries = feature_fn(variable_values, example_id)
+        if queries:
+            feature_queries.extend(queries)
+
+    return feature_queries

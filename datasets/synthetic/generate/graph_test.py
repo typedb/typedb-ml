@@ -19,7 +19,7 @@
 
 import unittest
 
-from  datasets.synthetic.generate.graph import ExampleGenerator
+from datasets.synthetic.generate.graph import generate_example_queries
 
 
 class MockPMF:
@@ -81,10 +81,7 @@ class TestGenerateExample(unittest.TestCase):
                              meningitis_query_fn,
                              flu_query_fn]
 
-        # TODO ExampleGenerator need to track the example_ids that have been used already, or query for the max,
-        #  or only be used in batch mode
-        gen = ExampleGenerator(query_feature_fns, pmf)
-        examples = [gen.generate_example() for _ in range(2)]
+        examples = [generate_example_queries(pmf, query_feature_fns, i) for i in range(2)]
 
         expected_examples = [
             [
