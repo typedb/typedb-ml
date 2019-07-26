@@ -19,7 +19,7 @@
 
 import unittest
 
-from datasets.synthetic.generate.graph import generate_example_queries
+from datasets.synthetic.generate.example import generate_example_queries
 
 
 class MockPMF:
