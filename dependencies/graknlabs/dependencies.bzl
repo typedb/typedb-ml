@@ -9,18 +9,19 @@ def io_bazel_rules_python():
         commit = "4443fa25feac79b0e4c7c63ca84f87a1d6032f49"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @io_bazel_rules_python
     )
 
-def graknlabs_bazel_distribution():
+def graknlabs_build_tools():
     git_repository(
-        name="graknlabs_bazel_distribution",
-        remote="https://github.com/graknlabs/bazel-distribution",
-        commit="62a9a6343e9f2a1aeed7c935e9092c0fd1e8e8ac"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_bazel_distribution
+        name = "graknlabs_build_tools",
+        remote = "https://github.com/graknlabs/build-tools",
+        commit = "02a6698a61aa4e63304deb2c1b364a46c305162f", # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_build_tools
     )
+
 
 def graknlabs_grakn_core():
     git_repository(
         name="graknlabs_grakn_core",
         remote="https://github.com/graknlabs/grakn",
-        commit="2845bb009876a74896bd479a7e49955c7fa1c7ca"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_grakn_core
+        commit="9dede119f3495c3611ccc7e3d65c076bcb71ea71"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_grakn_core
     )
 
 def graknlabs_client_python():

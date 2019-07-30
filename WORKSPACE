@@ -21,47 +21,20 @@ pip_repositories()
 
 
 ########################################################################################################################
-# Load Bazel Distribution
+# Load Build Tools
 ########################################################################################################################
 
-# Load Bazel Distribution here, since it is required for kglib and for grakn
-load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_bazel_distribution")
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_build_tools")
+graknlabs_build_tools()
+
+
+########################################################################################################################
+# Load Pip Distribution Requirements
+########################################################################################################################
+
+load("@graknlabs_build_tools//distribution:dependencies.bzl", "graknlabs_bazel_distribution")
 graknlabs_bazel_distribution()
 
-# --- Load the dependencies of graknlabs_bazel_distribution ---
-
-load("@graknlabs_bazel_distribution//github:dependencies.bzl", "github_dependencies_for_deployment")
-github_dependencies_for_deployment()
-
-#load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
-git_repository(
-    name = "io_bazel_skydoc",
-    remote = "https://github.com/graknlabs/skydoc.git",
-    branch = "experimental-skydoc-allow-dep-on-bazel-tools",
-)
-
-load("@io_bazel_skydoc//:setup.bzl", "skydoc_repositories")
-skydoc_repositories()
-
-load("@io_bazel_rules_sass//:package.bzl", "rules_sass_dependencies")
-rules_sass_dependencies()
-
-load("@build_bazel_rules_nodejs//:defs.bzl", "node_repositories")
-node_repositories()
-
-load("@io_bazel_rules_sass//:defs.bzl", "sass_repositories")
-sass_repositories()
-
-# Skip these graknlabs_bazel_distribution dependencies since they are already present
-#git_repository(
-#    name = "io_bazel_rules_python",
-#    remote = "https://github.com/bazelbuild/rules_python.git",
-#    commit = "fdbb17a4118a1728d19e638a5291b4c4266ea5b8",
-#)
-
-#load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
-#pip_repositories()
 
 pip3_import(
     name = "graknlabs_bazel_distribution_pip",
@@ -69,7 +42,6 @@ pip3_import(
 )
 load("@graknlabs_bazel_distribution_pip//:requirements.bzl", graknlabs_bazel_distribution_pip_install = "pip_install")
 graknlabs_bazel_distribution_pip_install()
-
 
 
 ###################################
@@ -116,13 +88,11 @@ graknlabs_grakn_core()
 
 load(
     "@graknlabs_grakn_core//dependencies/graknlabs:dependencies.bzl",
-    "graknlabs_build_tools",
     "graknlabs_graql",
     "graknlabs_protocol",
     "graknlabs_client_java",
     "graknlabs_benchmark"
 )
-graknlabs_build_tools()
 graknlabs_graql()
 graknlabs_protocol()
 graknlabs_client_java()
