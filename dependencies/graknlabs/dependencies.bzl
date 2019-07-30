@@ -9,11 +9,11 @@ def io_bazel_rules_python():
         commit = "4443fa25feac79b0e4c7c63ca84f87a1d6032f49"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @io_bazel_rules_python
     )
 
-def graknlabs_bazel_distribution():
+def graknlabs_build_tools():
     git_repository(
-        name="graknlabs_bazel_distribution",
-        remote="https://github.com/graknlabs/bazel-distribution",
-        commit="8dc6490f819d330361f46201e3390ce5457564a2"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_bazel_distribution
+        name = "graknlabs_build_tools",
+        remote = "https://github.com/graknlabs/build-tools",
+        commit = "02a6698a61aa4e63304deb2c1b364a46c305162f", # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_build_tools
     )
 
 
