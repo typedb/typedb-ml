@@ -48,7 +48,7 @@ class PMF:
             raise IndexError(f'Variable values have combined shape {values_shape}, whereas the PMF array given has '
                              f'shape {self._pmf_array.shape}')
 
-        if seed:
+        if seed is not None:
             np.random.seed(seed)
 
     def select(self):

@@ -31,24 +31,19 @@ def get_example_queries(pmf, example_id):
 
     variable_values = pmf.select()
 
-    queries = [(inspect.cleandoc(f'''insert 
-                $p isa person, 
-                has example-id 
-                {example_id};'''))]
+    queries = [f'insert $p isa person, has example-id {example_id};']
 
     if variable_values['Meningitis']:
         queries.append(inspect.cleandoc(f'''match
                        $d isa meningitis;
-                       $p isa person, has example-id 
-                       {example_id};
+                       $p isa person, has example-id {example_id};
                        insert
                        (patient: $p, diagnosed-disease: $d) 
                        isa diagnosis;'''))
 
     if variable_values['Flu']:
         queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id 
-                       {example_id};
+                       $p isa person, has example-id {example_id};
                        $d isa flu;
                        insert
                        (patient: $p, diagnosed-disease: $d) 
@@ -56,8 +51,7 @@ def get_example_queries(pmf, example_id):
 
     if variable_values['Light Sensitivity']:
         queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id 
-                       {example_id};
+                       $p isa person, has example-id {example_id};
                        $s isa light-sensitivity;
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
@@ -90,8 +84,10 @@ def main():
     session = client.session(keyspace=keyspace)
 
     pmf_array = np.zeros([2, 2, 2, 2], dtype=np.float)
-    pmf_array[0, 1, 1, 0] = 0.5
-    pmf_array[1, 0, 0, 1] = 0.5
+    pmf_array[0, 1, 0, 1] = 0.1
+    pmf_array[1, 0, 1, 0] = 0.15
+    pmf_array[0, 1, 1, 0] = 0.4
+    pmf_array[1, 0, 0, 1] = 0.35
 
     pmf = PMF({
         'Flu':                  [False, True],
