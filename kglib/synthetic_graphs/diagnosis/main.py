@@ -23,7 +23,7 @@ import os
 import numpy as np
 from grakn.client import GraknClient
 
-from datasets.synthetic.generate.pmf import PMF
+from kglib.synthetic_graphs.generate.pmf import PMF
 import subprocess as sp
 
 

@@ -6,7 +6,7 @@ py_library(
     name = "synthetic_graphs",
     srcs = glob(['**/*.py']),
     deps = [
-        '//datasets/synthetic/generate:generate',
+        '//kglib/synthetic_graphs/generate:generate',
         requirement('numpy'),
         requirement('pandas'),
         requirement('pytz'),
