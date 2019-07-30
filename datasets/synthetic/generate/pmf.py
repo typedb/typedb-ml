@@ -22,7 +22,7 @@ import pandas as pd
 
 
 class PMF:
-    def __init__(self, variables, pmf_array):
+    def __init__(self, variables, pmf_array, seed=None):
         """
         Probability Mass Function, the discrete equivalent of a Joint Probability Density Function
 
@@ -47,6 +47,9 @@ class PMF:
         if values_shape != self._pmf_array.shape:
             raise IndexError(f'Variable values have combined shape {values_shape}, whereas the PMF array given has '
                              f'shape {self._pmf_array.shape}')
+
+        if seed:
+            np.random.seed(seed)
 
     def select(self):
         """

@@ -17,76 +17,92 @@
 #  under the License.
 #
 
+import inspect
+import os
+
 import numpy as np
 from grakn.client import GraknClient
 
 from datasets.synthetic.generate.pmf import PMF
+import subprocess as sp
 
 
 def get_example_queries(pmf, example_id):
 
     variable_values = pmf.select()
 
-    queries = [(f'''insert 
+    queries = [(inspect.cleandoc(f'''insert 
                 $p isa person, 
                 has example-id 
-                {example_id};''')]
+                {example_id};'''))]
 
     if variable_values['Meningitis']:
-        queries.append(f'''match
+        queries.append(inspect.cleandoc(f'''match
                        $d isa meningitis;
                        $p isa person, has example-id 
                        {example_id};
                        insert
                        (patient: $p, diagnosed-disease: $d) 
-                       isa diagnosis;''')
+                       isa diagnosis;'''))
 
     if variable_values['Flu']:
-        queries.append(f'''match
+        queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id 
                        {example_id};
                        $d isa flu;
                        insert
                        (patient: $p, diagnosed-disease: $d) 
-                       isa diagnosis;''')
+                       isa diagnosis;'''))
 
     if variable_values['Light Sensitivity']:
-        queries.append(f'''match
+        queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id 
                        {example_id};
                        $s isa light-sensitivity;
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
-                       symptom-presentation;''')
+                       symptom-presentation;'''))
 
     if variable_values['Fever']:
-        queries.append(f'''match
+        queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id 
                        {example_id};
                        $s isa fever;
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
-                       symptom-presentation;''')
+                       symptom-presentation;'''))
 
     return queries
 
 
 def main():
+
+    keyspace = "diagnosis"
+
     client = GraknClient(uri="localhost:48555")
-    session = client.session(keyspace="diagnosis")
+    client.keyspaces().delete(keyspace)
+
+    sp.check_call([
+        './grakn', 'console', '-k', keyspace, '-f',
+        os.path.dirname(os.path.realpath(__file__)) + '/schema.gql'
+    ], cwd=os.getenv("GRAKN_BINARY_PATH"))
+
+    session = client.session(keyspace=keyspace)
 
     pmf_array = np.zeros([2, 2, 2, 2], dtype=np.float)
-    pmf_array[0, 1, 1, 1] = 1.0
+    pmf_array[0, 1, 1, 0] = 0.5
+    pmf_array[1, 0, 0, 1] = 0.5
 
     pmf = PMF({
         'Flu':                  [False, True],
         'Meningitis':           [False, True],
         'Light Sensitivity':    [False, True],
         'Fever':                [False, True]
-    }, pmf_array)
+    }, pmf_array, seed=0)
+
     print(pmf.to_dataframe())
 
-    for example_id in range(0, 2):
+    for example_id in range(0, 20):
         tx = session.transaction().write()
         for query in get_example_queries(pmf, example_id):
             tx.query(query)
