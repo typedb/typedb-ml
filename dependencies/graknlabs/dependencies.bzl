@@ -13,14 +13,15 @@ def graknlabs_bazel_distribution():
     git_repository(
         name="graknlabs_bazel_distribution",
         remote="https://github.com/graknlabs/bazel-distribution",
-        commit="62a9a6343e9f2a1aeed7c935e9092c0fd1e8e8ac"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_bazel_distribution
+        commit="8dc6490f819d330361f46201e3390ce5457564a2"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_bazel_distribution
     )
+
 
 def graknlabs_grakn_core():
     git_repository(
         name="graknlabs_grakn_core",
         remote="https://github.com/graknlabs/grakn",
-        commit="2845bb009876a74896bd479a7e49955c7fa1c7ca"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_grakn_core
+        commit="9dede119f3495c3611ccc7e3d65c076bcb71ea71"  # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_grakn_core
     )
 
 def graknlabs_client_python():
