@@ -21,7 +21,7 @@ import itertools
 
 import networkx as nx
 
-import kglib.kgcn_experimental.plotting
+from kglib.kgcn_experimental.plotting import plot_with_matplotlib
 from kglib.kgcn_experimental.encode import encode_types_one_hot, graph_to_input_target
 
 
@@ -253,4 +253,4 @@ def create_input_target_graphs(graphs, all_node_types, all_edge_types):
 
 if __name__ == "__main__":
     g = create_graph(12)
-    kglib.kgcn_experimental.plotting.plot_with_matplotlib(g)
+    plot_with_matplotlib(g)
