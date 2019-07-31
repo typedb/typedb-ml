@@ -18,7 +18,7 @@
 #
 
 from kglib.graph.create.from_queries import build_graph_from_queries
-from experiment_grakn.data import get_examples
+from experiment.genealogy.data import get_examples
 
 from grakn.client import GraknClient
 

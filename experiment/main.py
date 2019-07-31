@@ -24,9 +24,9 @@ import tensorflow as tf
 from graph_nets import utils_tf
 from graph_nets.demos import models
 
-from experiment_grakn.data import duplicate_edges_in_reverse, create_concept_graphs
+from experiment.genealogy.data import duplicate_edges_in_reverse, create_concept_graphs
 from experiment.feed import create_feed_dict, create_placeholders
-from experiment.data import create_input_target_graphs, create_graph
+from experiment.data import create_input_target_graphs
 from experiment.metrics import compute_accuracy
 from experiment.plotting import plot_input_vs_output, plot_across_training
 

@@ -19,7 +19,7 @@
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import build_thing, Thing
 import networkx as nx
 
-from experiment_grakn.data import create_concept_graphs, duplicate_edges_in_reverse
+from experiment.genealogy.data import create_concept_graphs, duplicate_edges_in_reverse
 from kglib.graph.test.case import GraphTestCase
 from grakn.client import GraknClient
 
