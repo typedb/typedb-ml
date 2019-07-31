@@ -22,8 +22,8 @@ import unittest
 import networkx as nx
 import numpy as np
 
-from experiment.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
-from experiment.encode import encode_types_one_hot
+from kglib.kgcn_experimental.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
+from kglib.kgcn_experimental.encode import encode_types_one_hot
 
 
 class TestDataGeneration(unittest.TestCase):

@@ -24,11 +24,11 @@ import tensorflow as tf
 from graph_nets import utils_tf
 from graph_nets.demos import models
 
-from experiment.genealogy.data import duplicate_edges_in_reverse, create_concept_graphs
-from experiment.feed import create_feed_dict, create_placeholders
-from experiment.data import create_input_target_graphs
-from experiment.metrics import compute_accuracy
-from experiment.plotting import plot_input_vs_output, plot_across_training
+from kglib.kgcn_experimental.genealogy.data import duplicate_edges_in_reverse, create_concept_graphs
+from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
+from kglib.kgcn_experimental.data import create_input_target_graphs
+from kglib.kgcn_experimental.metrics import compute_accuracy
+from kglib.kgcn_experimental.plotting import plot_input_vs_output, plot_across_training
 
 
 def create_loss_ops(target_op, output_ops):

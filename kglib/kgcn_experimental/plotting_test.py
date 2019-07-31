@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from graph_nets.utils_np import networkxs_to_graphs_tuple
 
-from experiment.data import create_input_target_graphs
-from experiment.plotting import plot_input_vs_output
+from kglib.kgcn_experimental.data import create_input_target_graphs
+from kglib.kgcn_experimental.plotting import plot_input_vs_output
 
 
 class TestPlotInputVsOutput(unittest.TestCase):
