@@ -17,27 +17,34 @@
 #  under the License.
 #
 
-from kglib.graph.create.from_queries import build_graph_from_queries
-from kglib.kgcn_experimental.genealogy.data import get_examples
+import random
 
-from grakn.client import GraknClient
+from kglib.kgcn_experimental.genealogy.data import create_concept_graphs
+from kglib.kgcn_experimental.model import model
 
 
 def main():
 
-    examples = get_examples()
+    graph_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
-    graphs = []
+    # The value at which to split the data into training and evaluation sets
+    tr_ge_split = int(len(graph_ids)/2)
 
-    with GraknClient(uri="localhost:48555") as client:
-        with client.session(keyspace="genealogy") as session:
+    random.seed(0)
+    random.shuffle(graph_ids)
+    print(f'Graphs used: {graph_ids}')
+    all_node_types = ['person', 'parentship', 'grandparentship', 'siblingship']
+    all_edge_types = ['parent', 'child', 'grandparent', 'grandchild', 'sibling']
 
-            for query_sampler_variable_graph_tuples in examples:
-
-                with session.transaction().write() as tx:
-
-                    combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
-                    graphs.append(combined_graph)
+    concept_graphs = create_concept_graphs(graph_ids)
+    model(concept_graphs,
+          all_node_types,
+          all_edge_types,
+          tr_ge_split,
+          num_processing_steps_tr=10,
+          num_processing_steps_ge=10,
+          num_training_iterations=10000,
+          log_every_seconds=2)
 
 
 if __name__ == "__main__":
