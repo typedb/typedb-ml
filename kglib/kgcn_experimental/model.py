@@ -63,12 +63,12 @@ def model(concept_graphs,
     """
     tf.reset_default_graph()
 
-    def prepare(graph):
+    raw_graphs = []
+    for graph in concept_graphs:
+        
         graph = nx.convert_node_labels_to_integers(graph, label_attribute='concept')
         duplicate_edges_in_reverse(graph)
-        return graph
-
-    raw_graphs = [prepare(graph) for graph in concept_graphs]
+        raw_graphs.append(graph)
 
     input_graphs, target_graphs = create_input_target_graphs(raw_graphs, all_node_types, all_edge_types)
     input_ph, target_ph = create_placeholders(input_graphs, target_graphs)
