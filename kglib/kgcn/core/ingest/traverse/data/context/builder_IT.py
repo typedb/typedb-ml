@@ -16,17 +16,22 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import os
+import subprocess as sp
 import unittest
 import unittest.mock as mock
 
 import grakn.client
 
-import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
 import kglib.kgcn.core.ingest.traverse.data.context.builder as builder
-import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mocks
+import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
+import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
+from kglib.kgcn.test.base import GraknServer
+
+TEST_KEYSPACE = "test_schema"
+TEST_URI = "localhost:48555"
 
 
 class ITContextBuilder(unittest.TestCase):
@@ -162,8 +167,8 @@ class ITContextBuilderWithRealGrakn(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        client = grakn.client.GraknClient(uri="localhost:48555")
-        cls.session = client.session(keyspace="test_schema")
+        client = grakn.client.GraknClient(uri=TEST_URI)
+        cls.session = client.session(keyspace=TEST_KEYSPACE)
 
         entity_query = "match $x isa company, has name 'Google'; get;"
         cls._tx = cls.session.transaction().write()
@@ -256,4 +261,12 @@ class ITContextBuilderWithRealGrakn(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+
+    with GraknServer() as gs:
+
+        sp.check_call([
+            'grakn', 'console', '-k', TEST_KEYSPACE, '-f',
+            os.getenv("TEST_SRCDIR") + '/kglib/kglib/kgcn/test_data/schema.gql'
+        ], cwd=gs.grakn_binary_location)
+
+        unittest.main()

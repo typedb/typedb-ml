@@ -12,12 +12,8 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 # We require loading bazel_rules from the graknlabs fork, not from bazel, since we've patched the python rules to work with TensorFlow
-git_repository(
-    name = "io_bazel_rules_python",
-    # Grakn python rules
-    remote = "https://github.com/graknlabs/rules_python.git",
-    commit = "4443fa25feac79b0e4c7c63ca84f87a1d6032f49",
-)
+load("//dependencies/graknlabs:dependencies.bzl", "io_bazel_rules_python")
+io_bazel_rules_python()
 
 ## Only needed for PIP support:
 load("@io_bazel_rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
@@ -29,11 +25,8 @@ pip_repositories()
 ########################################################################################################################
 
 # Load Bazel Distribution here, since it is required for kglib and for grakn
-git_repository(
-    name="graknlabs_bazel_distribution",
-    remote="https://github.com/graknlabs/bazel-distribution",
-    commit="62a9a6343e9f2a1aeed7c935e9092c0fd1e8e8ac"
-)
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_bazel_distribution")
+graknlabs_bazel_distribution()
 
 # --- Load the dependencies of graknlabs_bazel_distribution ---
 
@@ -78,6 +71,24 @@ load("@graknlabs_bazel_distribution_pip//:requirements.bzl", graknlabs_bazel_dis
 graknlabs_bazel_distribution_pip_install()
 
 
+
+###################################
+# Load Client Python Dependencies #
+###################################
+
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_client_python")
+graknlabs_client_python()
+
+pip3_import(
+    name = "graknlabs_client_python_pip",
+    requirements = "@graknlabs_client_python//:requirements.txt",
+)
+
+load("@graknlabs_client_python_pip//:requirements.bzl",
+graknlabs_client_python_pip_install = "pip_install")
+graknlabs_client_python_pip_install()
+
+
 ########################################################################################################################
 # Load KGLIB's PyPi requirements
 ########################################################################################################################
@@ -93,26 +104,11 @@ pip_install_kglib_requirements()
 
 
 ########################################################################################################################
-# Load the pre-loaded Animal Trade Grakn distribution
-########################################################################################################################
-
-http_file(
-  name = "animaltrade_dist",
-  urls = ["https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip", # TODO How to update to the latest relase each time?
-  ]
-)
-
-
-########################################################################################################################
 # Load Grakn
 ########################################################################################################################
 
-git_repository(
-    name="graknlabs_grakn_core",
-    remote="https://github.com/graknlabs/grakn",
-    commit="2845bb009876a74896bd479a7e49955c7fa1c7ca"
-)
-
+load("//dependencies/graknlabs:dependencies.bzl", "graknlabs_grakn_core")
+graknlabs_grakn_core()
 
 ################################
 # Load Grakn Labs dependencies #

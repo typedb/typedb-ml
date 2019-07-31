@@ -18,7 +18,6 @@
 #
 
 import os
-import subprocess as sub
 import time
 import unittest
 
@@ -75,16 +74,6 @@ NEIGHBOUR_SAMPLE_SIZES = (2, 1)
 
 
 class TestEndToEnd(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-
-        # Unzip the Grakn distribution containing our data
-        sub.run(['unzip', 'external/animaltrade_dist/file/downloaded', '-d',
-                          'external/animaltrade_dist/file/downloaded-unzipped'])
-
-        # Start Grakn
-        sub.run(['external/animaltrade_dist/file/downloaded-unzipped/grakn-core-all-mac-animaltrade1.5.3/grakn', 'server', 'start'])
 
     def test_multi_class_single_label_classification_end_to_end(self):
         tf.reset_default_graph()

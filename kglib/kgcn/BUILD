@@ -1,6 +1,7 @@
 load("@io_bazel_rules_python//python:python.bzl", "py_test", "py_library")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
 
+exports_files(["test_data/schema.gql"])
 
 py_test(
     name = "ordered_test",
@@ -69,6 +70,10 @@ py_test(
     ],
     deps = [
         "kgcn",
+    ],
+    data = [
+        "@graknlabs_grakn_core//:assemble-mac-zip",
+        ":test_data/schema.gql"
     ]
 )
 
@@ -99,6 +104,10 @@ py_test(
     ],
     deps = [
         "kgcn",
+    ],
+    data = [
+        "@graknlabs_grakn_core//:assemble-mac-zip",
+        ":test_data/schema.gql"
     ]
 )
 
@@ -109,6 +118,10 @@ py_test(
     ],
     deps = [
         "kgcn",
+    ],
+    data = [
+        "@graknlabs_grakn_core//:assemble-mac-zip",
+        ":test_data/schema.gql"
     ]
 )
 
@@ -120,6 +133,10 @@ py_test(
     ],
     deps = [
         "kgcn",
+    ],
+    data = [
+        "@graknlabs_grakn_core//:assemble-mac-zip",
+        ":test_data/schema.gql"
     ]
 )
 
@@ -158,8 +175,7 @@ py_library(
     srcs = glob(['**/*.py']),
     deps = [
         # Grakn deps
-        requirement('grakn-client'),
-        requirement('grpcio'),
+        "@graknlabs_client_python//:client_python",
 
         # TensorFlow deps
         requirement('tensorflow'),
