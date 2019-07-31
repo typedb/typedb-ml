@@ -24,7 +24,7 @@ import tensorflow as tf
 from graph_nets import utils_tf
 from graph_nets.demos import models
 
-from kglib.kgcn_experimental.data import create_input_target_graphs
+from kglib.kgcn_experimental.encode import encode_types_one_hot, graph_to_input_target
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.genealogy.data import duplicate_edges_in_reverse
 from kglib.kgcn_experimental.metrics import compute_accuracy
@@ -45,6 +45,27 @@ def make_all_runnable_in_session(*args):
     return [utils_tf.make_runnable_in_session(a) for a in args]
 
 
+def create_input_target_graphs(graphs, all_node_types, all_edge_types):
+    """
+    Builds graphs ready to be used for training
+    :param graph: The list of graphs to use
+    :param all_node_types: All of the types that can occur at nodes, for encoding purposes
+    :param all_edge_types: All of the types that can occur at edges, for encoding purposes
+    :return: the input graphs, the target (desired output) graphs, and the original_graphs
+    """
+
+    input_graphs = []
+    target_graphs = []
+    for graph in graphs:
+        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
+
+        input_graph, target_graph = graph_to_input_target(graph)
+        input_graphs.append(input_graph)
+        target_graphs.append(target_graph)
+
+    return input_graphs, target_graphs
+
+
 def model(concept_graphs,
           all_node_types,
           all_edge_types,
@@ -58,7 +79,7 @@ def model(concept_graphs,
         concept_graphs: In-memory graphs of Grakn concepts
         all_node_types: All of the node types present in the `concept_graphs`
         all_edge_types: All of the edge types present in the `concept_graphs`
-        tr_ge_split: Integer at which to split the graphs between training and generalisation 
+        tr_ge_split: Integer at which to split the graphs between training and generalisation
         num_processing_steps_tr: Number of processing (message-passing) steps for training.
         num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
         num_training_iterations: Number of training iterations

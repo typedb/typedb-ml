@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.kgcn_experimental.data import create_graph
+from kglib.kgcn_experimental.genealogy.in_memory.data import create_graph
 from kglib.kgcn_experimental.encode import encode_types_one_hot, graph_to_input_target
 
 
