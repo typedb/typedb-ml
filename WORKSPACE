@@ -12,7 +12,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
 # We require loading bazel_rules from the graknlabs fork, not from bazel, since we've patched the python rules to work with TensorFlow
-load("//dependencies/graknlabs:dependencies.bzl", "io_bazel_rules_python")
+load("//dependencies/python:dependencies.bzl", "io_bazel_rules_python")
 io_bazel_rules_python()
 
 ## Only needed for PIP support:
