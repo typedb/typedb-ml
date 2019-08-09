@@ -103,7 +103,7 @@ def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge):
     # off the shortest path, blue means the model is confident the node is on the
     # shortest path, and purplish colors mean the model isn't sure.
 
-    max_graphs_to_plot = 6
+    max_graphs_to_plot = 10
     num_steps_to_plot = 3
     node_size = 120
 

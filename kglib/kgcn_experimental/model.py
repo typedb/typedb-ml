@@ -120,7 +120,7 @@ def model(concept_graphs,
     start_time = time.time()
     last_log_time = start_time
     for iteration in range(last_iteration, num_training_iterations):
-        feed_dict, _ = create_feed_dict("tr", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
+        feed_dict, tr_raw_graphs = create_feed_dict("tr", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
         train_values = sess.run(
             {
                 "step": step_op,
@@ -159,4 +159,5 @@ def model(concept_graphs,
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
     plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
+    plot_input_vs_output(tr_raw_graphs, train_values, num_processing_steps_ge)
     plot_input_vs_output(ge_raw_graphs, test_values, num_processing_steps_ge)
