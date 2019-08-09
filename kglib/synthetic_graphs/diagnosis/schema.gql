@@ -6,21 +6,30 @@ example-id sub attribute,
 person sub entity,
     has example-id,
     plays patient,
+    plays candidate-patient,
     plays symptomatic-patient;
 
 disease sub entity,
     plays cause,
-    plays diagnosed-disease;
+    plays diagnosed-disease,
+    plays candidate-diagnosed-disease;
 
 diagnosis sub relation,
     relates patient,
-    relates diagnosed-disease,
-    relates suspected-cause;
+    relates diagnosed-disease;
 
 candidate-diagnosis sub relation,
     relates candidate-patient,
-    relates candidate-diagnosed-disease,
-    relates candidate-suspected-cause;
+    relates candidate-diagnosed-disease;
+
+where-no-diagnosis-add-candidate-diagnosis sub rule,
+    when {
+        $p isa person;
+        $d isa disease;
+        not{ (patient: $p, diagnosed-disease: $d) isa diagnosis; };
+    }, then {
+        (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
+    };
 
 
 meningitis sub disease;

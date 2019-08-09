@@ -50,8 +50,8 @@ def model(concept_graphs,
     """
     Args:
         concept_graphs: In-memory graphs of Grakn concepts
-        all_node_types: All of the node types present in the `concept_graphs`
-        all_edge_types: All of the edge types present in the `concept_graphs`
+        all_node_types: All of the node types present in the `concept_graphs`, used for encoding
+        all_edge_types: All of the edge types present in the `concept_graphs`, used for encoding
         tr_ge_split: Integer at which to split the graphs between training and generalisation
         num_processing_steps_tr: Number of processing (message-passing) steps for training.
         num_processing_steps_ge: Number of processing (message-passing) steps for generalization.

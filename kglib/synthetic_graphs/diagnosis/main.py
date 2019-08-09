@@ -69,12 +69,11 @@ def get_example_queries(pmf, example_id):
     return queries
 
 
-def main():
+def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:48555"):
 
-    keyspace = "diagnosis"
-
-    client = GraknClient(uri="localhost:48555")
+    client = GraknClient(uri=uri)
     client.keyspaces().delete(keyspace)
+
 
     sp.check_call([
         './grakn', 'console', '-k', keyspace, '-f',
@@ -98,9 +97,10 @@ def main():
 
     print(pmf.to_dataframe())
 
-    for example_id in range(0, 20):
+    for example_id in range(0, num_examples):
         tx = session.transaction().write()
         for query in get_example_queries(pmf, example_id):
+            print(query)
             tx.query(query)
         tx.commit()
 
@@ -109,4 +109,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    generate_example_graphs(20, keyspace="diagnosis", uri="localhost:48555")
