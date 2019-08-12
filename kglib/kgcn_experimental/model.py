@@ -64,11 +64,11 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
     loss_ops = []
     for output_op in output_ops:
 
-        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0.]))), axis=1)
+        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))), axis=1)
         target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
         output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
 
-        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0.]))), axis=1)
+        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))), axis=1)
         target_edges = tf.boolean_mask(target_op.nodes, edge_mask_op)
         output_edges = tf.boolean_mask(output_op.nodes, edge_mask_op)
 
@@ -116,17 +116,17 @@ def model(concept_graphs,
 
     # Connect the data to the model.
     # Instantiate the model.
-    model = models.EncodeProcessDecode(edge_output_size=2, node_output_size=2)
+    model = models.EncodeProcessDecode(edge_output_size=3, node_output_size=3)
     # A list of outputs, one per processing step.
     output_ops_tr = model(input_ph, num_processing_steps_tr)
     output_ops_ge = model(input_ph, num_processing_steps_ge)
 
     # Training loss.
-    loss_ops_tr = loss_ops_preexisting_no_penalty(target_ph, output_ops_tr)
+    loss_ops_tr = loss_ops_from_difference(target_ph, output_ops_tr)
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
     # Test/generalization loss.
-    loss_ops_ge = loss_ops_preexisting_no_penalty(target_ph, output_ops_ge)
+    loss_ops_ge = loss_ops_from_difference(target_ph, output_ops_ge)
     loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
 
     # Optimizer.

@@ -35,9 +35,9 @@ class TestPlotInputVsOutput(unittest.TestCase):
 
         graph = nx.MultiDiGraph(name=0)
 
-        existing = dict(input=1, solution=1)
-        to_infer = dict(input=0, solution=1)
-        candidate = dict(input=0, solution=0)
+        existing = dict(input=1, solution=0)
+        to_infer = dict(input=0, solution=2)
+        candidate = dict(input=0, solution=1)
 
         # people
         graph.add_node(0, type='person', **existing)

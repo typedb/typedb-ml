@@ -95,7 +95,7 @@ def plot_with_matplotlib(G):
     plt.show()
 
 
-def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge):
+def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge, solution_weights=(-0.5, 0.5, 0.5)):
 
     # # Plot graphs and results after each processing step.
     # The white node is the start, and the black is the end. Other nodes are colored
@@ -123,9 +123,7 @@ def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge):
         if j >= h:
             break
         for s, r, d in graph.edges(data=True):
-            # d['weight'] = 1 - (d['solution']-0.5)  # Looks good with k = 3
-            d['weight'] = (d['solution']-0.5)  # Looks good with high k
-            # d['weight'] = d['solution']  # Looks good with k=3 but spacing is small
+            d['weight'] = solution_weights[d['solution']]  # Looks good with high k
         pos = nx.spring_layout(graph, k=3 / math.sqrt(graph.number_of_nodes()), seed=1, weight='weight', iterations=50)
         # pos = nx.circular_layout(graph, scale=2)
         ground_truth_node_prob = target["nodes"][:, -1]
@@ -176,9 +174,9 @@ def element_color(gt_plot, probability, element_props):
     blue for existing elements, green for those to infer, red for candidates, all with transparency
     """
 
-    existing = dict(input=1, solution=2)
-    to_infer = dict(input=0, solution=1)
-    candidate = dict(input=0, solution=0)
+    existing = dict(input=1, solution=0)
+    to_infer = dict(input=0, solution=2)
+    candidate = dict(input=0, solution=1)
 
     to_infer = all([element_props.get(key) == value for key, value in to_infer.items()])
     candidate = all([element_props.get(key) == value for key, value in candidate.items()])

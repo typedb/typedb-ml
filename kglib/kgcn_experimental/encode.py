@@ -75,7 +75,7 @@ def encode_solution(category_index):
     Returns: Encoding for the category
 
     """
-    return np.array([[1., 0.], [0., 1.], [0., 0.]])[category_index][0]
+    return np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])[category_index][0]
 
 
 def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):
