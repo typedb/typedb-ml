@@ -20,6 +20,7 @@
 import time
 
 import networkx as nx
+import numpy as np
 import tensorflow as tf
 from graph_nets.demos import models
 
@@ -30,12 +31,52 @@ from kglib.kgcn_experimental.prepare import make_all_runnable_in_session, create
     duplicate_edges_in_reverse
 
 
-def create_loss_ops(target_op, output_ops):
+def loss_ops_from_difference(target_op, output_ops):
+    """
+    Loss operation which directly compares the target with the output over all nodes and edges
+    Args:
+        target_op: The target of the model
+        output_ops: A list of the outputs of the model, one for each message-passing step
+
+    Returns: The loss for each message-passing step
+
+    """
     loss_ops = [
       tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
       tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
       for output_op in output_ops
     ]
+    return loss_ops
+
+
+def loss_ops_preexisting_no_penalty(target_op, output_ops):
+    """
+    Loss operation which doesn't penalise the output values for pre-existing nodes and edges, treating them as slack
+    variables
+
+    Args:
+        target_op: The target of the model
+        output_ops: A list of the outputs of the model, one for each message-passing step
+
+    Returns: The loss for each message-passing step
+
+    """
+    loss_ops = []
+    for output_op in output_ops:
+
+        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0.]))), axis=1)
+        target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
+        output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
+
+        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0.]))), axis=1)
+        target_edges = tf.boolean_mask(target_op.nodes, edge_mask_op)
+        output_edges = tf.boolean_mask(output_op.nodes, edge_mask_op)
+
+        loss_op = (tf.losses.softmax_cross_entropy(target_nodes, output_nodes)
+                   + tf.losses.softmax_cross_entropy(target_edges, output_edges))
+
+        loss_ops.append(loss_op)
+
     return loss_ops
 
 
@@ -81,11 +122,11 @@ def model(concept_graphs,
     output_ops_ge = model(input_ph, num_processing_steps_ge)
 
     # Training loss.
-    loss_ops_tr = create_loss_ops(target_ph, output_ops_tr)
+    loss_ops_tr = loss_ops_preexisting_no_penalty(target_ph, output_ops_tr)
     # Loss across processing steps.
     loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
     # Test/generalization loss.
-    loss_ops_ge = create_loss_ops(target_ph, output_ops_ge)
+    loss_ops_ge = loss_ops_preexisting_no_penalty(target_ph, output_ops_ge)
     loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
 
     # Optimizer.
@@ -159,5 +200,4 @@ def model(concept_graphs,
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
     plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-    plot_input_vs_output(tr_raw_graphs, train_values, num_processing_steps_ge)
     plot_input_vs_output(ge_raw_graphs, test_values, num_processing_steps_ge)

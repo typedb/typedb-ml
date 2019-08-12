@@ -58,7 +58,7 @@ class QueryHandler:
     def __init__(self):
         # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to
         # exist
-        self.existing = dict(input=1, solution=1)
+        self.existing = dict(input=1, solution=2)
 
         # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive
         # examples

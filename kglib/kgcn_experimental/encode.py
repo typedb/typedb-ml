@@ -47,14 +47,16 @@ def graph_to_input_target(graph):
 
     for node_index, node_feature in graph.nodes(data=True):
         input_graph.nodes[node_index]['features'] = create_feature(node_feature, input_node_fields)
-        target_node = to_one_hot(create_feature(node_feature, target_node_fields).astype(int), 2)[0]
-        target_graph.nodes[node_index]['features'] = target_node
+        solution_category = create_feature(node_feature, target_node_fields).astype(int)
+        target_node_features = encode_solution(solution_category)
+        target_graph.nodes[node_index]['features'] = target_node_features
 
     for receiver, sender, edge_features in graph.edges(data=True):
         input_graph.edges[receiver, sender, 0]['features'] = create_feature(edge_features, input_edge_fields)
 
-        target_edge = to_one_hot(create_feature(edge_features, target_edge_fields).astype(int), 2)[0]
-        target_graph.edges[receiver, sender, 0]['features'] = target_edge
+        solution_category = create_feature(edge_features, target_edge_fields).astype(int)
+        target_edge_features = encode_solution(solution_category)
+        target_graph.edges[receiver, sender, 0]['features'] = target_edge_features
 
     input_graph.graph["features"] = np.array([0.0]*5)
     target_graph.graph["features"] = np.array([0.0]*5)
@@ -62,11 +64,18 @@ def graph_to_input_target(graph):
     return input_graph, target_graph
 
 
-def to_one_hot(indices, max_value, axis=-1):
-    one_hot = np.eye(max_value)[indices]
-    if axis not in (-1, one_hot.ndim):
-        one_hot = np.moveaxis(one_hot, -1, axis)
-    return one_hot
+def encode_solution(category_index):
+    """
+    Determines the encoding to use for a solution category
+    Args:
+        category_index: 0 to indicate a negative candidate in the solution,
+                        1 to indicate a positive candidate in the solution,
+                        2 to indicate pre-existing elements
+
+    Returns: Encoding for the category
+
+    """
+    return np.array([[1., 0.], [0., 1.], [0., 0.]])[category_index][0]
 
 
 def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):

@@ -176,7 +176,7 @@ def element_color(gt_plot, probability, element_props):
     blue for existing elements, green for those to infer, red for candidates, all with transparency
     """
 
-    existing = dict(input=1, solution=1)
+    existing = dict(input=1, solution=2)
     to_infer = dict(input=0, solution=1)
     candidate = dict(input=0, solution=0)
 
