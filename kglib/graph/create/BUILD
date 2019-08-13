@@ -23,6 +23,9 @@ py_test(
         "create",
         "//kglib/graph/test",
         "//kglib/graph/mock"
+    ],
+    data = [
+        "@graknlabs_grakn_core//:assemble-mac-zip",
     ]
 )
 

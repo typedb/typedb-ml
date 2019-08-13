@@ -16,10 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
-
 import unittest
-import warnings
 
 import networkx as nx
 from grakn.client import GraknClient
@@ -30,6 +27,9 @@ from kglib.graph.mock.answer import MockConceptMap
 from kglib.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 from kglib.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing, build_thing
+from kglib.kgcn.test.base import GraknServer
+
+TEST_URI = "localhost:48555"
 
 
 def mock_sampler(input_iter):
@@ -261,4 +261,6 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+
+    with GraknServer() as gs:
+        unittest.main()
