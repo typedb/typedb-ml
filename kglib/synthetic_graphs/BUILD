@@ -10,7 +10,8 @@ py_library(
         requirement('numpy'),
         requirement('pandas'),
         requirement('pytz'),
-        requirement('python-dateutil')
+        requirement('python-dateutil'),
+        requirement('six')
     ],
     visibility=['//visibility:public']
 )
