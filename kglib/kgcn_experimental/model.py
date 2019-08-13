@@ -103,6 +103,7 @@ def model(concept_graphs,
 
     """
     tf.reset_default_graph()
+    tf.set_random_seed(1)
 
     raw_graphs = []
     for graph in concept_graphs:
