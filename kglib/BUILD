@@ -7,6 +7,7 @@ py_library(
     deps = [
         '//kglib/kgcn',
         '//kglib/graph',
+        '//kglib/synthetic_graphs'
     ],
     visibility=['//visibility:public']
 )
