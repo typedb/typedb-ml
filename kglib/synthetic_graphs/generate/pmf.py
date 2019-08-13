@@ -17,12 +17,12 @@
 #  under the License.
 #
 
-
 import numpy as np
+import pandas as pd
 
 
 class PMF:
-    def __init__(self, variables, pmf_array):
+    def __init__(self, variables, pmf_array, seed=None):
         """
         Probability Mass Function, the discrete equivalent of a Joint Probability Density Function
 
@@ -48,6 +48,9 @@ class PMF:
             raise IndexError(f'Variable values have combined shape {values_shape}, whereas the PMF array given has '
                              f'shape {self._pmf_array.shape}')
 
+        if seed is not None:
+            np.random.seed(seed)
+
     def select(self):
         """
         Select a set of variable values from the PMF, using the probabilities supplied in `pmf_array` as weights.
@@ -66,3 +69,17 @@ class PMF:
         for index, (variable, discrete_values) in zip(chosen_index, self._variables.items()):
             answer[variable] = discrete_values[index]
         return answer
+
+    def to_dataframe(self):
+        """
+        Creates a DataFrame of the PMF, most useful for visualisation purposes
+
+        Returns:
+            A pandas DataFrame, multi-indexed by the variables and their possible values
+
+        """
+        variables = list(self._variables.keys())
+        variable_values = list(self._variables.values())
+        index = pd.MultiIndex.from_product(variable_values, names=variables)
+
+        return pd.DataFrame(self._pmf_array.flatten(), index=index)
