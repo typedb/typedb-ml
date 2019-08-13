@@ -116,7 +116,7 @@ def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge, solut
         zip(*(utils_np.graphs_tuple_to_data_dicts(test_values["outputs"][i])
               for i in step_indices)))
     h = min(num_graphs, max_graphs_to_plot)
-    w = num_steps_to_plot + 1
+    w = num_steps_to_plot + 2
     fig = plt.figure(101, figsize=(18, h * 3))
     fig.clf()
     for j, (graph, target, output) in enumerate(zip(raw_graphs, targets, outputs)):
@@ -130,7 +130,7 @@ def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge, solut
         ground_truth_edge_prob = target["edges"][:, -1]
 
         # Ground truth.
-        iax = j * (1 + num_steps_to_plot) + 1
+        iax = j * (2 + num_steps_to_plot) + 1
         ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, ground_truth_node_prob, ground_truth_edge_prob, True)
 
         # Format the ground truth plot axes
@@ -146,18 +146,42 @@ def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge, solut
 
         # Prediction.
         for k, outp in enumerate(output):
-            iax = j * (1 + num_steps_to_plot) + 2 + k
+            iax = j * (2 + num_steps_to_plot) + 2 + k
             node_prob = softmax_prob_last_dim(outp["nodes"])
             edge_prob = softmax_prob_last_dim(outp["edges"])
             ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
+
+        # Class Winners
+        # Displays whether the class represented by the last dimension was the winner
+        node_prob = last_dim_was_class_winner(output[-1]["nodes"])
+        edge_prob = last_dim_was_class_winner(output[-1]["edges"])
+
+        iax = j * (2 + num_steps_to_plot) + 2 + len(output)
+        ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
+
+        # Format the class winners plot axes
+        ax.set_axis_on()
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.spines['bottom'].set_color('green')
+        ax.spines['top'].set_color('green')
+        ax.spines['right'].set_color('green')
+        ax.spines['left'].set_color('green')
+        ax.grid(None)
+        ax.set_title("Model-predicted winners")
+
     plt.show()
 
 
 def softmax_prob_last_dim(x):
     e = np.exp(x)
     return e[:, -1] / np.sum(e, axis=-1)
+
+
+def last_dim_was_class_winner(x):
+    return (np.argmax(x, axis=-1) == 2) * 1
 
 
 def above_base(val, base=0.0):
