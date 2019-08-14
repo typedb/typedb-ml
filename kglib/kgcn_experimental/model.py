@@ -80,20 +80,20 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
     return loss_ops
 
 
-def model(concept_graphs,
+def model(tr_graphs,
+          ge_graphs,
           all_node_types,
           all_edge_types,
-          tr_ge_split,
           num_processing_steps_tr=10,
           num_processing_steps_ge=10,
           num_training_iterations=10000,
           log_every_seconds=2):
     """
     Args:
-        concept_graphs: In-memory graphs of Grakn concepts
+        tr_graphs: In-memory graphs of Grakn concepts for training
+        ge_graphs: In-memory graphs of Grakn concepts for generalisation
         all_node_types: All of the node types present in the `concept_graphs`, used for encoding
         all_edge_types: All of the edge types present in the `concept_graphs`, used for encoding
-        tr_ge_split: Integer at which to split the graphs between training and generalisation
         num_processing_steps_tr: Number of processing (message-passing) steps for training.
         num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
         num_training_iterations: Number of training iterations
@@ -105,15 +105,16 @@ def model(concept_graphs,
     tf.reset_default_graph()
     tf.set_random_seed(1)
 
-    raw_graphs = []
-    for graph in concept_graphs:
-        
-        graph = nx.convert_node_labels_to_integers(graph, label_attribute='concept')
-        duplicate_edges_in_reverse(graph)
-        raw_graphs.append(graph)
+    tr_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in tr_graphs]
+    gen_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in ge_graphs]
 
-    input_graphs, target_graphs = create_input_target_graphs(raw_graphs, all_node_types, all_edge_types)
-    input_ph, target_ph = create_placeholders(input_graphs, target_graphs)
+    tr_graphs = [duplicate_edges_in_reverse(graph) for graph in tr_graphs]
+    gen_graphs = [duplicate_edges_in_reverse(graph) for graph in gen_graphs]
+
+    tr_input_graphs, tr_target_graphs = create_input_target_graphs(tr_graphs, all_node_types, all_edge_types)
+    ge_input_graphs, ge_target_graphs = create_input_target_graphs(gen_graphs, all_node_types, all_edge_types)
+
+    input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
 
     # Connect the data to the model.
     # Instantiate the model.
@@ -162,7 +163,7 @@ def model(concept_graphs,
     start_time = time.time()
     last_log_time = start_time
     for iteration in range(last_iteration, num_training_iterations):
-        feed_dict, tr_raw_graphs = create_feed_dict("tr", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
+        feed_dict = create_feed_dict(input_ph, target_ph, tr_input_graphs, tr_target_graphs)
         train_values = sess.run(
             {
                 "step": step_op,
@@ -175,7 +176,7 @@ def model(concept_graphs,
         elapsed_since_last_log = the_time - last_log_time
         if elapsed_since_last_log > log_every_seconds:
             last_log_time = the_time
-            feed_dict, ge_raw_graphs = create_feed_dict("ge", tr_ge_split, input_ph, target_ph, input_graphs, target_graphs, raw_graphs)
+            feed_dict = create_feed_dict(input_ph, target_ph, ge_input_graphs, ge_target_graphs)
             test_values = sess.run(
                 {
                     "target": target_ph,
@@ -200,5 +201,6 @@ def model(concept_graphs,
                       iteration, elapsed, train_values["loss"], test_values["loss"],
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
+    # Process the outputs back into data_dicts
     plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-    plot_input_vs_output(ge_raw_graphs, test_values, num_processing_steps_ge)
+    plot_input_vs_output(gen_graphs, test_values, num_processing_steps_ge)

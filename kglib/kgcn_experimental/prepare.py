@@ -57,3 +57,4 @@ def duplicate_edges_in_reverse(graph):
     """
     for sender, receiver, keys, data in graph.edges(data=True, keys=True):
         graph.add_edge(receiver, sender, keys, **data)
+    return graph

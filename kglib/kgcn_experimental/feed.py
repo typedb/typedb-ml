@@ -32,26 +32,19 @@ def create_placeholders(input_graphs, target_graphs):
     return input_ph, target_ph
 
 
-def create_feed_dict(tr_or_ge, tr_ge_split, input_ph, target_ph, inputs, targets, raw_graphs):
+def create_feed_dict(input_ph, target_ph, inputs, targets):
     """Creates the feed dict for the placeholders for the model training and evaluation.
 
     Args:
-    input_ph: The input graph's placeholders, as a graph namedtuple.
-    target_ph: The target graph's placeholders, as a graph namedtuple.
+        input_ph: The input graph's placeholders, as a graph namedtuple.
+        target_ph: The target graph's placeholders, as a graph namedtuple.
+        inputs: The input graphs
+        targets: The target graphs
 
     Returns:
-    feed_dict: The feed `dict` of input and target placeholders and data.
-    raw_graphs: The `dict` of raw networkx graphs.
-    :param tr_ge_split:
+        feed_dict: The feed `dict` of input and target placeholders and data.
     """
-    if tr_or_ge == "tr":
-        start = 0
-        end = tr_ge_split
-    elif tr_or_ge == "ge":
-        start = tr_ge_split
-        end = None
-
-    input_graphs = utils_np.networkxs_to_graphs_tuple(inputs[start:end])
-    target_graphs = utils_np.networkxs_to_graphs_tuple(targets[start:end])
+    input_graphs = utils_np.networkxs_to_graphs_tuple(inputs)
+    target_graphs = utils_np.networkxs_to_graphs_tuple(targets)
     feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
-    return feed_dict, raw_graphs[start:end]
+    return feed_dict

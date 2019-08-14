@@ -35,7 +35,8 @@ def main():
 
     generate_example_graphs(num_graphs, keyspace=keyspace, uri=uri)
 
-    # Get the node and edge types
+    # Get the node and edge types, these can simply be passed as a list, but here we query the schema and then remove
+    # unwanted types and roles
 
     with GraknClient(uri=uri) as client:
         with client.session(keyspace=keyspace) as session:
@@ -55,10 +56,14 @@ def main():
                 print(all_edge_types)
 
     concept_graphs = create_concept_graphs(list(range(num_graphs)), keyspace, uri)
-    model(concept_graphs,
+
+    training_graphs = concept_graphs[:tr_ge_split]
+    generalisation_graphs = concept_graphs[tr_ge_split:]
+
+    model(training_graphs,
+          generalisation_graphs,
           all_node_types,
           all_edge_types,
-          tr_ge_split,
           num_processing_steps_tr=10,
           num_processing_steps_ge=10,
           num_training_iterations=1000,
