@@ -26,7 +26,6 @@ from graph_nets.demos import models
 
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
-from kglib.kgcn_experimental.plotting import plot_input_vs_output, plot_across_training
 from kglib.kgcn_experimental.prepare import make_all_runnable_in_session, create_input_target_graphs, \
     duplicate_edges_in_reverse
 
@@ -106,13 +105,13 @@ def model(tr_graphs,
     tf.set_random_seed(1)
 
     tr_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in tr_graphs]
-    gen_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in ge_graphs]
+    ge_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in ge_graphs]
 
     tr_graphs = [duplicate_edges_in_reverse(graph) for graph in tr_graphs]
-    gen_graphs = [duplicate_edges_in_reverse(graph) for graph in gen_graphs]
+    ge_graphs = [duplicate_edges_in_reverse(graph) for graph in ge_graphs]
 
     tr_input_graphs, tr_target_graphs = create_input_target_graphs(tr_graphs, all_node_types, all_edge_types)
-    ge_input_graphs, ge_target_graphs = create_input_target_graphs(gen_graphs, all_node_types, all_edge_types)
+    ge_input_graphs, ge_target_graphs = create_input_target_graphs(ge_graphs, all_node_types, all_edge_types)
 
     input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
 
@@ -201,6 +200,6 @@ def model(tr_graphs,
                       iteration, elapsed, train_values["loss"], test_values["loss"],
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
-    # Process the outputs back into data_dicts
-    plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-    plot_input_vs_output(gen_graphs, test_values, num_processing_steps_ge)
+    log_info = logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge
+
+    return train_values, test_values, log_info
