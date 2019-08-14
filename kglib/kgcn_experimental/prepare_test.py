@@ -18,10 +18,12 @@
 #
 
 import networkx as nx
+import numpy as np
+from graph_nets.graphs import GraphsTuple
 
 from kglib.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
-from kglib.kgcn_experimental.prepare import duplicate_edges_in_reverse
+from kglib.kgcn_experimental.prepare import duplicate_edges_in_reverse, apply_logits_to_graphs
 
 
 class TestDuplicateEdgesInReverse(GraphTestCase):
@@ -59,3 +61,38 @@ class TestDuplicateEdgesInReverse(GraphTestCase):
         expected_graph.add_edge(p0, par0, type='parent', input=1, solution=1)
         expected_graph.add_edge(p1, par0, type='child', input=1, solution=1)
         self.assertGraphsEqual(expected_graph, graph)
+
+
+class TestApplyLogitsToGraphs(GraphTestCase):
+    def test_logits_applied_as_expected(self):
+
+        graph = nx.MultiDiGraph(name=0)
+        graph.add_node(0)
+        graph.add_node(1)
+        graph.add_edge(0, 1)
+
+        nodes = np.array([[0.2, 0.3, 0.01], [0.56, -0.04, 0.05]], dtype=np.float64)
+        edges = np.array([[0.5, 0.008, -0.1]], dtype=np.float64)
+
+        globals = None
+        senders = np.array([0])
+        receivers = np.array([1])
+        n_node = np.array([2])
+        n_edge = np.array([1])
+
+        graphstuple = GraphsTuple(nodes=nodes,
+                                  edges=edges,
+                                  globals=globals,
+                                  receivers=receivers,
+                                  senders=senders,
+                                  n_node=n_node,
+                                  n_edge=n_edge)
+
+        expected_graph = nx.MultiDiGraph(name=0)
+        expected_graph.add_node(0, logits=[0.2, 0.3, 0.01])
+        expected_graph.add_node(1, logits=[0.56, -0.04, 0.05])
+        expected_graph.add_edge(0, 1, logits=[0.5, 0.008, -0.1])
+
+        graphs = apply_logits_to_graphs([graph], graphstuple)
+
+        self.assertGraphsEqual(expected_graph, graphs[0])

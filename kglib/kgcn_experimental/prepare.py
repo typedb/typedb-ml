@@ -19,7 +19,7 @@
 from graph_nets import utils_tf
 
 from kglib.kgcn_experimental.encode import encode_types_one_hot, graph_to_input_target
-
+from graph_nets.utils_np import graphs_tuple_to_networkxs, graphs_tuple_to_data_dicts
 
 def make_all_runnable_in_session(*args):
     """Lets an iterable of TF graphs be output from a session as NP graphs."""
@@ -58,3 +58,28 @@ def duplicate_edges_in_reverse(graph):
     for sender, receiver, keys, data in graph.edges(data=True, keys=True):
         graph.add_edge(receiver, sender, keys, **data)
     return graph
+
+
+def apply_logits_to_graphs(graphs, logits_graphs_tuple):
+    """
+    Take in a GraphTuple that describes the logits of graphs, and store those logits on those graphs as the property
+    'logits'. The indexing of the GraphTuple and the graphs must correspond.
+
+    Args:
+        graphs: Graphs to apply logits to
+        logits_graphs_tuple: GraphTuple containing logits
+
+    Returns:
+        graphs with logits added as property 'logits'
+    """
+
+    logit_graphs = graphs_tuple_to_networkxs(logits_graphs_tuple)
+
+    for graph, logit_graph in zip(graphs, logit_graphs):
+        for node, data in logit_graph.nodes(data=True):
+            graph.nodes[node]['logits'] = list(data['features'])
+
+        for sender, receiver, keys, data in logit_graph.edges(keys=True, data=True):
+            graph.edges[sender, receiver, keys]['logits'] = list(data['features'])
+
+    return graphs
