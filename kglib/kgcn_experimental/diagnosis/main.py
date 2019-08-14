@@ -26,10 +26,10 @@ from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 def main():
 
-    num_graphs = 40
+    num_graphs = 60
 
     # The value at which to split the data into training and evaluation sets
-    tr_ge_split = int(num_graphs*0.75)
+    tr_ge_split = int(num_graphs*0.5)
     keyspace = "diagnosis"
     uri = "localhost:48555"
 
