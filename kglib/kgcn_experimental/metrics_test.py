@@ -63,3 +63,7 @@ class TestComputeAccuracy(unittest.TestCase):
 
         self.assertEqual(expected_correct, correct)
         self.assertEqual(expected_solved, solved)
+
+
+if __name__ == "__main__":
+    unittest.main()

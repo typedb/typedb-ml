@@ -20,35 +20,70 @@ import copy
 import inspect
 
 import networkx as nx
-from grakn.client import GraknClient
 
 from kglib.graph.create.from_queries import build_graph_from_queries
 from kglib.graph.label.label import label_nodes_by_property, label_edges_by_property
 
 
-def create_concept_graphs(example_indices, keyspace, uri):
+def write_predictions_to_grakn(graphs, tx):
+    """
+    Take predictions from the ML model, and insert representations of those predictions back into the graph.
+
+    Args:
+        graphs: graphs containing the concepts, with their class predictions and class probabilities
+        tx: Grakn write transaction to use
+
+    Returns: None
+
+    """
+    for graph in graphs:
+        for node, data in graph.nodes(data=True):
+            if data['prediction'] == 2:
+                concept = data['concept']
+                concept_type = concept.type_label
+                if concept_type == 'diagnosis' or concept_type == 'candidate-diagnosis':
+                    neighbours = graph.neighbors(node)
+
+                    for neighbour in neighbours:
+                        concept = graph.nodes[neighbour]['concept']
+                        if concept.type_label == 'person':
+                            person = concept
+                        else:
+                            disease = concept
+
+                    p = data['probabilities']
+                    query = (f'match'
+                             f'$p id {person.id};'
+                             f'$d id {disease.id};'
+                             f'insert'
+                             f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
+                             f'has probability-exists {p[2]:.3f},'
+                             f'has probability-non-exists {p[1]:.3f},'
+                             f'has probability-preexists {p[0]:.3f};')
+                    tx.query(query)
+    tx.commit()
+
+
+def create_concept_graphs(example_indices, grakn_session):
     graphs = []
     qh = QueryHandler()
 
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
+    infer = True
 
-            infer = True
+    for example_id in example_indices:
+        print(f'Creating graph for example {example_id}')
+        graph_query_handles = qh.get_query_handles(example_id)
+        with grakn_session.transaction().read() as tx:
+            # Build a graph from the queries, samplers, and query graphs
+            graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
 
-            for example_id in example_indices:
-                print(f'Creating graph for example {example_id}')
-                graph_query_handles = qh.get_query_handles(example_id)
-                with session.transaction().read() as tx:
-                    # Build a graph from the queries, samplers, and query graphs
-                    graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
+        # Remove label leakage - change type labels that indicate candidates into non-candidates
+        label_nodes_by_property(graph, 'type', 'candidate-diagnosis', {'type': 'diagnosis'})
+        label_edges_by_property(graph, 'type', 'candidate-patient', {'type': 'patient'})
+        label_edges_by_property(graph, 'type', 'candidate-diagnosed-disease', {'type': 'diagnosed-disease'})
 
-                # Remove label leakage - change type labels that indicate candidates into non-candidates
-                label_nodes_by_property(graph, 'type', 'candidate-diagnosis', {'type': 'diagnosis'})
-                label_edges_by_property(graph, 'type', 'candidate-patient', {'type': 'patient'})
-                label_edges_by_property(graph, 'type', 'candidate-diagnosed-disease', {'type': 'diagnosed-disease'})
-
-                graph.name = example_id
-                graphs.append(graph)
+        graph.name = example_id
+        graphs.append(graph)
 
     return graphs
 

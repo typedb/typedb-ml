@@ -16,15 +16,16 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import networkx as nx
+import numpy as np
 from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs
+from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn
 from kglib.kgcn_experimental.model import model, softmax
 from kglib.kgcn_experimental.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
-import numpy as np
 
 
 def main():
@@ -41,24 +42,25 @@ def main():
     # Get the node and edge types, these can simply be passed as a list, but here we query the schema and then remove
     # unwanted types and roles
 
-    with GraknClient(uri=uri) as client:
-        with client.session(keyspace=keyspace) as session:
-            with session.transaction().read() as tx:
-                schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
-                all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
-                [all_node_types.remove(el) for el in
-                 ['thing', 'relation', 'entity', 'attribute', '@has-attribute', 'candidate-diagnosis', 'example-id',
-                  '@has-example-id']]
-                print(all_node_types)
+    client = GraknClient(uri=uri)
+    session = client.session(keyspace=keyspace)
 
-                roles = tx.query("match $x sub role; get;").collect_concepts()
-                all_edge_types = [role.label() for role in roles]
-                [all_edge_types.remove(el) for el in
-                 ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
-                  'candidate-diagnosed-disease', '@has-example-id-value', '@has-example-id-owner']]
-                print(all_edge_types)
+    with session.transaction().read() as tx:
+        schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
+        all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
+        [all_node_types.remove(el) for el in
+         ['thing', 'relation', 'entity', 'attribute', '@has-attribute', 'candidate-diagnosis', 'example-id',
+          '@has-example-id']]
+        print(all_node_types)
 
-    concept_graphs = create_concept_graphs(list(range(num_graphs)), keyspace, uri)
+        roles = tx.query("match $x sub role; get;").collect_concepts()
+        all_edge_types = [role.label() for role in roles]
+        [all_edge_types.remove(el) for el in
+         ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
+          'candidate-diagnosed-disease', '@has-example-id-value', '@has-example-id-owner']]
+        print(all_edge_types)
+
+    concept_graphs = create_concept_graphs(list(range(num_graphs)), session)
 
     tr_graphs = concept_graphs[:tr_ge_split]
     ge_graphs = concept_graphs[tr_ge_split:]
@@ -75,7 +77,7 @@ def main():
                                       all_edge_types,
                                       num_processing_steps_tr=10,
                                       num_processing_steps_ge=10,
-                                      num_training_iterations=100,
+                                      num_training_iterations=1000,
                                       log_every_seconds=2)
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
@@ -89,6 +91,12 @@ def main():
         for sender, receiver, keys, data in ge_graph.edges(keys=True, data=True):
             data['probabilities'] = softmax(data['logits'])
             data['prediction'] = int(np.argmax(data['probabilities']))
+
+    with session.transaction().write() as tx:
+        write_predictions_to_grakn(ge_graphs, tx)
+
+    session.close()
+    client.close()
 
 
 if __name__ == "__main__":

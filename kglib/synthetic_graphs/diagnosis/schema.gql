@@ -7,12 +7,14 @@ person sub entity,
     has example-id,
     plays patient,
     plays candidate-patient,
-    plays symptomatic-patient;
+    plays symptomatic-patient,
+    plays predicted-patient;
 
 disease sub entity,
     plays cause,
     plays diagnosed-disease,
-    plays candidate-diagnosed-disease;
+    plays candidate-diagnosed-disease,
+    plays predicted-diagnosed-disease;
 
 diagnosis sub relation,
     relates patient,
@@ -21,6 +23,23 @@ diagnosis sub relation,
 candidate-diagnosis sub relation,
     relates candidate-patient,
     relates candidate-diagnosed-disease;
+
+predicted-diagnosis sub relation,
+    relates predicted-patient,
+    relates predicted-diagnosed-disease,
+    has probability-exists,
+    has probability-non-exists,
+    has probability-preexists;
+
+probability-exists sub attribute,
+    datatype double;
+
+probability-non-exists sub attribute,
+    datatype double;
+
+probability-preexists sub attribute,
+    datatype double;
+
 
 where-no-diagnosis-add-candidate-diagnosis sub rule,
     when {
