@@ -19,7 +19,6 @@
 
 import time
 
-import networkx as nx
 import numpy as np
 import tensorflow as tf
 from graph_nets.demos import models
@@ -27,8 +26,7 @@ from graph_nets.demos import models
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
-from kglib.kgcn_experimental.prepare import make_all_runnable_in_session, create_input_target_graphs, \
-    duplicate_edges_in_reverse
+from kglib.kgcn_experimental.prepare import make_all_runnable_in_session, create_input_target_graphs
 
 
 def loss_ops_from_difference(target_op, output_ops):
@@ -80,6 +78,10 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
     return loss_ops
 
 
+def softmax(x):
+    return np.exp(x)/sum(np.exp(x))
+
+
 def model(tr_graphs,
           ge_graphs,
           all_node_types,
@@ -104,12 +106,6 @@ def model(tr_graphs,
     """
     tf.reset_default_graph()
     tf.set_random_seed(1)
-
-    tr_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in tr_graphs]
-    ge_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in ge_graphs]
-
-    tr_graphs = [duplicate_edges_in_reverse(graph) for graph in tr_graphs]
-    ge_graphs = [duplicate_edges_in_reverse(graph) for graph in ge_graphs]
 
     tr_input_graphs, tr_target_graphs = create_input_target_graphs(tr_graphs, all_node_types, all_edge_types)
     ge_input_graphs, ge_target_graphs = create_input_target_graphs(ge_graphs, all_node_types, all_edge_types)
@@ -203,3 +199,5 @@ def model(tr_graphs,
 
     plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
     plot_input_vs_output(ge_graphs, test_values, num_processing_steps_ge)
+
+    return train_values, test_values

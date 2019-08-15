@@ -16,13 +16,15 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import networkx as nx
 from grakn.client import GraknClient
+from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs
-from kglib.kgcn_experimental.model import model
-from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
+from kglib.kgcn_experimental.model import model, softmax
+from kglib.kgcn_experimental.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
+import numpy as np
 
 
 def main():
@@ -58,17 +60,35 @@ def main():
 
     concept_graphs = create_concept_graphs(list(range(num_graphs)), keyspace, uri)
 
-    training_graphs = concept_graphs[:tr_ge_split]
-    generalisation_graphs = concept_graphs[tr_ge_split:]
+    tr_graphs = concept_graphs[:tr_ge_split]
+    ge_graphs = concept_graphs[tr_ge_split:]
 
-    model(training_graphs,
-          generalisation_graphs,
-          all_node_types,
-          all_edge_types,
-          num_processing_steps_tr=10,
-          num_processing_steps_ge=10,
-          num_training_iterations=100,
-          log_every_seconds=2)
+    ind_tr_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in tr_graphs]
+    ind_ge_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in ge_graphs]
+
+    tr_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_tr_graphs]
+    ge_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_ge_graphs]
+
+    train_values, test_values = model(tr_graphs,
+                                      ge_graphs,
+                                      all_node_types,
+                                      all_edge_types,
+                                      num_processing_steps_tr=10,
+                                      num_processing_steps_ge=10,
+                                      num_training_iterations=100,
+                                      log_every_seconds=2)
+
+    logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
+    ge_graphs = apply_logits_to_graphs(ind_ge_graphs, logit_graphs)
+
+    for ge_graph in ge_graphs:
+        for node, data in ge_graph.nodes(data=True):
+            data['probabilities'] = softmax(data['logits'])
+            data['prediction'] = int(np.argmax(data['probabilities']))
+
+        for sender, receiver, keys, data in ge_graph.edges(keys=True, data=True):
+            data['probabilities'] = softmax(data['logits'])
+            data['prediction'] = int(np.argmax(data['probabilities']))
 
 
 if __name__ == "__main__":

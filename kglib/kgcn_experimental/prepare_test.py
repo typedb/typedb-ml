@@ -20,6 +20,7 @@
 import networkx as nx
 import numpy as np
 from graph_nets.graphs import GraphsTuple
+from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
@@ -72,13 +73,22 @@ class TestApplyLogitsToGraphs(GraphTestCase):
         graph.add_edge(0, 1)
 
         nodes = np.array([[0.2, 0.3, 0.01], [0.56, -0.04, 0.05]], dtype=np.float64)
-        edges = np.array([[0.5, 0.008, -0.1]], dtype=np.float64)
+        edges = np.array([[0.5, 0.008, -0.1],
+                          [0.5, 0.008, -0.1]], dtype=np.float64)
 
         globals = None
-        senders = np.array([0])
-        receivers = np.array([1])
+        senders = np.array([0, 1])
+        receivers = np.array([1, 0])
         n_node = np.array([2])
-        n_edge = np.array([1])
+        n_edge = np.array([2])
+
+        # TODO Once the model doesn't require duplicate reversed edges, then the GraphsTuple will look like this, as it
+        #  should:
+        # globals = None
+        # senders = np.array([0])
+        # receivers = np.array([1])
+        # n_node = np.array([2])
+        # n_edge = np.array([1])
 
         graphstuple = GraphsTuple(nodes=nodes,
                                   edges=edges,
@@ -93,6 +103,6 @@ class TestApplyLogitsToGraphs(GraphTestCase):
         expected_graph.add_node(1, logits=[0.56, -0.04, 0.05])
         expected_graph.add_edge(0, 1, logits=[0.5, 0.008, -0.1])
 
-        graphs = apply_logits_to_graphs([graph], graphstuple)
+        graphs = apply_logits_to_graphs([graph], graphs_tuple_to_networkxs(graphstuple))
 
         self.assertGraphsEqual(expected_graph, graphs[0])
