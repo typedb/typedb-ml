@@ -22,7 +22,6 @@ from grakn.client import GraknClient
 from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs
 from kglib.kgcn_experimental.model import model
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
-from kglib.kgcn_experimental.tmp.shortest_path import num_processing_steps_ge
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 
@@ -62,16 +61,14 @@ def main():
     training_graphs = concept_graphs[:tr_ge_split]
     generalisation_graphs = concept_graphs[tr_ge_split:]
 
-    train_values, test_values, log_info = model(training_graphs,
-                                                generalisation_graphs,
-                                                all_node_types,
-                                                all_edge_types,
-                                                num_processing_steps_tr=10,
-                                                num_processing_steps_ge=10,
-                                                num_training_iterations=100,
-                                                log_every_seconds=2)
-    plot_across_training(*log_info)
-    plot_input_vs_output(generalisation_graphs, test_values, num_processing_steps_ge)
+    model(training_graphs,
+          generalisation_graphs,
+          all_node_types,
+          all_edge_types,
+          num_processing_steps_tr=10,
+          num_processing_steps_ge=10,
+          num_training_iterations=100,
+          log_every_seconds=2)
 
 
 if __name__ == "__main__":

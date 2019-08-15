@@ -26,6 +26,7 @@ from graph_nets.demos import models
 
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
+from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
 from kglib.kgcn_experimental.prepare import make_all_runnable_in_session, create_input_target_graphs, \
     duplicate_edges_in_reverse
 
@@ -200,6 +201,5 @@ def model(tr_graphs,
                       iteration, elapsed, train_values["loss"], test_values["loss"],
                       correct_tr, solved_tr, correct_ge, solved_ge))
 
-    log_info = logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge
-
-    return train_values, test_values, log_info
+    plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
+    plot_input_vs_output(ge_graphs, test_values, num_processing_steps_ge)
