@@ -64,6 +64,23 @@ def write_predictions_to_grakn(graphs, tx):
     tx.commit()
 
 
+def get_all_types(tx):
+    schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
+    all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
+    [all_node_types.remove(el) for el in
+     ['thing', 'relation', 'entity', 'attribute', '@has-attribute', 'candidate-diagnosis', 'example-id',
+      '@has-example-id']]
+    print(all_node_types)
+
+    roles = tx.query("match $x sub role; get;").collect_concepts()
+    all_edge_types = [role.label() for role in roles]
+    [all_edge_types.remove(el) for el in
+     ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
+      'candidate-diagnosed-disease', '@has-example-id-value', '@has-example-id-owner']]
+    print(all_edge_types)
+    return all_node_types, all_edge_types
+
+
 def create_concept_graphs(example_indices, grakn_session):
     graphs = []
     qh = QueryHandler()

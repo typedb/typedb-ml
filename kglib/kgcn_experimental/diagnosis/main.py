@@ -22,15 +22,13 @@ import numpy as np
 from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn
+from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types
 from kglib.kgcn_experimental.model import model, softmax
 from kglib.kgcn_experimental.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 
-def main():
-
-    num_graphs = 60
+def main(num_graphs=60, num_processing_steps_tr=10, num_processing_steps_ge=10, num_training_iterations=1000):
 
     # The value at which to split the data into training and evaluation sets
     tr_ge_split = int(num_graphs*0.5)
@@ -46,19 +44,7 @@ def main():
     session = client.session(keyspace=keyspace)
 
     with session.transaction().read() as tx:
-        schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
-        all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
-        [all_node_types.remove(el) for el in
-         ['thing', 'relation', 'entity', 'attribute', '@has-attribute', 'candidate-diagnosis', 'example-id',
-          '@has-example-id']]
-        print(all_node_types)
-
-        roles = tx.query("match $x sub role; get;").collect_concepts()
-        all_edge_types = [role.label() for role in roles]
-        [all_edge_types.remove(el) for el in
-         ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
-          'candidate-diagnosed-disease', '@has-example-id-value', '@has-example-id-owner']]
-        print(all_edge_types)
+        all_node_types, all_edge_types = get_all_types(tx)
 
     concept_graphs = create_concept_graphs(list(range(num_graphs)), session)
 
@@ -75,9 +61,9 @@ def main():
                                       ge_graphs,
                                       all_node_types,
                                       all_edge_types,
-                                      num_processing_steps_tr=10,
-                                      num_processing_steps_ge=10,
-                                      num_training_iterations=1000,
+                                      num_processing_steps_tr=num_processing_steps_tr,
+                                      num_processing_steps_ge=num_processing_steps_ge,
+                                      num_training_iterations=num_training_iterations,
                                       log_every_seconds=2)
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
