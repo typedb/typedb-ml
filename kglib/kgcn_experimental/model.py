@@ -89,7 +89,8 @@ def model(tr_graphs,
           num_processing_steps_tr=10,
           num_processing_steps_ge=10,
           num_training_iterations=10000,
-          log_every_seconds=2):
+          log_every_seconds=2,
+          log_dir=None):
     """
     Args:
         tr_graphs: In-memory graphs of Grakn concepts for training
@@ -99,7 +100,8 @@ def model(tr_graphs,
         num_processing_steps_tr: Number of processing (message-passing) steps for training.
         num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
         num_training_iterations: Number of training iterations
-        log_every_seconds: # How much time between logging and printing the current results.
+        log_every_seconds: The time to wait between logging and printing the next set of results.
+        log_dir: Directory to store TensorFlow events files
 
     Returns:
 
@@ -138,6 +140,10 @@ def model(tr_graphs,
     # Reset the Tensorflow session, but keep the same computational graph.
 
     sess = tf.Session()
+
+    if log_dir is not None:
+        tf.summary.FileWriter(log_dir, sess.graph)
+
     sess.run(tf.global_variables_initializer())
 
     last_iteration = 0

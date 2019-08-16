@@ -24,4 +24,4 @@ from kglib.kgcn_experimental.diagnosis.main import main
 
 class TestMain(unittest.TestCase):
     def test_main_runs_without_exception(self):
-        main(num_graphs=6, num_processing_steps_tr=10, num_processing_steps_ge=10, num_training_iterations=20)
+        main(num_graphs=6, num_processing_steps_tr=2, num_processing_steps_ge=2, num_training_iterations=20)
