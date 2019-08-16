@@ -85,8 +85,11 @@ def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:4
     pmf_array = np.zeros([2, 2, 2, 2], dtype=np.float)
     pmf_array[0, 1, 0, 1] = 0.1
     pmf_array[1, 0, 1, 0] = 0.15
-    pmf_array[0, 1, 1, 0] = 0.4
-    pmf_array[1, 0, 0, 1] = 0.35
+    pmf_array[0, 1, 1, 0] = 0.05
+    pmf_array[1, 0, 0, 1] = 0.34
+    pmf_array[1, 1, 1, 1] = 0.01
+    pmf_array[0, 1, 1, 1] = 0.3
+    pmf_array[1, 0, 1, 1] = 0.05
 
     pmf = PMF({
         'Flu':                  [False, True],
