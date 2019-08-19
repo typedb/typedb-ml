@@ -20,8 +20,11 @@
 import time
 
 import numpy as np
+import sonnet as snt
 import tensorflow as tf
-from graph_nets.demos import models
+from graph_nets import modules
+from graph_nets import utils_tf
+from tensorflow.python.layers.core import dense
 
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
@@ -40,9 +43,9 @@ def loss_ops_from_difference(target_op, output_ops):
 
     """
     loss_ops = [
-      tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
-      tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
-      for output_op in output_ops
+        tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
+        tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
+        for output_op in output_ops
     ]
     return loss_ops
 
@@ -61,12 +64,13 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
     """
     loss_ops = []
     for output_op in output_ops:
-
-        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))), axis=1)
+        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))),
+                                          axis=1)
         target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
         output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
 
-        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))), axis=1)
+        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))),
+                                          axis=1)
         target_edges = tf.boolean_mask(target_op.nodes, edge_mask_op)
         output_edges = tf.boolean_mask(output_op.nodes, edge_mask_op)
 
@@ -79,7 +83,7 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
 
 
 def softmax(x):
-    return np.exp(x)/sum(np.exp(x))
+    return np.exp(x) / sum(np.exp(x))
 
 
 def model(tr_graphs,
@@ -116,7 +120,7 @@ def model(tr_graphs,
 
     # Connect the data to the model.
     # Instantiate the model.
-    model = models.EncodeProcessDecode(edge_output_size=3, node_output_size=3)
+    model = KGMessagePassingLearner(edge_output_size=3, node_output_size=3)
     # A list of outputs, one per processing step.
     output_ops_tr = model(input_ph, num_processing_steps_tr)
     output_ops_ge = model(input_ph, num_processing_steps_ge)
@@ -200,10 +204,171 @@ def model(tr_graphs,
             logged_iterations.append(iteration)
             print("# {:05d}, T {:.1f}, Ltr {:.4f}, Lge {:.4f}, Ctr {:.4f}, Str"
                   " {:.4f}, Cge {:.4f}, Sge {:.4f}".format(
-                      iteration, elapsed, train_values["loss"], test_values["loss"],
-                      correct_tr, solved_tr, correct_ge, solved_ge))
+                iteration, elapsed, train_values["loss"], test_values["loss"],
+                correct_tr, solved_tr, correct_ge, solved_ge))
 
     plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
     plot_input_vs_output(ge_graphs, test_values, num_processing_steps_ge)
 
     return train_values, test_values
+
+
+NUM_LAYERS = 2  # Hard-code number of layers in the edge/node/global models.
+LATENT_SIZE = 16
+
+
+class ThingModelManager:
+    """
+    Manages the models corresponding to different types of Thing in the Knowledge Graph. Assumes that the type of a
+    Thing is given categorically as an integer value in the 0th position of its features
+    """
+    def __init__(self, encoders, feature_length):
+        self._feature_length = feature_length
+        self._encoders = encoders
+
+    def encode(self, things):
+
+        encoded_things = np.zeros([things.shape[0], self._feature_length], dtype=np.float64)
+
+        for i, thing in enumerate(things):
+            encoder = self._encoders[int(thing[0])]  # Get the appropriate encoder for this type category
+            encoded_things[i, :] = encoder(thing)
+
+        return things
+
+
+class KGIndependent(snt.AbstractModule):
+    """
+    A graph model that applies independent models to graph elements according to the types of those elements
+
+    The inputs and outputs are graphs. The corresponding models are applied to
+    each element of the graph (edges, nodes and globals) in parallel and
+    independently of the other elements. It can be used to encode or
+    decode the elements of a knowledge graph.
+    """
+
+    def __init__(self,
+                 edge_model_fns=None,
+                 node_model_fns=None,
+                 global_model_fn=None,
+                 name="kg_independent"):
+        super(KGIndependent, self).__init__(name=name)
+
+        with self._enter_variable_scope():
+            # The use of snt.Module below is to ensure the ops and variables that
+            # result from the edge/node/global_model_fns are scoped analogous to how
+            # the Edge/Node/GlobalBlock classes do.
+            if edge_model_fns is None:
+                self._edge_model = lambda x: x
+            else:
+                self._edge_model = snt.Module(
+                    lambda x: edge_model_fns()(x), name="edge_model")
+            if node_model_fns is None:
+                self._node_model = lambda x: x
+            else:
+                self._node_model = snt.Module(
+                    lambda x: node_model_fns()(x), name="node_model")
+            if global_model_fn is None:
+                self._global_model = lambda x: x
+            else:
+                self._global_model = snt.Module(
+                    lambda x: global_model_fn()(x), name="global_model")
+
+    def _build(self, graph):
+        """Connects the GraphIndependent.
+
+        Args:
+          graph: A `graphs.GraphsTuple` containing non-`None` edges, nodes and
+            globals.
+
+        Returns:
+          An output `graphs.GraphsTuple` with updated edges, nodes and globals.
+
+        """
+        return graph.replace(
+            edges=self._edge_model(graph.edges),
+            nodes=self._node_model(graph.nodes),
+            globals=self._global_model(graph.globals))
+
+
+def make_mlp_model():
+    """Instantiates a new MLP, followed by LayerNorm.
+
+    The parameters of each new MLP are not shared with others generated by
+    this function.
+
+    Returns:
+      A Sonnet module which contains the MLP and LayerNorm.
+    """
+    return snt.Sequential([
+        snt.nets.MLP([LATENT_SIZE] * NUM_LAYERS, activate_final=True),
+        snt.LayerNorm()
+    ])
+
+
+class MLPGraphIndependent(snt.AbstractModule):
+    """GraphIndependent with MLP edge, node, and global models."""
+
+    def __init__(self, name="MLPGraphIndependent"):
+        super(MLPGraphIndependent, self).__init__(name=name)
+        with self._enter_variable_scope():
+            self._network = KGIndependent(
+                edge_model_fns=make_mlp_model,
+                node_model_fns=make_mlp_model,
+                global_model_fn=make_mlp_model)
+
+    def _build(self, inputs):
+        return self._network(inputs)
+
+
+class MLPGraphNetwork(snt.AbstractModule):
+    """GraphNetwork with MLP edge, node, and global models."""
+
+    def __init__(self, name="MLPGraphNetwork"):
+        super(MLPGraphNetwork, self).__init__(name=name)
+        with self._enter_variable_scope():
+            self._network = modules.GraphNetwork(make_mlp_model, make_mlp_model,
+                                                 make_mlp_model)
+
+    def _build(self, inputs):
+        return self._network(inputs)
+
+
+class KGMessagePassingLearner(snt.AbstractModule):
+
+    def __init__(self,
+                 edge_output_size=None,
+                 node_output_size=None,
+                 global_output_size=None,
+                 name="EncodeProcessDecode"):
+        super(KGMessagePassingLearner, self).__init__(name=name)
+        self._encoder = MLPGraphIndependent()
+        self._core = MLPGraphNetwork()
+        self._decoder = MLPGraphIndependent()
+        # Transforms the outputs into the appropriate shapes.
+        if edge_output_size is None:
+            edge_fn = None
+        else:
+            edge_fn = lambda: snt.Linear(edge_output_size, name="edge_output")
+        if node_output_size is None:
+            node_fn = None
+        else:
+            node_fn = lambda: snt.Linear(node_output_size, name="node_output")
+        if global_output_size is None:
+            global_fn = None
+        else:
+            global_fn = lambda: snt.Linear(global_output_size, name="global_output")
+        with self._enter_variable_scope():
+            self._output_transform = modules.GraphIndependent(edge_fn, node_fn,
+                                                              global_fn)
+
+    def _build(self, input_op, num_processing_steps):
+        latent = self._encoder(input_op)
+        latent0 = latent
+        output_ops = []
+        for _ in range(num_processing_steps):
+            core_input = utils_tf.concat([latent0, latent], axis=1)
+            latent = self._core(core_input)
+            decoded_op = self._decoder(latent)
+            output_ops.append(self._output_transform(decoded_op))
+        return output_ops
