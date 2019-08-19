@@ -63,14 +63,15 @@ class TestThingModelManager(unittest.TestCase):
         encoders_by_type = [entity_relation, entity_relation, continuous_attribute]
 
         tm = ThingModelManager(encoders_by_type, 3)
-        tm.encode(things)  # The function under test
+        tm(things)  # The function under test
 
         np.testing.assert_array_equal([[np.array([0, 0], dtype=np.float64)], [np.array([1, 0], dtype=np.float64)]],
                                       get_call_args(entity_relation))
 
         np.testing.assert_array_equal([[np.array([2, 0.5673], dtype=np.float64)]], get_call_args(continuous_attribute))
 
-    # class ITThingModelManager(unittest.TestCase):
+
+class ITThingModelManager(unittest.TestCase):
     def test_using_tensorflow(self):
         tf.enable_eager_execution()
 
@@ -85,7 +86,7 @@ class TestThingModelManager(unittest.TestCase):
         encoders_by_type = [entity_relation, entity_relation, continuous_attribute]
 
         tm = ThingModelManager(encoders_by_type, 2)
-        encoded_things = tm.encode(things)  # The function under test
+        encoded_things = tm(things)  # The function under test
 
         # Check that tensorflow was actually used
         self.assertEqual(EagerTensor, type(encoded_things))

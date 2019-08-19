@@ -217,16 +217,24 @@ NUM_LAYERS = 2  # Hard-code number of layers in the edge/node/global models.
 LATENT_SIZE = 16
 
 
-class ThingModelManager:
+class ThingModelManager(snt.AbstractModule):
     """
     Manages the models corresponding to different types of Thing in the Knowledge Graph. Assumes that the type of a
     Thing is given categorically as an integer value in the 0th position of its features
     """
-    def __init__(self, encoders, feature_length):
+    def __init__(self, encoders, feature_length, name="thing_model_manager"):
+        """
+        Args:
+            encoders: List of encoders, one for each of the type indices that may be present. Expected to have a small
+                set of instances reused throughout the list.
+            feature_length: The length of features to output for matrix initialisation
+            name: The name for this Module
+        """
+        super(ThingModelManager, self).__init__(name=name)
         self._feature_length = feature_length
         self._encoders = encoders
 
-    def encode(self, things):
+    def _build(self, things):
 
         encoded_things = np.zeros([things.shape[0], self._feature_length], dtype=np.float64)
 
