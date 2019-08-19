@@ -26,28 +26,12 @@ from tensorflow.python import constant
 from tensorflow.python.framework.ops import EagerTensor
 
 from kglib.kgcn_experimental.model import ThingModelManager
+from kglib.kgcn_experimental.test.utils import get_call_args
 
 
 def test_numpy_arrays_equal(arrays_a, arrays_b):
     for a, b in zip(arrays_a, arrays_b):
         np.testing.assert_array_equal(a, b)
-
-
-def get_call_args(mock):
-    """
-    Get the arguments used to call a mock for each call to the mock. Necessary since `.assert_has_calls` won't work
-    for numpy arrays
-    Args:
-        mock: the mock
-
-    Returns:
-        A list of lists. The outer list is the calls made, the inner list is the arguments given for that call
-    """
-    args = []
-    args_list = mock.call_args_list
-    for call in args_list:
-        args.append(call.args)
-    return args
 
 
 class TestThingModelManager(unittest.TestCase):
