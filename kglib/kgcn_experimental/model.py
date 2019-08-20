@@ -212,32 +212,46 @@ def model(tr_graphs,
     return train_values, test_values
 
 
-class ThingModelManager(snt.AbstractModule):
+class TypewiseEncoder(snt.AbstractModule):
     """
-    Manages the models corresponding to different types of Thing in the Knowledge Graph. Assumes that the type of a
-    Thing is given categorically as an integer value in the 0th position of its features
+    Orchestrates encoding elements according to their types. Defers encoding of each feature to the appropriate encoder
+    for the type of that feature. Assumes that the type is given categorically as an integer value in the 0th position
+    of the provided features Tensor.
     """
-    def __init__(self, encoders, feature_length, name="thing_model_manager"):
+    def __init__(self, encoders_for_types, feature_length, name="typewise_encoder"):
         """
         Args:
-            encoders: List of encoders, one for each of the type indices that may be present. Expected to have a small
-                set of instances reused throughout the list.
+            encoders_for_types: Dict - keys: encoders; values: a list of type categories the encoder should be used for
             feature_length: The length of features to output for matrix initialisation
             name: The name for this Module
         """
-        super(ThingModelManager, self).__init__(name=name)
+        super(TypewiseEncoder, self).__init__(name=name)
         self._feature_length = feature_length
-        self._encoders = encoders
+        self._encoders_for_types = encoders_for_types
 
-    def _build(self, things):
+    def _build(self, features):
 
-        encoded_things = np.zeros([things.shape[0], self._feature_length], dtype=np.float64)
+        encoded_features = np.zeros([features.shape[0], self._feature_length], dtype=np.float64)
 
-        for i, thing in enumerate(things):
-            encoder = self._encoders[int(thing[0])]  # Get the appropriate encoder for this type category
-            encoded_things[i, :] = encoder(thing)
+        for encoder, types in self._encoders_for_types.items():
 
-        return things
+            feat_types = tf.cast(features[:, 0], tf.int32)  # The types for each feature, as integers
+
+            # Expand dimensions ready for element-wise equality comparison
+            exp_types = tf.expand_dims(types, axis=0)
+            exp_feat_types = tf.expand_dims(feat_types, axis=1)
+
+            elementwise_equality = tf.equal(exp_feat_types, exp_types)
+
+            # Use this encoder when the feat_type matches any of the types
+            applicable_types_mask = tf.reduce_any(elementwise_equality, axis=1)
+            indices_to_encode = tf.where(applicable_types_mask)
+            # feats_to_encode = tf.gather(features, tf.squeeze(indices_to_encode))
+            feats_to_encode = tf.squeeze(tf.gather(features, indices_to_encode), axis=1)
+            encoded_feats = encoder(feats_to_encode)
+            encoded_features = tf.tensor_scatter_add(encoded_features, indices_to_encode, encoded_feats)
+
+        return encoded_features
 
 
 class KGIndependent(snt.AbstractModule):
