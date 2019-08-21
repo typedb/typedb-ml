@@ -286,3 +286,11 @@ def draw_networkx_edge_labels(G, pos,
         labelleft=False)
 
     return text_items
+
+
+def multidigraph_data_iterator(graph):
+    for node_index, node_data in graph.nodes(data=True):
+        yield node_data
+
+    for receiver, sender, keys, edge_data in graph.edges(data=True, keys=True):
+        yield edge_data

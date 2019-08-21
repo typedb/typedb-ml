@@ -24,13 +24,25 @@ import tensorflow as tf
 from mock import Mock
 from tensorflow.python.framework.ops import EagerTensor
 
-from kglib.kgcn_experimental.model import TypewiseEncoder
+from kglib.kgcn_experimental.model import TypewiseEncoder, KGCN
 from kglib.kgcn_experimental.test.utils import get_call_args
+import networkx as nx
 
 
 def test_numpy_arrays_equal(arrays_a, arrays_b):
     for a, b in zip(arrays_a, arrays_b):
         np.testing.assert_array_equal(a, b)
+
+
+class TestKGCN(unittest.TestCase):
+    def test_kgcn_runs(self):
+        graph = nx.MultiDiGraph()
+        graph.add_node(0, type='person', input=1, solution=0)
+        graph.add_edge(0, 1, type='sibling', input=1, solution=0)
+        graph.add_node(1, type='person', input=1, solution=0)
+
+        kgcn = KGCN(['person'], ['sibling'])
+        kgcn([graph], [graph], num_training_iterations=50, log_every_seconds=0.5)
 
 
 class TestTypewiseEncoder(unittest.TestCase):

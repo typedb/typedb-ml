@@ -18,33 +18,10 @@
 #
 from graph_nets import utils_tf
 
-from kglib.kgcn_experimental.encode import encode_types_one_hot, graph_to_input_target
-from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 def make_all_runnable_in_session(*args):
     """Lets an iterable of TF graphs be output from a session as NP graphs."""
     return [utils_tf.make_runnable_in_session(a) for a in args]
-
-
-def create_input_target_graphs(graphs, all_node_types, all_edge_types):
-    """
-    Builds graphs ready to be used for training
-    :param graph: The list of graphs to use
-    :param all_node_types: All of the types that can occur at nodes, for encoding purposes
-    :param all_edge_types: All of the types that can occur at edges, for encoding purposes
-    :return: the input graphs, the target (desired output) graphs, and the original_graphs
-    """
-
-    input_graphs = []
-    target_graphs = []
-    for graph in graphs:
-        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
-
-        input_graph, target_graph = graph_to_input_target(graph)
-        input_graphs.append(input_graph)
-        target_graphs.append(target_graph)
-
-    return input_graphs, target_graphs
 
 
 def duplicate_edges_in_reverse(graph):

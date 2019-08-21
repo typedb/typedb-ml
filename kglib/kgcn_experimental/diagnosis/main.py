@@ -23,7 +23,7 @@ from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types
-from kglib.kgcn_experimental.model import model, softmax
+from kglib.kgcn_experimental.model import KGCN, softmax
 from kglib.kgcn_experimental.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
@@ -57,14 +57,14 @@ def main(num_graphs=60, num_processing_steps_tr=10, num_processing_steps_ge=10, 
     tr_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_tr_graphs]
     ge_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_ge_graphs]
 
-    train_values, test_values = model(tr_graphs,
-                                      ge_graphs,
-                                      all_node_types,
-                                      all_edge_types,
-                                      num_processing_steps_tr=num_processing_steps_tr,
-                                      num_processing_steps_ge=num_processing_steps_ge,
-                                      num_training_iterations=num_training_iterations,
-                                      log_every_seconds=2)
+    kgcn = KGCN(all_node_types, all_edge_types)
+
+    train_values, test_values = kgcn(tr_graphs,
+                                     ge_graphs,
+                                     num_processing_steps_tr=num_processing_steps_tr,
+                                     num_processing_steps_ge=num_processing_steps_ge,
+                                     num_training_iterations=num_training_iterations,
+                                     log_every_seconds=2)
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
     ge_graphs = apply_logits_to_graphs(ind_ge_graphs, logit_graphs)

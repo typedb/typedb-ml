@@ -25,10 +25,11 @@ import tensorflow as tf
 from graph_nets import modules
 from graph_nets import utils_tf
 
+from kglib.kgcn_experimental.encode import encode_types_one_hot, encode_solutions, graph_to_input_target
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
-from kglib.kgcn_experimental.prepare import make_all_runnable_in_session, create_input_target_graphs
+from kglib.kgcn_experimental.prepare import make_all_runnable_in_session
 
 
 def loss_ops_from_difference(target_op, output_ops):
@@ -85,131 +86,142 @@ def softmax(x):
     return np.exp(x) / sum(np.exp(x))
 
 
-def model(tr_graphs,
-          ge_graphs,
-          all_node_types,
-          all_edge_types,
-          num_processing_steps_tr=10,
-          num_processing_steps_ge=10,
-          num_training_iterations=10000,
-          log_every_seconds=2,
-          log_dir=None):
-    """
-    Args:
-        tr_graphs: In-memory graphs of Grakn concepts for training
-        ge_graphs: In-memory graphs of Grakn concepts for generalisation
-        all_node_types: All of the node types present in the `concept_graphs`, used for encoding
-        all_edge_types: All of the edge types present in the `concept_graphs`, used for encoding
-        num_processing_steps_tr: Number of processing (message-passing) steps for training.
-        num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
-        num_training_iterations: Number of training iterations
-        log_every_seconds: The time to wait between logging and printing the next set of results.
-        log_dir: Directory to store TensorFlow events files
+class KGCN:
+    def __init__(self, all_node_types, all_edge_types):
+        self.all_node_types = all_node_types
+        self.all_edge_types = all_edge_types
 
-    Returns:
+    def input_fn(self, graphs):
+        input_graphs = []
+        target_graphs = []
+        for graph in graphs:
+            graph = encode_solutions(graph, solution_field="solution", encoded_solution_field="encoded_solution",
+                                     encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
+            graph = encode_types_one_hot(graph, self.all_node_types, self.all_edge_types, attribute='one_hot_type',
+                                         type_attribute='type')
 
-    """
-    tf.reset_default_graph()
-    tf.set_random_seed(1)
+            input_graph, target_graph = graph_to_input_target(graph,
+                                                              input_node_fields=("input", "one_hot_type"),
+                                                              input_edge_fields=("input", "one_hot_type"),
+                                                              target_node_fields=("encoded_solution",),
+                                                              target_edge_fields=("encoded_solution",),
+                                                              features_field="features")
+            input_graphs.append(input_graph)
+            target_graphs.append(target_graph)
+        return input_graphs, target_graphs
 
-    tr_input_graphs, tr_target_graphs = create_input_target_graphs(tr_graphs, all_node_types, all_edge_types)
-    ge_input_graphs, ge_target_graphs = create_input_target_graphs(ge_graphs, all_node_types, all_edge_types)
+    def __call__(self, tr_graphs, ge_graphs, num_processing_steps_tr=10, num_processing_steps_ge=10,
+                 num_training_iterations=10000, log_every_seconds=2, log_dir=None):
+        """
+        Args:
+            tr_graphs: In-memory graphs of Grakn concepts for training
+            ge_graphs: In-memory graphs of Grakn concepts for generalisation
+            num_processing_steps_tr: Number of processing (message-passing) steps for training.
+            num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
+            num_training_iterations: Number of training iterations
+            log_every_seconds: The time to wait between logging and printing the next set of results.
+            log_dir: Directory to store TensorFlow events files
 
-    input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
+        Returns:
 
-    # Connect the data to the model.
-    # Instantiate the model.
-    model = KGMessagePassingLearner(edge_output_size=3, node_output_size=3)
-    # A list of outputs, one per processing step.
-    output_ops_tr = model(input_ph, num_processing_steps_tr)
-    output_ops_ge = model(input_ph, num_processing_steps_ge)
+        """
+        tf.set_random_seed(1)
 
-    # Training loss.
-    loss_ops_tr = loss_ops_from_difference(target_ph, output_ops_tr)
-    # Loss across processing steps.
-    loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
-    # Test/generalization loss.
-    loss_ops_ge = loss_ops_from_difference(target_ph, output_ops_ge)
-    loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
+        tr_input_graphs, tr_target_graphs = self.input_fn(tr_graphs)
+        ge_input_graphs, ge_target_graphs = self.input_fn(ge_graphs)
 
-    # Optimizer.
-    learning_rate = 1e-3
-    optimizer = tf.train.AdamOptimizer(learning_rate)
-    step_op = optimizer.minimize(loss_op_tr)
+        input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
 
-    # Lets an iterable of TF graphs be output from a session as NP graphs.
-    input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
+        # Connect the data to the model.
+        # Instantiate the model.
+        model = KGMessagePassingLearner(edge_output_size=3, node_output_size=3)
+        # A list of outputs, one per processing step.
+        output_ops_tr = model(input_ph, num_processing_steps_tr)
+        output_ops_ge = model(input_ph, num_processing_steps_ge)
 
-    # Reset the Tensorflow session, but keep the same computational graph.
+        # Training loss.
+        loss_ops_tr = loss_ops_from_difference(target_ph, output_ops_tr)
+        # Loss across processing steps.
+        loss_op_tr = sum(loss_ops_tr) / num_processing_steps_tr
+        # Test/generalization loss.
+        loss_ops_ge = loss_ops_from_difference(target_ph, output_ops_ge)
+        loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
 
-    sess = tf.Session()
+        # Optimizer
+        learning_rate = 1e-3
+        optimizer = tf.train.AdamOptimizer(learning_rate)
+        step_op = optimizer.minimize(loss_op_tr)
 
-    if log_dir is not None:
-        tf.summary.FileWriter(log_dir, sess.graph)
+        input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
 
-    sess.run(tf.global_variables_initializer())
+        sess = tf.Session()
 
-    last_iteration = 0
-    logged_iterations = []
-    losses_tr = []
-    corrects_tr = []
-    solveds_tr = []
-    losses_ge = []
-    corrects_ge = []
-    solveds_ge = []
+        if log_dir is not None:
+            tf.summary.FileWriter(log_dir, sess.graph)
 
-    print("# (iteration number), T (elapsed seconds), "
-          "Ltr (training loss), Lge (test/generalization loss), "
-          "Ctr (training fraction nodes/edges labeled correctly), "
-          "Str (training fraction examples solved correctly), "
-          "Cge (test/generalization fraction nodes/edges labeled correctly), "
-          "Sge (test/generalization fraction examples solved correctly)")
+        sess.run(tf.global_variables_initializer())
 
-    start_time = time.time()
-    last_log_time = start_time
-    for iteration in range(last_iteration, num_training_iterations):
-        feed_dict = create_feed_dict(input_ph, target_ph, tr_input_graphs, tr_target_graphs)
-        train_values = sess.run(
-            {
-                "step": step_op,
-                "target": target_ph,
-                "loss": loss_op_tr,
-                "outputs": output_ops_tr
-            },
-            feed_dict=feed_dict)
-        the_time = time.time()
-        elapsed_since_last_log = the_time - last_log_time
-        if elapsed_since_last_log > log_every_seconds:
-            last_log_time = the_time
-            feed_dict = create_feed_dict(input_ph, target_ph, ge_input_graphs, ge_target_graphs)
-            test_values = sess.run(
+        last_iteration = 0
+        logged_iterations = []
+        losses_tr = []
+        corrects_tr = []
+        solveds_tr = []
+        losses_ge = []
+        corrects_ge = []
+        solveds_ge = []
+
+        print("# (iteration number), T (elapsed seconds), "
+              "Ltr (training loss), Lge (test/generalization loss), "
+              "Ctr (training fraction nodes/edges labeled correctly), "
+              "Str (training fraction examples solved correctly), "
+              "Cge (test/generalization fraction nodes/edges labeled correctly), "
+              "Sge (test/generalization fraction examples solved correctly)")
+
+        start_time = time.time()
+        last_log_time = start_time
+        for iteration in range(last_iteration, num_training_iterations):
+            feed_dict = create_feed_dict(input_ph, target_ph, tr_input_graphs, tr_target_graphs)
+            train_values = sess.run(
                 {
+                    "step": step_op,
                     "target": target_ph,
-                    "loss": loss_op_ge,
-                    "outputs": output_ops_ge
+                    "loss": loss_op_tr,
+                    "outputs": output_ops_tr
                 },
                 feed_dict=feed_dict)
-            correct_tr, solved_tr = compute_accuracy(
-                train_values["target"], train_values["outputs"][-1], use_edges=True)
-            correct_ge, solved_ge = compute_accuracy(
-                test_values["target"], test_values["outputs"][-1], use_edges=True)
-            elapsed = time.time() - start_time
-            losses_tr.append(train_values["loss"])
-            corrects_tr.append(correct_tr)
-            solveds_tr.append(solved_tr)
-            losses_ge.append(test_values["loss"])
-            corrects_ge.append(correct_ge)
-            solveds_ge.append(solved_ge)
-            logged_iterations.append(iteration)
-            print("# {:05d}, T {:.1f}, Ltr {:.4f}, Lge {:.4f}, Ctr {:.4f}, Str"
-                  " {:.4f}, Cge {:.4f}, Sge {:.4f}".format(
-                iteration, elapsed, train_values["loss"], test_values["loss"],
-                correct_tr, solved_tr, correct_ge, solved_ge))
+            the_time = time.time()
+            elapsed_since_last_log = the_time - last_log_time
+            if elapsed_since_last_log > log_every_seconds:
+                last_log_time = the_time
+                feed_dict = create_feed_dict(input_ph, target_ph, ge_input_graphs, ge_target_graphs)
+                test_values = sess.run(
+                    {
+                        "target": target_ph,
+                        "loss": loss_op_ge,
+                        "outputs": output_ops_ge
+                    },
+                    feed_dict=feed_dict)
+                correct_tr, solved_tr = compute_accuracy(
+                    train_values["target"], train_values["outputs"][-1], use_edges=True)
+                correct_ge, solved_ge = compute_accuracy(
+                    test_values["target"], test_values["outputs"][-1], use_edges=True)
+                elapsed = time.time() - start_time
+                losses_tr.append(train_values["loss"])
+                corrects_tr.append(correct_tr)
+                solveds_tr.append(solved_tr)
+                losses_ge.append(test_values["loss"])
+                corrects_ge.append(correct_ge)
+                solveds_ge.append(solved_ge)
+                logged_iterations.append(iteration)
+                print("# {:05d}, T {:.1f}, Ltr {:.4f}, Lge {:.4f}, Ctr {:.4f}, Str"
+                      " {:.4f}, Cge {:.4f}, Sge {:.4f}".format(
+                    iteration, elapsed, train_values["loss"], test_values["loss"],
+                    correct_tr, solved_tr, correct_ge, solved_ge))
 
-    plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-    plot_input_vs_output(ge_graphs, test_values, num_processing_steps_ge)
+        plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
+        plot_input_vs_output(ge_graphs, test_values, num_processing_steps_ge)
 
-    return train_values, test_values
+        return train_values, test_values
 
 
 class TypewiseEncoder(snt.AbstractModule):

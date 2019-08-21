@@ -48,7 +48,7 @@ class TestPlotInputVsOutput(unittest.TestCase):
         graph.add_edge(2, 0, type='parent', **to_infer)
         graph.add_edge(2, 1, type='child', **candidate)
 
-        inputs, targets = create_input_target_graphs([graph], all_node_types, all_edge_types)
+        inputs, targets = create_input_target_graphs([graph])
         target_graphs = networkxs_to_graphs_tuple(targets)
         test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}
         plot_input_vs_output([graph], test_values, num_processing_steps_ge)

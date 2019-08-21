@@ -21,8 +21,16 @@ import numpy as np
 import sonnet as snt
 import tensorflow as tf
 
+from kglib.kgcn_experimental.custom_nx import multidigraph_data_iterator
 
-def graph_to_input_target(graph):
+
+def graph_to_input_target(graph,
+                          input_node_fields,
+                          input_edge_fields,
+                          target_node_fields,
+                          target_edge_fields,
+                          features_field):
+
     """Returns 2 graphs with input and target feature vectors for training.
 
     Args:
@@ -39,45 +47,43 @@ def graph_to_input_target(graph):
     def create_feature(attr, fields):
         return np.hstack([np.array(attr[field], dtype=float) for field in fields])
 
-    input_node_fields = ("input", "one_hot_type")
-    input_edge_fields = ("input", "one_hot_type")
-    target_node_fields = ("solution",)
-    target_edge_fields = ("solution",)
-
     input_graph = graph.copy()
     target_graph = graph.copy()
 
-    for node_index, node_feature in graph.nodes(data=True):
-        input_graph.nodes[node_index]['features'] = create_feature(node_feature, input_node_fields)
-        solution_category = create_feature(node_feature, target_node_fields).astype(int)
-        target_node_features = encode_solution(solution_category)
-        target_graph.nodes[node_index]['features'] = target_node_features
+    for node_index, node_data in graph.nodes(data=True):
+        input_graph.nodes[node_index][features_field] = create_feature(node_data, input_node_fields)
+        target_graph.nodes[node_index][features_field] = create_feature(node_data, target_node_fields)
 
-    for receiver, sender, edge_features in graph.edges(data=True):
-        input_graph.edges[receiver, sender, 0]['features'] = create_feature(edge_features, input_edge_fields)
+    for receiver, sender, edge_data in graph.edges(data=True):
+        input_graph.edges[receiver, sender, 0][features_field] = create_feature(edge_data, input_edge_fields)
+        target_graph.edges[receiver, sender, 0][features_field] = create_feature(edge_data, target_edge_fields)
 
-        solution_category = create_feature(edge_features, target_edge_fields).astype(int)
-        target_edge_features = encode_solution(solution_category)
-        target_graph.edges[receiver, sender, 0]['features'] = target_edge_features
-
-    input_graph.graph["features"] = np.array([0.0]*5)
-    target_graph.graph["features"] = np.array([0.0]*5)
+    input_graph.graph[features_field] = np.array([0.0]*5)
+    target_graph.graph[features_field] = np.array([0.0]*5)
 
     return input_graph, target_graph
 
 
-def encode_solution(category_index):
+def encode_solutions(graph, solution_field="solution", encoded_solution_field="encoded_solution",
+                     encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])):
     """
     Determines the encoding to use for a solution category
     Args:
-        category_index: 0 to indicate a negative candidate in the solution,
-                        1 to indicate a positive candidate in the solution,
-                        2 to indicate pre-existing elements
+        graph: Graph to update
+        solution_field: The property in the graph that holds the value of the solution
+        encoded_solution_field: The property in the graph to use to hold the new solution value
+        encodings: An array, a row from which will be picked as the new solution based on using the current solution
+            as a row index
 
-    Returns: Encoding for the category
+    Returns: Graph with updated `encoded_solution_field`
 
     """
-    return np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])[category_index][0]
+
+    for data in multidigraph_data_iterator(graph):
+        solution = data[solution_field]
+        data[encoded_solution_field] = encodings[solution]
+
+    return graph
 
 
 def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):
@@ -103,6 +109,8 @@ def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_t
         index_to_one_hot = all_edge_types.index(edge_feature[type_attribute])
         one_hot[index_to_one_hot] = 1
         G.edges[sender, receiver, keys][attribute] = one_hot
+
+    return G
 
 
 def make_mlp_model(latent_size=16, num_layers=2):
