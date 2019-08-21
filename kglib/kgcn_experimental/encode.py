@@ -128,14 +128,15 @@ def make_mlp_model(latent_size=16, num_layers=2):
     ])
 
 
-class ThingEncoder(snt.AbstractModule):
-    def __init__(self, num_types, op, name='thing_encoder'):
-        super(ThingEncoder, self).__init__(name=name)
+class TypeEncoder(snt.AbstractModule):
+    def __init__(self, num_types, type_indicator_index, op, name='type_encoder'):
+        super(TypeEncoder, self).__init__(name=name)
+        self._index_of_type = type_indicator_index
         self._num_types = num_types
         with self._enter_variable_scope():
             self._op = op
 
     def _build(self, features):
-        index = tf.cast(features[:, 0], dtype=tf.int64)
+        index = tf.cast(features[:, self._index_of_type], dtype=tf.int64)
         one_hot = tf.one_hot(index, self._num_types, on_value=1.0, off_value=0.0, axis=-1, dtype=tf.float32)
         return self._op(one_hot)
