@@ -22,8 +22,9 @@ import unittest
 import networkx as nx
 import numpy as np
 
+from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 from kglib.kgcn_experimental.genealogy.in_memory.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
-from kglib.kgcn_experimental.encode import encode_types_one_hot
+from kglib.kgcn_experimental.encode import encode_type_categorically
 
 
 class TestDataGeneration(unittest.TestCase):
@@ -126,31 +127,36 @@ class TestAddSiblingship(unittest.TestCase):
         self.assertEqual(G.edges[9, 1, 0]['input'], 1)
 
 
-class TestOneHotEncodeTypes(unittest.TestCase):
+class TestCategoricallyEncodeTypes(unittest.TestCase):
     def test_type_encoding_is_as_expected(self):
         num_people = 2
         G = generate_graph(num_people)
         all_node_types = ['person', 'parentship', 'siblingship']
         all_edge_types = ['parent', 'child', 'sibling']
-        encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type')
+
+        node_iterator = multidigraph_node_data_iterator(G)
+        encode_type_categorically(node_iterator, all_node_types, 'type', 'categorical_type')
+
+        edge_iterator = multidigraph_edge_data_iterator(G)
+        encode_type_categorically(edge_iterator, all_edge_types, 'type', 'categorical_type')
 
         for node_index, node_feature in G.nodes(data=True):
             if node_feature['type'] == 'person':
-                np.testing.assert_array_equal(node_feature['one_hot_type'], np.array([1, 0, 0]))
+                np.testing.assert_array_equal(node_feature['categorical_type'], 0)
             elif node_feature['type'] == 'parentship':
-                np.testing.assert_array_equal(node_feature['one_hot_type'], np.array([0, 1, 0]))
+                np.testing.assert_array_equal(node_feature['categorical_type'], 1)
             elif node_feature['type'] == 'siblingship':
-                np.testing.assert_array_equal(node_feature['one_hot_type'], np.array([0, 0, 1]))
+                np.testing.assert_array_equal(node_feature['categorical_type'], 2)
             else:
                 raise ValueError(f'All nodes should have a type in {all_node_types}')
 
         for receiver, sender, edge_feature in G.edges(data=True):
             if edge_feature['type'] == 'parent':
-                np.testing.assert_array_equal(edge_feature['one_hot_type'], np.array([1, 0, 0]))
+                np.testing.assert_array_equal(edge_feature['categorical_type'], 0)
             elif edge_feature['type'] == 'child':
-                np.testing.assert_array_equal(edge_feature['one_hot_type'], np.array([0, 1, 0]))
+                np.testing.assert_array_equal(edge_feature['categorical_type'], 1)
             elif edge_feature['type'] == 'sibling':
-                np.testing.assert_array_equal(edge_feature['one_hot_type'], np.array([0, 0, 1]))
+                np.testing.assert_array_equal(edge_feature['categorical_type'], 2)
             else:
                 raise ValueError(f'All edges should have a type in {all_edge_types}')
 

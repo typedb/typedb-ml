@@ -24,44 +24,22 @@ import tensorflow as tf
 from kglib.kgcn_experimental.custom_nx import multidigraph_data_iterator
 
 
-def graph_to_input_target(graph,
-                          input_node_fields,
-                          input_edge_fields,
-                          target_node_fields,
-                          target_edge_fields,
-                          features_field):
-
-    """Returns 2 graphs with input and target feature vectors for training.
+def augment_data_fields(graph_data_iterator, fields_to_augment, augmented_field):
+    """
+    Returns a graph with features built from augmenting data fields found in the graph
 
     Args:
-    graph: An `nx.MultiDiGraph` instance.
+        graph_data_iterator: iterator over the data for elements in a graph
+        fields_to_augment: the fields of the data dictionaries to augment together
+        augmented_field: the field in which to store the augmented fields
 
     Returns:
-    The input `nx.MultiDiGraph` instance.
-    The target `nx.MultiDiGraph` instance.
+        None, updates the graph in-place
 
-    Raises:
-    ValueError: unknown node type
     """
 
-    def create_feature(attr, fields):
-        return np.hstack([np.array(attr[field], dtype=float) for field in fields])
-
-    input_graph = graph.copy()
-    target_graph = graph.copy()
-
-    for node_index, node_data in graph.nodes(data=True):
-        input_graph.nodes[node_index][features_field] = create_feature(node_data, input_node_fields)
-        target_graph.nodes[node_index][features_field] = create_feature(node_data, target_node_fields)
-
-    for receiver, sender, edge_data in graph.edges(data=True):
-        input_graph.edges[receiver, sender, 0][features_field] = create_feature(edge_data, input_edge_fields)
-        target_graph.edges[receiver, sender, 0][features_field] = create_feature(edge_data, target_edge_fields)
-
-    input_graph.graph[features_field] = np.array([0.0]*5)
-    target_graph.graph[features_field] = np.array([0.0]*5)
-
-    return input_graph, target_graph
+    for data in graph_data_iterator:
+        data[augmented_field] = np.hstack([np.array(data[field], dtype=float) for field in fields_to_augment])
 
 
 def encode_solutions(graph, solution_field="solution", encoded_solution_field="encoded_solution",
@@ -100,33 +78,6 @@ def encode_type_categorically(graph_data_iterator, all_types, type_field, catego
     """
     for data in graph_data_iterator:
         data[category_field] = all_types.index(data[type_field])
-
-
-def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):
-    """
-    Creates a one-hot encoding for every element in the graph, based on the "type" attribute of each element.
-    Adds this one-hot vector to each element as `attribute`
-    :param G: The graph to encode
-    :param all_node_types: The list of node types to encode from
-    :param all_edge_types: The list of edge types to encode from
-    :param attribute: The attribute to store the encodings on
-    :param type_attribute: The pre-existing attribute that indicates the type of the element
-    """
-
-    # TODO Catch the case where all types haven't been given correctly
-    for node_index, node_feature in G.nodes(data=True):
-        one_hot = np.zeros(len(all_node_types), dtype=np.int)
-        index_to_one_hot = all_node_types.index(node_feature[type_attribute])
-        one_hot[index_to_one_hot] = 1
-        G.nodes[node_index][attribute] = one_hot
-
-    for sender, receiver, keys, edge_feature in G.edges(data=True, keys=True):
-        one_hot = np.zeros(len(all_edge_types), dtype=np.int)
-        index_to_one_hot = all_edge_types.index(edge_feature[type_attribute])
-        one_hot[index_to_one_hot] = 1
-        G.edges[sender, receiver, keys][attribute] = one_hot
-
-    return G
 
 
 def make_mlp_model(latent_size=16, num_layers=2):

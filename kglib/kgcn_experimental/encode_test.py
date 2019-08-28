@@ -23,35 +23,29 @@ import numpy as np
 import tensorflow as tf
 from mock import Mock
 
-from kglib.kgcn_experimental.encode import encode_types_one_hot, graph_to_input_target, TypeEncoder, make_mlp_model
-from kglib.kgcn_experimental.genealogy.in_memory.data import create_graph
+from kglib.kgcn_experimental.encode import augment_data_fields, TypeEncoder, make_mlp_model
 from kglib.kgcn_experimental.test.utils import get_call_args
 
 
-class TestGraphToInputTarget(unittest.TestCase):
-    def test_number_of_nodes_in_outputs_is_correct(self):
-        all_node_types = ['person', 'parentship', 'siblingship']
-        all_edge_types = ['parent', 'child', 'sibling']
-        graph = create_graph(1)
-        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
+class TestAugmentDataFields(unittest.TestCase):
 
-        expected_n_nodes = graph.number_of_nodes()
+    def test_numpy_fields_augmented_as_expected(self):
+        data = [dict(attr1=np.array([0, 1, 0]), attr2=np.array([5]))]
 
-        input_graph, target_graph = graph_to_input_target(graph)
-        self.assertEqual(expected_n_nodes, input_graph.number_of_nodes())
-        self.assertEqual(expected_n_nodes, target_graph.number_of_nodes())
+        augment_data_fields(data, ('attr1', 'attr2'), 'features')
 
-    def test_number_of_edges_in_outputs_is_correct(self):
-        all_node_types = ['person', 'parentship', 'siblingship']
-        all_edge_types = ['parent', 'child', 'sibling']
-        graph = create_graph(1)
-        encode_types_one_hot(graph, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type')
+        expected_data = [dict(attr1=np.array([0, 1, 0]), attr2=np.array([5]), features=np.array([0, 1, 0, 5]))]
 
-        expected_n_edges = graph.number_of_edges()
+        np.testing.assert_equal(expected_data, data)
 
-        input_graph, target_graph = graph_to_input_target(graph)
-        self.assertEqual(expected_n_edges, input_graph.number_of_edges())
-        self.assertEqual(expected_n_edges, target_graph.number_of_edges())
+    def test_augmenting_non_numpy_numeric(self):
+        data = [dict(attr1=np.array([0, 1, 0]), attr2=5)]
+
+        augment_data_fields(data, ('attr1', 'attr2'), 'features')
+
+        expected_data = [dict(attr1=np.array([0, 1, 0]), attr2=5, features=np.array([0, 1, 0, 5]))]
+
+        np.testing.assert_equal(expected_data, data)
 
 
 class TestTypeEncoder(unittest.TestCase):

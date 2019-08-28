@@ -25,8 +25,9 @@ import tensorflow as tf
 from graph_nets import modules
 from graph_nets import utils_tf
 
-from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
-from kglib.kgcn_experimental.encode import encode_types_one_hot, encode_solutions, graph_to_input_target, \
+from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator, \
+    multidigraph_data_iterator
+from kglib.kgcn_experimental.encode import encode_solutions, augment_data_fields, \
     encode_type_categorically
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
@@ -99,8 +100,6 @@ class KGCN:
         for graph in graphs:
             graph = encode_solutions(graph, solution_field="solution", encoded_solution_field="encoded_solution",
                                      encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
-            graph = encode_types_one_hot(graph, self.all_node_types, self.all_edge_types, attribute='one_hot_type',
-                                         type_attribute='type')
 
             node_iterator = multidigraph_node_data_iterator(graph)
             encode_type_categorically(node_iterator, self.all_node_types, 'type', 'categorical_type')
@@ -108,12 +107,16 @@ class KGCN:
             edge_iterator = multidigraph_edge_data_iterator(graph)
             encode_type_categorically(edge_iterator, self.all_edge_types, 'type', 'categorical_type')
 
-            input_graph, target_graph = graph_to_input_target(graph,
-                                                              input_node_fields=("input", "one_hot_type"),
-                                                              input_edge_fields=("input", "one_hot_type"),
-                                                              target_node_fields=("encoded_solution",),
-                                                              target_edge_fields=("encoded_solution",),
-                                                              features_field="features")
+            features_field = "features"
+
+            input_graph = graph.copy()
+            augment_data_fields(multidigraph_data_iterator(input_graph), ("input", "categorical_type"), features_field)
+            input_graph.graph[features_field] = np.array([0.0] * 5)
+
+            target_graph = graph.copy()
+            augment_data_fields(multidigraph_data_iterator(target_graph), ("encoded_solution",), features_field)
+            target_graph.graph[features_field] = np.array([0.0] * 5)
+
             input_graphs.append(input_graph)
             target_graphs.append(target_graph)
         return input_graphs, target_graphs
