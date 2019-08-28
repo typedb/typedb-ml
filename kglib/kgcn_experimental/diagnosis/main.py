@@ -28,7 +28,7 @@ from kglib.kgcn_experimental.prepare import apply_logits_to_graphs, duplicate_ed
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 
-def main(num_graphs=60, num_processing_steps_tr=10, num_processing_steps_ge=10, num_training_iterations=1000):
+def diagnosis_example(num_graphs=60, num_processing_steps_tr=10, num_processing_steps_ge=10, num_training_iterations=1000):
 
     # The value at which to split the data into training and evaluation sets
     tr_ge_split = int(num_graphs*0.5)
@@ -86,4 +86,4 @@ def main(num_graphs=60, num_processing_steps_tr=10, num_processing_steps_ge=10, 
 
 
 if __name__ == "__main__":
-    main()
+    diagnosis_example()

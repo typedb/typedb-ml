@@ -38,10 +38,10 @@ class TestKGCN(unittest.TestCase):
     def test_kgcn_runs(self):
         graph = nx.MultiDiGraph()
         graph.add_node(0, type='person', input=1, solution=0)
-        graph.add_edge(0, 1, type='sibling', input=1, solution=0)
-        graph.add_node(1, type='person', input=1, solution=0)
+        graph.add_edge(0, 1, type='employee', input=1, solution=0)
+        graph.add_node(1, type='employment', input=1, solution=0)
 
-        kgcn = KGCN(['person'], ['sibling'])
+        kgcn = KGCN(['person', 'employment'], ['employee'])
         kgcn([graph], [graph], num_training_iterations=50, log_every_seconds=0.5)
 
 

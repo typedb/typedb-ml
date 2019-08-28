@@ -86,6 +86,22 @@ def encode_solutions(graph, solution_field="solution", encoded_solution_field="e
     return graph
 
 
+def encode_type_categorically(graph_data_iterator, all_types, type_field, category_field):
+    """
+    Encodes the type found in graph data as an integer according to the index it is found in `all_types`
+    Args:
+        graph_data_iterator: An iterator of data in the graph (node data, edge data or combined node and edge data)
+        all_types: The full list of types to be encoded in this order
+        type_field: The data field containing the type
+        category_field: The data field to use to store the encoding
+
+    Returns:
+
+    """
+    for data in graph_data_iterator:
+        data[category_field] = all_types.index(data[type_field])
+
+
 def encode_types_one_hot(G, all_node_types, all_edge_types, attribute='one_hot_type', type_attribute='type'):
     """
     Creates a one-hot encoding for every element in the graph, based on the "type" attribute of each element.

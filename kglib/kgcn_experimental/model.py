@@ -25,7 +25,9 @@ import tensorflow as tf
 from graph_nets import modules
 from graph_nets import utils_tf
 
-from kglib.kgcn_experimental.encode import encode_types_one_hot, encode_solutions, graph_to_input_target
+from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
+from kglib.kgcn_experimental.encode import encode_types_one_hot, encode_solutions, graph_to_input_target, \
+    encode_type_categorically
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
@@ -99,6 +101,12 @@ class KGCN:
                                      encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
             graph = encode_types_one_hot(graph, self.all_node_types, self.all_edge_types, attribute='one_hot_type',
                                          type_attribute='type')
+
+            node_iterator = multidigraph_node_data_iterator(graph)
+            encode_type_categorically(node_iterator, self.all_node_types, 'type', 'categorical_type')
+
+            edge_iterator = multidigraph_edge_data_iterator(graph)
+            encode_type_categorically(edge_iterator, self.all_edge_types, 'type', 'categorical_type')
 
             input_graph, target_graph = graph_to_input_target(graph,
                                                               input_node_fields=("input", "one_hot_type"),

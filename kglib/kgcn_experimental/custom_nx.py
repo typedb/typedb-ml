@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+from itertools import chain
 
 import networkx.utils
 
@@ -288,9 +289,15 @@ def draw_networkx_edge_labels(G, pos,
     return text_items
 
 
-def multidigraph_data_iterator(graph):
-    for node_index, node_data in graph.nodes(data=True):
+def multidigraph_edge_data_iterator(graph):
+    for _, _, _, edge_data in graph.edges(data=True, keys=True):
+        yield edge_data
+
+
+def multidigraph_node_data_iterator(graph):
+    for _, node_data in graph.nodes(data=True):
         yield node_data
 
-    for receiver, sender, keys, edge_data in graph.edges(data=True, keys=True):
-        yield edge_data
+
+def multidigraph_data_iterator(graph):
+    return chain(multidigraph_node_data_iterator(graph), multidigraph_edge_data_iterator(graph))
