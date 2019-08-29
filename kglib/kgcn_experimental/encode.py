@@ -110,4 +110,4 @@ class TypeEncoder(snt.AbstractModule):
 
 
 def pass_input_through_op(op):
-    return lambda features: tf.concat([tf.expand_dims(features[:, 0], axis=1), op(features[:, 1:])], axis=1)
+    return lambda features: tf.concat([tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1), op(features[:, 1:])], axis=1)

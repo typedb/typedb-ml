@@ -112,11 +112,11 @@ class KGCN:
 
             input_graph = graph.copy()
             augment_data_fields(multidigraph_data_iterator(input_graph), ("input", "categorical_type"), features_field)
-            input_graph.graph[features_field] = np.array([0.0] * 5)
+            input_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
 
             target_graph = graph.copy()
             augment_data_fields(multidigraph_data_iterator(target_graph), ("encoded_solution",), features_field)
-            target_graph.graph[features_field] = np.array([0.0] * 5)
+            target_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
 
             input_graphs.append(input_graph)
             target_graphs.append(target_graph)
@@ -144,12 +144,14 @@ class KGCN:
 
         input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
 
-        feature_length = 2
+        feature_length = 16
 
-        type_encoder_op = make_mlp_model()
+        # We need different ops for nodes and edges when using one-hot since the number of types in each differs
+        edge_type_encoder_op = make_mlp_model(latent_size=16, num_layers=2)
+        node_type_encoder_op = make_mlp_model(latent_size=16, num_layers=2)
 
-        edge_encoders_for_types = {TypeEncoder(len(self.all_edge_types), 0, type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
-        node_encoders_for_types = {TypeEncoder(len(self.all_node_types), 0, type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
+        edge_encoders_for_types = {TypeEncoder(len(self.all_edge_types), 0, edge_type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
+        node_encoders_for_types = {TypeEncoder(len(self.all_node_types), 0, node_type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
 
         edge_typewise = TypewiseEncoder(edge_encoders_for_types, feature_length, name="edge_typewise_encoder")
         node_typewise = TypewiseEncoder(node_encoders_for_types, feature_length, name="node_typewise_encoder")
@@ -269,11 +271,11 @@ class TypewiseEncoder(snt.AbstractModule):
 
     def _build(self, features):
 
-        # encoded_features = tf.zeros([features.shape[0], self._feature_length], dtype=tf.float64)
+        # encoded_features = tf.zeros([features.shape[0], self._feature_length], dtype=tf.float32)
 
         dims = tf.stack([tf.shape(features)[0], self._feature_length])
 
-        encoded_features = tf.zeros(dims, dtype=tf.float64)
+        encoded_features = tf.zeros(dims, dtype=tf.float32)
 
         for encoder, types in self._encoders_for_types.items():
 

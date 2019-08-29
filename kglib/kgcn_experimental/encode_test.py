@@ -53,21 +53,21 @@ class TestTypeEncoder(unittest.TestCase):
         tf.enable_eager_execution()
 
     def test_type_encoding_stages_are_as_expected(self):
-        op_mock = Mock(return_value=np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float64))
+        op_mock = Mock(return_value=np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float32))
 
         encode = TypeEncoder(5, 0, op=op_mock)
-        encoding = encode(np.array([[1, 0.1234]], dtype=np.float64))
+        encoding = encode(np.array([[1, 0.1234]], dtype=np.float32))
 
         op_mock_call_args = get_call_args(op_mock)
-        expected_one_hot_encoding = np.array([[0, 1, 0, 0, 0]], dtype=np.float64)
+        expected_one_hot_encoding = np.array([[0, 1, 0, 0, 0]], dtype=np.float32)
         np.testing.assert_array_equal(op_mock_call_args[0][0].numpy(), expected_one_hot_encoding)
 
-        expected_encoding = np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float64)
+        expected_encoding = np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float32)
         np.testing.assert_array_equal(expected_encoding, encoding)
 
     def test_default_op_works_as_expected(self):
         encode = TypeEncoder(5, 0, make_mlp_model(latent_size=16, num_layers=2))
-        encoding = encode(tf.constant(np.array([[1, 0.1234]]), dtype=np.float64))
+        encoding = encode(tf.constant(np.array([[1, 0.1234]]), dtype=np.float32))
         self.assertEqual((1, 16), encoding.numpy().shape)
         print(encoding)
 
@@ -76,23 +76,23 @@ class TestAttributeEncoder(unittest.TestCase):
     def test_attribute_encoding_stages_are_as_expected(self):
 
         def op_mock():
-            return Mock(return_value=np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float64))
+            return Mock(return_value=np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float32))
 
         def attr_mock():
-            return Mock(return_value=np.array([0.22632198, 0.29790161, 0.44993045], dtype=np.float64))
+            return Mock(return_value=np.array([0.22632198, 0.29790161, 0.44993045], dtype=np.float32))
 
         encode = AttributeEncoder(5, 0, op=op_mock, attr_op=attr_mock)
-        encoding = encode(np.array([2, 0.1234], dtype=np.float64))
+        encoding = encode(np.array([2, 0.1234], dtype=np.float32))
 
         op_mock_call_args = get_call_args(op_mock)
-        expected_intermediate_encoding = np.array([0, 0, 1, 0, 0, 0.22632198, 0.29790161, 0.44993045], dtype=np.float64)
+        expected_intermediate_encoding = np.array([0, 0, 1, 0, 0, 0.22632198, 0.29790161, 0.44993045], dtype=np.float32)
         np.testing.assert_array_equal(op_mock_call_args, [[expected_intermediate_encoding]])
 
         attr_mock_call_args = get_call_args(attr_mock)
-        expected_attribute_value = np.array([0.1234], dtype=np.float64)
+        expected_attribute_value = np.array([0.1234], dtype=np.float32)
         np.testing.assert_array_equal(attr_mock_call_args, [[expected_attribute_value]])
 
-        expected_encoding = np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float64)
+        expected_encoding = np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float32)
         np.testing.assert_array_equal(expected_encoding, encoding)
 
 

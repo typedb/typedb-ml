@@ -47,23 +47,24 @@ class TestKGCN(unittest.TestCase):
 
 class TestTypewiseEncoder(unittest.TestCase):
     def test_types_encoded_by_expected_functions(self):
-        things = np.array([[0, 0], [1, 0], [2, 0.5673]], dtype=np.float64)
+        tf.enable_eager_execution()
+        things = np.array([[0, 0], [1, 0], [2, 0.5673]], dtype=np.float32)
 
-        entity_relation = Mock(return_value=np.array([[0.1, 0, 0], [0.1, 0, 0]], dtype=np.float64))
+        entity_relation = Mock(return_value=np.array([[0.1, 0, 0], [0.1, 0, 0]], dtype=np.float32))
 
-        continuous_attribute = Mock(return_value=np.array([[0.9527, 0.2367, 0.7582]], dtype=np.float64))
+        continuous_attribute = Mock(return_value=np.array([[0.9527, 0.2367, 0.7582]], dtype=np.float32))
 
         encoders_for_types = {entity_relation: [0, 1], continuous_attribute: [2]}
 
         tm = TypewiseEncoder(encoders_for_types, 3)
         encoding = tm(things)  # The function under test
 
-        np.testing.assert_array_equal([[np.array([[0, 0], [1, 0]], dtype=np.float64)]],
+        np.testing.assert_array_equal([[np.array([[0, 0], [1, 0]], dtype=np.float32)]],
                                       get_call_args(entity_relation))
 
-        np.testing.assert_array_equal([[np.array([[2, 0.5673]], dtype=np.float64)]], get_call_args(continuous_attribute))
+        np.testing.assert_array_equal([[np.array([[2, 0.5673]], dtype=np.float32)]], get_call_args(continuous_attribute))
 
-        expected_encoding = np.array([[0.1, 0, 0], [0.1, 0, 0], [0.9527, 0.2367, 0.7582]], dtype=np.float64)
+        expected_encoding = np.array([[0.1, 0, 0], [0.1, 0, 0], [0.9527, 0.2367, 0.7582]], dtype=np.float32)
         np.testing.assert_array_equal(expected_encoding, encoding.numpy())
 
 
@@ -74,7 +75,7 @@ class ITTypewiseEncoder(unittest.TestCase):
         tf.reset_default_graph()
         tf.set_random_seed(1)
 
-        things = tf.Variable(initial_value=np.array([[0, 0], [1, 0], [2, 0.5673]], dtype=np.float64))
+        things = tf.Variable(initial_value=np.array([[0, 0], [1, 0], [2, 0.5673]], dtype=np.float32))
 
         entity_relation = lambda x: x
         continuous_attribute = lambda x: x

@@ -29,10 +29,10 @@ class TestComputeAccuracy(unittest.TestCase):
 
     def test_compute_accuracy_is_as_expected(self):
 
-        t_nodes = np.array([[1, 0], [1, 0], [0, 1]], dtype=np.float64)
-        o_nodes = np.array([[0, 1], [1, 0], [1, 0]], dtype=np.float64)
-        t_edges = np.array([[0, 1], [1, 0]], dtype=np.float64)
-        o_edges = np.array([[1, 0], [1, 0]], dtype=np.float64)
+        t_nodes = np.array([[1, 0], [1, 0], [0, 1]], dtype=np.float32)
+        o_nodes = np.array([[0, 1], [1, 0], [1, 0]], dtype=np.float32)
+        t_edges = np.array([[0, 1], [1, 0]], dtype=np.float32)
+        o_edges = np.array([[1, 0], [1, 0]], dtype=np.float32)
 
         globals = None
         senders = np.array([0, 1])

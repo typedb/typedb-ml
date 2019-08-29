@@ -72,9 +72,9 @@ class TestApplyLogitsToGraphs(GraphTestCase):
         graph.add_node(1)
         graph.add_edge(0, 1)
 
-        nodes = np.array([[0.2, 0.3, 0.01], [0.56, -0.04, 0.05]], dtype=np.float64)
+        nodes = np.array([[0.2, 0.3, 0.01], [0.56, -0.04, 0.05]], dtype=np.float32)
         edges = np.array([[0.5, 0.008, -0.1],
-                          [0.5, 0.008, -0.1]], dtype=np.float64)
+                          [0.5, 0.008, -0.1]], dtype=np.float32)
 
         globals = None
         senders = np.array([0, 1])
