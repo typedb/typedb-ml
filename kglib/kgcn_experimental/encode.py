@@ -107,3 +107,7 @@ class TypeEncoder(snt.AbstractModule):
         index = tf.cast(features[:, self._index_of_type], dtype=tf.int64)
         one_hot = tf.one_hot(index, self._num_types, on_value=1.0, off_value=0.0, axis=-1, dtype=tf.float32)
         return self._op(one_hot)
+
+
+def pass_input_through_op(op):
+    return lambda features: tf.concat([tf.expand_dims(features[:, 0], axis=1), op(features[:, 1:])], axis=1)

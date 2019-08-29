@@ -23,7 +23,7 @@ import numpy as np
 import tensorflow as tf
 from mock import Mock
 
-from kglib.kgcn_experimental.encode import augment_data_fields, TypeEncoder, make_mlp_model
+from kglib.kgcn_experimental.encode import augment_data_fields, TypeEncoder, make_mlp_model, pass_input_through_op
 from kglib.kgcn_experimental.test.utils import get_call_args
 
 
@@ -94,6 +94,19 @@ class TestAttributeEncoder(unittest.TestCase):
 
         expected_encoding = np.array([0.121, 1.621, 1.437, -0.194, -0.216], dtype=np.float64)
         np.testing.assert_array_equal(expected_encoding, encoding)
+
+
+class TestPassInputThroughOp(unittest.TestCase):
+    def test_input_passed_as_expected(self):
+        tf.enable_eager_execution()
+        feats = np.array([[0, 0, 1],
+                          [1, 2, 0]])
+        expected_output = np.array([[0, 1, 2],
+                                    [1, 3, 1]])
+
+        op = lambda x: x + 1
+        output = pass_input_through_op(op)(feats)
+        np.testing.assert_array_equal(expected_output, output.numpy())
 
 
 if __name__ == "__main__":

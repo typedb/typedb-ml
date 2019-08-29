@@ -24,11 +24,12 @@ import sonnet as snt
 import tensorflow as tf
 from graph_nets import modules
 from graph_nets import utils_tf
+from graph_nets.modules import GraphIndependent
 
 from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator, \
     multidigraph_data_iterator
 from kglib.kgcn_experimental.encode import encode_solutions, augment_data_fields, \
-    encode_type_categorically
+    encode_type_categorically, pass_input_through_op, TypeEncoder
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
@@ -143,9 +144,23 @@ class KGCN:
 
         input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
 
-        # Connect the data to the model.
-        # Instantiate the model.
-        model = KGMessagePassingLearner(edge_output_size=3, node_output_size=3)
+        feature_length = 2
+
+        type_encoder_op = make_mlp_model()
+
+        edge_encoders_for_types = {TypeEncoder(len(self.all_edge_types), 0, type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
+        node_encoders_for_types = {TypeEncoder(len(self.all_node_types), 0, type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
+
+        edge_typewise = TypewiseEncoder(edge_encoders_for_types, feature_length, name="edge_typewise_encoder")
+        node_typewise = TypewiseEncoder(node_encoders_for_types, feature_length, name="node_typewise_encoder")
+
+        edge_model = snt.Module(pass_input_through_op(edge_typewise))
+        node_model = snt.Module(pass_input_through_op(node_typewise))
+
+        kg_encoder = KGIndependent(edge_model, node_model)
+
+        model = KGMessagePassingLearner(kg_encoder, edge_output_size=3, node_output_size=3)
+
         # A list of outputs, one per processing step.
         output_ops_tr = model(input_ph, num_processing_steps_tr)
         output_ops_ge = model(input_ph, num_processing_steps_ge)
@@ -254,7 +269,11 @@ class TypewiseEncoder(snt.AbstractModule):
 
     def _build(self, features):
 
-        encoded_features = np.zeros([features.shape[0], self._feature_length], dtype=np.float64)
+        # encoded_features = tf.zeros([features.shape[0], self._feature_length], dtype=tf.float64)
+
+        dims = tf.stack([tf.shape(features)[0], self._feature_length])
+
+        encoded_features = tf.zeros(dims, dtype=tf.float64)
 
         for encoder, types in self._encoders_for_types.items():
 
@@ -288,31 +307,15 @@ class KGIndependent(snt.AbstractModule):
     """
 
     def __init__(self,
-                 edge_model_fns=None,
-                 node_model_fns=None,
-                 global_model_fn=None,
+                 edge_model,
+                 node_model,
                  name="kg_independent"):
         super(KGIndependent, self).__init__(name=name)
 
         with self._enter_variable_scope():
-            # The use of snt.Module below is to ensure the ops and variables that
-            # result from the edge/node/global_model_fns are scoped analogous to how
-            # the Edge/Node/GlobalBlock classes do.
-            if edge_model_fns is None:
-                self._edge_model = lambda x: x
-            else:
-                self._edge_model = snt.Module(
-                    lambda x: edge_model_fns()(x), name="edge_model")
-            if node_model_fns is None:
-                self._node_model = lambda x: x
-            else:
-                self._node_model = snt.Module(
-                    lambda x: node_model_fns()(x), name="node_model")
-            if global_model_fn is None:
-                self._global_model = lambda x: x
-            else:
-                self._global_model = snt.Module(
-                    lambda x: global_model_fn()(x), name="global_model")
+            self._edge_model = edge_model
+            self._node_model = node_model
+            self._global_model = lambda x: x
 
     def _build(self, graph):
         """Connects the GraphIndependent.
@@ -352,9 +355,9 @@ class MLPGraphIndependent(snt.AbstractModule):
     def __init__(self, name="MLPGraphIndependent"):
         super(MLPGraphIndependent, self).__init__(name=name)
         with self._enter_variable_scope():
-            self._network = KGIndependent(
-                edge_model_fns=make_mlp_model,
-                node_model_fns=make_mlp_model,
+            self._network = GraphIndependent(
+                edge_model_fn=make_mlp_model,
+                node_model_fn=make_mlp_model,
                 global_model_fn=make_mlp_model)
 
     def _build(self, inputs):
@@ -377,12 +380,13 @@ class MLPGraphNetwork(snt.AbstractModule):
 class KGMessagePassingLearner(snt.AbstractModule):
 
     def __init__(self,
+                 kg_encoder,
                  edge_output_size=None,
                  node_output_size=None,
                  global_output_size=None,
                  name="EncodeProcessDecode"):
         super(KGMessagePassingLearner, self).__init__(name=name)
-        self._encoder = MLPGraphIndependent()
+        self._encoder = kg_encoder
         self._core = MLPGraphNetwork()
         self._decoder = MLPGraphIndependent()
         # Transforms the outputs into the appropriate shapes.
