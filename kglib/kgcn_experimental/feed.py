@@ -27,8 +27,8 @@ def create_placeholders(input_graphs, target_graphs):
     input_ph: The input graph's placeholders, as a graph namedtuple.
     target_ph: The target graph's placeholders, as a graph namedtuple.
     """
-    input_ph = utils_tf.placeholders_from_networkxs(input_graphs)
-    target_ph = utils_tf.placeholders_from_networkxs(target_graphs)
+    input_ph = utils_tf.placeholders_from_networkxs(input_graphs, name="input_placeholders_from_networksx")
+    target_ph = utils_tf.placeholders_from_networkxs(target_graphs, name="target_placeholders_from_networkxs")
     return input_ph, target_ph
 
 

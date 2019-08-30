@@ -276,6 +276,18 @@ class TypewiseEncoder(snt.AbstractModule):
             name: The name for this Module
         """
         super(TypewiseEncoder, self).__init__(name=name)
+
+        types_considered = []
+        for a in encoders_for_types.values():
+            types_considered.extend(a)
+        types_considered.sort()
+
+        expected_types = list(range(max(types_considered) + 1))
+
+        if types_considered != expected_types:
+            raise ValueError(
+                f'Encoder categories are inconsistent. Expected {expected_types}, but got {types_considered}')
+
         self._feature_length = feature_length
         self._encoders_for_types = encoders_for_types
 
