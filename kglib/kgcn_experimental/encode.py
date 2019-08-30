@@ -100,13 +100,12 @@ class TypeEncoder(snt.AbstractModule):
         super(TypeEncoder, self).__init__(name=name)
         self._index_of_type = type_indicator_index
         self._num_types = num_types
-        with self._enter_variable_scope():
-            self._op = op
+        self._op = op
 
     def _build(self, features):
         index = tf.cast(features[:, self._index_of_type], dtype=tf.int64)
         one_hot = tf.one_hot(index, self._num_types, on_value=1.0, off_value=0.0, axis=-1, dtype=tf.float32)
-        return self._op(one_hot)
+        return self._op()(one_hot)
 
 
 def pass_input_through_op(op):

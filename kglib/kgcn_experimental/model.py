@@ -122,6 +122,33 @@ class KGCN:
             target_graphs.append(target_graph)
         return input_graphs, target_graphs
 
+    def _build(self):
+
+        feature_length = 15
+
+        # We need different ops for nodes and edges when using one-hot since the number of types in each differs
+        def edge_type_encoder_op(): return make_mlp_model(latent_size=15, num_layers=2)
+
+        def node_type_encoder_op(): return make_mlp_model(latent_size=15, num_layers=2)
+
+        edge_encoders_for_types = {lambda: TypeEncoder(len(self.all_edge_types), 0, edge_type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
+        node_encoders_for_types = {lambda: TypeEncoder(len(self.all_node_types), 0, node_type_encoder_op): [i for i, _ in enumerate(self.all_node_types)]}
+
+        def edge_typewise(): return TypewiseEncoder(edge_encoders_for_types, feature_length, name="edge_typewise_encoder")
+
+        def node_typewise(): return TypewiseEncoder(node_encoders_for_types, feature_length, name="node_typewise_encoder")
+
+        def edge_model():
+            return pass_input_through_op(edge_typewise())
+
+        def node_model():
+            return pass_input_through_op(node_typewise())
+
+        kg_encoder = lambda: GraphIndependent(edge_model, node_model, make_mlp_model, name='kg_encoder')
+
+        model = KGMessagePassingLearner(kg_encoder, edge_output_size=3, node_output_size=3)
+        return model
+
     def __call__(self, tr_graphs, ge_graphs, num_processing_steps_tr=10, num_processing_steps_ge=10,
                  num_training_iterations=10000, log_every_seconds=2, log_dir=None):
         """
@@ -137,31 +164,14 @@ class KGCN:
         Returns:
 
         """
+
+        model = self._build()
         tf.set_random_seed(1)
 
         tr_input_graphs, tr_target_graphs = self.input_fn(tr_graphs)
         ge_input_graphs, ge_target_graphs = self.input_fn(ge_graphs)
 
         input_ph, target_ph = create_placeholders(tr_input_graphs, tr_target_graphs)
-
-        feature_length = 16
-
-        # We need different ops for nodes and edges when using one-hot since the number of types in each differs
-        edge_type_encoder_op = make_mlp_model(latent_size=16, num_layers=2)
-        node_type_encoder_op = make_mlp_model(latent_size=16, num_layers=2)
-
-        edge_encoders_for_types = {TypeEncoder(len(self.all_edge_types), 0, edge_type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
-        node_encoders_for_types = {TypeEncoder(len(self.all_node_types), 0, node_type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
-
-        edge_typewise = TypewiseEncoder(edge_encoders_for_types, feature_length, name="edge_typewise_encoder")
-        node_typewise = TypewiseEncoder(node_encoders_for_types, feature_length, name="node_typewise_encoder")
-
-        edge_model = snt.Module(pass_input_through_op(edge_typewise))
-        node_model = snt.Module(pass_input_through_op(node_typewise))
-
-        kg_encoder = KGIndependent(edge_model, node_model)
-
-        model = KGMessagePassingLearner(kg_encoder, edge_output_size=3, node_output_size=3)
 
         # A list of outputs, one per processing step.
         output_ops_tr = model(input_ph, num_processing_steps_tr)
@@ -271,11 +281,9 @@ class TypewiseEncoder(snt.AbstractModule):
 
     def _build(self, features):
 
-        # encoded_features = tf.zeros([features.shape[0], self._feature_length], dtype=tf.float32)
+        shape = tf.stack([tf.shape(features)[0], self._feature_length])
 
-        dims = tf.stack([tf.shape(features)[0], self._feature_length])
-
-        encoded_features = tf.zeros(dims, dtype=tf.float32)
+        encoded_features = tf.zeros(shape, dtype=tf.float32)
 
         for encoder, types in self._encoders_for_types.items():
 
@@ -290,50 +298,12 @@ class TypewiseEncoder(snt.AbstractModule):
             # Use this encoder when the feat_type matches any of the types
             applicable_types_mask = tf.reduce_any(elementwise_equality, axis=1)
             indices_to_encode = tf.where(applicable_types_mask)
-            # feats_to_encode = tf.gather(features, tf.squeeze(indices_to_encode))
             feats_to_encode = tf.squeeze(tf.gather(features, indices_to_encode), axis=1)
-            encoded_feats = encoder(feats_to_encode)
-            encoded_features = tf.tensor_scatter_add(encoded_features, indices_to_encode, encoded_feats)
+            encoded_feats = encoder()(feats_to_encode)
+
+            encoded_features += tf.scatter_nd(tf.cast(indices_to_encode, dtype=tf.int32), encoded_feats, shape)
 
         return encoded_features
-
-
-class KGIndependent(snt.AbstractModule):
-    """
-    A graph model that applies independent models to graph elements according to the types of those elements
-
-    The inputs and outputs are graphs. The corresponding models are applied to
-    each element of the graph (edges, nodes and globals) in parallel and
-    independently of the other elements. It can be used to encode or
-    decode the elements of a knowledge graph.
-    """
-
-    def __init__(self,
-                 edge_model,
-                 node_model,
-                 name="kg_independent"):
-        super(KGIndependent, self).__init__(name=name)
-
-        with self._enter_variable_scope():
-            self._edge_model = edge_model
-            self._node_model = node_model
-            self._global_model = lambda x: x
-
-    def _build(self, graph):
-        """Connects the GraphIndependent.
-
-        Args:
-          graph: A `graphs.GraphsTuple` containing non-`None` edges, nodes and
-            globals.
-
-        Returns:
-          An output `graphs.GraphsTuple` with updated edges, nodes and globals.
-
-        """
-        return graph.replace(
-            edges=self._edge_model(graph.edges),
-            nodes=self._node_model(graph.nodes),
-            globals=self._global_model(graph.globals))
 
 
 def make_mlp_model(latent_size=16, num_layers=2):
@@ -386,11 +356,9 @@ class KGMessagePassingLearner(snt.AbstractModule):
                  edge_output_size=None,
                  node_output_size=None,
                  global_output_size=None,
-                 name="EncodeProcessDecode"):
+                 name="KGMessagePassingLearner"):
         super(KGMessagePassingLearner, self).__init__(name=name)
-        self._encoder = kg_encoder
-        self._core = MLPGraphNetwork()
-        self._decoder = MLPGraphIndependent()
+
         # Transforms the outputs into the appropriate shapes.
         if edge_output_size is None:
             edge_fn = None
@@ -405,6 +373,9 @@ class KGMessagePassingLearner(snt.AbstractModule):
         else:
             global_fn = lambda: snt.Linear(global_output_size, name="global_output")
         with self._enter_variable_scope():
+            self._encoder = kg_encoder()
+            self._core = MLPGraphNetwork()
+            self._decoder = MLPGraphIndependent()
             self._output_transform = modules.GraphIndependent(edge_fn, node_fn,
                                                               global_fn)
 
