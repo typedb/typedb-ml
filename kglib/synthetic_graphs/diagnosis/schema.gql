@@ -3,6 +3,9 @@ define
 example-id sub attribute,
     datatype long;
 
+name sub attribute,
+    datatype string;
+
 person sub entity,
     has example-id,
     plays patient,
@@ -11,6 +14,7 @@ person sub entity,
     plays predicted-patient;
 
 disease sub entity,
+    key name,
     plays cause,
     plays diagnosed-disease,
     plays candidate-diagnosed-disease,
@@ -50,20 +54,14 @@ where-no-diagnosis-add-candidate-diagnosis sub rule,
         (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
     };
 
-
-meningitis sub disease;
-flu sub disease;
-
 causality sub relation,
     relates cause,
     relates effect;
 
 symptom sub entity,
+    key name,
     plays presented-symptom,
     plays effect;
-
-light-sensitivity sub symptom;
-fever sub symptom;
 
 symptom-presentation sub relation,
     relates presented-symptom,
@@ -71,10 +69,10 @@ symptom-presentation sub relation,
 
 # Add elements to the Knowledge Graph that are common to all examples
 insert
-    $men isa meningitis;
-    $flu isa flu;
-    $ls isa light-sensitivity;
-    $fever isa fever;
+    $men isa disease, has name "meningitis";
+    $flu isa disease, has name "flu";
+    $ls isa symptom, has name "light-sensitivity";
+    $fever isa symptom, has name "fever";
     $c(cause: $men, effect: $ls) isa causality;
     $c1(cause: $men, effect: $fever) isa causality;
     $c2(cause: $flu, effect: $ls) isa causality;

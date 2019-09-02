@@ -35,7 +35,7 @@ def get_example_queries(pmf, example_id):
 
     if variable_values['Meningitis']:
         queries.append(inspect.cleandoc(f'''match
-                       $d isa meningitis;
+                       $d isa disease, has name "meningitis";
                        $p isa person, has example-id {example_id};
                        insert
                        (patient: $p, diagnosed-disease: $d) 
@@ -44,7 +44,7 @@ def get_example_queries(pmf, example_id):
     if variable_values['Flu']:
         queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id {example_id};
-                       $d isa flu;
+                       $d isa disease, has name "flu";
                        insert
                        (patient: $p, diagnosed-disease: $d) 
                        isa diagnosis;'''))
@@ -52,16 +52,15 @@ def get_example_queries(pmf, example_id):
     if variable_values['Light Sensitivity']:
         queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id {example_id};
-                       $s isa light-sensitivity;
+                       $s isa symptom, has name "light-sensitivity";
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
                        symptom-presentation;'''))
 
     if variable_values['Fever']:
         queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id 
-                       {example_id};
-                       $s isa fever;
+                       $p isa person, has example-id {example_id};
+                       $s isa symptom, has name "fever";
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
                        symptom-presentation;'''))
@@ -73,7 +72,6 @@ def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:4
 
     client = GraknClient(uri=uri)
     client.keyspaces().delete(keyspace)
-
 
     sp.check_call([
         './grakn', 'console', '-k', keyspace, '-f',
