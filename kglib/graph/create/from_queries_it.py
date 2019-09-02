@@ -37,7 +37,7 @@ def mock_sampler(input_iter):
 
 
 class MockTransaction:
-    def query(self, query):
+    def query(self, query, infer=True):
 
         if query == 'match $x id V123; get;':
             return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
@@ -92,7 +92,7 @@ class ITBuildGraphFromQueries(GraphTestCase):
         name_exp = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name')
+        expected_combined_graph.add_node(name_exp, type='name', datatype='string', value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')
@@ -136,7 +136,7 @@ class ITBuildGraphFromQueries(GraphTestCase):
         child = GraknEdge(parentship_exp, person_exp, 'child')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name')
+        expected_combined_graph.add_node(name_exp, type='name', datatype='string', value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
 
         expected_combined_graph.add_node(parent, type='parent')
@@ -159,7 +159,7 @@ class ITBuildGraphFromQueries(GraphTestCase):
                                                ('match $y id V123; get;', mock_sampler, g2)]
 
         class MockTransaction2:
-            def query(self, query):
+            def query(self, query, infer=True):
                 if query == 'match $x id V123; get;':
                     return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
                 elif query == 'match $y id V123; get;':
@@ -178,7 +178,7 @@ class ITBuildGraphFromQueries(GraphTestCase):
         query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1)]
 
         class MockTransactionEmpty:
-            def query(self, query):
+            def query(self, query, infer=True):
                 return []
 
         mock_tx = MockTransactionEmpty()
@@ -251,7 +251,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name')
+        expected_combined_graph.add_node(name_exp, type='name', datatype='string', value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')

@@ -41,6 +41,19 @@ class TestConceptDictToGraknMathGraph(GraphTestCase):
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 
+    def test_single_attribute_graph_is_as_expected(self):
+        variable_graph = nx.MultiDiGraph()
+        variable_graph.add_node('x')
+
+        name = neighbour.Thing('V123', 'name', 'attribute', data_type='string', value='Bob')
+        concept_dict = {'x': name}
+
+        grakn_graph = concept_dict_to_grakn_math_graph(concept_dict, variable_graph)
+        expected_grakn_graph = nx.MultiDiGraph()
+        expected_grakn_graph.add_node(name, type='name', datatype='string', value='Bob')
+
+        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+
     def test_single_entity_single_relation_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
         variable_graph.add_node('x')

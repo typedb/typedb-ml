@@ -46,6 +46,9 @@ def concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=None
     for variable, thing in concept_dict.items():
         data = variable_graph.nodes[variable]
         data.update(type=thing.type_label)
+        if thing.base_type_label == 'attribute':
+            data.update(datatype=thing.data_type, value=thing.value)
+
         grakn_graph.add_node(thing, **data)
 
         # Record the mapping of nodes from one graph to the other
