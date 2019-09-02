@@ -9,7 +9,6 @@ py_library(
         requirement('networkx'),
         requirement('decorator'),
         '//kglib/kgcn:kgcn',
-        '//kglib/graph/label:label',
         '//kglib/graph/create:create',
         '//kglib/graph/create/model:model',
         '//kglib/graph/create/model/standard:standard',

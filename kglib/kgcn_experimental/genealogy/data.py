@@ -20,9 +20,8 @@
 import networkx as nx
 from grakn.client import GraknClient
 
-from kglib.graph.label.label import label_nodes_by_property, label_edges_by_property
 from kglib.graph.create.from_queries import build_graph_from_queries
-
+from kglib.kgcn_experimental.custom_nx import multidigraph_data_iterator
 
 KEYSPACE = "genealogy"
 URI = "localhost:48555"
@@ -59,8 +58,13 @@ def create_concept_graphs(example_indices):
                 graph = nx.compose(inferred_graph, material_graphs[example_id])
 
                 # Remove label leakage - change type labels that indicate candidates into non-candidates
-                label_nodes_by_property(graph, 'type', 'candidate-siblingship', {'type': 'siblingship'})
-                label_edges_by_property(graph, 'type', 'candidate-sibling', {'type': 'sibling'})
+
+                for data in multidigraph_data_iterator(graph):
+                    typ = data['type']
+                    if typ == 'candidate-siblingship':
+                        data.update(type='siblingship')
+                    elif typ == 'candidate-sibling':
+                        data.update(type='sibling')
 
                 graph.name = example_id
                 graphs.append(graph)

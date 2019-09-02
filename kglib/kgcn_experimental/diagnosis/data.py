@@ -22,7 +22,7 @@ import inspect
 import networkx as nx
 
 from kglib.graph.create.from_queries import build_graph_from_queries
-from kglib.graph.label.label import label_nodes_by_property, label_edges_by_property
+from kglib.kgcn_experimental.custom_nx import multidigraph_data_iterator
 
 
 def write_predictions_to_grakn(graphs, tx):
@@ -95,9 +95,14 @@ def create_concept_graphs(example_indices, grakn_session):
             graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
 
         # Remove label leakage - change type labels that indicate candidates into non-candidates
-        label_nodes_by_property(graph, 'type', 'candidate-diagnosis', {'type': 'diagnosis'})
-        label_edges_by_property(graph, 'type', 'candidate-patient', {'type': 'patient'})
-        label_edges_by_property(graph, 'type', 'candidate-diagnosed-disease', {'type': 'diagnosed-disease'})
+        for data in multidigraph_data_iterator(graph):
+            typ = data['type']
+            if typ == 'candidate-diagnosis':
+                data.update(type='diagnosis')
+            elif typ == 'candidate-patient':
+                data.update(type='patient')
+            elif typ == 'candidate-diagnosed-disease':
+                data.update(type='diagnosed-disease')
 
         graph.name = example_id
         graphs.append(graph)
