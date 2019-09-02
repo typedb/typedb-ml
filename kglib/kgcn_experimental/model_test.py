@@ -42,7 +42,7 @@ class TestTypewiseEncoder(unittest.TestCase):
     def test_types_encoded_by_expected_functions(self):
         things = np.array([[0, 0], [1, 0], [2, 0.5673]], dtype=np.float32)
 
-        mock_entity_relation_encoder = Mock(return_value=np.array([[0.1, 0, 0], [0.1, 0, 0]], dtype=np.float32))
+        mock_entity_relation_encoder = Mock(return_value=np.array([[0, 0, 0], [0, 0, 0]], dtype=np.float32))
 
         mock_attribute_encoder = Mock(return_value=np.array([[0.9527, 0.2367, 0.7582]], dtype=np.float32))
 
@@ -51,12 +51,12 @@ class TestTypewiseEncoder(unittest.TestCase):
         tm = TypewiseEncoder(encoders_for_types, 3)
         encoding = tm(things)  # The function under test
 
-        np.testing.assert_array_equal([[np.array([[0, 0], [1, 0]], dtype=np.float32)]],
+        np.testing.assert_array_equal([[np.array([[0], [0]], dtype=np.float32)]],
                                       get_call_args(mock_entity_relation_encoder))
 
-        np.testing.assert_array_equal([[np.array([[2, 0.5673]], dtype=np.float32)]], get_call_args(mock_attribute_encoder))
+        np.testing.assert_array_equal([[np.array([[0.5673]], dtype=np.float32)]], get_call_args(mock_attribute_encoder))
 
-        expected_encoding = np.array([[0.1, 0, 0], [0.1, 0, 0], [0.9527, 0.2367, 0.7582]], dtype=np.float32)
+        expected_encoding = np.array([[0, 0, 0], [0, 0, 0], [0.9527, 0.2367, 0.7582]], dtype=np.float32)
         np.testing.assert_array_equal(expected_encoding, encoding.numpy())
 
     def test_basic_encoding(self):
@@ -100,18 +100,18 @@ class ITTypewiseEncoder(unittest.TestCase):
 
         encoders_for_types = {lambda: entity_relation: [0, 1], lambda: continuous_attribute: [2]}
 
-        tm = TypewiseEncoder(encoders_for_types, 2)
+        tm = TypewiseEncoder(encoders_for_types, 1)
         encoded_things = tm(things)  # The function under test
 
         # Check that tensorflow was actually used
         self.assertEqual(EagerTensor, type(encoded_things))
 
     def test_from_graphtuple(self):
-        inp = GraphsTuple(nodes=np.array([[1., 0.],
-                                          [1., 1.],
-                                          [1., 2.]]),
-                          edges=np.array([[1., 0.],
-                                          [1., 1.]]),
+        inp = GraphsTuple(nodes=np.array([[1., 0., 0.],
+                                          [1., 1., 0.],
+                                          [1., 2., 0.]]),
+                          edges=np.array([[1., 0., 0.],
+                                          [1., 1., 0.]]),
                           receivers=np.array([1, 2], dtype=np.int32),
                           senders=np.array([0, 1], dtype=np.int32),
                           globals=np.array([[0., 0., 0., 0., 0.]], dtype=np.float32),
