@@ -29,7 +29,7 @@ from graph_nets.modules import GraphIndependent
 from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator, \
     multidigraph_data_iterator
 from kglib.kgcn_experimental.encode import encode_solutions, augment_data_fields, \
-    encode_type_categorically, pass_input_through_op, TypeEncoder
+    encode_categorically, pass_input_through_op, TypeEncoder
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
@@ -103,10 +103,10 @@ class KGCN:
                                      encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
 
             node_iterator = multidigraph_node_data_iterator(graph)
-            encode_type_categorically(node_iterator, self.all_node_types, 'type', 'categorical_type')
+            encode_categorically(node_iterator, self.all_node_types, 'type', 'categorical_type')
 
             edge_iterator = multidigraph_edge_data_iterator(graph)
-            encode_type_categorically(edge_iterator, self.all_edge_types, 'type', 'categorical_type')
+            encode_categorically(edge_iterator, self.all_edge_types, 'type', 'categorical_type')
 
             features_field = "features"
 

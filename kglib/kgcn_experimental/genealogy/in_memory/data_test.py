@@ -24,7 +24,7 @@ import numpy as np
 
 from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 from kglib.kgcn_experimental.genealogy.in_memory.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
-from kglib.kgcn_experimental.encode import encode_type_categorically
+from kglib.kgcn_experimental.encode import encode_categorically
 
 
 class TestDataGeneration(unittest.TestCase):
@@ -135,10 +135,10 @@ class TestCategoricallyEncodeTypes(unittest.TestCase):
         all_edge_types = ['parent', 'child', 'sibling']
 
         node_iterator = multidigraph_node_data_iterator(G)
-        encode_type_categorically(node_iterator, all_node_types, 'type', 'categorical_type')
+        encode_categorically(node_iterator, all_node_types, 'type', 'categorical_type')
 
         edge_iterator = multidigraph_edge_data_iterator(G)
-        encode_type_categorically(edge_iterator, all_edge_types, 'type', 'categorical_type')
+        encode_categorically(edge_iterator, all_edge_types, 'type', 'categorical_type')
 
         for node_index, node_feature in G.nodes(data=True):
             if node_feature['type'] == 'person':
