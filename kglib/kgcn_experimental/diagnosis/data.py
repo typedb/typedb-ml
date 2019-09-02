@@ -68,15 +68,16 @@ def get_all_types(tx):
     schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
     all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
     [all_node_types.remove(el) for el in
-     ['thing', 'relation', 'entity', 'attribute', '@has-attribute', 'candidate-diagnosis', 'example-id',
-      '@has-example-id']]
+     ['thing', 'relation', 'entity', 'attribute', '@has-attribute', '@key-attribute', 'candidate-diagnosis',
+      'example-id', '@key-example-id', '@key-name']]
     print(all_node_types)
 
     roles = tx.query("match $x sub role; get;").collect_concepts()
-    all_edge_types = [role.label() for role in roles]
+    all_edge_types = ['has'] + [role.label() for role in roles]
     [all_edge_types.remove(el) for el in
      ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
-      'candidate-diagnosed-disease', '@has-example-id-value', '@has-example-id-owner']]
+      'candidate-diagnosed-disease', '@key-example-id-value', '@key-example-id-owner',
+      '@key-name-value', '@key-name-owner']]
     print(all_edge_types)
     return all_node_types, all_edge_types
 
@@ -127,8 +128,8 @@ class QueryHandler:
     def diagnosis_query(self, example_id):
         return inspect.cleandoc(f'''match
                $p isa person, has example-id {example_id};
-               $s isa symptom;
-               $d isa disease;
+               $s isa symptom, has name $sn;
+               $d isa disease, has name $dn;
                $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
                $c(cause: $d, effect: $s) isa causality;
                $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
@@ -138,7 +139,11 @@ class QueryHandler:
         g = nx.MultiDiGraph()
         g.add_node('p', **self.existing)
         g.add_node('s', **self.existing)
+        g.add_edge('s', 'sn', type='has', **self.existing)
+        g.add_node('sn', **self.existing)
         g.add_node('d', **self.existing)
+        g.add_node('dn', **self.existing)
+        g.add_edge('d', 'dn', type='has', **self.existing)
         g.add_node('sp', **self.existing)
         g.add_edge('sp', 's', type='presented-symptom', **self.existing)
         g.add_edge('sp', 'p', type='symptomatic-patient', **self.existing)
@@ -158,8 +163,8 @@ class QueryHandler:
     def candidate_diagnosis_query(self, example_id):
         return inspect.cleandoc(f'''match
                $p isa person, has example-id {example_id};
-               $s isa symptom;
-               $d isa disease;
+               $s isa symptom, has name $sn;
+               $d isa disease, has name $dn;
                $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
                $c(cause: $d, effect: $s) isa causality;
                $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 

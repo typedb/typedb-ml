@@ -7,7 +7,7 @@ name sub attribute,
     datatype string;
 
 person sub entity,
-    has example-id,
+    key example-id,
     plays patient,
     plays candidate-patient,
     plays symptomatic-patient,
