@@ -22,65 +22,10 @@ import unittest
 import numpy as np
 import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
-from mock import Mock
 from tensorflow.python.framework.ops import EagerTensor
 
-from kglib.kgcn_experimental.model import TypewiseEncoder, make_mlp_model
-from kglib.kgcn_experimental.test.utils import get_call_args
-
-
-def test_numpy_arrays_equal(arrays_a, arrays_b):
-    for a, b in zip(arrays_a, arrays_b):
-        np.testing.assert_array_equal(a, b)
-
-
-class TestTypewiseEncoder(unittest.TestCase):
-    def setUp(self):
-        tf.enable_eager_execution()
-
-    def test_types_encoded_by_expected_functions(self):
-        things = np.array([[0, 0], [1, 0], [2, 0.5673]], dtype=np.float32)
-
-        mock_entity_relation_encoder = Mock(return_value=np.array([[0, 0, 0], [0, 0, 0]], dtype=np.float32))
-
-        mock_attribute_encoder = Mock(return_value=np.array([[0.9527, 0.2367, 0.7582]], dtype=np.float32))
-
-        encoders_for_types = {lambda: mock_entity_relation_encoder: [0, 1], lambda: mock_attribute_encoder: [2]}
-
-        tm = TypewiseEncoder(encoders_for_types, 3)
-        encoding = tm(things)  # The function under test
-
-        np.testing.assert_array_equal([[np.array([[0], [0]], dtype=np.float32)]],
-                                      get_call_args(mock_entity_relation_encoder))
-
-        np.testing.assert_array_equal([[np.array([[0.5673]], dtype=np.float32)]], get_call_args(mock_attribute_encoder))
-
-        expected_encoding = np.array([[0, 0, 0], [0, 0, 0], [0.9527, 0.2367, 0.7582]], dtype=np.float32)
-        np.testing.assert_array_equal(expected_encoding, encoding.numpy())
-
-    def test_basic_encoding(self):
-        things = np.array([[0], [1], [2]], dtype=np.float32)
-
-        mock_entity_relation_encoder = Mock(return_value=np.array([[0.1, 0, 0], [0.1, 0, 0], [0.1, 0, 0]], dtype=np.float32))
-
-        encoders_for_types = {lambda: mock_entity_relation_encoder: [0, 1, 2]}
-
-        tm = TypewiseEncoder(encoders_for_types, 3)
-        encoding = tm(things)  # The function under test
-
-        expected_encoding = np.array([[0.1, 0, 0], [0.1, 0, 0], [0.1, 0, 0]], dtype=np.float32)
-        np.testing.assert_array_equal(expected_encoding, encoding.numpy())
-
-    def test_encoders_do_not_fulfil_classes(self):
-        mock_entity_relation_encoder = Mock()
-
-        encoders_for_types = {lambda: mock_entity_relation_encoder: [0, 2]}
-
-        with self.assertRaises(ValueError) as context:
-            TypewiseEncoder(encoders_for_types, 3)
-
-        self.assertEqual('Encoder categories are inconsistent. Expected [0, 1, 2], but got [0, 2]',
-                         str(context.exception))
+from kglib.kgcn_experimental.model import make_mlp_model
+from kglib.kgcn_experimental.typewise import TypewiseEncoder
 
 
 class ITTypewiseEncoder(unittest.TestCase):

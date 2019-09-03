@@ -29,83 +29,18 @@ from graph_nets.modules import GraphIndependent
 
 from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator, \
     multidigraph_data_iterator
+from kglib.kgcn_experimental.embedding import common_embedding, node_embedding
 from kglib.kgcn_experimental.encode import encode_solutions, augment_data_fields, \
     encode_categorically
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
+from kglib.kgcn_experimental.loss import loss_ops_from_difference
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
 from kglib.kgcn_experimental.prepare import make_all_runnable_in_session
 
 
-def loss_ops_from_difference(target_op, output_ops):
-    """
-    Loss operation which directly compares the target with the output over all nodes and edges
-    Args:
-        target_op: The target of the model
-        output_ops: A list of the outputs of the model, one for each message-passing step
-
-    Returns: The loss for each message-passing step
-
-    """
-    loss_ops = [
-        tf.losses.softmax_cross_entropy(target_op.nodes, output_op.nodes) +
-        tf.losses.softmax_cross_entropy(target_op.edges, output_op.edges)
-        for output_op in output_ops
-    ]
-    return loss_ops
-
-
-def loss_ops_preexisting_no_penalty(target_op, output_ops):
-    """
-    Loss operation which doesn't penalise the output values for pre-existing nodes and edges, treating them as slack
-    variables
-
-    Args:
-        target_op: The target of the model
-        output_ops: A list of the outputs of the model, one for each message-passing step
-
-    Returns: The loss for each message-passing step
-
-    """
-    loss_ops = []
-    for output_op in output_ops:
-        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))),
-                                          axis=1)
-        target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
-        output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
-
-        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))),
-                                          axis=1)
-        target_edges = tf.boolean_mask(target_op.nodes, edge_mask_op)
-        output_edges = tf.boolean_mask(output_op.nodes, edge_mask_op)
-
-        loss_op = (tf.losses.softmax_cross_entropy(target_nodes, output_nodes)
-                   + tf.losses.softmax_cross_entropy(target_edges, output_edges))
-
-        loss_ops.append(loss_op)
-
-    return loss_ops
-
-
 def softmax(x):
     return np.exp(x) / sum(np.exp(x))
-
-
-def common_embedding(features, all_edge_types, type_embedding_dim):
-    preexistance_feat = tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1)
-    type_embedder = tf.keras.layers.Embedding(len(all_edge_types), type_embedding_dim)
-    type_embedding = type_embedder(features[:, 1])
-    return tf.concat([preexistance_feat, type_embedding], axis=1)
-
-
-def attribute_embedding(features, attr_encoders, attr_embedding_dim):
-    typewise_attribute_encoder = TypewiseEncoder(attr_encoders, attr_embedding_dim)
-    return typewise_attribute_encoder(features[:, 2:])
-
-
-def node_embedding(features, all_node_types, type_embedding_dim, attr_encoders, attr_embedding_dim):
-    return tf.concat([common_embedding(features, all_node_types, type_embedding_dim),
-                      attribute_embedding(features, attr_encoders, attr_embedding_dim)], axis=1)
 
 
 class KGCN:
@@ -285,62 +220,6 @@ class KGCN:
         plot_input_vs_output(ge_graphs, test_values, num_processing_steps_ge)
 
         return train_values, test_values
-
-
-class TypewiseEncoder(snt.AbstractModule):
-    """
-    Orchestrates encoding elements according to their types. Defers encoding of each feature to the appropriate encoder
-    for the type of that feature. Assumes that the type is given categorically as an integer value in the 0th position
-    of the provided features Tensor.
-    """
-    def __init__(self, encoders_for_types, feature_length, name="typewise_encoder"):
-        """
-        Args:
-            encoders_for_types: Dict - keys: encoders; values: a list of type categories the encoder should be used for
-            feature_length: The length of features to output for matrix initialisation
-            name: The name for this Module
-        """
-        super(TypewiseEncoder, self).__init__(name=name)
-
-        types_considered = []
-        for a in encoders_for_types.values():
-            types_considered.extend(a)
-        types_considered.sort()
-
-        expected_types = list(range(max(types_considered) + 1))
-
-        if types_considered != expected_types:
-            raise ValueError(
-                f'Encoder categories are inconsistent. Expected {expected_types}, but got {types_considered}')
-
-        self._feature_length = feature_length
-        self._encoders_for_types = encoders_for_types
-
-    def _build(self, features):
-
-        shape = tf.stack([tf.shape(features)[0], self._feature_length])
-
-        encoded_features = tf.zeros(shape, dtype=tf.float32)
-
-        for encoder, types in self._encoders_for_types.items():
-
-            feat_types = tf.cast(features[:, 0], tf.int32)  # The types for each feature, as integers
-
-            # Expand dimensions ready for element-wise equality comparison
-            exp_types = tf.expand_dims(types, axis=0)
-            exp_feat_types = tf.expand_dims(feat_types, axis=1)
-
-            elementwise_equality = tf.equal(exp_feat_types, exp_types)
-
-            # Use this encoder when the feat_type matches any of the types
-            applicable_types_mask = tf.reduce_any(elementwise_equality, axis=1)
-            indices_to_encode = tf.where(applicable_types_mask)
-            feats_to_encode = tf.squeeze(tf.gather(features[:, 1:], indices_to_encode), axis=1)
-            encoded_feats = encoder()(feats_to_encode)
-
-            encoded_features += tf.scatter_nd(tf.cast(indices_to_encode, dtype=tf.int32), encoded_feats, shape)
-
-        return encoded_features
 
 
 def make_mlp_model(latent_size=16, num_layers=2):
