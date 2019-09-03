@@ -75,7 +75,9 @@ class KGCN:
             features_field = "features"
 
             input_graph = graph.copy()
-            augment_data_fields(multidigraph_data_iterator(input_graph), ("input", "categorical_type"), features_field)
+            augment_data_fields(multidigraph_data_iterator(input_graph),
+                                ("input", "categorical_type", "value"),
+                                features_field)
             input_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
 
             target_graph = graph.copy()
@@ -89,14 +91,14 @@ class KGCN:
     def _build(self):
 
         common_embedding_module = snt.Module(
-            partial(common_embedding, all_edge_types=self.all_edge_types, type_embedding_dim=self._type_embedding_dim))
+            partial(common_embedding, num_types=len(self.all_edge_types), type_embedding_dim=self._type_embedding_dim))
 
         edge_model = snt.Sequential([common_embedding_module,
                                      snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
                                      snt.LayerNorm()])
 
         node_embedding_module = snt.Module(
-            partial(node_embedding, all_node_types=self.all_node_types, type_embedding_dim=self._type_embedding_dim,
+            partial(node_embedding, num_types=len(self.all_node_types), type_embedding_dim=self._type_embedding_dim,
                     attr_encoders=self._attr_encoders, attr_embedding_dim=self._attr_embedding_dim)
         )
 

@@ -30,17 +30,14 @@ from kglib.kgcn_experimental.network.model import KGCN
 class TestKGCN(unittest.TestCase):
     def test_kgcn_runs(self):
         graph = nx.MultiDiGraph()
-        graph.add_node(0, type='person', input=1, solution=0)
-        graph.add_edge(0, 1, type='employee', input=1, solution=0)
-        graph.add_node(1, type='employment', input=1, solution=0)
-        graph.add_edge(1, 2, type='employer', input=1, solution=0)
-        graph.add_node(2, type='company', input=1, solution=0)
+        graph.add_node(0, type='person', value=0, input=1, solution=0)
+        graph.add_edge(0, 1, type='employee', value=0, input=1, solution=0)
+        graph.add_node(1, type='employment', value=0, input=1, solution=0)
+        graph.add_edge(1, 2, type='employer', value=0, input=1, solution=0)
+        graph.add_node(2, type='company', value=0, input=1, solution=0)
 
-        kgcn = KGCN(['person', 'employment', 'company'],
-                    ['employee', 'employer'],
-                    5,
-                    6,
-                    attr_encoders={lambda x: tf.constant(np.zeros((3, 6))): [0, 1, 2]})
+        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'], 5, 6,
+                    attr_encoders={lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]})
         kgcn([graph], [graph],
              num_processing_steps_tr=2,
              num_processing_steps_ge=2,
@@ -49,52 +46,11 @@ class TestKGCN(unittest.TestCase):
 
 
 class TestModel(unittest.TestCase):
+
     def test_model_runs(self):
         tf.enable_eager_execution()
 
-        input_graph = GraphsTuple(
-            nodes=tf.convert_to_tensor(np.array([[1, 0], [1, 1], [1, 2]], dtype=np.float32)),
-            edges=tf.convert_to_tensor(np.array([[1, 0], [1, 1]], dtype=np.float32)),
-            globals=tf.convert_to_tensor(np.array([[0, 0, 0, 0, 0]], dtype=np.float32)),
-            receivers=tf.convert_to_tensor(np.array([1, 2], dtype=np.int32)),
-            senders=tf.convert_to_tensor(np.array([0, 1], dtype=np.int32)),
-            n_node=tf.convert_to_tensor(np.array([3], dtype=np.int32)),
-            n_edge=tf.convert_to_tensor(np.array([2], dtype=np.int32)))
-
-        target_graph = GraphsTuple(
-            nodes=tf.convert_to_tensor(np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]], dtype=np.float32)),
-            edges=tf.convert_to_tensor(np.array([[1, 0, 0], [1, 0, 0]], dtype=np.float32)),
-            globals=tf.convert_to_tensor(np.array([[0, 0, 0, 0, 0]], dtype=np.float32)),
-            receivers=tf.convert_to_tensor(np.array([1, 2], dtype=np.int32)),
-            senders=tf.convert_to_tensor(np.array([0, 1], dtype=np.int32)),
-            n_node=tf.convert_to_tensor(np.array([3], dtype=np.int32)),
-            n_edge=tf.convert_to_tensor(np.array([2], dtype=np.int32)))
-
-        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'])
-        model = kgcn._build()
-        output_ops_tr = model(input_graph, 2)
-        output_ops_ge = model(target_graph, 2)
-
-    def test_model_runs_2(self):
-        tf.enable_eager_execution()
-
-        graph = GraphsTuple(nodes=tf.convert_to_tensor(np.array([[1, 0], [1, 1], [1, 2]], dtype=np.float32)),
-                            edges=tf.convert_to_tensor(np.array([[1, 0], [1, 1]], dtype=np.float32)),
-                            globals=tf.convert_to_tensor(np.array([[0, 0, 0, 0, 0]], dtype=np.float32)),
-                            receivers=tf.convert_to_tensor(np.array([1, 2], dtype=np.int32)),
-                            senders=tf.convert_to_tensor(np.array([0, 1], dtype=np.int32)),
-                            n_node=tf.convert_to_tensor(np.array([3], dtype=np.int32)),
-                            n_edge=tf.convert_to_tensor(np.array([2], dtype=np.int32)))
-
-        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'])
-        model = kgcn._build()
-        output1 = model(graph, 2)
-        output2 = model(graph, 2)
-
-    def test_model_runs_3(self):
-        tf.enable_eager_execution()
-
-        graph = GraphsTuple(nodes=tf.convert_to_tensor(np.array([[1, 0, 0], [1, 0, 0], [1, 0, 0]], dtype=np.float32)),
+        graph = GraphsTuple(nodes=tf.convert_to_tensor(np.array([[1, 2, 0], [1, 0, 0], [1, 1, 0]], dtype=np.float32)),
                             edges=tf.convert_to_tensor(np.array([[1, 0, 0], [1, 0, 0]], dtype=np.float32)),
                             globals=tf.convert_to_tensor(np.array([[0, 0, 0, 0, 0]], dtype=np.float32)),
                             receivers=tf.convert_to_tensor(np.array([1, 2], dtype=np.int32)),
@@ -102,10 +58,10 @@ class TestModel(unittest.TestCase):
                             n_node=tf.convert_to_tensor(np.array([3], dtype=np.int32)),
                             n_edge=tf.convert_to_tensor(np.array([2], dtype=np.int32)))
 
-        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'])
+        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'], 5, 6,
+                    {lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]})
         model = kgcn._build()
-        output1 = model(graph, 2)
-        output2 = model(graph, 2)
+        model(graph, 2)
 
 
 if __name__ == "__main__":
