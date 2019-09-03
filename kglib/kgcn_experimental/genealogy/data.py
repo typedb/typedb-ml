@@ -21,7 +21,7 @@ import networkx as nx
 from grakn.client import GraknClient
 
 from kglib.graph.create.from_queries import build_graph_from_queries
-from kglib.kgcn_experimental.custom_nx import multidigraph_data_iterator
+from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_data_iterator
 
 KEYSPACE = "genealogy"
 URI = "localhost:48555"

@@ -24,7 +24,7 @@ from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
-from kglib.kgcn_experimental.prepare import duplicate_edges_in_reverse, apply_logits_to_graphs
+from kglib.kgcn_experimental.graph_utils.prepare import duplicate_edges_in_reverse, apply_logits_to_graphs
 
 
 class TestDuplicateEdgesInReverse(GraphTestCase):

@@ -27,16 +27,16 @@ from graph_nets import modules
 from graph_nets import utils_tf
 from graph_nets.modules import GraphIndependent
 
-from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator, \
-    multidigraph_data_iterator
-from kglib.kgcn_experimental.embedding import common_embedding, node_embedding
-from kglib.kgcn_experimental.encode import encode_solutions, augment_data_fields, \
+from kglib.kgcn_experimental.graph_utils.encode import encode_solutions, augment_data_fields, \
     encode_categorically
-from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
-from kglib.kgcn_experimental.loss import loss_ops_from_difference
-from kglib.kgcn_experimental.metrics import compute_accuracy
-from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
-from kglib.kgcn_experimental.prepare import make_all_runnable_in_session
+from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_edge_data_iterator, \
+    multidigraph_node_data_iterator, multidigraph_data_iterator
+from kglib.kgcn_experimental.graph_utils.prepare import make_all_runnable_in_session
+from kglib.kgcn_experimental.network.embedding import common_embedding, node_embedding
+from kglib.kgcn_experimental.network.feed import create_feed_dict, create_placeholders
+from kglib.kgcn_experimental.network.loss import loss_ops_from_difference
+from kglib.kgcn_experimental.network.metrics import compute_accuracy
+from kglib.kgcn_experimental.plot.plotting import plot_across_training, plot_input_vs_output
 
 
 def softmax(x):

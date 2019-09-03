@@ -20,7 +20,7 @@
 import random
 
 from kglib.kgcn_experimental.genealogy.data import create_concept_graphs
-from kglib.kgcn_experimental.model import model
+from kglib.kgcn_experimental.network.model import model
 
 
 def main():

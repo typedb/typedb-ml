@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
-import kglib.kgcn_experimental.custom_nx as custom_nx
+import kglib.kgcn_experimental.plot.draw as custom_nx
 
 
 def plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge):

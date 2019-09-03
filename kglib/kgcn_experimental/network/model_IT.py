@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import unittest
 
 import networkx as nx
@@ -23,7 +24,7 @@ import numpy as np
 import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn_experimental.model import KGCN
+from kglib.kgcn_experimental.network.model import KGCN
 
 
 class TestKGCN(unittest.TestCase):

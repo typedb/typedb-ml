@@ -19,7 +19,7 @@
 
 import tensorflow as tf
 
-from kglib.kgcn_experimental.typewise import TypewiseEncoder
+from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
 
 
 def common_embedding(features, all_types, type_embedding_dim):

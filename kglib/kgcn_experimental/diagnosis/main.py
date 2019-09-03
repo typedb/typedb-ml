@@ -23,8 +23,10 @@ from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types
-from kglib.kgcn_experimental.model import KGCN, softmax
-from kglib.kgcn_experimental.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
+from kglib.kgcn_experimental.network.model import make_mlp_model
+from kglib.kgcn_experimental.network.model import KGCN, softmax
+from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
+from kglib.kgcn_experimental.graph_utils.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 

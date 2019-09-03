@@ -21,7 +21,7 @@ import itertools
 
 import networkx as nx
 
-from kglib.kgcn_experimental.plotting import plot_with_matplotlib
+from kglib.kgcn_experimental.plot.plotting import plot_with_matplotlib
 
 
 def generate_graph(num_people: int) -> nx.MultiDiGraph:
