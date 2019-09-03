@@ -19,7 +19,6 @@
 
 import numpy as np
 import sonnet as snt
-import tensorflow as tf
 
 from kglib.kgcn_experimental.custom_nx import multidigraph_data_iterator
 
@@ -93,20 +92,3 @@ def make_mlp_model(latent_size=16, num_layers=2):
         snt.nets.MLP([latent_size] * num_layers, activate_final=True),
         snt.LayerNorm()
     ])
-
-
-class TypeEncoder(snt.AbstractModule):
-    def __init__(self, num_types, type_indicator_index, op, name='type_encoder'):
-        super(TypeEncoder, self).__init__(name=name)
-        self._index_of_type = type_indicator_index
-        self._num_types = num_types
-        self._op = op
-
-    def _build(self, features):
-        index = tf.cast(features[:, self._index_of_type], dtype=tf.int64)
-        one_hot = tf.one_hot(index, self._num_types, on_value=1.0, off_value=0.0, axis=-1, dtype=tf.float32)
-        return self._op()(one_hot)
-
-
-def pass_input_through_op(op):
-    return lambda features: tf.concat([tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1), op(features[:, 1:])], axis=1)

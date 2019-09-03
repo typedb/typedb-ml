@@ -35,7 +35,11 @@ class TestKGCN(unittest.TestCase):
         graph.add_edge(1, 2, type='employer', input=1, solution=0)
         graph.add_node(2, type='company', input=1, solution=0)
 
-        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'])
+        kgcn = KGCN(['person', 'employment', 'company'],
+                    ['employee', 'employer'],
+                    5,
+                    6,
+                    attr_encoders={lambda x: tf.constant(np.zeros((3, 6))): [0, 1, 2]})
         kgcn([graph], [graph],
              num_processing_steps_tr=2,
              num_processing_steps_ge=2,

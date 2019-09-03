@@ -18,6 +18,7 @@
 #
 
 import time
+from functools import partial
 
 import numpy as np
 import sonnet as snt
@@ -29,7 +30,7 @@ from graph_nets.modules import GraphIndependent
 from kglib.kgcn_experimental.custom_nx import multidigraph_node_data_iterator, multidigraph_edge_data_iterator, \
     multidigraph_data_iterator
 from kglib.kgcn_experimental.encode import encode_solutions, augment_data_fields, \
-    encode_categorically, pass_input_through_op, TypeEncoder
+    encode_categorically
 from kglib.kgcn_experimental.feed import create_feed_dict, create_placeholders
 from kglib.kgcn_experimental.metrics import compute_accuracy
 from kglib.kgcn_experimental.plotting import plot_across_training, plot_input_vs_output
@@ -90,8 +91,36 @@ def softmax(x):
     return np.exp(x) / sum(np.exp(x))
 
 
+def common_embedding(features, all_edge_types, type_embedding_dim):
+    preexistance_feat = tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1)
+    type_embedder = tf.keras.layers.Embedding(len(all_edge_types), type_embedding_dim)
+    type_embedding = type_embedder(features[:, 1])
+    return tf.concat([preexistance_feat, type_embedding], axis=1)
+
+
+def attribute_embedding(features, attr_encoders, attr_embedding_dim):
+    typewise_attribute_encoder = TypewiseEncoder(attr_encoders, attr_embedding_dim)
+    return typewise_attribute_encoder(features[:, 2:])
+
+
+def node_embedding(features, all_node_types, type_embedding_dim, attr_encoders, attr_embedding_dim):
+    return tf.concat([common_embedding(features, all_node_types, type_embedding_dim),
+                      attribute_embedding(features, attr_encoders, attr_embedding_dim)], axis=1)
+
+
 class KGCN:
-    def __init__(self, all_node_types, all_edge_types):
+    def __init__(self,
+                 all_node_types,
+                 all_edge_types,
+                 type_embedding_dim,
+                 attr_embedding_dim,
+                 attr_encoders,
+                 latent_size=16, num_layers=2):
+        self._attr_encoders = attr_encoders
+        self._latent_size = latent_size
+        self._num_layers = num_layers
+        self._type_embedding_dim = type_embedding_dim
+        self._attr_embedding_dim = attr_embedding_dim
         self.all_node_types = all_node_types
         self.all_edge_types = all_edge_types
 
@@ -124,27 +153,23 @@ class KGCN:
 
     def _build(self):
 
-        feature_length = 15
+        common_embedding_module = snt.Module(
+            partial(common_embedding, all_edge_types=self.all_edge_types, type_embedding_dim=self._type_embedding_dim))
 
-        # We need different ops for nodes and edges when using one-hot since the number of types in each differs
-        def edge_type_encoder_op(): return make_mlp_model(latent_size=15, num_layers=2)
+        edge_model = snt.Sequential([common_embedding_module,
+                                     snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
+                                     snt.LayerNorm()])
 
-        def node_type_encoder_op(): return make_mlp_model(latent_size=15, num_layers=2)
+        node_embedding_module = snt.Module(
+            partial(node_embedding, all_node_types=self.all_node_types, type_embedding_dim=self._type_embedding_dim,
+                    attr_encoders=self._attr_encoders, attr_embedding_dim=self._attr_embedding_dim)
+        )
 
-        edge_encoders_for_types = {lambda: TypeEncoder(len(self.all_edge_types), 0, edge_type_encoder_op): [i for i, _ in enumerate(self.all_edge_types)]}
-        node_encoders_for_types = {lambda: TypeEncoder(len(self.all_node_types), 0, node_type_encoder_op): [i for i, _ in enumerate(self.all_node_types)]}
+        node_model = snt.Sequential([node_embedding_module,
+                                     snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
+                                     snt.LayerNorm()])
 
-        def edge_typewise(): return TypewiseEncoder(edge_encoders_for_types, feature_length, name="edge_typewise_encoder")
-
-        def node_typewise(): return TypewiseEncoder(node_encoders_for_types, feature_length, name="node_typewise_encoder")
-
-        def edge_model():
-            return pass_input_through_op(edge_typewise())
-
-        def node_model():
-            return pass_input_through_op(node_typewise())
-
-        kg_encoder = lambda: GraphIndependent(edge_model, node_model, make_mlp_model, name='kg_encoder')
+        kg_encoder = lambda: GraphIndependent(lambda: edge_model, lambda: node_model, make_mlp_model, name='kg_encoder')
 
         model = KGMessagePassingLearner(kg_encoder, edge_output_size=3, node_output_size=3)
         return model

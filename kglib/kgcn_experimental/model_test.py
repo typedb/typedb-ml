@@ -25,7 +25,6 @@ from graph_nets.graphs import GraphsTuple
 from mock import Mock
 from tensorflow.python.framework.ops import EagerTensor
 
-from kglib.kgcn_experimental.encode import pass_input_through_op, TypeEncoder
 from kglib.kgcn_experimental.model import TypewiseEncoder, make_mlp_model
 from kglib.kgcn_experimental.test.utils import get_call_args
 
