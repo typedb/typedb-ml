@@ -19,14 +19,14 @@
 
 import networkx as nx
 import numpy as np
+import tensorflow as tf
 from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types
-from kglib.kgcn_experimental.network.model import make_mlp_model
-from kglib.kgcn_experimental.network.model import KGCN, softmax
-from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
+from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 from kglib.kgcn_experimental.graph_utils.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
+from kglib.kgcn_experimental.network.model import KGCN, softmax
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 
@@ -50,6 +50,18 @@ def diagnosis_example(num_graphs=60, num_processing_steps_tr=10, num_processing_
 
     concept_graphs = create_concept_graphs(list(range(num_graphs)), session)
 
+    name_values = 'meningitis', 'flu', 'fever', 'light-sensitivity'
+    for graph in concept_graphs:
+        for node_data in multidigraph_node_data_iterator(graph):
+            typ = node_data['type']
+            if typ == 'name':
+                node_data['value'] = name_values.index(node_data['value'])
+            else:
+                node_data['value'] = 0
+
+        for edge_data in multidigraph_edge_data_iterator(graph):
+            edge_data['value'] = 0
+
     tr_graphs = concept_graphs[:tr_ge_split]
     ge_graphs = concept_graphs[tr_ge_split:]
 
@@ -59,8 +71,30 @@ def diagnosis_example(num_graphs=60, num_processing_steps_tr=10, num_processing_
     tr_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_tr_graphs]
     ge_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_ge_graphs]
 
-    kgcn = KGCN(all_node_types, all_edge_types)
+    entities_and_relations = all_node_types.copy()
+    entities_and_relations.remove('name')
 
+    type_embedding_dim = 5
+    attr_embedding_dim = 6
+
+    def make_blank_embedder():
+
+        def attr_encoders(features):
+            shape = tf.stack([tf.shape(features)[0], attr_embedding_dim])
+
+            encoded_features = tf.zeros(shape, dtype=tf.float32)
+            return encoded_features
+
+        return attr_encoders
+
+    attr_encoders = {make_blank_embedder: list(range(len(all_node_types)))}
+
+    kgcn = KGCN(all_node_types,
+                all_edge_types,
+                type_embedding_dim,
+                attr_embedding_dim,
+                attr_encoders,
+                latent_size=16, num_layers=2)
     train_values, test_values = kgcn(tr_graphs,
                                      ge_graphs,
                                      num_processing_steps_tr=num_processing_steps_tr,

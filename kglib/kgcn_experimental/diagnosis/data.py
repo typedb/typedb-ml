@@ -69,7 +69,8 @@ def get_all_types(tx):
     all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
     [all_node_types.remove(el) for el in
      ['thing', 'relation', 'entity', 'attribute', '@has-attribute', '@key-attribute', 'candidate-diagnosis',
-      'example-id', '@key-example-id', '@key-name']]
+      'example-id', '@key-example-id', '@key-name', '@has-probability-exists', '@has-probability-non-exists',
+      '@has-probability-preexists', 'probability-exists', 'probability-non-exists', 'probability-preexists']]
     print(all_node_types)
 
     roles = tx.query("match $x sub role; get;").collect_concepts()
