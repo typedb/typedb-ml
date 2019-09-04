@@ -24,49 +24,41 @@ from mock import Mock, patch
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute
 import tensorflow as tf
 
+from kglib.kgcn_experimental.test.utils import get_call_args
 
-class TestCategoricalAttribute(unittest.TestCase):
+
+class TestCategoricalAttribute(tf.test.TestCase):
 
     def setUp(self):
-        self._mock_embed_instance = Mock()
+        self._mock_embed_instance = Mock(return_value=tf.zeros((3, 1, 5), dtype=tf.float32))
         self._mock_embed_class = Mock(return_value=self._mock_embed_instance)
         self._patcher = patch('kglib.kgcn_experimental.network.attribute.snt.Embed', new=self._mock_embed_class,
                               spec=True)
         self._patcher.start()
 
-        self._mock_cast = Mock()
-        self._cast_patcher = patch('kglib.kgcn_experimental.network.attribute.tf.cast', new=self._mock_cast, spec=True)
-        self._cast_patcher.start()
-
     def tearDown(self):
         self._patcher.stop()
-        self._cast_patcher.stop()
 
     def test_embed_invoked_correctly(self):
         attr_embedding_dim = 5
-        cat = CategoricalAttribute([0, 1, 2], 5)
-        cat(Mock())
-        self._mock_embed_class.assert_called_once_with(3, attr_embedding_dim)
+        cat = CategoricalAttribute([0, 2], 5)
+        cat(tf.zeros((3, 1), tf.float32))
+        self._mock_embed_class.assert_called_once_with(2, attr_embedding_dim)
 
     def test_output_is_as_expected(self):
-
-        output_mock = Mock()
-        self._mock_embed_instance.return_value = output_mock
-
-        cat = CategoricalAttribute([0, 1, 2], 5)
-        output = cat(Mock())
-        self.assertEqual(output_mock, output)
-
-    def test_embed_instance_called_with_input(self):
         inp = tf.zeros((3, 1), dtype=tf.float32)
-        casted_inp = Mock()
-        self._mock_cast.return_value = casted_inp
+        expected_output = tf.zeros((3, 5), dtype=tf.float32)
+        cat = CategoricalAttribute([0, 2], 5)
+        output = cat(inp)
+        self.assertAllClose(expected_output, output)
+        self.assertEqual(expected_output.dtype, output.dtype)
 
-        cat = CategoricalAttribute([0, 1, 2], 5)
+    def test_embed_instance_called_with_correctly(self):
+        inp = tf.zeros((3, 1), dtype=tf.float32)
+        cat = CategoricalAttribute([0, 2], 5)
         cat(inp)
-
-        self._mock_cast.assert_called_once_with(inp, dtype=tf.int32)
-        self._mock_embed_instance.assert_called_once_with(casted_inp)
+        self.assertAllClose(get_call_args(self._mock_embed_instance), [[tf.zeros((3, 1), dtype=tf.int32)]])
+        self.assertEqual(get_call_args(self._mock_embed_instance)[0][0].dtype, tf.int32)
 
 
 if __name__ == "__main__":
