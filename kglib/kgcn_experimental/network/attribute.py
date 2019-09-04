@@ -22,11 +22,11 @@ import tensorflow as tf
 
 
 class CategoricalAttribute(snt.AbstractModule):
-    def __init__(self, categories, attr_embedding_dim, name='CategoricalAttribute'):
+    def __init__(self, num_categories, attr_embedding_dim, name='CategoricalAttribute'):
         super(CategoricalAttribute, self).__init__(name=name)
 
         self._attr_embedding_dim = attr_embedding_dim
-        self._num_categories = len(categories)
+        self._num_categories = num_categories
 
     def _build(self, inputs):
         int_inputs = tf.cast(inputs, dtype=tf.int32)

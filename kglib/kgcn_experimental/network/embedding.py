@@ -24,7 +24,6 @@ from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
 
 def common_embedding(features, num_types, type_embedding_dim):
     preexistance_feat = tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1)
-    # type_embedder = tf.keras.layers.Embedding(num_types, type_embedding_dim)
     type_embedder = snt.Embed(num_types, type_embedding_dim)
     type_embedding = type_embedder(tf.cast(features[:, 1], tf.int32))
     return tf.concat([preexistance_feat, type_embedding], axis=1)
@@ -32,7 +31,7 @@ def common_embedding(features, num_types, type_embedding_dim):
 
 def attribute_embedding(features, attr_encoders, attr_embedding_dim):
     typewise_attribute_encoder = TypewiseEncoder(attr_encoders, attr_embedding_dim)
-    return typewise_attribute_encoder(features[:, 2:])
+    return typewise_attribute_encoder(features[:, 1:])
 
 
 def node_embedding(features, num_types, type_embedding_dim, attr_encoders, attr_embedding_dim):

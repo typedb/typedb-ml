@@ -41,21 +41,21 @@ class TestCategoricalAttribute(tf.test.TestCase):
 
     def test_embed_invoked_correctly(self):
         attr_embedding_dim = 5
-        cat = CategoricalAttribute([0, 2], 5)
+        cat = CategoricalAttribute(2, 5)
         cat(tf.zeros((3, 1), tf.float32))
         self._mock_embed_class.assert_called_once_with(2, attr_embedding_dim)
 
     def test_output_is_as_expected(self):
         inp = tf.zeros((3, 1), dtype=tf.float32)
         expected_output = tf.zeros((3, 5), dtype=tf.float32)
-        cat = CategoricalAttribute([0, 2], 5)
+        cat = CategoricalAttribute(2, 5)
         output = cat(inp)
         self.assertAllClose(expected_output, output)
         self.assertEqual(expected_output.dtype, output.dtype)
 
     def test_embed_instance_called_with_correctly(self):
         inp = tf.zeros((3, 1), dtype=tf.float32)
-        cat = CategoricalAttribute([0, 2], 5)
+        cat = CategoricalAttribute(2, 5)
         cat(inp)
         self.assertAllClose(get_call_args(self._mock_embed_instance), [[tf.zeros((3, 1), dtype=tf.int32)]])
         self.assertEqual(get_call_args(self._mock_embed_instance)[0][0].dtype, tf.int32)

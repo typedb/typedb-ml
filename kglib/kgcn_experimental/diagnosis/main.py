@@ -26,6 +26,7 @@ from graph_nets.utils_np import graphs_tuple_to_networkxs
 from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types
 from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 from kglib.kgcn_experimental.graph_utils.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
+from kglib.kgcn_experimental.network.attribute import CategoricalAttribute
 from kglib.kgcn_experimental.network.model import KGCN, softmax
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
@@ -71,9 +72,6 @@ def diagnosis_example(num_graphs=60, num_processing_steps_tr=10, num_processing_
     tr_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_tr_graphs]
     ge_graphs = [duplicate_edges_in_reverse(graph) for graph in ind_ge_graphs]
 
-    entities_and_relations = all_node_types.copy()
-    entities_and_relations.remove('name')
-
     type_embedding_dim = 5
     attr_embedding_dim = 6
 
@@ -87,7 +85,18 @@ def diagnosis_example(num_graphs=60, num_processing_steps_tr=10, num_processing_
 
         return attr_encoders
 
-    attr_encoders = {make_blank_embedder: list(range(len(all_node_types)))}
+    def make_name_embedder():
+        return CategoricalAttribute(len(name_values), attr_embedding_dim)
+
+    type_categories_list = list(range(len(all_node_types)))
+    non_attribute_nodes = type_categories_list.copy()
+
+    name_index = all_node_types.index('name')
+
+    non_attribute_nodes.pop(name_index)
+
+    attr_encoders = {make_blank_embedder: non_attribute_nodes,
+                     make_name_embedder: [name_index]}
 
     kgcn = KGCN(all_node_types,
                 all_edge_types,
@@ -95,6 +104,7 @@ def diagnosis_example(num_graphs=60, num_processing_steps_tr=10, num_processing_
                 attr_embedding_dim,
                 attr_encoders,
                 latent_size=16, num_layers=2)
+
     train_values, test_values = kgcn(tr_graphs,
                                      ge_graphs,
                                      num_processing_steps_tr=num_processing_steps_tr,

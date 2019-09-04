@@ -26,7 +26,7 @@ import numpy as np
 
 class ITCategoricalAttribute(unittest.TestCase):
     def test_output_tensorspec(self):
-        cat = CategoricalAttribute([1, 2, 3], 5)
+        cat = CategoricalAttribute(2, 5)
         inp = tf.zeros((3, 1), dtype=tf.float32)
         output = cat(inp)
         np.testing.assert_array_equal(tf.TensorShape([3, 5]), output.shape)
