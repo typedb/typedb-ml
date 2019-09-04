@@ -90,23 +90,26 @@ class KGCN:
 
     def _build(self):
 
-        common_embedding_module = snt.Module(
-            partial(common_embedding, num_types=len(self.all_edge_types), type_embedding_dim=self._type_embedding_dim))
+        def make_edge_model():
+            common_embedding_module = snt.Module(
+                partial(common_embedding, num_types=len(self.all_edge_types),
+                        type_embedding_dim=self._type_embedding_dim)
+            )
 
-        edge_model = snt.Sequential([common_embedding_module,
-                                     snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
-                                     snt.LayerNorm()])
+            return snt.Sequential([common_embedding_module,
+                                   snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
+                                   snt.LayerNorm()])
 
-        node_embedding_module = snt.Module(
-            partial(node_embedding, num_types=len(self.all_node_types), type_embedding_dim=self._type_embedding_dim,
-                    attr_encoders=self._attr_encoders, attr_embedding_dim=self._attr_embedding_dim)
-        )
+        def make_node_model():
+            node_embedding_module = snt.Module(
+                partial(node_embedding, num_types=len(self.all_node_types), type_embedding_dim=self._type_embedding_dim,
+                        attr_encoders=self._attr_encoders, attr_embedding_dim=self._attr_embedding_dim)
+            )
+            return snt.Sequential([node_embedding_module,
+                                   snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
+                                   snt.LayerNorm()])
 
-        node_model = snt.Sequential([node_embedding_module,
-                                     snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
-                                     snt.LayerNorm()])
-
-        kg_encoder = lambda: GraphIndependent(lambda: edge_model, lambda: node_model, make_mlp_model, name='kg_encoder')
+        kg_encoder = lambda: GraphIndependent(make_edge_model, make_node_model, make_mlp_model, name='kg_encoder')
 
         model = KGMessagePassingLearner(kg_encoder, edge_output_size=3, node_output_size=3)
         return model
