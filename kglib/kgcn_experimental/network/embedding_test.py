@@ -30,7 +30,7 @@ from kglib.kgcn_experimental.test.utils import get_call_args
 class TestCommonEmbedding(unittest.TestCase):
     def test_embedding_output_shape_as_expected(self):
         tf.enable_eager_execution()
-        features = np.array([[1, 0, 0.7], [1, 2, 0.7], [0, 1, 0.5]])
+        features = np.array([[1, 0, 0.7], [1, 2, 0.7], [0, 1, 0.5]], dtype=np.float32)
         type_embedding_dim = 5
         output = common_embedding(features, 3, type_embedding_dim)
 

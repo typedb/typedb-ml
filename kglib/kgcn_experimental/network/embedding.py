@@ -18,14 +18,15 @@
 #
 
 import tensorflow as tf
-
+import sonnet as snt
 from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
 
 
 def common_embedding(features, num_types, type_embedding_dim):
     preexistance_feat = tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1)
-    type_embedder = tf.keras.layers.Embedding(num_types, type_embedding_dim)
-    type_embedding = type_embedder(features[:, 1])
+    # type_embedder = tf.keras.layers.Embedding(num_types, type_embedding_dim)
+    type_embedder = snt.Embed(num_types, type_embedding_dim)
+    type_embedding = type_embedder(tf.cast(features[:, 1], tf.int32))
     return tf.concat([preexistance_feat, type_embedding], axis=1)
 
 
