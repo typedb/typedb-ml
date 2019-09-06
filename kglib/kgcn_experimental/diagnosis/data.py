@@ -19,9 +19,8 @@
 import copy
 import inspect
 
-import networkx as nx
-
 from kglib.graph.create.from_queries import build_graph_from_queries
+from kglib.graph.create.query_graph import QueryGraph
 from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_data_iterator
 
 
@@ -112,19 +111,17 @@ def create_concept_graphs(example_indices, grakn_session):
     return graphs
 
 
+# Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
+PREEXISTS = dict(input=1, solution=0)
+
+# Elements to infer are the graph elements whose existence we want to predict to be true, they are positive examples
+TO_INFER = dict(input=0, solution=2)
+
+# Candidates are neither present in the input nor in the solution, they are negative examples
+CANDIDATE = dict(input=0, solution=1)
+
+
 class QueryHandler:
-
-    def __init__(self):
-        # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to
-        # exist
-        self.existing = dict(input=1, solution=0)
-
-        # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive
-        # examples
-        self.to_infer = dict(input=0, solution=2)
-
-        # Candidates are neither present in the input nor in the solution, they are negative examples
-        self.candidate = dict(input=0, solution=1)
 
     def diagnosis_query(self, example_id):
         return inspect.cleandoc(f'''match
@@ -137,28 +134,27 @@ class QueryHandler:
                get;''')
 
     def base_query_graph(self):
-        g = nx.MultiDiGraph()
-        g.add_node('p', **self.existing)
-        g.add_node('s', **self.existing)
-        g.add_edge('s', 'sn', type='has', **self.existing)
-        g.add_node('sn', **self.existing)
-        g.add_node('d', **self.existing)
-        g.add_node('dn', **self.existing)
-        g.add_edge('d', 'dn', type='has', **self.existing)
-        g.add_node('sp', **self.existing)
-        g.add_edge('sp', 's', type='presented-symptom', **self.existing)
-        g.add_edge('sp', 'p', type='symptomatic-patient', **self.existing)
-        g.add_node('c', **self.existing)
-        g.add_edge('c', 's', type='effect', **self.existing)
-        g.add_edge('c', 'd', type='cause', **self.existing)
+        p, s, sn, d, dn, sp, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'c'
+        g = QueryGraph()
+        g.add_vars(p, s, sn, d, dn, sp, c, **PREEXISTS)
+        g.add_has_edge(s, sn, **PREEXISTS)
+        g.add_has_edge(d, dn, **PREEXISTS)
+        g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
+        g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
+        g.add_role_edge(c, s, 'effect', **PREEXISTS)
+        g.add_role_edge(c, d, 'cause', **PREEXISTS)
+
         return g
 
     def diagnosis_query_graph(self):
         g = self.base_query_graph()
         g = copy.copy(g)
-        g.add_node('diag', **self.to_infer)
-        g.add_edge('diag', 'd', type='diagnosed-disease', **self.to_infer)
-        g.add_edge('diag', 'p', type='patient', **self.to_infer)
+
+        diag, d, p = 'diag', 'd', 'p'
+        g.add_vars(diag, **TO_INFER)
+        g.add_role_edge(diag, d, 'diagnosed-disease', **TO_INFER)
+        g.add_role_edge(diag, p, 'patient', **TO_INFER)
+
         return g
 
     def candidate_diagnosis_query(self, example_id):
@@ -174,9 +170,12 @@ class QueryHandler:
     def candidate_diagnosis_query_graph(self):
         g = self.base_query_graph()
         g = copy.copy(g)
-        g.add_node('diag', **self.candidate)
-        g.add_edge('diag', 'd', type='candidate-diagnosed-disease', **self.candidate)
-        g.add_edge('diag', 'p', type='candidate-patient', **self.candidate)
+
+        diag, d, p = 'diag', 'd', 'p'
+        g.add_vars(diag, **CANDIDATE)
+        g.add_role_edge(diag, d, 'candidate-diagnosed-disease', **CANDIDATE)
+        g.add_role_edge(diag, p, 'candidate-patient', **CANDIDATE)
+
         return g
 
     def get_query_handles(self, example_id):
