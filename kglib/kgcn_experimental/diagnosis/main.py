@@ -29,7 +29,7 @@ from kglib.kgcn_experimental.pipeline.utils import apply_logits_to_graphs, dupli
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute, BlankAttribute
 from kglib.kgcn_experimental.network.core import softmax, KGCN
 from kglib.kgcn_experimental.pipeline.process import KGCNProcessor
-from kglib.utils.synthetic_graphs.diagnosis.main import generate_example_graphs
+from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
 
 
 def diagnosis_example(num_graphs=60,
