@@ -25,7 +25,7 @@ import numpy as np
 from mock import MagicMock
 
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
-from kglib.kgcn_experimental.diagnosis.data import write_predictions_to_grakn
+from kglib.kgcn_experimental.examples.diagnosis.data import write_predictions_to_grakn
 
 
 class TestWritePredictionsToGrakn(unittest.TestCase):

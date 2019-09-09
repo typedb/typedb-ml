@@ -23,7 +23,7 @@ import networkx as nx
 import numpy as np
 
 from kglib.utils.iterate import multidigraph_edge_data_iterator, multidigraph_node_data_iterator
-from kglib.kgcn_experimental.genealogy.in_memory.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
+from kglib.kgcn_experimental.examples.genealogy.in_memory.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
 from kglib.kgcn_experimental.pipeline.encode import encode_categorically
 
 

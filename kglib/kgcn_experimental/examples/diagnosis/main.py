@@ -22,7 +22,7 @@ import numpy as np
 from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types, \
+from kglib.kgcn_experimental.examples.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types, \
     CATEGORICAL_ATTRIBUTES
 from kglib.utils.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
 from kglib.kgcn_experimental.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
