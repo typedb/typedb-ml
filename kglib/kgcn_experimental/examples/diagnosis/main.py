@@ -22,8 +22,8 @@ import numpy as np
 from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn_experimental.examples.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, get_all_types, \
-    CATEGORICAL_ATTRIBUTES
+from kglib.kgcn_experimental.examples.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, \
+    get_all_types, CATEGORICAL_ATTRIBUTES
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
 from kglib.kgcn_experimental.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute, BlankAttribute
@@ -88,12 +88,12 @@ def diagnosis_example(num_graphs=60,
     for attr_typ, category_values in categorical_attributes.items():
         num_categories = len(category_values)
 
-        def make_blank_embedder():
+        def make_embedder():
             return CategoricalAttribute(num_categories, attr_embedding_dim, name=attr_typ + '_cat_embedder')
         attr_typ_index = all_node_types.index(attr_typ)
 
         # Record the embedder, and the index of the type that it should encode
-        attr_embedders[make_blank_embedder] = [attr_typ_index]
+        attr_embedders[make_embedder] = [attr_typ_index]
 
         non_attribute_nodes.pop(attr_typ_index)
 
