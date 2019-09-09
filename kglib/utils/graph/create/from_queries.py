@@ -22,7 +22,7 @@ from functools import reduce
 import networkx as nx
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from kglib.utils.graph.create.model.standard.convert import concept_dict_to_grakn_standard_graph
+from kglib.utils.graph.create.model.standard.convert import concept_dict_to_graph
 
 
 def concept_dict_from_concept_map(concept_map):
@@ -74,7 +74,7 @@ def combine_n_graphs(graphs_list):
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
-                             concept_dict_converter=concept_dict_to_grakn_standard_graph, infer=True):
+                             concept_dict_converter=concept_dict_to_graph, infer=True):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
     queries (variable graphs)of those queries, over a Grakn transaction

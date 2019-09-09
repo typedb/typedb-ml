@@ -20,7 +20,7 @@ import unittest
 import networkx as nx
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 
-from kglib.utils.graph.create.model.standard.convert import concept_dict_to_grakn_standard_graph
+from kglib.utils.graph.create.model.standard.convert import concept_dict_to_graph
 from kglib.utils.graph.test.case import GraphTestCase
 
 
@@ -32,7 +32,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         person = Thing('V123', 'person', 'entity')
         concept_dict = {'x': person}
 
-        grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person, type='person')
 
@@ -45,7 +45,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         name = Thing('V123', 'name', 'attribute', data_type='string', value='Bob')
         concept_dict = {'x': name}
 
-        grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(name, type='name', datatype='string', value='Bob')
 
@@ -61,7 +61,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person, type='person')
         expected_grakn_graph.add_node(employment, type='employment')
@@ -82,7 +82,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         employment = Thing('V12345', 'employment', 'relation')
         concept_dict = {'x': person, 'y': company, 'r': employment}
 
-        grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
 
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person, type='person')
@@ -103,7 +103,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         concept_dict = {'x': person,
                         'y': person2}
 
-        grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person, type='person')
 
@@ -120,7 +120,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         concept_dict = {'x': person, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
-            _ = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_graph(concept_dict, variable_graph)
 
         self.assertEqual('An edge in the variable_graph originates from a non-relation, check the variable_graph!',
                          str(context.exception))
@@ -136,7 +136,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         concept_dict = {'x': name, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
-            _ = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_graph(concept_dict, variable_graph)
 
         self.assertEqual('An edge in the variable_graph originates from a non-relation, check the variable_graph!',
                          str(context.exception))
@@ -153,7 +153,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
                         'a': thing}
 
         with self.assertRaises(ValueError) as context:
-            _ = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_graph(concept_dict, variable_graph)
 
         self.assertEqual(
             'The variables in the variable_graph must match those in the concept_dict\n'
@@ -171,7 +171,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        grakn_graph = concept_dict_to_grakn_standard_graph(concept_dict, variable_graph)
+        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
         expected_grakn_graph.add_node(person, type='person', input=1, solution=1)
         expected_grakn_graph.add_node(employment, type='employment', input=1, solution=1)

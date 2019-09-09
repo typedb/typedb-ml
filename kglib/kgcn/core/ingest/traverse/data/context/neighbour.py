@@ -206,24 +206,6 @@ class Thing(utils.PropertyComparable):
         return self.__str__()
 
 
-class GraknEdge(utils.PropertyComparable):
-    """
-    This is a Role in a standard Grakn model, but not in a Grakn math model, where a Role is represented as a node
-    with "plays" and "relates" edges directed towards it
-    """
-    def __init__(self, sender, receiver, type_label):
-        self.sender = sender
-        self.receiver = receiver
-        self.type_label = type_label
-        self.id = (sender.id, receiver.id)
-
-    def __str__(self):
-        return f'<{self.type_label}, {self.id}>'
-
-    def __repr__(self):
-        return self.__str__()
-
-
 class Connection:
     def __init__(self, role_label, role_direction, neighbour_thing):
         self.role_label = role_label

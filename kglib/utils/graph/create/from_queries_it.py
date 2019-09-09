@@ -22,11 +22,10 @@ import networkx as nx
 from grakn.client import GraknClient
 
 from kglib.utils.graph.create.from_queries import build_graph_from_queries
-from kglib.utils.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
 from kglib.utils.graph.test.mock.answer import MockConceptMap
 from kglib.utils.graph.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 from kglib.utils.graph.test.case import GraphTestCase
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing, build_thing
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing, build_thing
 from kglib.kgcn.test.base import GraknServer
 
 TEST_URI = "localhost:48555"
@@ -59,7 +58,7 @@ class MockTransaction:
 
 
 class ITBuildGraphFromQueries(GraphTestCase):
-    def test_standard_graph_is_built_as_expected(self):
+    def test_graph_is_built_as_expected(self):
         g1 = nx.MultiDiGraph()
         g1.add_node('x')
 
@@ -96,56 +95,6 @@ class ITBuildGraphFromQueries(GraphTestCase):
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')
-        expected_combined_graph.add_edge(person_exp, name_exp, type='has')
-
-        self.assertGraphsEqual(expected_combined_graph, combined_graph)
-
-    def test_math_graph_is_built_as_expected(self):
-        g1 = nx.MultiDiGraph()
-        g1.add_node('x')
-
-        g2 = nx.MultiDiGraph()
-        g2.add_node('x')
-        g2.add_node('n')
-        g2.add_edge('x', 'n', type='has')
-
-        g3 = nx.MultiDiGraph()
-        g3.add_node('x')
-        g3.add_node('r')
-        g3.add_node('y')
-        g3.add_edge('r', 'x', type='child')
-        g3.add_edge('r', 'y', type='parent')
-
-        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1),
-                                               ('match $x id V123, has name $n; get;', mock_sampler, g2),
-                                               ('match $x id V123; $r(child: $x, parent: $y); get;', mock_sampler, g3),
-                                               # TODO Add functionality for loading schema at a later date
-                                               # ('match $x sub person; $x sub $type; get;', g4),
-                                               # ('match $x sub $y; get;', g5),
-                                               ]
-
-        mock_tx = MockTransaction()
-
-        combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx,
-                                                  concept_dict_converter=concept_dict_to_grakn_math_graph)
-
-        person_exp = Thing('V123', 'person', 'entity')
-        parentship_exp = Thing('V567', 'parentship', 'relation')
-        name_exp = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
-        parent = GraknEdge(parentship_exp, person_exp, 'parent')
-        child = GraknEdge(parentship_exp, person_exp, 'child')
-        expected_combined_graph = nx.MultiDiGraph()
-        expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name', datatype='string', value='Bob')
-        expected_combined_graph.add_node(parentship_exp, type='parentship')
-
-        expected_combined_graph.add_node(parent, type='parent')
-        expected_combined_graph.add_node(child, type='child')
-
-        expected_combined_graph.add_edge(parentship_exp, child, type='relates')
-        expected_combined_graph.add_edge(parentship_exp, parent, type='relates')
-        expected_combined_graph.add_edge(person_exp, parent, type='plays')
-        expected_combined_graph.add_edge(person_exp, child, type='plays')
         expected_combined_graph.add_edge(person_exp, name_exp, type='has')
 
         self.assertGraphsEqual(expected_combined_graph, combined_graph)
@@ -210,7 +159,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
         self._client.keyspaces().delete(self._keyspace)
         self._client.close()
 
-    def test_standard_graph_is_built_from_grakn_as_expected(self):
+    def test_graph_is_built_from_grakn_as_expected(self):
 
         g1 = nx.MultiDiGraph()
         g1.add_node('x')

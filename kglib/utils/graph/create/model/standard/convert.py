@@ -17,20 +17,57 @@
 #  under the License.
 #
 
-from kglib.utils.graph.create.model.common.convert import concept_dict_to_grakn_graph
+import networkx as nx
 
 
-def concept_dict_to_grakn_standard_graph(concept_dict, variable_graph):
-    return concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=add_role_as_direct_edge)
-
-
-def add_role_as_direct_edge(grakn_graph, relation, roleplayer, data):
+def concept_dict_to_graph(concept_dict, variable_graph):
     """
-    When adding roles to the graph, here we insert the role as a direct edge, with the type of the role stored in the
-    edge data as 'type'
-    :param grakn_graph: The graph to add roles to
-    :param relation: The relation node
-    :param roleplayer: The roleplayer node
-    :param data: The data dict, containing the type of the role edge
+    Create a new graph from a concept_dict, based on a `variable_graph` that describes the interactions between the
+    variables in the `concept_dict`
+    Args:
+        concept_dict: A dictionary with variable names as keys, values are Things
+        variable_graph: A graph with variable names as nodes, edges represent roles and has connections, indicated by
+            the key "type" stored on each edge
+
+    Returns:
+        A graph with Things as nodes. Edges connecting the nodes have only role/has type information in their data
     """
-    grakn_graph.add_edge(relation, roleplayer, **data)
+    grakn_graph = nx.MultiDiGraph()
+    node_to_var = {}
+
+    if set(variable_graph.nodes()) != set(concept_dict.keys()):
+
+        in_var_graph_not_in_concept_dict = set(variable_graph).difference(set(concept_dict.keys()))
+        in_concept_dict_not_in_var_graph = set(concept_dict.keys()).difference(set(variable_graph))
+
+        raise ValueError(f'The variables in the variable_graph must match those in the concept_dict\n'
+                         f'In the variable graph but not in the concept dict: {in_var_graph_not_in_concept_dict}\n'
+                         f'In the concept dict but not in the variable graph: {in_concept_dict_not_in_var_graph}')
+
+    # This assumes that all variables are nodes, which would not be the case for variable roles
+    for variable, thing in concept_dict.items():
+        data = variable_graph.nodes[variable]
+        data.update(type=thing.type_label)
+        if thing.base_type_label == 'attribute':
+            data.update(datatype=thing.data_type, value=thing.value)
+
+        grakn_graph.add_node(thing, **data)
+
+        # Record the mapping of nodes from one graph to the other
+        assert variable not in node_to_var
+        node_to_var[variable] = thing
+
+    for sending_var, receiving_var, data in variable_graph.edges(data=True):
+        sender = node_to_var[sending_var]
+        receiver = node_to_var[receiving_var]
+
+        if sender.base_type_label != 'relation' and not (
+                receiver.base_type_label == 'attribute' and data['type'] == 'has'):
+            raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
+
+        if data['type'] == 'has':
+            grakn_graph.add_edge(sender, receiver, **data)
+        else:
+            grakn_graph.add_edge(sender, receiver, **data)
+
+    return grakn_graph
