@@ -19,42 +19,30 @@
 
 import networkx as nx
 import numpy as np
-from grakn.client import GraknClient
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn_experimental.examples.diagnosis.data import create_concept_graphs, write_predictions_to_grakn, \
-    get_all_types, CATEGORICAL_ATTRIBUTES
-from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
-from kglib.kgcn_experimental.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
+from kglib.kgcn_experimental.examples.diagnosis.data import get_all_types
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute, BlankAttribute
 from kglib.kgcn_experimental.network.core import softmax, KGCN
 from kglib.kgcn_experimental.pipeline.process import KGCNProcessor
-from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
+from kglib.kgcn_experimental.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
+from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
 
 
-def diagnosis_example(num_graphs=60,
-                      num_processing_steps_tr=10,
-                      num_processing_steps_ge=10,
-                      num_training_iterations=1000,
-                      categorical_attributes=CATEGORICAL_ATTRIBUTES):
-
-    # The value at which to split the data into training and evaluation sets
-    tr_ge_split = int(num_graphs*0.5)
-    keyspace = "diagnosis"
-    uri = "localhost:48555"
-
-    generate_example_graphs(num_graphs, keyspace=keyspace, uri=uri)
-
-    # Get the node and edge types, these can simply be passed as a list, but here we query the schema and then remove
-    # unwanted types and roles
-
-    client = GraknClient(uri=uri)
-    session = client.session(keyspace=keyspace)
+def template(concept_graphs,
+             tr_ge_split,
+             session,
+             num_processing_steps_tr=10,
+             num_processing_steps_ge=10,
+             num_training_iterations=1000,
+             categorical_attributes=None,
+             type_embedding_dim=5,
+             attr_embedding_dim=6,
+             edge_output_size=3,
+             node_output_size=3):
 
     with session.transaction().read() as tx:
         all_node_types, all_edge_types = get_all_types(tx)
-
-    concept_graphs = create_concept_graphs(list(range(num_graphs)), session)
 
     # Encode attribute values
     for graph in concept_graphs:
@@ -75,9 +63,6 @@ def diagnosis_example(num_graphs=60,
 
     tr_graphs = concept_graphs[:tr_ge_split]
     ge_graphs = concept_graphs[tr_ge_split:]
-
-    type_embedding_dim = 5
-    attr_embedding_dim = 6
 
     type_categories_list = [i for i, _ in enumerate(all_node_types)]
     non_attribute_nodes = type_categories_list.copy()
@@ -108,8 +93,8 @@ def diagnosis_example(num_graphs=60,
                 type_embedding_dim,
                 attr_embedding_dim,
                 attr_embedders,
-                edge_output_size=3,
-                node_output_size=3)
+                edge_output_size=edge_output_size,
+                node_output_size=node_output_size)
 
     processor = KGCNProcessor(kgcn, all_node_types, all_edge_types)
 
@@ -130,12 +115,4 @@ def diagnosis_example(num_graphs=60,
             data['probabilities'] = softmax(data['logits'])
             data['prediction'] = int(np.argmax(data['probabilities']))
 
-    with session.transaction().write() as tx:
-        write_predictions_to_grakn(ge_graphs, tx)
-
-    session.close()
-    client.close()
-
-
-if __name__ == "__main__":
-    diagnosis_example()
+    return ge_graphs

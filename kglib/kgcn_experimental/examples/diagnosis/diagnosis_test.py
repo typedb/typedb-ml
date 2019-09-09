@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.kgcn_experimental.examples.diagnosis.main import diagnosis_example
+from kglib.kgcn_experimental.examples.diagnosis.diagnosis import diagnosis_example
 
 
 class TestMain(unittest.TestCase):
