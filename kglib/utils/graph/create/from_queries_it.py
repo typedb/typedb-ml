@@ -23,8 +23,8 @@ from grakn.client import GraknClient
 
 from kglib.utils.graph.create.from_queries import build_graph_from_queries
 from kglib.utils.graph.create.model.math.convert import concept_dict_to_grakn_math_graph
-from kglib.utils.graph.mock.answer import MockConceptMap
-from kglib.utils.graph.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
+from kglib.utils.graph.test.mock.answer import MockConceptMap
+from kglib.utils.graph.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 from kglib.utils.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge, Thing, build_thing
 from kglib.kgcn.test.base import GraknServer
