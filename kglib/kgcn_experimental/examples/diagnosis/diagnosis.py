@@ -22,7 +22,7 @@ import inspect
 
 from grakn.client import GraknClient
 
-from kglib.kgcn_experimental.examples.diagnosis.template import template
+from kglib.kgcn_experimental.pipeline.pipeline import pipeline
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
 from kglib.utils.graph.create.queries_to_graph import build_graph_from_queries
 from kglib.utils.graph.create.query_graph import QueryGraph
@@ -47,7 +47,7 @@ def diagnosis_example(num_graphs=60,
     with session.transaction().read() as tx:
         all_node_types, all_edge_types = get_all_types(tx)
 
-    ge_graphs = template(graphs,
+    ge_graphs = pipeline(graphs,
                          tr_ge_split,
                          all_node_types,
                          all_edge_types,

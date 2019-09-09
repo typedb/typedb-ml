@@ -23,12 +23,12 @@ from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute, BlankAttribute
 from kglib.kgcn_experimental.network.core import softmax, KGCN
-from kglib.kgcn_experimental.pipeline.process import KGCNProcessor
+from kglib.kgcn_experimental.learn.learn import KGCNLearner
 from kglib.kgcn_experimental.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
 
 
-def template(concept_graphs,
+def pipeline(concept_graphs,
              tr_ge_split,
              all_node_types,
              all_edge_types,
@@ -93,14 +93,14 @@ def template(concept_graphs,
                 edge_output_size=edge_output_size,
                 node_output_size=node_output_size)
 
-    processor = KGCNProcessor(kgcn, all_node_types, all_edge_types)
+    learner = KGCNLearner(kgcn, all_node_types, all_edge_types)
 
-    train_values, test_values = processor(tr_graphs,
-                                          ge_graphs,
-                                          num_processing_steps_tr=num_processing_steps_tr,
-                                          num_processing_steps_ge=num_processing_steps_ge,
-                                          num_training_iterations=num_training_iterations,
-                                          log_every_seconds=2)
+    train_values, test_values = learner(tr_graphs,
+                                        ge_graphs,
+                                        num_processing_steps_tr=num_processing_steps_tr,
+                                        num_processing_steps_ge=num_processing_steps_ge,
+                                        num_training_iterations=num_training_iterations,
+                                        log_every_seconds=2)
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 

@@ -24,11 +24,11 @@ import numpy as np
 import tensorflow as tf
 
 from kglib.kgcn_experimental.network.core import KGCN
-from kglib.kgcn_experimental.pipeline.process import KGCNProcessor
+from kglib.kgcn_experimental.learn.learn import KGCNLearner
 
 
-class ITKGCNProcessor(unittest.TestCase):
-    def test_processor_runs(self):
+class ITKGCNLearner(unittest.TestCase):
+    def test_learner_runs(self):
         graph = nx.MultiDiGraph()
         graph.add_node(0, type='person', encoded_value=0, input=1, solution=0)
         graph.add_edge(0, 1, type='employee', encoded_value=0, input=1, solution=0)
@@ -40,12 +40,12 @@ class ITKGCNProcessor(unittest.TestCase):
 
         kgcn = KGCN(3, 2, 5, 6, attr_embedders, edge_output_size=3, node_output_size=3)
 
-        processor = KGCNProcessor(kgcn, ['person', 'employment', 'company'], ['employee', 'employer'])
-        processor([graph], [graph],
-                  num_processing_steps_tr=2,
-                  num_processing_steps_ge=2,
-                  num_training_iterations=50,
-                  log_every_seconds=0.5)
+        learner = KGCNLearner(kgcn, ['person', 'employment', 'company'], ['employee', 'employer'])
+        learner([graph], [graph],
+                num_processing_steps_tr=2,
+                num_processing_steps_ge=2,
+                num_training_iterations=50,
+                log_every_seconds=0.5)
 
 
 if __name__ == "__main__":
