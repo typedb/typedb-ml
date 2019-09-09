@@ -24,7 +24,7 @@ import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
 from tensorflow.python.framework.ops import EagerTensor
 
-from kglib.kgcn_experimental.network.model import make_mlp_model
+from kglib.kgcn_experimental.network.core import make_mlp_model
 from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
 
 

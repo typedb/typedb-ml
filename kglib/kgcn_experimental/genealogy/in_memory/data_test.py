@@ -22,9 +22,9 @@ import unittest
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_edge_data_iterator, multidigraph_node_data_iterator
+from kglib.kgcn_experimental.utils.iterate import multidigraph_edge_data_iterator, multidigraph_node_data_iterator
 from kglib.kgcn_experimental.genealogy.in_memory.data import generate_graph, add_base_labels, find_relation_node, add_parentship, add_siblingship
-from kglib.kgcn_experimental.graph_utils.encode import encode_categorically
+from kglib.kgcn_experimental.pipeline.encode import encode_categorically
 
 
 class TestDataGeneration(unittest.TestCase):

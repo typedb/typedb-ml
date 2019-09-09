@@ -16,12 +16,6 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-from graph_nets import utils_tf
-
-
-def make_all_runnable_in_session(*args):
-    """Lets an iterable of TF graphs be output from a session as NP graphs."""
-    return [utils_tf.make_runnable_in_session(a) for a in args]
 
 
 def duplicate_edges_in_reverse(graph):

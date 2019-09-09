@@ -21,7 +21,7 @@ import unittest
 
 import numpy as np
 
-from kglib.kgcn_experimental.graph_utils.encode import augment_data_fields
+from kglib.kgcn_experimental.pipeline.encode import augment_data_fields
 
 
 class TestAugmentDataFields(unittest.TestCase):

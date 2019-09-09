@@ -21,7 +21,7 @@ import inspect
 
 from kglib.graph.create.from_queries import build_graph_from_queries
 from kglib.graph.create.query_graph import QueryGraph
-from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_data_iterator
+from kglib.kgcn_experimental.utils.iterate import multidigraph_data_iterator
 
 
 CATEGORICAL_ATTRIBUTES = {'name': ['meningitis', 'flu', 'fever', 'light-sensitivity']}

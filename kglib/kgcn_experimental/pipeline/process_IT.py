@@ -23,8 +23,8 @@ import networkx as nx
 import numpy as np
 import tensorflow as tf
 
-from kglib.kgcn_experimental.network.model import KGCN
-from kglib.kgcn_experimental.network.process import KGCNProcessor
+from kglib.kgcn_experimental.network.core import KGCN
+from kglib.kgcn_experimental.pipeline.process import KGCNProcessor
 
 
 class ITKGCNProcessor(unittest.TestCase):

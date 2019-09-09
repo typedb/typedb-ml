@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from graph_nets.utils_np import networkxs_to_graphs_tuple
 
-from kglib.kgcn_experimental.graph_utils.prepare import create_input_target_graphs
+from kglib.kgcn_experimental.pipeline.utils import create_input_target_graphs
 from kglib.kgcn_experimental.plot.plotting import plot_input_vs_output
 
 

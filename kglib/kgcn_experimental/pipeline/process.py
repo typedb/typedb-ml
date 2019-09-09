@@ -22,13 +22,12 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from kglib.kgcn_experimental.graph_utils.encode import encode_solutions, encode_categorically, augment_data_fields
-from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_node_data_iterator, \
+from kglib.kgcn_experimental.pipeline.encode import encode_solutions, encode_categorically, augment_data_fields
+from kglib.kgcn_experimental.utils.iterate import multidigraph_node_data_iterator, \
     multidigraph_edge_data_iterator, multidigraph_data_iterator
-from kglib.kgcn_experimental.graph_utils.prepare import make_all_runnable_in_session
-from kglib.kgcn_experimental.network.feed import create_placeholders, create_feed_dict
+from kglib.kgcn_experimental.pipeline.feed import create_placeholders, create_feed_dict, make_all_runnable_in_session
 from kglib.kgcn_experimental.network.loss import loss_ops_from_difference
-from kglib.kgcn_experimental.network.metrics import compute_accuracy
+from kglib.kgcn_experimental.pipeline.metrics import compute_accuracy
 from kglib.kgcn_experimental.plot.plotting import plot_across_training, plot_input_vs_output
 
 

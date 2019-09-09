@@ -48,3 +48,8 @@ def create_feed_dict(input_ph, target_ph, inputs, targets):
     target_graphs = utils_np.networkxs_to_graphs_tuple(targets)
     feed_dict = {input_ph: input_graphs, target_ph: target_graphs}
     return feed_dict
+
+
+def make_all_runnable_in_session(*args):
+    """Lets an iterable of TF graphs be output from a session as NP graphs."""
+    return [utils_tf.make_runnable_in_session(a) for a in args]
