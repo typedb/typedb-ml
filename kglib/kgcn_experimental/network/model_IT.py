@@ -24,30 +24,33 @@ import numpy as np
 import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn_experimental.network.model import KGCN
+from kglib.kgcn_experimental.network.model import KGCNProcessor, KGCN
+
+
+class TestKGCNProcessor(unittest.TestCase):
+    def test_processor_runs(self):
+        graph = nx.MultiDiGraph()
+        graph.add_node(0, type='person', encoded_value=0, input=1, solution=0)
+        graph.add_edge(0, 1, type='employee', encoded_value=0, input=1, solution=0)
+        graph.add_node(1, type='employment', encoded_value=0, input=1, solution=0)
+        graph.add_edge(1, 2, type='employer', encoded_value=0, input=1, solution=0)
+        graph.add_node(2, type='company', encoded_value=0, input=1, solution=0)
+
+        attr_embedders = {lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]}
+
+        kgcn = KGCN(3, 2, 5, 6, attr_embedders, edge_output_size=3, node_output_size=3)
+
+        processor = KGCNProcessor(kgcn, ['person', 'employment', 'company'], ['employee', 'employer'])
+        processor([graph], [graph],
+                  num_processing_steps_tr=2,
+                  num_processing_steps_ge=2,
+                  num_training_iterations=50,
+                  log_every_seconds=0.5)
 
 
 class TestKGCN(unittest.TestCase):
+
     def test_kgcn_runs(self):
-        graph = nx.MultiDiGraph()
-        graph.add_node(0, type='person', value=0, input=1, solution=0)
-        graph.add_edge(0, 1, type='employee', value=0, input=1, solution=0)
-        graph.add_node(1, type='employment', value=0, input=1, solution=0)
-        graph.add_edge(1, 2, type='employer', value=0, input=1, solution=0)
-        graph.add_node(2, type='company', value=0, input=1, solution=0)
-
-        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'], 5, 6,
-                    attr_encoders={lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]})
-        kgcn([graph], [graph],
-             num_processing_steps_tr=2,
-             num_processing_steps_ge=2,
-             num_training_iterations=50,
-             log_every_seconds=0.5)
-
-
-class TestModel(unittest.TestCase):
-
-    def test_model_runs(self):
         tf.enable_eager_execution()
 
         graph = GraphsTuple(nodes=tf.convert_to_tensor(np.array([[1, 2, 0], [1, 0, 0], [1, 1, 0]], dtype=np.float32)),
@@ -58,10 +61,10 @@ class TestModel(unittest.TestCase):
                             n_node=tf.convert_to_tensor(np.array([3], dtype=np.int32)),
                             n_edge=tf.convert_to_tensor(np.array([2], dtype=np.int32)))
 
-        kgcn = KGCN(['person', 'employment', 'company'], ['employee', 'employer'], 5, 6,
-                    {lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]})
-        model = kgcn._build()
-        model(graph, 2)
+        attr_embedders = {lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]}
+        kgcn = KGCN(3, 2, 5, 6, attr_embedders, edge_output_size=3, node_output_size=3)
+
+        kgcn(graph, 2)
 
 
 if __name__ == "__main__":

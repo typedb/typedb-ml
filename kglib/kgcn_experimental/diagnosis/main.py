@@ -27,7 +27,7 @@ from kglib.kgcn_experimental.diagnosis.data import create_concept_graphs, write_
 from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
 from kglib.kgcn_experimental.graph_utils.prepare import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute, BlankAttribute
-from kglib.kgcn_experimental.network.model import KGCN, softmax
+from kglib.kgcn_experimental.network.model import KGCNProcessor, softmax, KGCN
 from kglib.synthetic_graphs.diagnosis.main import generate_example_graphs
 
 
@@ -102,19 +102,22 @@ def diagnosis_example(num_graphs=60,
         return BlankAttribute(attr_embedding_dim)
     attr_embedders[make_blank_embedder] = non_attribute_nodes
 
-    kgcn = KGCN(all_node_types,
-                all_edge_types,
+    kgcn = KGCN(len(all_node_types),
+                len(all_edge_types),
                 type_embedding_dim,
                 attr_embedding_dim,
                 attr_embedders,
-                latent_size=16, num_layers=2)
+                edge_output_size=3,
+                node_output_size=3)
 
-    train_values, test_values = kgcn(tr_graphs,
-                                     ge_graphs,
-                                     num_processing_steps_tr=num_processing_steps_tr,
-                                     num_processing_steps_ge=num_processing_steps_ge,
-                                     num_training_iterations=num_training_iterations,
-                                     log_every_seconds=2)
+    processor = KGCNProcessor(kgcn, all_node_types, all_edge_types)
+
+    train_values, test_values = processor(tr_graphs,
+                                          ge_graphs,
+                                          num_processing_steps_tr=num_processing_steps_tr,
+                                          num_processing_steps_ge=num_processing_steps_ge,
+                                          num_training_iterations=num_training_iterations,
+                                          log_every_seconds=2)
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 

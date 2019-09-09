@@ -25,3 +25,7 @@ from kglib.kgcn_experimental.diagnosis.main import diagnosis_example
 class TestMain(unittest.TestCase):
     def test_main_runs_without_exception(self):
         diagnosis_example(num_graphs=6, num_processing_steps_tr=2, num_processing_steps_ge=2, num_training_iterations=20)
+
+
+if __name__ == "__main__":
+    unittest.main()
