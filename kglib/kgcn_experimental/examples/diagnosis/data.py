@@ -19,7 +19,7 @@
 import copy
 import inspect
 
-from kglib.utils.graph.create.from_queries import build_graph_from_queries
+from kglib.utils.graph.create.queries_to_graph import build_graph_from_queries
 from kglib.utils.graph.create.query_graph import QueryGraph
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 
