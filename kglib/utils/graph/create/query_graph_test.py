@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.graph.create.query_graph import QueryGraph
+from kglib.utils.graph.create.query_graph import QueryGraph
 
 
 class TestQueryGraph(unittest.TestCase):

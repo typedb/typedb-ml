@@ -22,7 +22,7 @@ from functools import reduce
 import networkx as nx
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from kglib.graph.create.model.standard.convert import concept_dict_to_grakn_standard_graph
+from kglib.utils.graph.create.model.standard.convert import concept_dict_to_grakn_standard_graph
 
 
 def concept_dict_from_concept_map(concept_map):

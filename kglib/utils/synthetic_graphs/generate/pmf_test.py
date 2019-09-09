@@ -22,7 +22,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from kglib.synthetic_graphs.generate.pmf import PMF
+from kglib.utils.synthetic_graphs.generate.pmf import PMF
 
 
 class TestPMF(unittest.TestCase):

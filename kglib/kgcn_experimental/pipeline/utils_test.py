@@ -34,7 +34,7 @@ import numpy as np
 from graph_nets.graphs import GraphsTuple
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.graph.test.case import GraphTestCase
+from kglib.utils.graph.test.case import GraphTestCase
 from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 from kglib.kgcn_experimental.pipeline.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 

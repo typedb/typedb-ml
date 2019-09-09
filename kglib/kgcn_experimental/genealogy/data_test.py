@@ -20,7 +20,7 @@ from kglib.kgcn.core.ingest.traverse.data.context.neighbour import build_thing
 import networkx as nx
 
 from kglib.kgcn_experimental.genealogy.data import create_concept_graphs
-from kglib.graph.test.case import GraphTestCase
+from kglib.utils.graph.test.case import GraphTestCase
 from grakn.client import GraknClient
 
 

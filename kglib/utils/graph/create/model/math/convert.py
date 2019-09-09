@@ -17,20 +17,31 @@
 #  under the License.
 #
 
-from kglib.graph.create.model.common.convert import concept_dict_to_grakn_graph
+
+from kglib.utils.graph.create.model.common.convert import concept_dict_to_grakn_graph
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import GraknEdge
 
 
-def concept_dict_to_grakn_standard_graph(concept_dict, variable_graph):
-    return concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_func=add_role_as_direct_edge)
+def concept_dict_to_grakn_math_graph(concept_dict, variable_graph):
+    return concept_dict_to_grakn_graph(concept_dict, variable_graph, add_role_as_casting_node)
 
 
-def add_role_as_direct_edge(grakn_graph, relation, roleplayer, data):
+def add_role_as_casting_node(grakn_graph, relation, roleplayer, data):
     """
-    When adding roles to the graph, here we insert the role as a direct edge, with the type of the role stored in the
-    edge data as 'type'
+    When adding roles to the graph, here we insert the role as a node, represented by a Role object. This role node
+    is connected via a 'relates' edge to its relation, and 'plays' edge to its roleplayer.
     :param grakn_graph: The graph to add roles to
     :param relation: The relation node
     :param roleplayer: The roleplayer node
     :param data: The data dict, containing the type of the role edge
     """
-    grakn_graph.add_edge(relation, roleplayer, **data)
+    role = GraknEdge(relation, roleplayer, data['type'])
+    relates_data = dict(data)
+    relates_data['type'] = 'relates'
+    plays_data = dict(data)
+    plays_data['type'] = 'plays'
+    grakn_graph.add_node(role, **data)
+    grakn_graph.add_edge(relation, role, **relates_data)
+    grakn_graph.add_edge(roleplayer, role, **plays_data)
+
+
