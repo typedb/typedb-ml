@@ -24,7 +24,7 @@ from mock import Mock, patch
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute
 import tensorflow as tf
 
-from kglib.kgcn_experimental.test.utils import get_call_args
+from kglib.utils.test.utils import get_call_args
 
 
 class TestCategoricalAttribute(tf.test.TestCase):

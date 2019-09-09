@@ -19,7 +19,7 @@
 
 import numpy as np
 
-from kglib.utils.iterate import multidigraph_data_iterator
+from kglib.utils.graph.iterate import multidigraph_data_iterator
 
 
 def augment_data_fields(graph_data_iterator, fields_to_augment, augmented_field):
