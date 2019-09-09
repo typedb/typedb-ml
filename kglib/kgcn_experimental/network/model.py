@@ -88,31 +88,27 @@ class KGCN:
             target_graphs.append(target_graph)
         return input_graphs, target_graphs
 
-    def _build(self):
+    def _edge_model(self):
+        common_embedding_module = snt.Module(
+            partial(common_embedding, num_types=len(self._all_edge_types),
+                    type_embedding_dim=self._type_embedding_dim)
+        )
 
-        def make_edge_model():
-            common_embedding_module = snt.Module(
-                partial(common_embedding, num_types=len(self._all_edge_types),
-                        type_embedding_dim=self._type_embedding_dim)
-            )
+        return snt.Sequential([common_embedding_module,
+                               snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
+                               snt.LayerNorm()])
 
-            return snt.Sequential([common_embedding_module,
-                                   snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
-                                   snt.LayerNorm()])
+    def _node_model(self):
+        node_embedding_module = snt.Module(
+            partial(node_embedding, num_types=len(self._all_node_types), type_embedding_dim=self._type_embedding_dim,
+                    attr_encoders=self._attr_embedders, attr_embedding_dim=self._attr_embedding_dim)
+        )
+        return snt.Sequential([node_embedding_module,
+                               snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
+                               snt.LayerNorm()])
 
-        def make_node_model():
-            node_embedding_module = snt.Module(
-                partial(node_embedding, num_types=len(self._all_node_types), type_embedding_dim=self._type_embedding_dim,
-                        attr_encoders=self._attr_embedders, attr_embedding_dim=self._attr_embedding_dim)
-            )
-            return snt.Sequential([node_embedding_module,
-                                   snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
-                                   snt.LayerNorm()])
-
-        kg_encoder = lambda: GraphIndependent(make_edge_model, make_node_model, make_mlp_model, name='kg_encoder')
-
-        model = KGMessagePassingLearner(kg_encoder, edge_output_size=3, node_output_size=3)
-        return model
+    def _kg_encoder(self):
+        return GraphIndependent(self._edge_model, self._node_model, make_mlp_model, name='kg_encoder')
 
     def __call__(self, tr_graphs, ge_graphs, num_processing_steps_tr=10, num_processing_steps_ge=10,
                  num_training_iterations=10000, log_every_seconds=2, log_dir=None):
@@ -130,7 +126,7 @@ class KGCN:
 
         """
 
-        model = self._build()
+        model = KGMessagePassingLearner(self._kg_encoder, edge_output_size=3, node_output_size=3)
         tf.set_random_seed(1)
 
         tr_input_graphs, tr_target_graphs = self.input_fn(tr_graphs)
