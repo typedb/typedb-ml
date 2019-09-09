@@ -21,7 +21,6 @@ import networkx as nx
 import numpy as np
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn_experimental.examples.diagnosis.data import get_all_types
 from kglib.kgcn_experimental.network.attribute import CategoricalAttribute, BlankAttribute
 from kglib.kgcn_experimental.network.core import softmax, KGCN
 from kglib.kgcn_experimental.pipeline.process import KGCNProcessor
@@ -31,7 +30,8 @@ from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigr
 
 def template(concept_graphs,
              tr_ge_split,
-             session,
+             all_node_types,
+             all_edge_types,
              num_processing_steps_tr=10,
              num_processing_steps_ge=10,
              num_training_iterations=1000,
@@ -40,9 +40,6 @@ def template(concept_graphs,
              attr_embedding_dim=6,
              edge_output_size=3,
              node_output_size=3):
-
-    with session.transaction().read() as tx:
-        all_node_types, all_edge_types = get_all_types(tx)
 
     # Encode attribute values
     for graph in concept_graphs:

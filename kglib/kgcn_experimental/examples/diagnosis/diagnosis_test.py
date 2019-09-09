@@ -19,12 +19,74 @@
 
 import unittest
 
-from kglib.kgcn_experimental.examples.diagnosis.diagnosis import diagnosis_example
+import grakn.client
+import networkx as nx
+import numpy as np
+from mock import MagicMock
+
+from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
+from kglib.kgcn_experimental.examples.diagnosis.diagnosis import write_predictions_to_grakn
 
 
-class TestMain(unittest.TestCase):
-    def test_main_runs_without_exception(self):
-        diagnosis_example(num_graphs=6, num_processing_steps_tr=2, num_processing_steps_ge=2, num_training_iterations=20)
+class TestWritePredictionsToGrakn(unittest.TestCase):
+    def test_query_made_as_expected(self):
+        graph = nx.MultiDiGraph()
+
+        graph.add_node(0, concept=Thing('V123', 'person', 'entity'), probabilities=np.array([1.0, 0.0, 0.0]),
+                       prediction=0)
+        graph.add_node(1, concept=Thing('V1235', 'disease', 'entity'), probabilities=np.array([1.0, 0.0, 0.0]),
+                       prediction=0)
+        graph.add_node(2, concept=Thing('V6543', 'diagnosis', 'relation'), probabilities=np.array([0.0, 0.0071, 0.9927]),
+                       prediction=2)
+
+        graph.add_edge(2, 0)
+        graph.add_edge(2, 1)
+
+        graphs = [graph]
+        tx = MagicMock(grakn.client.Transaction)
+
+        tx.commit = MagicMock()
+        tx.query = MagicMock()
+
+        write_predictions_to_grakn(graphs, tx)
+
+        expected_query = (f'match'
+                          f'$p id V123;'
+                          f'$d id V1235;'
+                          f'insert'
+                          f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
+                          f'has probability-exists 0.993,'
+                          f'has probability-non-exists 0.007,'
+                          f'has probability-preexists 0.000;')
+
+        tx.query.assert_called_with(expected_query)
+
+        tx.commit.assert_called()
+
+    def test_query_made_only_if_relation_wins(self):
+        graph = nx.MultiDiGraph()
+
+        graph.add_node(0, concept=Thing('V123', 'person', 'entity'),
+                       probabilities=np.array([1.0, 0.0, 0.0]), prediction=0)
+        graph.add_node(1, concept=Thing('V1235', 'disease', 'entity'),
+                       probabilities=np.array([1.0, 0.0, 0.0]), prediction=0)
+        graph.add_node(2, concept=Thing('V6543', 'diagnosis', 'relation'),
+                       probabilities=np.array([0.0, 0.0, 1.0]), prediction=1)
+
+        graph.add_edge(2, 0)
+        graph.add_edge(2, 1)
+
+        graphs = [graph]
+        tx = MagicMock(grakn.client.Transaction)
+
+        tx.commit = MagicMock()
+        tx.query = MagicMock()
+
+        write_predictions_to_grakn(graphs, tx)
+
+        tx.query.assert_not_called()
+
+        tx.commit.assert_called()
 
 
 if __name__ == "__main__":
