@@ -49,15 +49,15 @@ class KGCN:
                  all_edge_types,
                  type_embedding_dim,
                  attr_embedding_dim,
-                 attr_encoders,
+                 attr_embedders,
                  latent_size=16, num_layers=2):
-        self._attr_encoders = attr_encoders
-        self._latent_size = latent_size
-        self._num_layers = num_layers
+        self._all_node_types = all_node_types
+        self._all_edge_types = all_edge_types
         self._type_embedding_dim = type_embedding_dim
         self._attr_embedding_dim = attr_embedding_dim
-        self.all_node_types = all_node_types
-        self.all_edge_types = all_edge_types
+        self._attr_embedders = attr_embedders
+        self._latent_size = latent_size
+        self._num_layers = num_layers
 
     def input_fn(self, graphs):
         input_graphs = []
@@ -67,16 +67,16 @@ class KGCN:
                                      encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
 
             node_iterator = multidigraph_node_data_iterator(graph)
-            encode_categorically(node_iterator, self.all_node_types, 'type', 'categorical_type')
+            encode_categorically(node_iterator, self._all_node_types, 'type', 'categorical_type')
 
             edge_iterator = multidigraph_edge_data_iterator(graph)
-            encode_categorically(edge_iterator, self.all_edge_types, 'type', 'categorical_type')
+            encode_categorically(edge_iterator, self._all_edge_types, 'type', 'categorical_type')
 
             features_field = "features"
 
             input_graph = graph.copy()
             augment_data_fields(multidigraph_data_iterator(input_graph),
-                                ("input", "categorical_type", "value"),
+                                ("input", "categorical_type", "encoded_value"),
                                 features_field)
             input_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
 
@@ -92,7 +92,7 @@ class KGCN:
 
         def make_edge_model():
             common_embedding_module = snt.Module(
-                partial(common_embedding, num_types=len(self.all_edge_types),
+                partial(common_embedding, num_types=len(self._all_edge_types),
                         type_embedding_dim=self._type_embedding_dim)
             )
 
@@ -102,8 +102,8 @@ class KGCN:
 
         def make_node_model():
             node_embedding_module = snt.Module(
-                partial(node_embedding, num_types=len(self.all_node_types), type_embedding_dim=self._type_embedding_dim,
-                        attr_encoders=self._attr_encoders, attr_embedding_dim=self._attr_embedding_dim)
+                partial(node_embedding, num_types=len(self._all_node_types), type_embedding_dim=self._type_embedding_dim,
+                        attr_encoders=self._attr_embedders, attr_embedding_dim=self._attr_embedding_dim)
             )
             return snt.Sequential([node_embedding_module,
                                    snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),

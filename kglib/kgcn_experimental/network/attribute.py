@@ -22,7 +22,7 @@ import tensorflow as tf
 
 
 class CategoricalAttribute(snt.AbstractModule):
-    def __init__(self, num_categories, attr_embedding_dim, name='CategoricalAttribute'):
+    def __init__(self, num_categories, attr_embedding_dim, name='CategoricalAttributeEmbedder'):
         super(CategoricalAttribute, self).__init__(name=name)
 
         self._attr_embedding_dim = attr_embedding_dim
@@ -32,3 +32,16 @@ class CategoricalAttribute(snt.AbstractModule):
         int_inputs = tf.cast(inputs, dtype=tf.int32)
         embedding = snt.Embed(self._num_categories, self._attr_embedding_dim)(int_inputs)
         return tf.squeeze(embedding, axis=1)
+
+
+class BlankAttribute(snt.AbstractModule):
+
+    def __init__(self, attr_embedding_dim, name='BlankAttributeEmbedder'):
+        super(BlankAttribute, self).__init__(name=name)
+        self._attr_embedding_dim = attr_embedding_dim
+
+    def _build(self, features):
+        shape = tf.stack([tf.shape(features)[0], self._attr_embedding_dim])
+
+        encoded_features = tf.zeros(shape, dtype=tf.float32)
+        return encoded_features

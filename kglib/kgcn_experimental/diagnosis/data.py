@@ -24,6 +24,9 @@ from kglib.graph.create.query_graph import QueryGraph
 from kglib.kgcn_experimental.graph_utils.iterate import multidigraph_data_iterator
 
 
+CATEGORICAL_ATTRIBUTES = {'name': ['meningitis', 'flu', 'fever', 'light-sensitivity']}
+
+
 def write_predictions_to_grakn(graphs, tx):
     """
     Take predictions from the ML model, and insert representations of those predictions back into the graph.
