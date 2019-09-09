@@ -19,7 +19,7 @@
 
 import tensorflow as tf
 import sonnet as snt
-from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
+from kglib.kgcn_experimental.models.typewise import TypewiseEncoder
 
 
 def common_embedding(features, num_types, type_embedding_dim):

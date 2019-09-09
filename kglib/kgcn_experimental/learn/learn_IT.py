@@ -23,7 +23,7 @@ import networkx as nx
 import numpy as np
 import tensorflow as tf
 
-from kglib.kgcn_experimental.network.core import KGCN
+from kglib.kgcn_experimental.models.core import KGCN
 from kglib.kgcn_experimental.learn.learn import KGCNLearner
 
 

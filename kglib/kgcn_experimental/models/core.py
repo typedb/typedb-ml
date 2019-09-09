@@ -25,7 +25,7 @@ from graph_nets import modules
 from graph_nets import utils_tf
 from graph_nets.modules import GraphIndependent
 
-from kglib.kgcn_experimental.network.embedding import common_embedding, node_embedding
+from kglib.kgcn_experimental.models.embedding import common_embedding, node_embedding
 
 
 def softmax(x):

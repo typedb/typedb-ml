@@ -21,7 +21,7 @@ import unittest
 
 from mock import Mock, patch
 
-from kglib.kgcn_experimental.network.attribute import CategoricalAttribute
+from kglib.kgcn_experimental.models.attribute import CategoricalAttribute
 import tensorflow as tf
 
 from kglib.utils.test.utils import get_call_args

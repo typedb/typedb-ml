@@ -24,7 +24,7 @@ import tensorflow as tf
 from mock import Mock
 
 from kglib.utils.test.utils import get_call_args
-from kglib.kgcn_experimental.network.typewise import TypewiseEncoder
+from kglib.kgcn_experimental.models.typewise import TypewiseEncoder
 
 
 class TestTypewiseEncoder(unittest.TestCase):

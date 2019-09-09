@@ -23,7 +23,7 @@ import numpy as np
 import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn_experimental.network.core import KGCN
+from kglib.kgcn_experimental.models.core import KGCN
 
 
 class ITKGCN(unittest.TestCase):
