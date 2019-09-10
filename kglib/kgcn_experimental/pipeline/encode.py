@@ -19,7 +19,37 @@
 
 import numpy as np
 
-from kglib.utils.graph.iterate import multidigraph_data_iterator
+from kglib.utils.graph.iterate import multidigraph_data_iterator, multidigraph_node_data_iterator, \
+    multidigraph_edge_data_iterator
+
+
+def encode_types(graph, node_types, edge_types):
+    node_iterator = multidigraph_node_data_iterator(graph)
+    encode_categorically(node_iterator, node_types, 'type', 'categorical_type')
+
+    edge_iterator = multidigraph_edge_data_iterator(graph)
+    encode_categorically(edge_iterator, edge_types, 'type', 'categorical_type')
+    return graph
+
+
+def create_input_graph(graph, features_field="features"):
+    input_graph = graph.copy()
+    augment_data_fields(multidigraph_data_iterator(input_graph),
+                        ("input", "categorical_type", "encoded_value"),
+                        features_field)
+    input_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
+    return input_graph
+
+
+def create_target_graph(graph, features_field="features"):
+    target_graph = graph.copy()
+    target_graph = encode_solutions(target_graph, solution_field="solution", encoded_solution_field="encoded_solution",
+                                    encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
+    augment_data_fields(multidigraph_data_iterator(target_graph),
+                        ("encoded_solution",),
+                        features_field)
+    target_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
+    return target_graph
 
 
 def augment_data_fields(graph_data_iterator, fields_to_augment, augmented_field):
