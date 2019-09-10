@@ -8,7 +8,7 @@ py_test(
         "queries_to_graph_test.py"
     ],
     deps = [
-        "create",
+        "thing",
         "//kglib/utils/grakn/test",
         "//kglib/utils/graph/test",
     ]
@@ -20,7 +20,7 @@ py_test(
         "queries_to_graph_it.py"
     ],
     deps = [
-        "create",
+        "thing",
         "//kglib/utils/grakn/test",
         "//kglib/utils/graph/test",
         "@graknlabs_client_python//:client_python",
@@ -30,8 +30,20 @@ py_test(
     ]
 )
 
+
+py_test(
+    name = "concept_dict_to_graph_test",
+    srcs = [
+        "concept_dict_to_graph_test.py"
+    ],
+    deps = [
+        "thing",
+        "//kglib/utils/graph/test",
+    ],
+)
+
 py_library(
-    name = "create",
+    name = "thing",
     srcs = glob(['**/*.py']),
     deps = [
         "//kglib/utils/grakn/object",

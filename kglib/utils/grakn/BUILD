@@ -3,14 +3,14 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 
 py_library(
-    name = "graph",
+    name = "grakn",
     srcs = glob(['**/*.py']),
     deps = [
         requirement('networkx'),
         requirement('decorator'),
-        '//kglib/kgcn:kgcn',
-        '//kglib/utils/graph/query:query',
-        '//kglib/utils/graph/thing:thing',
+        '//kglib/utils/grakn/test:test',
+        '//kglib/utils/grakn/object:object',
+        '//kglib/utils/grakn/synthetic:synthetic',
     ],
     visibility=['//visibility:public']
 )

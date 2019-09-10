@@ -3,14 +3,9 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 
 py_library(
-    name = "graph",
+    name = "object",
     srcs = glob(['**/*.py']),
     deps = [
-        requirement('networkx'),
-        requirement('decorator'),
-        '//kglib/kgcn:kgcn',
-        '//kglib/utils/graph/query:query',
-        '//kglib/utils/graph/thing:thing',
     ],
     visibility=['//visibility:public']
 )

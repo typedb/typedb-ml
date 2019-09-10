@@ -24,8 +24,8 @@ from grakn.client import GraknClient
 
 from kglib.kgcn_experimental.pipeline.pipeline import pipeline
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
-from kglib.utils.graph.create.queries_to_graph import build_graph_from_queries
-from kglib.utils.graph.create.query_graph import QueryGraph
+from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
+from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 
 

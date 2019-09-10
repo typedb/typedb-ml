@@ -21,7 +21,7 @@ import unittest
 import networkx as nx
 
 from kglib.utils.grakn.object.thing import Thing
-from kglib.utils.graph.create.concept_dict_to_graph import concept_dict_to_graph
+from kglib.utils.graph.thing.concept_dict_to_graph import concept_dict_to_graph
 from kglib.utils.graph.test.case import GraphTestCase
 
 
@@ -179,6 +179,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         expected_grakn_graph.add_edge(employment, person, type='employee', input=0, solution=1)
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+
 
 if __name__ == "__main__":
     unittest.main()

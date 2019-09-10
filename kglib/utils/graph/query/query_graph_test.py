@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.utils.graph.create.query_graph import QueryGraph
+from kglib.utils.graph.query.query_graph import QueryGraph
 
 
 class TestQueryGraph(unittest.TestCase):
@@ -45,3 +45,7 @@ class TestQueryGraph(unittest.TestCase):
         edges = [edge for edge in g.edges]
         self.assertEqual(1, len(edges))
         self.assertEqual('role', g.edges['a', 'b', 0]['type'])
+
+
+if __name__ == "__main__":
+    unittest.main()

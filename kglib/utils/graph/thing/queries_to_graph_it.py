@@ -25,7 +25,7 @@ from kglib.utils.grakn.object.thing import Thing, build_thing
 from kglib.utils.grakn.test.base import GraknServer
 from kglib.utils.grakn.test.mock.answer import MockConceptMap
 from kglib.utils.grakn.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
-from kglib.utils.graph.create.queries_to_graph import build_graph_from_queries
+from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
 from kglib.utils.graph.test.case import GraphTestCase
 
 TEST_URI = "localhost:48555"
