@@ -21,17 +21,15 @@ import unittest
 
 import matplotlib.pyplot as plt
 import networkx as nx
-from graph_nets.utils_np import networkxs_to_graphs_tuple
+import numpy as np
+from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn_experimental.pipeline.utils import create_input_target_graphs
 from kglib.kgcn_experimental.plot.plotting import plot_input_vs_output
 
 
 class TestPlotInputVsOutput(unittest.TestCase):
     def test_plotting(self):
         num_processing_steps_ge = 6
-        all_node_types = ['person', 'parentship', 'siblingship']
-        all_edge_types = ['parent', 'child', 'sibling']
 
         graph = nx.MultiDiGraph(name=0)
 
@@ -48,9 +46,18 @@ class TestPlotInputVsOutput(unittest.TestCase):
         graph.add_edge(2, 0, type='parent', **to_infer)
         graph.add_edge(2, 1, type='child', **candidate)
 
-        inputs, targets = create_input_target_graphs([graph])
-        target_graphs = networkxs_to_graphs_tuple(targets)
-        test_values = {"target": target_graphs, "outputs": [target_graphs for _ in range(6)]}
+        graph_tuple = GraphsTuple(nodes=np.array([[1., 0., 0.],
+                                                  [1., 1., 0.],
+                                                  [1., 0., 1.]]),
+                                  edges=np.array([[1., 0., 0.],
+                                                  [1., 1., 0.]]),
+                                  receivers=np.array([1, 2], dtype=np.int32),
+                                  senders=np.array([0, 1], dtype=np.int32),
+                                  globals=np.array([[0., 0., 0., 0., 0.]], dtype=np.float32),
+                                  n_node=np.array([3], dtype=np.int32),
+                                  n_edge=np.array([2], dtype=np.int32))
+
+        test_values = {"target": graph_tuple, "outputs": [graph_tuple for _ in range(6)]}
         plot_input_vs_output([graph], test_values, num_processing_steps_ge)
         plt.show()
 

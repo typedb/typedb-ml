@@ -17,14 +17,16 @@
 #  under the License.
 #
 
+import unittest
+
 import networkx as nx
 import numpy as np
 from graph_nets.graphs import GraphsTuple
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
+from kglib.kgcn_experimental.pipeline.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
-from kglib.kgcn_experimental.pipeline.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 
 
 class TestDuplicateEdgesInReverse(GraphTestCase):
@@ -106,3 +108,7 @@ class TestApplyLogitsToGraphs(GraphTestCase):
         graphs = apply_logits_to_graphs([graph], graphs_tuple_to_networkxs(graphstuple))
 
         self.assertGraphsEqual(expected_graph, graphs[0])
+
+
+if __name__ == '__main__':
+    unittest.main()
