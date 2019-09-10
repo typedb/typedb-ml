@@ -32,7 +32,7 @@ from kglib.utils.graph.iterate import multidigraph_data_iterator
 def diagnosis_example(num_graphs=60,
                       num_processing_steps_tr=10,
                       num_processing_steps_ge=10,
-                      num_training_iterations=1000,
+                      num_training_iterations=2000,
                       keyspace="diagnosis", uri="localhost:48555"):
 
     tr_ge_split = int(num_graphs*0.5)
