@@ -45,12 +45,16 @@ def diagnosis_example(num_graphs=60,
     graphs = create_concept_graphs(list(range(num_graphs)), session)
 
     with session.transaction().read() as tx:
-        all_node_types, all_edge_types = get_all_types(tx)
+        # Change the terminology here onwards from thing -> node and role -> edge
+        node_types = get_thing_types(tx)
+        edge_types = get_role_types(tx)
+        print(f'Found node types: {node_types}')
+        print(f'Found edge types: {edge_types}')
 
     ge_graphs = pipeline(graphs,
                          tr_ge_split,
-                         all_node_types,
-                         all_edge_types,
+                         node_types,
+                         edge_types,
                          num_processing_steps_tr=num_processing_steps_tr,
                          num_processing_steps_ge=num_processing_steps_ge,
                          num_training_iterations=num_training_iterations,
@@ -171,23 +175,24 @@ class QueryHandler:
         ]
 
 
-def get_all_types(tx):
+def get_thing_types(tx):
     schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
-    all_node_types = [schema_concept.label() for schema_concept in schema_concepts]
-    [all_node_types.remove(el) for el in
+    thing_types = [schema_concept.label() for schema_concept in schema_concepts]
+    [thing_types.remove(el) for el in
      ['thing', 'relation', 'entity', 'attribute', '@has-attribute', '@key-attribute', 'candidate-diagnosis',
       'example-id', '@key-example-id', '@key-name', '@has-probability-exists', '@has-probability-non-exists',
       '@has-probability-preexists', 'probability-exists', 'probability-non-exists', 'probability-preexists']]
-    print(all_node_types)
+    return thing_types
 
-    roles = tx.query("match $x sub role; get;").collect_concepts()
-    all_edge_types = ['has'] + [role.label() for role in roles]
-    [all_edge_types.remove(el) for el in
+
+def get_role_types(tx):
+    schema_concepts = tx.query("match $x sub role; get;").collect_concepts()
+    role_types = ['has'] + [role.label() for role in schema_concepts]
+    [role_types.remove(el) for el in
      ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
       'candidate-diagnosed-disease', '@key-example-id-value', '@key-example-id-owner',
       '@key-name-value', '@key-name-owner']]
-    print(all_edge_types)
-    return all_node_types, all_edge_types
+    return role_types
 
 
 def write_predictions_to_grakn(graphs, tx):
