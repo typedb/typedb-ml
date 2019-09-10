@@ -19,8 +19,8 @@
 
 import unittest
 import networkx as nx
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 
+from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.graph.create.concept_dict_to_graph import concept_dict_to_graph
 from kglib.utils.graph.test.case import GraphTestCase
 

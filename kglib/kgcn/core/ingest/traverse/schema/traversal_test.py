@@ -25,7 +25,7 @@ import grakn.client
 import kglib.kgcn.core.ingest.encode.encode as encode
 import kglib.kgcn.core.ingest.traverse.schema.executor as ex
 import kglib.kgcn.core.ingest.traverse.schema.traversal as trv
-from kglib.kgcn.test.base import GraknServer
+from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "test_schema"
 TEST_URI = "localhost:48555"

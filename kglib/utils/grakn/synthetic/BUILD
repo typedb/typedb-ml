@@ -3,10 +3,10 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 
 py_library(
-    name = "synthetic_graphs",
+    name = "synthetic",
     srcs = glob(['**/*.py']),
     deps = [
-        '//kglib/synthetic_graphs/generate:generate',
+        '//kglib/utils/grakn/synthetic/statistics:statistics',
         requirement('numpy'),
         requirement('pandas'),
         requirement('pytz'),

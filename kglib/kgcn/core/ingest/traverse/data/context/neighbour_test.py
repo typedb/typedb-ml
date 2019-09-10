@@ -23,7 +23,7 @@ import unittest
 import grakn.client
 
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
-from kglib.kgcn.test.base import GraknServer
+from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "test_schema"
 TEST_URI = "localhost:48555"

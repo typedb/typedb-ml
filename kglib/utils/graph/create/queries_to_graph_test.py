@@ -21,11 +21,11 @@ import unittest
 
 import networkx as nx
 
-from kglib.utils.graph.create.queries_to_graph import concept_dict_from_concept_map, combine_2_graphs
+from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.grakn.test.mock.answer import MockConceptMap
 from kglib.utils.grakn.test.mock.concept import MockType, MockThing
+from kglib.utils.graph.create.queries_to_graph import concept_dict_from_concept_map, combine_2_graphs
 from kglib.utils.graph.test.case import GraphTestCase
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 
 
 class TestConceptDictsFromQuery(unittest.TestCase):

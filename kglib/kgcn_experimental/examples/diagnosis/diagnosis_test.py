@@ -24,8 +24,8 @@ import networkx as nx
 import numpy as np
 from mock import MagicMock
 
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 from kglib.kgcn_experimental.examples.diagnosis.diagnosis import write_predictions_to_grakn
+from kglib.utils.grakn.object.thing import Thing
 
 
 class TestWritePredictionsToGrakn(unittest.TestCase):

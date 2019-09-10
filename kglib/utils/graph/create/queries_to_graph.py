@@ -21,7 +21,7 @@ from functools import reduce
 
 import networkx as nx
 
-import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
+from kglib.utils.grakn.object.thing import build_thing
 from kglib.utils.graph.create.concept_dict_to_graph import concept_dict_to_graph
 
 
@@ -32,7 +32,7 @@ def concept_dict_from_concept_map(concept_map):
     :param concept_map: A dict of Concepts provided by Grakn keyed by query variables
     :return: A dictionary of concepts keyed by query variables
     """
-    return {variable: neighbour.build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
+    return {variable: build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
 
 
 def combine_2_graphs(graph1, graph2):

@@ -9,11 +9,7 @@ py_library(
         requirement('networkx'),
         requirement('decorator'),
         '//kglib/kgcn:kgcn',
-        '//kglib/graph/create:create',
-        '//kglib/graph/create/model:model',
-        '//kglib/graph/create/model/standard:standard',
-        '//kglib/graph/create/model/math:math',
-        '//kglib/graph/create/model/common:common',
+        '//kglib/utils/graph/create:create',
     ],
     visibility=['//visibility:public']
 )

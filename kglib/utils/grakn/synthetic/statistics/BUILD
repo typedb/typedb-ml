@@ -7,12 +7,12 @@ py_test(
         "pmf_test.py"
     ],
     deps = [
-        "generate"
+        "statistics"
     ]
 )
 
 py_library(
-    name = "generate",
+    name = "statistics",
     srcs = glob(['**/*.py']),
     deps = [
         requirement('numpy'),

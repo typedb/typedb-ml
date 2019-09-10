@@ -25,7 +25,7 @@ import numpy as np
 import tensorflow as tf
 
 import kglib.kgcn.core.ingest.encode.encode as encode
-from kglib.kgcn.test.base import GraknServer
+from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "test_schema"
 TEST_URI = "localhost:48555"

@@ -3,41 +3,40 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 
 py_test(
-    name = "from_queries_test",
+    name = "queries_to_graph_test",
     srcs = [
-        "from_queries_test.py"
+        "queries_to_graph_test.py"
     ],
     deps = [
         "create",
-        "//kglib/graph/test",
-        "//kglib/graph/mock"
+        "//kglib/utils/grakn/test",
+        "//kglib/utils/graph/test",
     ]
 )
 
 py_test(
-    name = "from_queries_it",
+    name = "queries_to_graph_it",
     srcs = [
-        "from_queries_it.py"
+        "queries_to_graph_it.py"
     ],
     deps = [
         "create",
-        "//kglib/graph/test",
-        "//kglib/graph/mock"
+        "//kglib/utils/grakn/test",
+        "//kglib/utils/graph/test",
+        "@graknlabs_client_python//:client_python",
     ],
     data = [
         "@graknlabs_grakn_core//:assemble-mac-zip",
     ]
 )
 
-
 py_library(
     name = "create",
     srcs = glob(['**/*.py']),
     deps = [
+        "//kglib/utils/grakn/object",
         requirement('networkx'),
         requirement('decorator'),
-        '//kglib/kgcn',
-        '//kglib/graph/create/model',
     ],
     visibility=['//visibility:public']
 )

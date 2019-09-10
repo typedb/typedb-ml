@@ -17,25 +17,13 @@
 #  under the License.
 #
 
-#
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing,
-#  software distributed under the License is distributed on an
-#  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-#  KIND, either express or implied.  See the License for the
-#  specific language governing permissions and limitations
-#  under the License.
-#
-
 import networkx as nx
 import numpy as np
 from graph_nets.graphs import GraphsTuple
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
+from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
-from kglib.kgcn.core.ingest.traverse.data.context.neighbour import Thing
 from kglib.kgcn_experimental.pipeline.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 
 

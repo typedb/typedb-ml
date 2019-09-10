@@ -28,7 +28,7 @@ import kglib.kgcn.core.ingest.traverse.data.context.builder_mocks as mocks
 import kglib.kgcn.core.ingest.traverse.data.context.neighbour as neighbour
 import kglib.kgcn.core.ingest.traverse.data.sample.ordered as ordered
 import kglib.kgcn.core.ingest.traverse.data.sample.sample as samp
-from kglib.kgcn.test.base import GraknServer
+from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "test_schema"
 TEST_URI = "localhost:48555"
