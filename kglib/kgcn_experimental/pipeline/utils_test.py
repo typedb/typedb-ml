@@ -85,9 +85,9 @@ class TestApplyLogitsToGraphs(GraphTestCase):
         expected_graph.add_node(1, logits=[0.56, -0.04, 0.05])
         expected_graph.add_edge(0, 1, logits=[0.5, 0.008, -0.1])
 
-        graphs = apply_logits_to_graphs([graph], [logits_graph])
+        graph_with_logits = apply_logits_to_graphs(graph, logits_graph)
 
-        self.assertGraphsEqual(expected_graph, graphs[0])
+        self.assertGraphsEqual(expected_graph, graph_with_logits)
 
 
 if __name__ == '__main__':

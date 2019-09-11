@@ -31,29 +31,28 @@ def duplicate_edges_in_reverse(graph):
     return graph
 
 
-def apply_logits_to_graphs(graphs, logits_graphs):
+def apply_logits_to_graphs(graph, logits_graph):
     """
-    Take in graphs that describes the logits of the graphs of interest, and store those logits on those graphs as the
-    property 'logits'. The two sets of graphs must correspond
+    Take in a graph that describes the logits of the graph of interest, and store those logits on the graph as the
+    property 'logits'. The graphs must correspond with one another
 
     Args:
-        graphs: Graphs to apply logits to
-        logits_graphs: Graphs containing logits
+        graph: Graph to apply logits to
+        logits_graph: Graph containing logits
 
     Returns:
-        graphs with logits added as property 'logits'
+        graph with logits added as property 'logits'
     """
 
-    for graph, logit_graph in zip(graphs, logits_graphs):
-        for node, data in logit_graph.nodes(data=True):
-            graph.nodes[node]['logits'] = list(data['features'])
+    for node, data in logits_graph.nodes(data=True):
+        graph.nodes[node]['logits'] = list(data['features'])
 
-        # TODO This is the desired implementation, but the graphs are altered by the model to have duplicated reversed
-        #  edges, so this won't work for now
-        # for sender, receiver, keys, data in logit_graph.edges(keys=True, data=True):
-        #     graph.edges[sender, receiver, keys]['logits'] = list(data['features'])
+    # TODO This is the desired implementation, but the graphs are altered by the model to have duplicated reversed
+    #  edges, so this won't work for now
+    # for sender, receiver, keys, data in logit_graph.edges(keys=True, data=True):
+    #     graph.edges[sender, receiver, keys]['logits'] = list(data['features'])
 
-        for sender, receiver, keys, data in graph.edges(keys=True, data=True):
-            data['logits'] = list(logit_graph.edges[sender, receiver, keys]['features'])
+    for sender, receiver, keys, data in graph.edges(keys=True, data=True):
+        data['logits'] = list(logits_graph.edges[sender, receiver, keys]['features'])
 
-    return graphs
+    return graph

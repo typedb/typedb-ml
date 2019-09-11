@@ -122,7 +122,8 @@ def pipeline(graphs,
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 
     indexed_ge_graphs = indexed_graphs[tr_ge_split:]
-    ge_graphs = apply_logits_to_graphs(indexed_ge_graphs, logit_graphs)
+    ge_graphs = [apply_logits_to_graphs(graph, logit_graph) for graph, logit_graph in
+                 zip(indexed_ge_graphs, logit_graphs)]
 
     for ge_graph in ge_graphs:
         for data in multidigraph_data_iterator(ge_graph):
