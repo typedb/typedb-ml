@@ -74,38 +74,18 @@ class TestApplyLogitsToGraphs(GraphTestCase):
         graph.add_node(1)
         graph.add_edge(0, 1)
 
-        nodes = np.array([[0.2, 0.3, 0.01], [0.56, -0.04, 0.05]], dtype=np.float32)
-        edges = np.array([[0.5, 0.008, -0.1],
-                          [0.5, 0.008, -0.1]], dtype=np.float32)
-
-        globals = None
-        senders = np.array([0, 1])
-        receivers = np.array([1, 0])
-        n_node = np.array([2])
-        n_edge = np.array([2])
-
-        # TODO Once the model doesn't require duplicate reversed edges, then the GraphsTuple will look like this, as it
-        #  should:
-        # globals = None
-        # senders = np.array([0])
-        # receivers = np.array([1])
-        # n_node = np.array([2])
-        # n_edge = np.array([1])
-
-        graphstuple = GraphsTuple(nodes=nodes,
-                                  edges=edges,
-                                  globals=globals,
-                                  receivers=receivers,
-                                  senders=senders,
-                                  n_node=n_node,
-                                  n_edge=n_edge)
+        logits_graph = nx.MultiDiGraph(name=0)
+        logits_graph.add_node(0, features=np.array([0.2, 0.3, 0.01]))
+        logits_graph.add_node(1, features=np.array([0.56, -0.04, 0.05]))
+        logits_graph.add_edge(0, 1, features=np.array([0.5, 0.008, -0.1]))
+        logits_graph.add_edge(1, 0, features=np.array([0.5, 0.008, -0.1]))
 
         expected_graph = nx.MultiDiGraph(name=0)
         expected_graph.add_node(0, logits=[0.2, 0.3, 0.01])
         expected_graph.add_node(1, logits=[0.56, -0.04, 0.05])
         expected_graph.add_edge(0, 1, logits=[0.5, 0.008, -0.1])
 
-        graphs = apply_logits_to_graphs([graph], graphs_tuple_to_networkxs(graphstuple))
+        graphs = apply_logits_to_graphs([graph], [logits_graph])
 
         self.assertGraphsEqual(expected_graph, graphs[0])
 
