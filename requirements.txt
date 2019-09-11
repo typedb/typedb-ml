@@ -3,6 +3,7 @@ astor==0.7.1
 contextlib2==0.5.5
 cycler==0.10.0
 decorator==4.3.0
+dm-sonnet==1.32
 gast==0.2.0
 graph-nets==1.0.4
 h5py==2.8.0

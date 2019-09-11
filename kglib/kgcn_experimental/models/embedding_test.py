@@ -44,7 +44,7 @@ class TestAttributeEmbedding(unittest.TestCase):
 
         mock_instance = Mock()
         mock = Mock(return_value=mock_instance)
-        patcher = patch('kglib.kgcn_experimental.network.embedding.TypewiseEncoder', spec=True, new=mock)
+        patcher = patch('kglib.kgcn_experimental.models.embedding.TypewiseEncoder', spec=True, new=mock)
         mock_class = patcher.start()
 
         attr_encoders = Mock()
@@ -55,7 +55,7 @@ class TestAttributeEmbedding(unittest.TestCase):
         mock_class.assert_called_once_with(attr_encoders, attr_embedding_dim)
         call_args = get_call_args(mock_instance)
 
-        np.testing.assert_array_equal([[np.array([[0.7], [0.7], [0.5]])]], call_args)
+        np.testing.assert_array_equal([[np.array([[0, 0.7], [2, 0.7], [1, 0.5]])]], call_args)
 
         patcher.stop()
 
@@ -75,11 +75,11 @@ class TestNodeEmbedding(unittest.TestCase):
 
         mock_common_embedding = Mock(return_value=np.ones((3, 4)))
 
-        patcher_attr = patch('kglib.kgcn_experimental.network.embedding.attribute_embedding', spec=True,
+        patcher_attr = patch('kglib.kgcn_experimental.models.embedding.attribute_embedding', spec=True,
                              new=mock_attribute_embedding)
         patcher_attr.start()
 
-        patcher_common = patch('kglib.kgcn_experimental.network.embedding.common_embedding', spec=True,
+        patcher_common = patch('kglib.kgcn_experimental.models.embedding.common_embedding', spec=True,
                                new=mock_common_embedding)
         patcher_common.start()
 

@@ -21,10 +21,8 @@ import unittest
 
 import numpy as np
 import tensorflow as tf
-from graph_nets.graphs import GraphsTuple
 from tensorflow.python.framework.ops import EagerTensor
 
-from kglib.kgcn_experimental.models.core import make_mlp_model
 from kglib.kgcn_experimental.models.typewise import TypewiseEncoder
 
 
@@ -33,7 +31,7 @@ class ITTypewiseEncoder(unittest.TestCase):
     def setUp(self):
         tf.enable_eager_execution()
 
-    def test_using_tensorflow(self):
+    def test_with_tensors(self):
         tf.reset_default_graph()
         tf.set_random_seed(1)
 
@@ -49,29 +47,6 @@ class ITTypewiseEncoder(unittest.TestCase):
 
         # Check that tensorflow was actually used
         self.assertEqual(EagerTensor, type(encoded_things))
-
-    def test_from_graphtuple(self):
-        inp = GraphsTuple(nodes=np.array([[1., 0., 0.],
-                                          [1., 1., 0.],
-                                          [1., 2., 0.]]),
-                          edges=np.array([[1., 0., 0.],
-                                          [1., 1., 0.]]),
-                          receivers=np.array([1, 2], dtype=np.int32),
-                          senders=np.array([0, 1], dtype=np.int32),
-                          globals=np.array([[0., 0., 0., 0., 0.]], dtype=np.float32),
-                          n_node=np.array([3], dtype=np.int32), n_edge=np.array([2], dtype=np.int32))
-
-        feature_length = 15
-        all_edge_types = ['employee', 'employer']
-        edge_type_encoder_op = lambda: make_mlp_model(latent_size=15, num_layers=2)
-        edge_encoders_for_types = {lambda: TypeEncoder(len(all_edge_types), 0, edge_type_encoder_op):
-                                       [i for i, _ in enumerate(all_edge_types)]}
-        edge_typewise = TypewiseEncoder(edge_encoders_for_types, feature_length, name="edge_typewise_encoder")
-
-        def edge_model():
-            return pass_input_through_op(edge_typewise)
-
-        output = edge_model()(inp.edges)
 
 
 if __name__ == '__main__':

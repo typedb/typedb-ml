@@ -26,6 +26,7 @@ py_library(
         requirement('graph_nets'),
         requirement('tensorflow'),
         requirement('tensorflow-probability'),
+        requirement('dm-sonnet'),
         requirement('semantic-version'),
         requirement('contextlib2'),
         requirement('wrapt')
