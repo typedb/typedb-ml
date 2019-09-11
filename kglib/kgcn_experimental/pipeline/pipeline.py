@@ -111,7 +111,7 @@ def pipeline(graphs,
 
     learner = KGCNLearner(kgcn,
                           num_processing_steps_tr=num_processing_steps_tr,
-                          num_processing_steps_ge=num_processing_steps_ge,)
+                          num_processing_steps_ge=num_processing_steps_ge)
 
     train_values, test_values = learner(tr_input_graphs,
                                         tr_target_graphs,

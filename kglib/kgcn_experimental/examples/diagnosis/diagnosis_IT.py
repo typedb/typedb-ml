@@ -16,10 +16,15 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import os
+import subprocess as sp
 import unittest
 
 from kglib.kgcn_experimental.examples.diagnosis.diagnosis import diagnosis_example
+from kglib.utils.grakn.test.base import GraknServer
+
+TEST_KEYSPACE = "diagnosis"
+TEST_URI = "localhost:48555"
 
 
 class TestDiagnosisExample(unittest.TestCase):
@@ -28,3 +33,15 @@ class TestDiagnosisExample(unittest.TestCase):
                           num_processing_steps_tr=2,
                           num_processing_steps_ge=2,
                           num_training_iterations=20)
+
+
+if __name__ == "__main__":
+
+    with GraknServer() as gs:
+
+        sp.check_call([
+            'grakn', 'console', '-k', TEST_KEYSPACE, '-f',
+            os.getenv("TEST_SRCDIR") + '/kglib/kglib/kgcn/test_data/schema.gql'
+        ], cwd=gs.grakn_binary_location)
+
+        unittest.main()
