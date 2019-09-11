@@ -7,6 +7,7 @@ py_test(
         "attribute_test.py"
     ],
     deps = [
+        "//kglib/utils/test",
         "models"
     ]
 )
@@ -27,6 +28,7 @@ py_test(
         "embedding_test.py"
     ],
     deps = [
+        "//kglib/utils/test",
         "models"
     ]
 )
@@ -37,6 +39,7 @@ py_test(
         "typewise_test.py"
     ],
     deps = [
+        "//kglib/utils/test",
         "models"
     ]
 )
@@ -65,7 +68,6 @@ py_library(
     name = "models",
     srcs = glob(['**/*.py']),
     deps = [
-        '//kglib/utils/test',
         requirement('graph_nets'),
         requirement('numpy'),
         requirement('dm-sonnet'),
