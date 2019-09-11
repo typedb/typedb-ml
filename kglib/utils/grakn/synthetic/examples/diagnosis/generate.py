@@ -71,13 +71,6 @@ def get_example_queries(pmf, example_id):
 def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:48555"):
 
     client = GraknClient(uri=uri)
-    client.keyspaces().delete(keyspace)
-
-    sp.check_call([
-        './grakn', 'console', '-k', keyspace, '-f',
-        os.path.dirname(os.path.realpath(__file__)) + '/schema.gql'
-    ], cwd=os.getenv("GRAKN_BINARY_PATH"))
-
     session = client.session(keyspace=keyspace)
 
     pmf_array = np.zeros([2, 2, 2, 2], dtype=np.float)

@@ -16,8 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-import os
-import subprocess as sp
+
 import unittest
 
 from kglib.kgcn_experimental.examples.diagnosis.diagnosis import diagnosis_example
@@ -28,6 +27,14 @@ TEST_URI = "localhost:48555"
 
 
 class TestDiagnosisExample(unittest.TestCase):
+    def setUp(self):
+        self._gs = GraknServer()
+        self._gs.start()
+        self._gs.load_graql_file(TEST_KEYSPACE, '/kglib/kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql')
+
+    def tearDown(self):
+        self._gs.stop()
+
     def test_example_runs_without_exception(self):
         diagnosis_example(num_graphs=6,
                           num_processing_steps_tr=2,
@@ -36,12 +43,4 @@ class TestDiagnosisExample(unittest.TestCase):
 
 
 if __name__ == "__main__":
-
-    with GraknServer() as gs:
-
-        sp.check_call([
-            'grakn', 'console', '-k', TEST_KEYSPACE, '-f',
-            os.getenv("TEST_SRCDIR") + '/kglib/kglib/kgcn/test_data/schema.gql'
-        ], cwd=gs.grakn_binary_location)
-
-        unittest.main()
+    unittest.main()

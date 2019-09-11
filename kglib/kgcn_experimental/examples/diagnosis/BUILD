@@ -22,7 +22,7 @@ py_test(
     ],
     data = [
         "@graknlabs_grakn_core//:assemble-mac-zip",
-#        ":test_data/schema.gql"
+        "//kglib/utils/grakn/synthetic/examples:diagnosis/schema.gql"
     ]
 )
 

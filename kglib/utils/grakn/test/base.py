@@ -46,6 +46,12 @@ class GraknServer(object):
         self.__unpacked_dir = None
 
     def __enter__(self):
+        return self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self.stop()
+
+    def start(self):
         if not self.__unpacked_dir:
             self._unpack()
         sp.check_call([
@@ -53,7 +59,7 @@ class GraknServer(object):
         ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def stop(self):
         sp.check_call([
             'grakn', 'server', 'stop'
         ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
@@ -64,6 +70,12 @@ class GraknServer(object):
         self.__unpacked_dir = tempfile.mkdtemp(prefix='grakn')
         with ZipFile(GraknServer.DISTRIBUTION_LOCATION) as zf:
             zf.extractall(self.__unpacked_dir)
+
+    def load_graql_file(self, keyspace, graql_file_path):
+        sp.check_call([
+            'grakn', 'console', '-k', keyspace, '-f',
+            os.getenv("TEST_SRCDIR") + graql_file_path
+        ], cwd=self.grakn_binary_location)
 
     @property
     def grakn_binary_location(self):

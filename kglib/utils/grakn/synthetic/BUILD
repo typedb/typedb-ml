@@ -7,6 +7,7 @@ py_library(
     srcs = glob(['**/*.py']),
     deps = [
         '//kglib/utils/grakn/synthetic/statistics:statistics',
+        '//kglib/utils/grakn/synthetic/examples:examples',
         requirement('numpy'),
         requirement('pandas'),
         requirement('pytz'),
