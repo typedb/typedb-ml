@@ -31,7 +31,7 @@ class KGCNLearner:
     """
     Responsible for running a KGCN model
     """
-    def __init__(self, model, num_processing_steps_tr=10, num_processing_steps_ge=10,):
+    def __init__(self, model, num_processing_steps_tr=10, num_processing_steps_ge=10):
         self._model = model
         self._num_processing_steps_tr = num_processing_steps_tr
         self._num_processing_steps_ge = num_processing_steps_ge
