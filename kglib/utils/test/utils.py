@@ -28,8 +28,9 @@ def get_call_args(mock):
     Returns:
         A list of lists. The outer list is the calls made, the inner list is the arguments given for that call
     """
-    args = []
+    flat_args = []
     args_list = mock.call_args_list
     for call in args_list:
-        args.append(call.args)
-    return args
+        args, kwargs = call
+        flat_args.append(args)
+    return flat_args

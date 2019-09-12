@@ -19,7 +19,7 @@
 
 import unittest
 
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from kglib.kgcn.models.attribute import CategoricalAttribute
 import tensorflow as tf
@@ -53,7 +53,7 @@ class TestCategoricalAttribute(tf.test.TestCase):
         self.assertAllClose(expected_output, output)
         self.assertEqual(expected_output.dtype, output.dtype)
 
-    def test_embed_instance_called_with_correctly(self):
+    def test_embed_instance_called_correctly(self):
         inp = tf.zeros((3, 1), dtype=tf.float32)
         cat = CategoricalAttribute(2, 5)
         cat(inp)
