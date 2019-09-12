@@ -32,7 +32,7 @@ class TestCategoricalAttribute(tf.test.TestCase):
     def setUp(self):
         self._mock_embed_instance = Mock(return_value=tf.zeros((3, 1, 5), dtype=tf.float32))
         self._mock_embed_class = Mock(return_value=self._mock_embed_instance)
-        self._patcher = patch('kglib.kgcn_experimental.models.attribute.snt.Embed', new=self._mock_embed_class,
+        self._patcher = patch('kglib.kgcn.models.attribute.snt.Embed', new=self._mock_embed_class,
                               spec=True)
         self._patcher.start()
 

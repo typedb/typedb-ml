@@ -18,8 +18,8 @@ py_test(
     ],
     deps = [
         "learn",
-        "//kglib/kgcn_experimental/models",
-        "//kglib/kgcn_experimental/plot"
+        "//kglib/kgcn/models",
+        "//kglib/kgcn/plot"
     ]
 )
 

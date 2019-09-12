@@ -8,7 +8,6 @@ py_library(
     deps = [
         requirement('networkx'),
         requirement('decorator'),
-        '//kglib/kgcn:kgcn',
         '//kglib/utils/graph/query:query',
         '//kglib/utils/graph/thing:thing',
     ],

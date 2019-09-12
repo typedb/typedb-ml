@@ -1,32 +1,13 @@
-load("@io_bazel_rules_python//python:python.bzl", "py_test", "py_library")
+load("@io_bazel_rules_python//python:python.bzl", "py_library")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
-
-py_test(
-    name = "encode_test",
-    srcs = [
-        "encode_test.py"
-    ],
-    deps = [
-        "pipeline"
-    ]
-)
-
-py_test(
-    name = "utils_test",
-    srcs = [
-        "utils_test.py"
-    ],
-    deps = [
-        "pipeline",
-        "//kglib/utils/graph/test"
-    ]
-)
 
 
 py_library(
-    name = "pipeline",
+    name = "kgcn",
     srcs = glob(['**/*.py']),
     deps = [
+        requirement('networkx'),
+        requirement('decorator'),
         requirement('graph_nets'),
         requirement('numpy'),
         requirement('dm-sonnet'),
@@ -35,7 +16,11 @@ py_library(
         requirement('semantic-version'),
         requirement('contextlib2'),
         requirement('wrapt'),
-        "//kglib/utils/graph",
+        '//kglib/kgcn/examples/diagnosis',
+        '//kglib/kgcn/learn',
+        '//kglib/kgcn/models',
+        '//kglib/kgcn/pipeline',
+        '//kglib/kgcn/plot',
     ],
     visibility=['//visibility:public']
 )
