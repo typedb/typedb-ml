@@ -21,8 +21,6 @@ import unittest
 
 import networkx as nx
 import numpy as np
-from graph_nets.graphs import GraphsTuple
-from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn.pipeline.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 from kglib.utils.grakn.object.thing import Thing

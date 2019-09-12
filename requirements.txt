@@ -1,4 +1,4 @@
-absl-py==0.5.0
+absl-py==0.7.0
 astor==0.7.1
 contextlib2==0.5.5
 cycler==0.10.0
@@ -7,7 +7,7 @@ dm-sonnet==1.32
 gast==0.2.0
 graph-nets==1.0.4
 h5py==2.8.0
-Keras-Applications==1.0.6
+Keras-Applications==1.0.8
 Keras-Preprocessing==1.0.5
 Markdown==3.0.1
 matplotlib==3.1.0
@@ -22,10 +22,13 @@ semantic-version==2.6.0
 scikit-learn==0.20.1
 scipy==1.1.0
 six==1.11.0
-tensorboard==1.13.1
+tensorboard==1.14.0
 tensorflow==1.13.1
 tensorflow-hub==0.1.1
 tensorflow-probability==0.6.0
 termcolor==1.1.0
 Werkzeug==0.14.1
 wrapt==1.11.1
+google_pasta==0.1.6
+opt_einsum==2.3.2
+tensorflow_estimator==1.14.0rc0

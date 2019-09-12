@@ -18,11 +18,11 @@
 #
 
 import unittest
+from unittest.mock import MagicMock
 
 import grakn.client
 import networkx as nx
 import numpy as np
-from mock import MagicMock
 
 from kglib.kgcn.examples.diagnosis.diagnosis import write_predictions_to_grakn
 from kglib.utils.grakn.object.thing import Thing
