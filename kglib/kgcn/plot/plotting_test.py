@@ -17,18 +17,19 @@
 #  under the License.
 #
 
+import datetime
+import os
 import unittest
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn.plot.plotting import plot_input_vs_output
+from kglib.kgcn.plot.plotting import plot_predictions
 
 
-class TestPlotInputVsOutput(unittest.TestCase):
-    def test_plotting(self):
+class TestPlotPredictions(unittest.TestCase):
+    def test_plot_is_created(self):
         num_processing_steps_ge = 6
 
         graph = nx.MultiDiGraph(name=0)
@@ -58,8 +59,12 @@ class TestPlotInputVsOutput(unittest.TestCase):
                                   n_edge=np.array([2], dtype=np.int32))
 
         test_values = {"target": graph_tuple, "outputs": [graph_tuple for _ in range(6)]}
-        plot_input_vs_output([graph], test_values, num_processing_steps_ge)
-        plt.show()
+
+        filename = f'./graph_{datetime.datetime.now()}.png'
+
+        plot_predictions([graph], test_values, num_processing_steps_ge, output_file=filename)
+
+        self.assertTrue(os.path.isfile(filename))
 
 
 if __name__ == "__main__":

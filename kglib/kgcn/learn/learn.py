@@ -24,7 +24,7 @@ import tensorflow as tf
 from kglib.kgcn.learn.feed import create_placeholders, create_feed_dict, make_all_runnable_in_session
 from kglib.kgcn.learn.loss import loss_ops_from_difference
 from kglib.kgcn.learn.metrics import compute_accuracy
-from kglib.kgcn.plot.plotting import plot_across_training, plot_input_vs_output
+from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
 
 
 class KGCNLearner:
@@ -143,6 +143,6 @@ class KGCNLearner:
                         correct_tr, solved_tr, correct_ge, solved_ge))
 
         plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge)
-        plot_input_vs_output(ge_input_graphs, test_values, self._num_processing_steps_ge)
+        plot_predictions(ge_input_graphs, test_values, self._num_processing_steps_ge)
 
         return train_values, test_values

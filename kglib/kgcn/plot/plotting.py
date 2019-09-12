@@ -27,7 +27,8 @@ import numpy as np
 import kglib.kgcn.plot.draw as custom_nx
 
 
-def plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge):
+def plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge,
+                         output_file='./learning.png'):
     # Plot results curves.
     fig = plt.figure(1, figsize=(18, 3))
     fig.clf()
@@ -60,42 +61,12 @@ def plot_across_training(logged_iterations, losses_tr, losses_ge, corrects_tr, c
     ax.set_title("Fraction solved across training")
     ax.set_xlabel("Training iteration")
     ax.set_ylabel("Fraction examples solved")
-    plt.show()
+
+    plt.savefig(output_file, bbox_inches='tight')
 
 
-def plot_with_matplotlib(G):
-    """
-    Really basic plotting function for input graphs
-    :param G:
-    :return:
-    """
-
-    attribute = 'solution'
-    edges = []
-    for edge in G.edges:
-        if G.edges[edge][attribute] == 1:
-            edges.append(edge)
-
-    nodes = []
-    for node in G.nodes:
-        if G.nodes[node][attribute] == 1:
-            nodes.append(node)
-
-    labels_dict = {node_id: G.nodes[node_id]['type'] for node_id in nodes}
-    edge_labels_dict = {(edge_id[0], edge_id[1]): G.edges[edge_id]['type'] for edge_id in edges}
-    pos = nx.circular_layout(G)
-    nx.draw_networkx_nodes(G, pos,
-                           nodelist=nodes,
-                           cmap=plt.get_cmap('jet'),
-                           node_size=500
-                           )
-    nx.draw_networkx_labels(G, pos, labels=labels_dict)
-    nx.draw_networkx_edges(G, pos, edgelist=edges, edge_color='r', arrows=True, arrowsize=30)
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels_dict)
-    plt.show()
-
-
-def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge, solution_weights=(-0.5, 0.5, 0.5)):
+def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_weights=(-0.5, 0.5, 0.5),
+                     output_file='./graph.png'):
 
     # # Plot graphs and results after each processing step.
     # The white node is the start, and the black is the end. Other nodes are colored
@@ -172,7 +143,7 @@ def plot_input_vs_output(raw_graphs, test_values, num_processing_steps_ge, solut
         ax.grid(None)
         ax.set_title("Model-predicted winners")
 
-    plt.show()
+    plt.savefig(output_file, bbox_inches='tight')
 
 
 def softmax_prob_last_dim(x):
