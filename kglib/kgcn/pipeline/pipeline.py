@@ -26,6 +26,7 @@ from kglib.kgcn.models.attribute import CategoricalAttribute, BlankAttribute
 from kglib.kgcn.models.core import softmax, KGCN
 from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph
 from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
+from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
 
 
@@ -113,11 +114,14 @@ def pipeline(graphs,
                           num_processing_steps_tr=num_processing_steps_tr,
                           num_processing_steps_ge=num_processing_steps_ge)
 
-    train_values, test_values = learner(tr_input_graphs,
-                                        tr_target_graphs,
-                                        ge_input_graphs,
-                                        ge_target_graphs,
-                                        num_training_iterations=num_training_iterations)
+    train_values, test_values, tr_info = learner(tr_input_graphs,
+                                                 tr_target_graphs,
+                                                 ge_input_graphs,
+                                                 ge_target_graphs,
+                                                 num_training_iterations=num_training_iterations)
+
+    plot_across_training(*tr_info)
+    plot_predictions(ge_input_graphs, test_values, num_processing_steps_ge)
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 
