@@ -44,7 +44,9 @@ py_test(
 
 py_library(
     name = "thing",
-    srcs = glob(['**/*.py']),
+#    srcs = glob(['**/*.py']),
+    srcs = ['concept_dict_to_graph.py',
+            'queries_to_graph.py'],
     deps = [
         "//kglib/utils/grakn/object",
         requirement('networkx'),

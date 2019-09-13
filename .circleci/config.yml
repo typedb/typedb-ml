@@ -11,6 +11,7 @@ commands:
 
   run-grakn-server:
     steps:
+      - bazel_install
       - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
       - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
@@ -21,24 +22,24 @@ jobs:
     working_directory: ~/kglib
     steps:
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+#      - bazel_install
+#      - run: pyenv install 3.6.3
+#      - run: pyenv global 3.6.3
+#      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
   deploy-pip-snapshot:
     machine: true
     working_directory: ~/kglib
     steps:
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: |
-          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
-          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
-          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
-          bazel run //:deploy-pip -- snapshot
+#      - bazel_install
+#      - run: pyenv install 3.6.3
+#      - run: pyenv global 3.6.3
+#      - run: |
+#          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+#          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
+#          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
+#          bazel run //:deploy-pip -- snapshot
 
   test-deployment-pip:
       machine: true
