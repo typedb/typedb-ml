@@ -79,16 +79,7 @@ py_library(
         # Tensorflow deps
         requirement('absl-py'),
         requirement('astor'),
-        requirement('gast'),
-        requirement('google_pasta'),
-        requirement('keras-applications'),
-        requirement('keras-preprocessing'),
-#        requirement('numpy'),
-        requirement('opt-einsum'),
         requirement('six'),
-        requirement('protobuf'),
-        requirement('tensorboard'),
-        requirement('tensorflow-estimator'),
         requirement('termcolor'),
         requirement('wrapt'),
 

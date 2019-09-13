@@ -21,7 +21,7 @@ import unittest
 
 import numpy as np
 import tensorflow as tf
-from mock import Mock
+from unittest.mock import Mock
 from unittest.mock import patch
 from kglib.kgcn.models.embedding import common_embedding, attribute_embedding, node_embedding
 from kglib.utils.test.utils import get_call_args
