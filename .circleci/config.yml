@@ -51,7 +51,7 @@ jobs:
               sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" test/deployment/requirements.txt
               cat test/deployment/requirements.txt
               pip install -r test/deployment/requirements.txt
-              python -m unittest examples.kgcn.animal_trade.test.end_to_end_test
+              python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
 
   deploy-git:
     machine: true
