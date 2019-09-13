@@ -11,8 +11,7 @@ commands:
 
   run-grakn-server:
     steps:
-      - run-bazel-rbe:
-          command: bazel build @graknlabs_grakn_core//:assemble-linux-targz
+      - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
       - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
 
