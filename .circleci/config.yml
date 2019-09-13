@@ -9,6 +9,13 @@ commands:
             chmod +x bazel-0.25.2-installer-linux-x86_64.sh
             sudo ./bazel-0.25.2-installer-linux-x86_64.sh
 
+  run-grakn-server:
+    steps:
+      - run-bazel-rbe:
+          command: bazel build @graknlabs_grakn_core//:assemble-linux-targz
+      - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
+      - run: nohup ./dist/grakn-core-all-linux/grakn server start
+
 jobs:
   test:
     machine: true
@@ -41,16 +48,15 @@ jobs:
         - checkout
         - run: pyenv install 3.6.3
         - run: pyenv global 3.6.3
-        - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip
-        - run: unzip grakn-core-all-mac-animaltrade1.5.3.zip
-        - run: nohup grakn-core-all-mac-animaltrade1.5.3/grakn server start
+        - run-grakn-server
         - run:
             name: Run test-deployment-pip for kglib
             command: |
               echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
               sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" test/deployment/requirements.txt
-              cat test/deployment/requirements.txt
-              pip install -r test/deployment/requirements.txt
+              cat tests/deployment/requirements.txt
+              pip install -r tests/deployment/requirements.txt
+              ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
               python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
 
   deploy-git:
