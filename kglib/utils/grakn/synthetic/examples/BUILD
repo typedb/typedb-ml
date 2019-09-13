@@ -5,7 +5,9 @@ exports_files(["diagnosis/schema.gql"])
 
 py_library(
     name = "examples",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'diagnosis/generate.py',
+    ],
     deps = [
         "@graknlabs_client_python//:client_python",
         requirement('numpy'),

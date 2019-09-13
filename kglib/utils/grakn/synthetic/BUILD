@@ -4,15 +4,9 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 py_library(
     name = "synthetic",
-    srcs = glob(['**/*.py']),
     deps = [
-        '//kglib/utils/grakn/synthetic/statistics:statistics',
-        '//kglib/utils/grakn/synthetic/examples:examples',
-        requirement('numpy'),
-        requirement('pandas'),
-        requirement('pytz'),
-        requirement('python-dateutil'),
-        requirement('six')
+        '//kglib/utils/grakn/synthetic/statistics',
+        '//kglib/utils/grakn/synthetic/examples',
     ],
     visibility=['//visibility:public']
 )

@@ -13,7 +13,10 @@ py_test(
 
 py_library(
     name = "plot",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'draw.py',
+        'plotting.py',
+    ],
     deps = [
         # Matplotlib deps
         requirement('cycler'),

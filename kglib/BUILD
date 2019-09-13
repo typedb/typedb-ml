@@ -3,7 +3,9 @@ load("@graknlabs_bazel_distribution_pip//:requirements.bzl", deployment_requirem
 
 py_library(
     name = "kglib",
-    srcs = glob(['__init__.py']),
+    srcs = [
+        '__init__.py',
+    ],
     deps = [
         '//kglib/kgcn',
         '//kglib/utils',

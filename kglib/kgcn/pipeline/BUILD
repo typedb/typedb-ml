@@ -25,7 +25,11 @@ py_test(
 
 py_library(
     name = "pipeline",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'encode.py',
+        'pipeline.py',
+        'utils.py',
+    ],
     deps = [
         requirement('graph_nets'),
         requirement('numpy'),

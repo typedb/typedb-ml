@@ -66,7 +66,12 @@ py_test(
 
 py_library(
     name = "models",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'attribute.py',
+        'core.py',
+        'embedding.py',
+        'typewise.py',
+    ],
     deps = [
         # Networkx deps
         requirement('networkx'),

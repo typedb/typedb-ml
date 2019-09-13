@@ -13,7 +13,9 @@ py_test(
 
 py_library(
     name = "statistics",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'pmf.py',
+    ],
     deps = [
         requirement('numpy'),
         requirement('pandas'),

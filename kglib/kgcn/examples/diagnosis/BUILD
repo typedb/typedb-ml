@@ -8,6 +8,9 @@ py_test(
     ],
     deps = [
         "diagnosis",
+        requirement('numpy'),
+        requirement('networkx'),
+        requirement('decorator'),
     ]
 )
 
@@ -28,7 +31,9 @@ py_test(
 
 py_library(
     name = "diagnosis",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'diagnosis.py'
+    ],
     deps = [
         "//kglib/kgcn/pipeline",
         "//kglib/kgcn/learn",

@@ -14,7 +14,9 @@ py_test(
 
 py_library(
     name = "query",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'query_graph.py',
+    ],
     deps = [
         requirement('networkx'),
         requirement('decorator'),

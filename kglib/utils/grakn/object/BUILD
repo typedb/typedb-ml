@@ -4,8 +4,9 @@ load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 py_library(
     name = "object",
-    srcs = glob(['**/*.py']),
-    deps = [
+    srcs = [
+        'comparable.py',
+        'thing.py',
     ],
     visibility=['//visibility:public']
 )

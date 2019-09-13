@@ -25,7 +25,12 @@ py_test(
 
 py_library(
     name = "learn",
-    srcs = glob(['**/*.py']),
+    srcs = [
+        'feed.py',
+        'learn.py',
+        'loss.py',
+        'metrics.py',
+    ],
     deps = [
         # Networkx deps
         requirement('networkx'),
