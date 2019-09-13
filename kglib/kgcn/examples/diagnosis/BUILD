@@ -36,14 +36,6 @@ py_library(
         "//kglib/kgcn/models",
         "//kglib/utils/grakn/synthetic",
         "@graknlabs_client_python//:client_python",
-        requirement('graph_nets'),
-        requirement('numpy'),
-        requirement('dm-sonnet'),
-        requirement('tensorflow'),
-        requirement('tensorflow-probability'),
-        requirement('semantic-version'),
-        requirement('contextlib2'),
-        requirement('wrapt'),
     ],
     visibility=['//visibility:public']
 )

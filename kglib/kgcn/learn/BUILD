@@ -27,14 +27,39 @@ py_library(
     name = "learn",
     srcs = glob(['**/*.py']),
     deps = [
-        requirement('graph_nets'),
-        requirement('numpy'),
-        requirement('dm-sonnet'),
-        requirement('tensorflow'),
-        requirement('tensorflow-probability'),
-        requirement('semantic-version'),
+        # Networkx deps
+        requirement('networkx'),
+        requirement('decorator'),
+
+        # Graph nets deps
+        requirement('absl-py'),
+        requirement('cloudpickle'),
         requirement('contextlib2'),
-        requirement('wrapt')
+        # requirement('decorator'),
+        requirement('dm-sonnet'),
+        requirement('future'),
+        requirement('graph-nets'),
+        # requirement('networkx'),
+        requirement('numpy'),
+        requirement('semantic-version'),
+        requirement('six'),
+        requirement('tensorflow-probability'),
+        requirement('wrapt'),
+
+        # Tensorflow deps
+        # requirement('absl-py'),
+        requirement('astor'),
+        requirement('gast'),
+        requirement('google-pasta'),
+        requirement('keras-applications'),
+        requirement('keras-preprocessing'),
+        # requirement('six'),
+        requirement('protobuf'),
+        requirement('tensorboard'),
+        requirement('tensorflow'),
+        requirement('tensorflow-estimator'),
+        requirement('termcolor'),
+        # requirement('wrapt'),
 
     ],
     visibility=['//visibility:public']
