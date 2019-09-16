@@ -89,13 +89,17 @@ graknlabs_grakn_core()
 load(
     "@graknlabs_grakn_core//dependencies/graknlabs:dependencies.bzl",
     "graknlabs_graql",
+    "graknlabs_common",
     "graknlabs_protocol",
     "graknlabs_client_java",
+    "graknlabs_console",
     "graknlabs_benchmark"
 )
 graknlabs_graql()
+graknlabs_common()
 graknlabs_protocol()
 graknlabs_client_java()
+graknlabs_console()
 graknlabs_benchmark()
 
 # Skip since these are already present above
