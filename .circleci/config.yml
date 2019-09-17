@@ -125,7 +125,7 @@ workflows:
       - deploy-pip-snapshot:
           filters:
             branches:
-              ignore: kglib-release-branch
+              only: master
           requires:
             - test
             - build
