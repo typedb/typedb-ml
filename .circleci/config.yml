@@ -17,6 +17,14 @@ commands:
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
 
 jobs:
+  build:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - bazel build //...
+
   test:
     machine: true
     working_directory: ~/kglib
@@ -106,13 +114,21 @@ workflows:
   version: 2
   kglib:
     jobs:
-      - test
+      - test:
+          filters:
+            branches:
+              ignore: kglib-release-branch
+      - build:
+          filters:
+            branches:
+              ignore: kglib-release-branch
       - deploy-pip-snapshot:
           filters:
             branches:
               ignore: kglib-release-branch
           requires:
             - test
+            - build
       - test-deployment-pip:
           filters:
             branches:
