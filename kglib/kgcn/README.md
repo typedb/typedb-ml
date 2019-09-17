@@ -88,7 +88,7 @@ This approach leverages DeepMind's [Graph Nets](https://github.com/deepmind/grap
 
 Here we identify the core components used to build a working KGCN.
 
-###Application
+### Application
 
 e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py)
 
@@ -101,7 +101,7 @@ The process conducted by the example is as follows:
 3. Run the pipeline
 4. Write the predictions made to Grakn
 
-###Pipeline
+### Pipeline
 
 Can be customised from [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py). A pipeline performs the following:
 
@@ -114,13 +114,13 @@ Can be customised from [pipeline](https://github.com/graknlabs/kglib/tree/master
 6. Create visualisations
 7. Record the predictions made, and return them in graphs
 
-###KGCNLearner
+### KGCNLearner
 
 - Performs the training loop
 - Manages the loss function and optimiser
 - Manages the TensorFlow session
 - Prints results for the training and generalistaion datasets during training 
 
-###KGCN
+### KGCN
 
 Defines the computation graph for a KGCN, including the initial embedding of values and the edge/node/graph feature update strategy during message-passing. This is the core that depends upon [Graph Nets](https://github.com/deepmind/graph_nets).
