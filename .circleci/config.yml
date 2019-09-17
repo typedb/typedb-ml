@@ -23,7 +23,7 @@ jobs:
     steps:
       - checkout
       - bazel_install
-      - bazel build //...
+      - run: bazel build //...
 
   test:
     machine: true
