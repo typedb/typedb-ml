@@ -59,7 +59,18 @@ jobs:
               ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
               python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
 
-  deploy-git:
+  release-approval:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: |
+          export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
+          export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
+          bazel run @graknlabs_build_tools//ci:release-approval
+
+  deploy-github:
     machine: true
     working_directory: ~/kglib
     steps:
@@ -85,28 +96,58 @@ jobs:
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
           bazel run //:deploy-pip -- release
 
+  release-cleanup:
+    machine: true
+    steps:
+      - checkout
+      - run: git push --delete origin kglib-release-branch
+
 workflows:
   version: 2
   kglib:
     jobs:
       - test
       - deploy-pip-snapshot:
+          filters:
+            branches:
+              ignore: kglib-release-branch
           requires:
             - test
       - test-deployment-pip:
+          filters:
+            branches:
+              only: master
           requires:
             - deploy-pip-snapshot
-      - approve-deploy-git:
-          type: approval
+      - release-approval:
+          filters:
+            branches:
+              only: master
           requires:
             - test-deployment-pip
-      - deploy-git:
-          requires:
-            - approve-deploy-git
-      - approve-deploy-pip-release:
+
+  kglib-release:
+    jobs:
+      - deploy-github:
+          filters:
+            branches:
+              only: kglib-release-branch
+      - deploy-approval:
           type: approval
+          filters:
+            branches:
+              only: kglib-release-branch
           requires:
-            - deploy-git
+            - deploy-github
       - deploy-pip-release:
+          filters:
+            branches:
+              only: kglib-release-branch
           requires:
-            - approve-deploy-pip-release
+            - deploy-approval
+      - release-cleanup:
+          filters:
+            branches:
+              only: kglib-release-branch
+          requires:
+            - deploy-pip-release
