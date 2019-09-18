@@ -9,7 +9,24 @@ commands:
             chmod +x bazel-0.25.2-installer-linux-x86_64.sh
             sudo ./bazel-0.25.2-installer-linux-x86_64.sh
 
+  run-grakn-server:
+    steps:
+      - bazel_install
+      - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
+      - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
+      - run: nohup ./dist/grakn-core-all-linux/grakn server start
+
 jobs:
+  build:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: bazel build //...
+
   test:
     machine: true
     working_directory: ~/kglib
@@ -41,19 +58,29 @@ jobs:
         - checkout
         - run: pyenv install 3.6.3
         - run: pyenv global 3.6.3
-        - run: wget https://storage.googleapis.com/kglib/grakn-core-all-mac-animaltrade1.5.3.zip
-        - run: unzip grakn-core-all-mac-animaltrade1.5.3.zip
-        - run: nohup grakn-core-all-mac-animaltrade1.5.3/grakn server start
+        - run-grakn-server
         - run:
             name: Run test-deployment-pip for kglib
             command: |
               echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
-              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" test/deployment/requirements.txt
-              cat test/deployment/requirements.txt
-              pip install -r test/deployment/requirements.txt
-              python -m unittest examples.kgcn.animal_trade.test.end_to_end_test
+              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
+              cat tests/deployment/requirements.txt
+              pip install -r tests/deployment/requirements.txt
+              ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
+              python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
 
-  deploy-git:
+  release-approval:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: |
+          export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
+          export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
+          bazel run @graknlabs_build_tools//ci:release-approval
+
+  deploy-github:
     machine: true
     working_directory: ~/kglib
     steps:
@@ -79,28 +106,66 @@ jobs:
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
           bazel run //:deploy-pip -- release
 
+  release-cleanup:
+    machine: true
+    steps:
+      - checkout
+      - run: git push --delete origin kglib-release-branch
+
 workflows:
   version: 2
   kglib:
     jobs:
-      - test
+      - test:
+          filters:
+            branches:
+              ignore: kglib-release-branch
+      - build:
+          filters:
+            branches:
+              ignore: kglib-release-branch
       - deploy-pip-snapshot:
+          filters:
+            branches:
+              only: master
           requires:
             - test
+            - build
       - test-deployment-pip:
+          filters:
+            branches:
+              only: master
           requires:
             - deploy-pip-snapshot
-      - approve-deploy-git:
-          type: approval
+      - release-approval:
+          filters:
+            branches:
+              only: master
           requires:
             - test-deployment-pip
-      - deploy-git:
-          requires:
-            - approve-deploy-git
-      - approve-deploy-pip-release:
+
+  kglib-release:
+    jobs:
+      - deploy-github:
+          filters:
+            branches:
+              only: kglib-release-branch
+      - deploy-approval:
           type: approval
+          filters:
+            branches:
+              only: kglib-release-branch
           requires:
-            - deploy-git
+            - deploy-github
       - deploy-pip-release:
+          filters:
+            branches:
+              only: kglib-release-branch
           requires:
-            - approve-deploy-pip-release
+            - deploy-approval
+      - release-cleanup:
+          filters:
+            branches:
+              only: kglib-release-branch
+          requires:
+            - deploy-pip-release

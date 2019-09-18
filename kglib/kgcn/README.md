@@ -1,180 +1,126 @@
-# Knowledge Graph Convolutional Networks (KGCNs)
+# Knowledge Graph Convolutional Networks
 
-This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN). The [principal idea of this work](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68) is to forge a bridge between knowledge graphs, automated logical reasoning, and machine learning, using [Grakn](https://github.com/graknlabs/grakn) as the knowledge graph.
+This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN). This project is in its second major iteration since its inception. 
 
 **Summary**
 
-A KGCN can be used to create vector representations, *embeddings*, of any labelled set of Grakn [Things](https://dev.grakn.ai/docs/concept-api/overview) via supervised learning.
+This KGCN framework is designed to provide a versatile means of performing learning tasks over a Grakn knowledge graph, including:
 
-1. A KGCN can be trained directly for the classification or regression of Things stored in Grakn. 
-2. Future work will include building embeddings via unsupervised learning.
+- Predicting the existence of new [Relations](https://dev.grakn.ai/docs/schema/concepts#relation) that between existing [Concepts](https://dev.grakn.ai/docs/concept-api/overview). These relations can be binary, **ternary** (3-way) or [**N-ary**](), since Relations in Grakn are graph [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge). This functionality is included in the [latest release](https://github.com/graknlabs/kglib/releases/latest).
+- Predicting the values of [Attributes](https://dev.grakn.ai/docs/schema/concepts#attribute) attached to other Concepts
+- Predicting a subgraph of Entities, Relations and Attributes to complete a known graph
+- Predicting erroneous data in a graph
+- Predicting many connections within a graph such that the graph as a whole is optimised to satisfy some criteria
+- Creating embeddings for Grakn Concepts
 
-## What is it used for?
-
-Often, data doesn't fit well into a tabular format. There are many benefits to storing complex and interrelated data in a knowledge graph, not least that the context of each datapoint can be stored in full.
-
-However, many existing machine learning techniques rely upon the existence of an *input vector for each example*. Creating such a vector to represent a node in a knowledge graph is non-trivial.
-
-In order to make use of the wealth of existing ideas, tools and pipelines in machine learning, we need a method of building these vectors. In this way we can leverage contextual information from a knowledge graph for machine learning.
-
-This is what a KGCN can achieve. Given an example node in a knowledge graph, it can examine the nodes in the vicinity of that example, its *context*. Based on this context it can determine a vector representation, an *embedding*, for that example.
-
-**There are two broad learning tasks a KGCN is suitable for:**
-
-**1. Supervised learning from a knowledge graph for prediction e.g. multi-class classification (implemented), regression, link prediction**
-**2. Unsupervised creation of Knowledge Graph Embeddings, e.g. for clustering and node comparison tasks**
-
-![KGCN Process](readme_images/KGCN_process.png)
-
-In order to build a *useful* representation, a KGCN needs to perform some learning. To do that it needs a function to optimise. Revisiting the broad tasks we can perform, we have different cases to configure the learning:
-
-1. In the supervised case, we can optimise for the exact task we want to perform. In this case embeddings are interim tensors in a learning pipeline
-2. To build unsupervised embeddings as the output, we optimise to minimise some similarity metrics across the graph
+Understand the full capabilities of KGCNs by examining the methodology outlined below
 
 ## Quickstart
+**Requirements**
 
-**Requirements:**
+- Python 3.7
 
-- Python 3.6.3 <= version < 3.7 ([tensorflow doesn't yet support Python 3.7](https://github.com/tensorflow/tensorflow/issues/17022)).
+- kglib installed via pip: `pip install grakn-kglib`. 
 
-- Ensure that `pip` uses the Python version listed above. Find out using 'pip --version'. By default `pip` may use Python 2, in which case you may need either `pip3`, or to create an isolated environment using `pipenv`/`virtualenv`, or change your global Python with `pyenv`.
-
-- kglib installed from pip: `pip install grakn-kglib`. 
-
-- A Grakn 1.5.3 server running locally on your machine.
+- The [latest release of Grakn Core](https://github.com/graknlabs/grakn/releases/latest) or [Grakn KGMS](https://dev.grakn.ai/docs/cloud-deployment/kgms) running.
 
 ### Usage
 
-The following is a template of what must be defined in order to instantiate a KGCN, optimised for a downstream learning task of multi-class classification:
+See the [full example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py) of how to use a KGCN for Relation prediction. You can use this as a template to create a KGCN for your own Grakn database. If you need to customise the learning or model used, you'll need to make changes to the [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py) used.
 
-```python
-import kglib.kgcn.core.model as model
-import kglib.kgcn.learn.classify as classify
-import tensorflow as tf
-import grakn.client
+Once you have installed kglib via pip (as above) you can run the example as follows:
 
-URI = "localhost:48555"
-
-client = grakn.client.GraknClient(uri=URI)
-session = client.session(keyspace=training_keyspace)
-transaction = session.transaction().write()
-
-kgcn = model.KGCN(neighbour_sample_sizes,
-                  features_size,
-                  example_things_features_size,
-                  aggregated_size,
-                  embedding_size,
-                  transaction,
-                  batch_size)
-
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-
-classifier = classify.SupervisedKGCNMultiClassSingleLabelClassifier(kgcn,
-                                               optimizer, 
-                                               num_classes, 
-                                               log_dir,
-                                               max_training_steps=max_training_steps)
-
-training_feed_dict = classifier.get_feed_dict(session, 
-                                              training_things, 
-                                              labels=training_labels)
-
-classifier.train(training_feed_dict)
-
-transaction.close()
-session.close()
-```
-
-There is also a [full example](https://github.com/graknlabs/kglib/tree/master/examples/kgcn/animal_trade) which outlines retrieving a set of example Things with labels and working with separate keyspaces for training and testing.
+1. Start a Grakn server
+2. Load [the schema](kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql) for the example into Grakn. The template for the command is `./grakn console -k diagnosis -f path/to/schema.gql`
+3. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
+4. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and examples of the predictions made.
 
 ## Methodology
 
-The ideology behind this project is described [here](https://blog.grakn.ai/knowledge-graph-convolutional-networks-machine-learning-over-reasoned-knowledge-9eb5ce5e0f68), and a [video of the presentation](https://youtu.be/Jx_Twc75ka0?t=368). The principles of the implementation are based on [GraphSAGE](http://snap.stanford.edu/graphsage/), from the Stanford SNAP group, heavily adapted to work over a knowledge graph. Instead of working on a typical property graph, a KGCN learns from contextual data stored in a *typed hypergraph*, **Grakn**. Additionally, it learns from facts deduced by Grakn's *automated logical reasoner*. From this point onwards some understanding of [Grakn's docs](http://dev.grakn.ai) is assumed.
+The methodology that this implementation uses for Relation prediction is as follows:
 
-Now we introduce the key components and how they interact.
+In the case of the diagnosis example, we aim to predict `diagnosis` Relations. We have the correct `diagnosis` relations, and we write a Grakn rule to insert `candidate-diagnosis` relations as negative examples. They are added wherever a real `diagnosis` Relation could logically exist, but does not.
+
+We then teach the KGCN to distinguish between the positive and negative examples.
+
+###Examples == Subgraphs
+
+We do this by creating *examples*, where each example is a subgraph extracted from a Grakn knowledge Graph. These subgraphs contain positive and negative instances of the relation to be predicted.
+
+A single subgraph is created by making multiple queries to Grakn. In the diagnosis example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return imformation about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. 
+
+In this example the queries used are:
+```
+match
+$p isa person, has example-id {example_id};
+$s isa symptom, has name $sn;
+$d isa disease, has name $dn;
+$sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
+$c(cause: $d, effect: $s) isa causality;
+$diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
+get;
+```
+```
+match
+$p isa person, has example-id {example_id};
+$s isa symptom, has name $sn;
+$d isa disease, has name $dn;
+$sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
+$c(cause: $d, effect: $s) isa causality;
+$diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
+get;
+```
+A single subgraph is extracted from Grakn by making these queries and combining the results into a graph. For your own domain you should find queries that will retrieve the most relevant information for the Relations you are trying to predict.
+
+We can visualise such a subgraph by running these two queries in Grakn Workbase:
+
+![](.images/queried_subgraph.png)
+
+You can get the relevant version of Workbase from the Assets of the [latest release](https://github.com/graknlabs/workbase/releases/latest).
+
+###Learning
+
+A KGCN is a learned message-passing graph algorithm. Neural network components are learned, and are used to transform signals that are passed around the graph. This approach is convolutional due to the fact that the same transformation is applied to all edges and another is applied to all nodes. It may help your understanding to analogise this to convolution over images, where the same transformation is applied over all pixel neighbourhoods.
+
+This approach leverages DeepMind's [Graph Nets](https://github.com/deepmind/graph_nets) framework, detailed in [their paper](https://arxiv.org/pdf/1806.01261.pdf). This work is a generalisation of graph learning approaches, which offers plenty of ways to structure learning tailored to various knowledge graph problems.
+
+## Components
+
+Here we identify the core components used to build a working KGCN.
+
+### Application
+
+e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py)
+
+The process conducted by the example is as follows:
+
+1. Generate synthetic graphs, each graph is used as an *example*
+   - This requires specifying queries that will retrieve Concepts from Grakn
+   - The answers from these queries are used to create subgraphs, stored in-memory as networkx graphs
+2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
+3. Run the pipeline
+4. Write the predictions made to Grakn
+
+### Pipeline
+
+Can be customised from [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py). A pipeline performs the following:
+
+1. Take in graphs and the training/generalistaion split
+2. Encode graph values (including type information) into numerics
+3. Perform prerequisite graph formatting and manipulation
+4. Build the neural network model, providing embedding models for Attribute Types
+   - Currently only categorical encoding is supported. Continuous values for attributes will be supported soon
+5. Run the learning process
+6. Create visualisations
+7. Record the predictions made, and return them in graphs
+
+### KGCNLearner
+
+- Performs the training loop
+- Manages the loss function and optimiser
+- Manages the TensorFlow session
+- Prints results for the training and generalistaion datasets during training 
 
 ### KGCN
 
-A KGCN is responsible for deriving embeddings for a set of Things (and thereby directly learn to classify them). We start by querying Grakn to find a set of labelled examples. Following that, we gather data about the context of each example Thing. We do this by considering their neighbours, and their neighbours' neighbours, recursively, up to K hops away.
-
-![methodology](readme_images/methodology.png)We retrieve the data concerning this neighbourhood from Grakn (diagram above). This information includes the *type hierarchy*, *roles*, and *attribute value* of each neighbouring Thing encountered, and any inferred neighbours (represented above by dotted lines). This data is compiled into arrays to be ingested by a neural network.
-
-Via operations Aggregate and Combine, a single vector representation is built for a Thing. This process can be chained recursively over *K* hops of neighbouring Things. This builds a representation for a Thing of interest that contains information extracted from a wide context.
-
-![chaining](readme_images/chaining.png)
-
-In supervised learning these embeddings are directly optimised to perform the task at hand. For multi-class classification this is achieved by passing the embeddings to a single subsequent dense layer and determining loss via softmax cross entropy (against the example Things' labels); then, optimising to minimise that loss.
-
-A KGCN object brings together a number of sub-components, a Context Builder, Neighbour Finder, Encoder, and an Embedder.
-
-#### Context Builder
-
-In order to feed a TensorFlow neural network, we need regular array structures of input data. The Context Builder builds these *context arrays*. For each example Thing, it talks to a **Neighbour Finder**, which queries Grakn for (a sub-sample of) the neighbours of that example Thing. For each neighbouring Thing, the Neighbour Finder retrieves its:
-
-- Id
-- Type
-- Meta-Type (either Entity or Relation or Attribute)
-- Data-type (if it's an attribute)
-- Value (if it's an attribute)
-- The Role that connects the example to that neighbour
-- The direction of that Role
-
-It passes these to the Context Builder to be added to the context arrays.
-
-Using the unique ids of those 1-hop neighbours, KGCN queries Grakn for (a sub-sample of) their 2-hop neighbours and, again, store the information found for them. This process is recursive until K-hops has been reached.
-
-These context arrays are composed by KGCN into feed dicts (TensorFlow terminology), which can be fed to the network. This could (probably should) be replaced by TensorFlow Datasets as input to the network.
-
-#### Encoder
-
-Having built context arrays, these need to be mapped to numerical vector representations. This is performed by an Encoder that operates inside the TensorFlow computation graph, acting immediately after the data is input to the TensorFlow placeholders.
-
-All of the data contained in the context arrays is encoded in this step.
-
-- Role Types are multi-hot encoded according to their hierarchy
-- Role directions are not affected
-- Neighbour Types are multi-hot encoded according to their hierarchy
-- Neighbour Data Types are one-hot encoded
-- Longs are converted to floats
-- Doubles are not affected
-- Booleans are encoded to True = 1, False = 0, Not present = -1
-- Dates are given in unixtime and converted to floats, then normalised
-- Strings are encoded to 128 dimensional floats using a [pre-trained network](https://tfhub.dev/google/nnlm-en-dim128-with-normalization/1) from TensorFlow Hub
-
-#### Embedder
-
-To create embeddings, we build a network in TensorFlow that successively aggregates and combines features from the K hops until a 'summary' representation remains - an embedding (diagram below). 
-
-To create the pipeline, the Embedder chains Aggregate and Combine operations for the K-hops of neighbours considered. e.g. for the 2-hop case this means Aggregate-Combine-Aggregate-Combine.
-
-![Aggregation and Combination process](readme_images/aggregate_and_combine.png)
-
-The diagram above shows how this chaining works in the case of supervised classification.
-
-Embedder is responsible for chaining the sub-components Aggregator and Combiner, explained below.
-
-##### Aggregator
-
-An *Aggregator* (pictured below) takes in a vector representation of a sub-sample of a Thing's neighbours. It produces one vector that is representative of all of those inputs. It must do this in a way that is order agnostic, since the neighbours are unordered. To achieve this we use one densely connected layer, and *maxpool* the outputs (maxpool is order-agnostic).![aggregation](readme_images/aggregation.png)
-
-##### Combiner
-
-Once we have Aggregated the neighbours of a Thing into a single vector representation, we need to combine this with the vector representation of that thing itself. A *Combiner* achieves this by concatenating the two vectors, and reduces the dimensionality using a single densely connected layer.
-
-![combination](readme_images/combination.png)
-
-### Supervised KGCN Classifier
-
-A Supervised KGCN Classifier is responsible for orchestrating actual learning. It takes in a KGCN instance and as for any learner making use of a KGCN, it provides:
-
-- Methods for **train/evaluation/prediction**
-- **A pipeline** from embedding tensors to predictions
-- **A loss function** that takes in predictions and labels
-- An optimiser
-- The backpropagation training loop
-
-It must be the class that provides these behaviours, since a KGCN is not coupled to any particular learning task. This class therefore provides all of the specialisations required for a supervised learning framework.
-
-Below is a slightly simplified UML activity diagram of the program flow.
-
-![supervised learner](readme_images/supervised_learner.png)
+Defines the computation graph for a KGCN, including the initial embedding of values and the edge/node/graph feature update strategy during message-passing. This is the core that depends upon [Graph Nets](https://github.com/deepmind/graph_nets).

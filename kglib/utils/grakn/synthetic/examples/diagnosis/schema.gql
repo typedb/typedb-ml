@@ -1,0 +1,79 @@
+define
+
+example-id sub attribute,
+    datatype long;
+
+name sub attribute,
+    datatype string;
+
+person sub entity,
+    key example-id,
+    plays patient,
+    plays candidate-patient,
+    plays symptomatic-patient,
+    plays predicted-patient;
+
+disease sub entity,
+    key name,
+    plays cause,
+    plays diagnosed-disease,
+    plays candidate-diagnosed-disease,
+    plays predicted-diagnosed-disease;
+
+diagnosis sub relation,
+    relates patient,
+    relates diagnosed-disease;
+
+candidate-diagnosis sub relation,
+    relates candidate-patient,
+    relates candidate-diagnosed-disease;
+
+predicted-diagnosis sub relation,
+    relates predicted-patient,
+    relates predicted-diagnosed-disease,
+    has probability-exists,
+    has probability-non-exists,
+    has probability-preexists;
+
+probability-exists sub attribute,
+    datatype double;
+
+probability-non-exists sub attribute,
+    datatype double;
+
+probability-preexists sub attribute,
+    datatype double;
+
+
+where-no-diagnosis-add-candidate-diagnosis sub rule,
+    when {
+        $p isa person;
+        $d isa disease;
+        not{ (patient: $p, diagnosed-disease: $d) isa diagnosis; };
+    }, then {
+        (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
+    };
+
+causality sub relation,
+    relates cause,
+    relates effect;
+
+symptom sub entity,
+    key name,
+    plays presented-symptom,
+    plays effect;
+
+symptom-presentation sub relation,
+    relates presented-symptom,
+    relates symptomatic-patient;
+
+# Add elements to the Knowledge Graph that are common to all examples
+insert
+    $men isa disease, has name "meningitis";
+    $flu isa disease, has name "flu";
+    $ls isa symptom, has name "light-sensitivity";
+    $fever isa symptom, has name "fever";
+    $c(cause: $men, effect: $ls) isa causality;
+    $c1(cause: $men, effect: $fever) isa causality;
+    $c2(cause: $flu, effect: $ls) isa causality;
+    $c3(cause: $flu, effect: $fever) isa causality;

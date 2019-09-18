@@ -12,6 +12,35 @@ To respond to these scenarios, KGLIB is the centre of all research projects cond
 
 At present this repo contains one project: [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn).
 
+## Quickstart
+**Requirements**
+
+- Python 3.7
+
+- Install via pip: `pip install grakn-kglib`
+
+- The [latest release of Grakn Core](https://github.com/graknlabs/grakn/releases/latest) or [Grakn KGMS](https://dev.grakn.ai/docs/cloud-deployment/kgms) running
+
+**Building from source**
+
+To test that all targets can be built: 
+
+```bash
+bazel build //...
+```
+
+To run all tests: 
+
+```bash
+bazel test //... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python3)
+```
+
+To build the pip distribution (find the output in `bazel-bin`):
+
+```bash
+bazel build //:assemble-pip
+```
+
 ## Knowledge Graph Tasks
 
 Below is a set of tasks to be conducted over Knowledge Graphs (KGs) that we have identified from real Grakn use cases. The objective of KGLIB is to implement a portfolio of solutions for these tasks for Grakn Knowledge Graphs.
