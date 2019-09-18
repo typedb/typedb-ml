@@ -21,53 +21,57 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
-      - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: bazel build //...
+      - run: echo "Hello"
+#      - checkout
+#      - bazel_install
+#      - run: pyenv install 3.6.3
+#      - run: pyenv global 3.6.3
+#      - run: bazel build //...
 
   test:
     machine: true
     working_directory: ~/kglib
     steps:
-      - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+      - run: echo "Hello"
+#      - checkout
+#      - bazel_install
+#      - run: pyenv install 3.6.3
+#      - run: pyenv global 3.6.3
+#      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
   deploy-pip-snapshot:
     machine: true
     working_directory: ~/kglib
     steps:
-      - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
-      - run: |
-          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
-          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
-          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
-          bazel run //:deploy-pip -- snapshot
+      - run: echo "Hello"
+#      - checkout
+#      - bazel_install
+#      - run: pyenv install 3.6.3
+#      - run: pyenv global 3.6.3
+#      - run: |
+#          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+#          export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
+#          export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
+#          bazel run //:deploy-pip -- snapshot
 
   test-deployment-pip:
       machine: true
       working_directory: ~/kglib
       steps:
-        - checkout
-        - run: pyenv install 3.6.3
-        - run: pyenv global 3.6.3
-        - run-grakn-server
-        - run:
-            name: Run test-deployment-pip for kglib
-            command: |
-              echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
-              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
-              cat tests/deployment/requirements.txt
-              pip install -r tests/deployment/requirements.txt
-              ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
-              python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
+        - run: echo "Hello"
+#        - checkout
+#        - run: pyenv install 3.6.3
+#        - run: pyenv global 3.6.3
+#        - run-grakn-server
+#        - run:
+#            name: Run test-deployment-pip for kglib
+#            command: |
+#              echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+#              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
+#              cat tests/deployment/requirements.txt
+#              pip install -r tests/deployment/requirements.txt
+#              ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
+#              python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
 
   release-approval:
     machine: true
@@ -75,6 +79,8 @@ jobs:
     steps:
       - checkout
       - bazel_install
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
@@ -84,14 +90,15 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
-      - checkout
-      - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
-      - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
-      - run:
-         name: "Publish Draft Release on GitHub"
-         command: |
-           VERSION_TAG="v"$(cat "VERSION")
-           curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"Draft\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
+      - run: echo "Hello"
+#      - checkout
+#      - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
+#      - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
+#      - run:
+#         name: "Publish Draft Release on GitHub"
+#         command: |
+#           VERSION_TAG="v"$(cat "VERSION")
+#           curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"Draft\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
 
   deploy-pip-release:
     machine: true
@@ -101,10 +108,10 @@ jobs:
       - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
-      - run: |
-          export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
-          export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
-          bazel run //:deploy-pip -- release
+#      - run: |
+#          export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
+#          export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
+#          bazel run //:deploy-pip -- release
 
   release-cleanup:
     machine: true
@@ -125,22 +132,22 @@ workflows:
             branches:
               ignore: kglib-release-branch
       - deploy-pip-snapshot:
-          filters:
-            branches:
-              only: master
+#          filters:
+#            branches:
+#              only: master
           requires:
             - test
             - build
       - test-deployment-pip:
-          filters:
-            branches:
-              only: master
+#          filters:
+#            branches:
+#              only: master
           requires:
             - deploy-pip-snapshot
       - release-approval:
-          filters:
-            branches:
-              only: master
+#          filters:
+#            branches:
+#              only: master
           requires:
             - test-deployment-pip
 
