@@ -19,13 +19,22 @@
 
 import sonnet as snt
 import tensorflow as tf
+import abc
 
 
-class CategoricalAttribute(snt.AbstractModule):
-    def __init__(self, num_categories, attr_embedding_dim, name='CategoricalAttributeEmbedder'):
-        super(CategoricalAttribute, self).__init__(name=name)
-
+class Attribute(snt.AbstractModule, abc.ABC):
+    """
+    Abstract base class for Attribute value embedding models
+    """
+    def __init__(self, attr_embedding_dim, name='AttributeEmbedder'):
+        super(Attribute, self).__init__(name=name)
         self._attr_embedding_dim = attr_embedding_dim
+
+
+class CategoricalAttribute(Attribute):
+    def __init__(self, num_categories, attr_embedding_dim, name='CategoricalAttributeEmbedder'):
+        super(CategoricalAttribute, self).__init__(attr_embedding_dim, name=name)
+
         self._num_categories = num_categories
 
     def _build(self, inputs):
@@ -34,11 +43,10 @@ class CategoricalAttribute(snt.AbstractModule):
         return tf.squeeze(embedding, axis=1)
 
 
-class BlankAttribute(snt.AbstractModule):
+class BlankAttribute(Attribute):
 
     def __init__(self, attr_embedding_dim, name='BlankAttributeEmbedder'):
-        super(BlankAttribute, self).__init__(name=name)
-        self._attr_embedding_dim = attr_embedding_dim
+        super(BlankAttribute, self).__init__(attr_embedding_dim, name=name)
 
     def _build(self, features):
         shape = tf.stack([tf.shape(features)[0], self._attr_embedding_dim])
