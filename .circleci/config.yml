@@ -75,6 +75,8 @@ jobs:
     steps:
       - checkout
       - bazel_install
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
@@ -101,10 +103,10 @@ jobs:
       - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
-      - run: |
-          export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
-          export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
-          bazel run //:deploy-pip -- release
+#      - run: |
+#          export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
+#          export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
+#          bazel run //:deploy-pip -- release
 
   release-cleanup:
     machine: true
