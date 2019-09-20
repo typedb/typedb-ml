@@ -112,7 +112,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: git push --delete origin kglib-release-branch
+      - run: git push --delete https://$REPO_GITHUB_TOKEN@github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH
 
 workflows:
   version: 2
