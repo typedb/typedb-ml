@@ -37,6 +37,7 @@ def pipeline(graphs,
              num_processing_steps_tr=10,
              num_processing_steps_ge=10,
              num_training_iterations=10000,
+             continuous_attributes=None,
              categorical_attributes=None,
              type_embedding_dim=5,
              attr_embedding_dim=6,
@@ -56,10 +57,16 @@ def pipeline(graphs,
         for node_data in multidigraph_node_data_iterator(graph):
             typ = node_data['type']
 
-            # Add the integer value of the category for each categorical attribute instance
-            for attr_typ, category_values in categorical_attributes.items():
-                if typ == attr_typ:
-                    node_data['encoded_value'] = category_values.index(node_data['value'])
+            if categorical_attributes is not None:
+                # Add the integer value of the category for each categorical attribute instance
+                for attr_typ, category_values in categorical_attributes.items():
+                    if typ == attr_typ:
+                        node_data['encoded_value'] = category_values.index(node_data['value'])
+
+            if continuous_attributes is not None:
+                for attr_typ, (min_val, max_val) in continuous_attributes.items():
+                    if typ == attr_typ:
+                        node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
 
     indexed_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in graphs]
     graphs = [duplicate_edges_in_reverse(graph) for graph in indexed_graphs]

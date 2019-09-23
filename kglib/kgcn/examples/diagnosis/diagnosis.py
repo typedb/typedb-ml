@@ -51,15 +51,9 @@ def diagnosis_example(num_graphs=60,
         print(f'Found node types: {node_types}')
         print(f'Found edge types: {edge_types}')
 
-    ge_graphs = pipeline(graphs,
-                         tr_ge_split,
-                         node_types,
-                         edge_types,
-                         num_processing_steps_tr=num_processing_steps_tr,
+    ge_graphs = pipeline(graphs, tr_ge_split, node_types, edge_types, num_processing_steps_tr=num_processing_steps_tr,
                          num_processing_steps_ge=num_processing_steps_ge,
-                         num_training_iterations=num_training_iterations,
-                         categorical_attributes=CATEGORICAL_ATTRIBUTES,
-                         )
+                         num_training_iterations=num_training_iterations, categorical_attributes=CATEGORICAL_ATTRIBUTES)
 
     with session.transaction().write() as tx:
         write_predictions_to_grakn(ge_graphs, tx)
