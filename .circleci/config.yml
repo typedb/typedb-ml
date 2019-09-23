@@ -1,17 +1,18 @@
 version: 2.1
 commands:
-  bazel_install:
+
+  install-bazel-linux-rbe:
     steps:
-      - run:
-          name: Bazel - Install
-          command: |
-            curl -OL https://github.com/bazelbuild/bazel/releases/download/0.25.2/bazel-0.25.2-installer-linux-x86_64.sh
-            chmod +x bazel-0.25.2-installer-linux-x86_64.sh
-            sudo ./bazel-0.25.2-installer-linux-x86_64.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/apt-wait.sh
+      - run: bash ./apt-wait.sh && rm ./apt-wait.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-linux.sh
+      - run: bash ./install-bazel-linux.sh && rm ./install-bazel-linux.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-rbe.sh
+      - run: bash ./install-bazel-rbe.sh && rm ./install-bazel-rbe.sh
 
   run-grakn-server:
     steps:
-      - bazel_install
+      - install-bazel-linux-rbe
       - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
       - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
@@ -21,8 +22,8 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
       - run: bazel build //...
@@ -31,8 +32,8 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
       - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
@@ -41,8 +42,8 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
       - run: |
@@ -73,8 +74,8 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
       - run: |
@@ -99,8 +100,8 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
       - run: |
