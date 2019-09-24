@@ -76,7 +76,7 @@ jobs:
               cat tests/deployment/requirements.txt
               pip install -r tests/deployment/requirements.txt
               ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
-              python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_deployment_test
+              cd tests/deployment/ && python -m unittest kgcn.diagnosis
 
   release-approval:
     machine: true
