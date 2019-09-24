@@ -36,6 +36,16 @@ jobs:
       - run: pyenv global 3.6.3
       - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
+  end-to-end-test:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - bazel_install
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
+      - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+
   deploy-pip-snapshot:
     machine: true
     working_directory: ~/kglib
@@ -125,12 +135,17 @@ workflows:
           filters:
             branches:
               ignore: kglib-release-branch
+      - end-to-end-test:
+          filters:
+            branches:
+              ignore: kglib-release-branch
       - deploy-pip-snapshot:
           filters:
             branches:
               only: master
           requires:
             - test
+            - end-to-end-test
             - build
       - test-deployment-pip:
           filters:
