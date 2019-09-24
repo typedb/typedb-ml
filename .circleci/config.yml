@@ -165,7 +165,7 @@ workflows:
             branches:
               only: kglib-release-branch
           requires:
-            - deploy-github
+            - release-validate
       - deploy-approval:
           type: approval
           filters:
