@@ -36,12 +36,12 @@ jobs:
       - run: pyenv global 3.6.3
       - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
-  end-to-end-test:
+  test-end-to-end:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
       - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
@@ -91,6 +91,15 @@ jobs:
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
           bazel run @graknlabs_build_tools//ci:release-approval
 
+  release-validate:
+    machine: true
+    steps:
+      - install-bazel-linux-rbe
+      - checkout
+      - run: |
+          bazel run @graknlabs_build_tools//ci:release-validate-deps -- \
+            graknlabs_grakn_core graknlabs_client_python
+
   deploy-github:
     machine: true
     working_directory: ~/kglib
@@ -135,7 +144,7 @@ workflows:
           filters:
             branches:
               ignore: kglib-release-branch
-      - end-to-end-test:
+      - test-end-to-end:
           filters:
             branches:
               ignore: kglib-release-branch
@@ -145,7 +154,7 @@ workflows:
               only: master
           requires:
             - test
-            - end-to-end-test
+            - test-end-to-end
             - build
       - test-deployment-pip:
           filters:
@@ -162,10 +171,16 @@ workflows:
 
   kglib-release:
     jobs:
+      - release-validate:
+          filters:
+            branches:
+              only: kglib-release-branch
       - deploy-github:
           filters:
             branches:
               only: kglib-release-branch
+          requires:
+            - release-validate
       - deploy-approval:
           type: approval
           filters:
