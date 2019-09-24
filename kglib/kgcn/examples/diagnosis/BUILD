@@ -15,9 +15,9 @@ py_test(
 )
 
 py_test(
-    name = "diagnosis_IT",
+    name = "diagnosis_end_to_end_test",
     srcs = [
-        "diagnosis_IT.py"
+        "diagnosis_end_to_end_test.py"
     ],
     deps = [
         "diagnosis",
