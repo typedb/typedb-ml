@@ -18,7 +18,7 @@ Understand the full capabilities of KGCNs by examining the methodology outlined 
 ## Quickstart
 **Requirements**
 
-- Python 3.7
+- Python >= 3.6
 
 - kglib installed via pip: `pip install grakn-kglib`. 
 
