@@ -15,7 +15,7 @@ At present this repo contains one project: [*Knowledge Graph Convolutional Netwo
 ## Quickstart
 **Requirements**
 
-- Python 3.7
+- Python >= 3.6
 
 - Install via pip: `pip install grakn-kglib`
 

@@ -20,12 +20,6 @@ commands:
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
 
-  install-python-3-7-4:
-    steps:
-      - run: cd $(pyenv root) && git pull
-      - run: pyenv install 3.7.4
-      - run: pyenv global 3.7.4
-
 jobs:
   build:
     machine: true
@@ -33,7 +27,7 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-      - install-python-3-7-4
+      - install-python-3-6-3
       - run: bazel build //...
 
   test:
@@ -42,7 +36,7 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-      - install-python-3-7-4
+      - install-python-3-6-3
       - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
   test-end-to-end:
@@ -51,7 +45,7 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-      - install-python-3-7-4
+      - install-python-3-6-3
       - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
   deploy-pip-snapshot:
@@ -60,7 +54,7 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-      - install-python-3-7-4
+      - install-python-3-6-3
       - run: |
           echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
           export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
@@ -72,7 +66,7 @@ jobs:
       working_directory: ~/kglib
       steps:
         - checkout
-        - install-python-3-7-4
+        - install-python-3-6-3
         - run-grakn-server
         - run:
             name: Run test-deployment-pip for kglib
@@ -90,7 +84,7 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-      - install-python-3-7-4
+      - install-python-3-6-3
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
@@ -124,7 +118,7 @@ jobs:
     steps:
       - install-bazel-linux-rbe
       - checkout
-      - install-python-3-7-4
+      - install-python-3-6-3
       - run: |
           export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
