@@ -16,6 +16,7 @@ py_test(
 
 py_test(
     name = "diagnosis_end_to_end_test",
+    size = "large",
     srcs = [
         "diagnosis_end_to_end_test.py"
     ],
