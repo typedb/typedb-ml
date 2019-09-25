@@ -54,7 +54,7 @@ jobs:
     steps:
       - checkout
       - run: gem install awesome_bot
-      - run: find . -name \*.md | tr '\n' ',' | xargs awesome_bot --allow 403,301,302 --allow-dupe --base-url https:// --files
+      - run: find . -name \*.md | tr '\n' ',' | xargs awesome_bot --allow 403,301,302 --allow-dupe --files
 
   deploy-pip-snapshot:
     machine: true
