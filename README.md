@@ -40,19 +40,19 @@ cd kglib
 
 To build all targets can be built:
 
-```bash
+```
 bazel build //...
 ```
 
 To run all tests (requires Python 3.6+): 
 
-```bash
+```
 bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python3)
 ```
 
 To build the pip distribution (find the output in `bazel-bin`):
 
-```bash
+```
 bazel build //:assemble-pip
 ```
 
