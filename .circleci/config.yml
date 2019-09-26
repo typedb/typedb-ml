@@ -48,6 +48,13 @@ jobs:
       - install-python
       - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
 
+  test-markdown-link-health:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - run: find . -name \*.md | xargs -L1 npx markdown-link-check -v
+
   deploy-pip-snapshot:
     machine: true
     working_directory: ~/kglib
@@ -147,6 +154,10 @@ workflows:
           filters:
             branches:
               ignore: kglib-release-branch
+      - test-markdown-link-health:
+          filters:
+            branches:
+              ignore: kglib-release-branch
       - deploy-pip-snapshot:
           filters:
             branches:
@@ -155,6 +166,7 @@ workflows:
             - test
             - test-end-to-end
             - build
+            - test-markdown-link-health
       - test-deployment-pip:
           filters:
             branches:

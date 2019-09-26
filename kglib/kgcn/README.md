@@ -8,7 +8,7 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 This KGCN framework is designed to provide a versatile means of performing learning tasks over a Grakn knowledge graph, including:
 
-- Predicting the existence of new [Relations](https://dev.grakn.ai/docs/schema/concepts#relation) that between existing [Concepts](https://dev.grakn.ai/docs/concept-api/overview). These relations can be binary, **ternary** (3-way) or [**N-ary**](), since Relations in Grakn are graph [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge). This functionality is included in the [latest release](https://github.com/graknlabs/kglib/releases/latest).
+- Predicting the existence of new [Relations](https://dev.grakn.ai/docs/schema/concepts#relation) between existing [Concepts](https://dev.grakn.ai/docs/concept-api/overview). These relations can be binary, **ternary** (3-way) or [**N-ary**](), since Relations in Grakn are graph [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge). This functionality is included in the [latest release](https://github.com/graknlabs/kglib/releases/latest).
 - Predicting the values of [Attributes](https://dev.grakn.ai/docs/schema/concepts#attribute) attached to other Concepts
 - Predicting a subgraph of Entities, Relations and Attributes to complete a known graph
 - Predicting erroneous data in a graph
@@ -34,7 +34,7 @@ Once you have installed kglib via pip (as above) you can run the example as foll
 
 1. Start a Grakn server
 
-2. Load [the schema](kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql) for the example into Grakn. The template for the command is `./grakn console -k diagnosis -f path/to/schema.gql`
+2. Load [the schema](../utils/grakn/synthetic/examples/diagnosis/schema.gql) for the example into Grakn. The template for the command is `./grakn console -k diagnosis -f path/to/schema.gql`
 
 3. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
 
