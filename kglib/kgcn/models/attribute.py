@@ -33,7 +33,7 @@ class Attribute(snt.AbstractModule, abc.ABC):
 
 
 class ContinuousAttribute(Attribute):
-    def __init__(self, attr_embedding_dim, name='CategoricalAttributeEmbedder'):
+    def __init__(self, attr_embedding_dim, name='ContinuousAttributeEmbedder'):
         super(ContinuousAttribute, self).__init__(attr_embedding_dim, name=name)
 
     def _build(self, attribute_value):

@@ -22,12 +22,13 @@ import numpy as np
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn.learn.learn import KGCNLearner
-from kglib.kgcn.models.attribute import CategoricalAttribute, BlankAttribute
+from kglib.kgcn.models.attribute import ContinuousAttribute, CategoricalAttribute, BlankAttribute
 from kglib.kgcn.models.core import softmax, KGCN
 from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph
 from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
-from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
+from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator, \
+    multidigraph_edge_data_iterator
 
 
 def pipeline(graphs,
@@ -50,23 +51,23 @@ def pipeline(graphs,
 
     # Encode attribute values
     for graph in graphs:
-
-        for data in multidigraph_data_iterator(graph):
-            data['encoded_value'] = 0
-
         for node_data in multidigraph_node_data_iterator(graph):
             typ = node_data['type']
 
-            if categorical_attributes is not None:
+            if categorical_attributes is not None and typ in categorical_attributes.keys():
                 # Add the integer value of the category for each categorical attribute instance
-                for attr_typ, category_values in categorical_attributes.items():
-                    if typ == attr_typ:
-                        node_data['encoded_value'] = category_values.index(node_data['value'])
+                category_values = categorical_attributes[typ]
+                node_data['encoded_value'] = category_values.index(node_data['value'])
 
-            if continuous_attributes is not None:
-                for attr_typ, (min_val, max_val) in continuous_attributes.items():
-                    if typ == attr_typ:
-                        node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
+            elif continuous_attributes is not None and typ in continuous_attributes.keys():
+                min_val, max_val = continuous_attributes[typ]
+                node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
+
+            else:
+                node_data['encoded_value'] = 0
+
+        for edge_data in multidigraph_edge_data_iterator(graph):
+            edge_data['encoded_value'] = 0
 
     indexed_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in graphs]
     graphs = [duplicate_edges_in_reverse(graph) for graph in indexed_graphs]
@@ -90,18 +91,32 @@ def pipeline(graphs,
 
     attr_embedders = dict()
 
-    # Construct categorical attribute embedders
-    for attr_typ, category_values in categorical_attributes.items():
-        num_categories = len(category_values)
+    if categorical_attributes is not None:
+        # Construct categorical attribute embedders
+        for attr_typ, category_values in categorical_attributes.items():
+            num_categories = len(category_values)
 
-        def make_embedder():
-            return CategoricalAttribute(num_categories, attr_embedding_dim, name=attr_typ + '_cat_embedder')
-        attr_typ_index = node_types.index(attr_typ)
+            def make_embedder():
+                return CategoricalAttribute(num_categories, attr_embedding_dim, name=attr_typ + '_cat_embedder')
+            attr_typ_index = node_types.index(attr_typ)
 
-        # Record the embedder, and the index of the type that it should encode
-        attr_embedders[make_embedder] = [attr_typ_index]
+            # Record the embedder, and the index of the type that it should encode
+            attr_embedders[make_embedder] = [attr_typ_index]
 
-        non_attribute_nodes.pop(attr_typ_index)
+            non_attribute_nodes.pop(attr_typ_index)
+
+    if continuous_attributes is not None:
+        # Construct continuous attribute embedders
+        for attr_typ, (min_val, max_val) in continuous_attributes.items():
+
+            def make_embedder():
+                return ContinuousAttribute(attr_embedding_dim, name=attr_typ + '_cont_embedder')
+            attr_typ_index = node_types.index(attr_typ)
+
+            # Record the embedder, and the index of the type that it should encode
+            attr_embedders[make_embedder] = [attr_typ_index]
+
+            non_attribute_nodes.pop(attr_typ_index)
 
     # All entities and relations (non-attributes) also need an embedder with matching output dimension, which does
     # nothing. This is provided as a list of their indices
