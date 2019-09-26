@@ -1,50 +1,67 @@
 version: 2.1
 commands:
-  bazel_install:
+
+  install-bazel-linux-rbe:
     steps:
-      - run:
-          name: Bazel - Install
-          command: |
-            curl -OL https://github.com/bazelbuild/bazel/releases/download/0.25.2/bazel-0.25.2-installer-linux-x86_64.sh
-            chmod +x bazel-0.25.2-installer-linux-x86_64.sh
-            sudo ./bazel-0.25.2-installer-linux-x86_64.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/04c69fbe5277bf2ed9e2baf5e9a53ac3c9ebee80/ci/install-bazel-linux.sh
+      - run: bash ./install-bazel-linux.sh && rm ./install-bazel-linux.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/04c69fbe5277bf2ed9e2baf5e9a53ac3c9ebee80/ci/install-bazel-rbe.sh
+      - run: bash ./install-bazel-rbe.sh && rm ./install-bazel-rbe.sh
 
   run-grakn-server:
     steps:
-      - bazel_install
+      - install-bazel-linux-rbe
       - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
       - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
+
+  install-python:
+    steps:
+      - run: pyenv install 3.6.3
+      - run: pyenv global 3.6.3
 
 jobs:
   build:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
+      - install-python
       - run: bazel build //...
 
   test:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
+      - install-python
       - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+
+  test-end-to-end:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - install-bazel-linux-rbe
+      - checkout
+      - install-python
+      - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+
+  test-markdown-link-health:
+    machine: true
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - run: find . -name \*.md | xargs -L1 npx markdown-link-check -v
 
   deploy-pip-snapshot:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
+      - install-python
       - run: |
           echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
           export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
@@ -56,8 +73,7 @@ jobs:
       working_directory: ~/kglib
       steps:
         - checkout
-        - run: pyenv install 3.6.3
-        - run: pyenv global 3.6.3
+        - install-python
         - run-grakn-server
         - run:
             name: Run test-deployment-pip for kglib
@@ -67,18 +83,29 @@ jobs:
               cat tests/deployment/requirements.txt
               pip install -r tests/deployment/requirements.txt
               ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
-              python -m unittest kglib.kgcn.examples.diagnosis.diagnosis_end_to_end_test
+              cd tests/deployment/ && python -m unittest kgcn.diagnosis
 
   release-approval:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
+      - install-python
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
           bazel run @graknlabs_build_tools//ci:release-approval
+
+  release-validate:
+    machine: true
+    steps:
+      - install-bazel-linux-rbe
+      - checkout
+      - install-python
+      - run: |
+          bazel run @graknlabs_build_tools//ci:release-validate-deps -- \
+            graknlabs_grakn_core graknlabs_client_python
 
   deploy-github:
     machine: true
@@ -97,10 +124,9 @@ jobs:
     machine: true
     working_directory: ~/kglib
     steps:
+      - install-bazel-linux-rbe
       - checkout
-      - bazel_install
-      - run: pyenv install 3.6.3
-      - run: pyenv global 3.6.3
+      - install-python
       - run: |
           export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
@@ -110,7 +136,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: git push --delete origin kglib-release-branch
+      - run: git push --delete https://$REPO_GITHUB_TOKEN@github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH
 
 workflows:
   version: 2
@@ -124,13 +150,23 @@ workflows:
           filters:
             branches:
               ignore: kglib-release-branch
+      - test-end-to-end:
+          filters:
+            branches:
+              ignore: kglib-release-branch
+      - test-markdown-link-health:
+          filters:
+            branches:
+              ignore: kglib-release-branch
       - deploy-pip-snapshot:
           filters:
             branches:
               only: master
           requires:
             - test
+            - test-end-to-end
             - build
+            - test-markdown-link-health
       - test-deployment-pip:
           filters:
             branches:
@@ -146,10 +182,16 @@ workflows:
 
   kglib-release:
     jobs:
+      - release-validate:
+          filters:
+            branches:
+              only: kglib-release-branch
       - deploy-github:
           filters:
             branches:
               only: kglib-release-branch
+          requires:
+            - release-validate
       - deploy-approval:
           type: approval
           filters:

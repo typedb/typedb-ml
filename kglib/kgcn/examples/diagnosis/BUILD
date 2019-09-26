@@ -14,20 +14,6 @@ py_test(
     ]
 )
 
-py_test(
-    name = "diagnosis_IT",
-    srcs = [
-        "diagnosis_IT.py"
-    ],
-    deps = [
-        "diagnosis",
-        "//kglib/utils/grakn/test",
-    ],
-    data = [
-        "@graknlabs_grakn_core//:assemble-mac-zip",
-        "//kglib/utils/grakn/synthetic/examples:diagnosis/schema.gql"
-    ]
-)
 
 py_library(
     name = "diagnosis",

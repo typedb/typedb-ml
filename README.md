@@ -8,36 +8,51 @@
 
 [Grakn](https://github.com/graknlabs/grakn) lets us create Knowledge Graphs from our data. But what challenges do we encounter where querying alone won’t cut it? What library can address these challenges?
 
-To respond to these scenarios, KGLIB is the centre of all research projects conducted at Grakn Labs. In particular, its focus is on the integration of machine learning with the Grakn knowledge graph.
+To respond to these scenarios, KGLIB is the centre of all research projects conducted at Grakn Labs. In particular, its focus is on the integration of machine learning with the Grakn Knowledge Graph. More on this below, in [*Knowledge Graph Tasks*](https://github.com/graknlabs/kglib#knowledge-graph-tasks).
 
-At present this repo contains one project: [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn).
+At present this repo contains one project: [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn). Go there for more info on getting started with a working example.
 
 ## Quickstart
 **Requirements**
 
-- Python 3.7
+- Python >= 3.6
 
 - Install via pip: `pip install grakn-kglib`
 
 - The [latest release of Grakn Core](https://github.com/graknlabs/grakn/releases/latest) or [Grakn KGMS](https://dev.grakn.ai/docs/cloud-deployment/kgms) running
 
+**Run**
+Take a look at [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) to see a walkthrough of how to use the library.
+
 **Building from source**
 
-To test that all targets can be built: 
+Clone KGLIB:
 
-```bash
+```
+git clone git@github.com:graknlabs/kglib.git
+```
+
+`cd` in to the project:
+
+```
+cd kglib
+```
+
+To build all targets can be built:
+
+```
 bazel build //...
 ```
 
-To run all tests: 
+To run all tests (requires Python 3.6+): 
 
-```bash
-bazel test //... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python3)
+```
+bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python3)
 ```
 
 To build the pip distribution (find the output in `bazel-bin`):
 
-```bash
+```
 bazel build //:assemble-pip
 ```
 
@@ -76,7 +91,7 @@ Here we term any task which creates new facts for the KG as *Knowledge Graph Com
 
 #### Relation Prediction (a.k.a. Link prediction)
 
-We often want to find new connections in our Knowledge Graphs. Often, we need to understand how two concepts are connected. This is the case of binary Relation prediction, which all existing literature concerns itself with. Grakn is a [Hypergraph](https://en.wikipedia.org/wiki/Hypergraph), where Relations are [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge). Therefore, in general, the Relations we may want to predict may be **ternary** (3-way) or even **[N-ary](https://en.wikipedia.org/wiki/N-ary_group)** (N-way), which goes beyond the research we have seen in this domain.
+We often want to find new connections in our Knowledge Graphs. Often, we need to understand how two concepts are connected. This is the case of **binary** Relation prediction, which all existing literature concerns itself with. Grakn is a [Hypergraph](https://en.wikipedia.org/wiki/Hypergraph), where Relations are [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge). Therefore, in general, the Relations we may want to predict may be **ternary** (3-way) or even **[N-ary](https://en.wikipedia.org/wiki/N-ary_group)** (N-way), which goes beyond the research we have seen in this domain.
 
 When predicting Relations, there are several scenarios we may have. When predicting binary Relations between the members of one set and the members of another set, we may need to  predict them as:
 
@@ -88,21 +103,17 @@ When predicting Relations, there are several scenarios we may have. When predict
 
 *Examples:* The problem of predicting which disease(s) a patient has is a one-to-many problem. Whereas, predicting which drugs in the KG treat which diseases is a many-to-many problem.
 
+Notice also that recommender systems are one use case of one-to-many binary Relation prediction.
+
 We anticipate that solutions working well for the one-to-one case will also be applicable (at least to some extent) to the one-to-many case and cascade also to the many-to-many case.
 
-***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) can help us with one-to-one binary Relation prediction. This requires extra implementation, for which two approaches are apparent:
-
-- Create two KGCNs, one for each of the two Roleplayers in the binary Relation. Extend the neural network to compare the embeddings of each Roleplayer, and classify the pairing according to whether a Relation should exist or not.
-
-- Feed Relations directly to a KGCN, and classify their existence. (KGCNs can accept Relations as the Things of interest just as well as Entities). To do this we also need to create hypothetical Relations, labelled as negative examples, and feed them to the KGCN alongside the positively labelled known Relations. Note that this extends well to ternary and N-ary Relations.
-
-Notice also that recommender systems are one use case of one-to-many binary Relation prediction.
+***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) performs Relation prediction using an approach based on [Graph Networks](https://github.com/deepmind/graph_nets) from DeepMind. This can be used to predict **binary**, **ternary**, or **N-ary** relations. This is well-supported for the one-to-one case and the one-to-many case.
 
 #### Attribute Prediction
 
 We would like to predict one or more Attributes of a Thing, which may include also prediction of whether that Attribute should even be present at all.
 
-***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) can be used to directly learn Attributes for any Thing. Attribute prediction is already fully supported.
+***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) can be used to directly learn Attributes for any Thing. This requires some minor additional functionality to be added (we intend to build this imminently).
 
 #### Subgraph Prediction
 
@@ -114,7 +125,7 @@ Embeddings of Things and/or Types are universally useful for performing other do
 These vectors are easy to ingest into other ML pipelines.
 The benefit of building general-purpose embeddings is therefore to make use of them in multiple other pipelines. This reduces the expense of traversing the Knowledge Graph, since this task can be performed once and the output re-used more than once.
 
-***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) can be used to build general-purpose embeddings. This requires additional functionality, since a generic loss function is required in order to train the model. At its simplest, this can be achieved by measuring the shortest distance across the KG between two Things. This can be achieved trivially in Grakn using [`compute path`](https://dev.grakn.ai/docs/query/compute-query#compute-the-shortest-path).
+***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) can be used to build general-purpose embeddings. This requires additional functionality, since a generic loss function is required in order to train the model in an unsupervised fashion. At its simplest, this can be achieved by measuring the shortest distance across the KG between two Things. This can be achieved trivially in Grakn using [`compute path`](https://dev.grakn.ai/docs/query/compute-query#compute-the-shortest-path).
 
 #### Rule Mining (a.k.a. Association Rule Learning)
 

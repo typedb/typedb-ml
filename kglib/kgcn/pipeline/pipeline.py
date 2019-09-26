@@ -141,4 +141,5 @@ def pipeline(graphs,
             data['probabilities'] = softmax(data['logits'])
             data['prediction'] = int(np.argmax(data['probabilities']))
 
-    return ge_graphs
+    _, _, _, _, _, solveds_tr, solveds_ge = tr_info
+    return ge_graphs, solveds_tr, solveds_ge
