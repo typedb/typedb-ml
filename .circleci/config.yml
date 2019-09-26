@@ -54,7 +54,7 @@ jobs:
     steps:
       - checkout
       - run: npm install -g markdown-link-check
-      - run: find . -name \*.md | xargs -L1 markdown-link-check -v
+      - run: find . -name \*.md | xargs -L1 npx markdown-link-check -v
 
   deploy-pip-snapshot:
     machine: true
