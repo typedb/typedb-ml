@@ -18,13 +18,11 @@
 #
 
 import inspect
-import os
 
 import numpy as np
 from grakn.client import GraknClient
 
 from kglib.utils.grakn.synthetic.statistics.pmf import PMF
-import subprocess as sp
 
 
 def get_example_queries(pmf, example_id):
@@ -49,21 +47,21 @@ def get_example_queries(pmf, example_id):
                        (patient: $p, diagnosed-disease: $d) 
                        isa diagnosis;'''))
 
-    if variable_values['Light Sensitivity']:
+    if variable_values['Light Sensitivity'] is not False:
         queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id {example_id};
                        $s isa symptom, has name "light-sensitivity";
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
-                       symptom-presentation;'''))
+                       symptom-presentation, has severity {variable_values['Light Sensitivity']()};'''))
 
-    if variable_values['Fever']:
+    if variable_values['Fever'] is not False:
         queries.append(inspect.cleandoc(f'''match
                        $p isa person, has example-id {example_id};
                        $s isa symptom, has name "fever";
                        insert
                        (presented-symptom: $s, symptomatic-patient: $p) isa 
-                       symptom-presentation;'''))
+                       symptom-presentation, has severity {variable_values['Fever']()};'''))
 
     return queries
 
@@ -82,11 +80,14 @@ def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:4
     pmf_array[0, 1, 1, 1] = 0.3
     pmf_array[1, 0, 1, 1] = 0.05
 
+    def normal_dist(mean, var):
+        return lambda: round(np.random.normal(mean, var, 1)[0], 2)
+
     pmf = PMF({
         'Flu':                  [False, True],
         'Meningitis':           [False, True],
-        'Light Sensitivity':    [False, True],
-        'Fever':                [False, True]
+        'Light Sensitivity':    [False, normal_dist(0.5, 0.1)],
+        'Fever':                [False, normal_dist(0.3, 0.2)]
     }, pmf_array, seed=0)
 
     print(pmf.to_dataframe())
