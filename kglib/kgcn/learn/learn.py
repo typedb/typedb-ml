@@ -43,7 +43,7 @@ class KGCNLearner:
                  num_training_iterations=10000,
                  learning_rate=1e-3,
                  log_every_epochs=50,
-                 log_dir=None):
+                 log_dir="./"):
         """
         Args:
             tr_graphs: In-memory graphs of Grakn concepts for training
@@ -83,7 +83,8 @@ class KGCNLearner:
         sess = tf.Session()
 
         if log_dir is not None:
-            tf.summary.FileWriter(log_dir, sess.graph)
+            train_writer = tf.summary.FileWriter(log_dir, sess.graph)
+            merged_summaries = tf.summary.merge_all()
 
         sess.run(tf.global_variables_initializer())
 
@@ -105,16 +106,21 @@ class KGCNLearner:
         start_time = time.time()
         for iteration in range(num_training_iterations):
             feed_dict = create_feed_dict(input_ph, target_ph, tr_input_graphs, tr_target_graphs)
-            train_values = sess.run(
-                {
-                    "step": step_op,
-                    "target": target_ph,
-                    "loss": loss_op_tr,
-                    "outputs": output_ops_tr
-                },
-                feed_dict=feed_dict)
 
             if iteration % log_every_epochs == 0:
+
+                train_values = sess.run(
+                    {
+                        "step": step_op,
+                        "target": target_ph,
+                        "loss": loss_op_tr,
+                        "outputs": output_ops_tr,
+                        "summary": merged_summaries
+                    },
+                    feed_dict=feed_dict)
+
+                train_writer.add_summary(train_values["summary"], iteration)
+
                 feed_dict = create_feed_dict(input_ph, target_ph, ge_input_graphs, ge_target_graphs)
                 test_values = sess.run(
                     {
@@ -140,6 +146,15 @@ class KGCNLearner:
                       " {:.4f}, Cge {:.4f}, Sge {:.4f}".format(
                         iteration, elapsed, train_values["loss"], test_values["loss"],
                         correct_tr, solved_tr, correct_ge, solved_ge))
+            else:
+                train_values = sess.run(
+                    {
+                        "step": step_op,
+                        "target": target_ph,
+                        "loss": loss_op_tr,
+                        "outputs": output_ops_tr
+                    },
+                    feed_dict=feed_dict)
 
         training_info = logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge
         return train_values, test_values, training_info

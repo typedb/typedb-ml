@@ -37,10 +37,13 @@ class ContinuousAttribute(Attribute):
         super(ContinuousAttribute, self).__init__(attr_embedding_dim, name=name)
 
     def _build(self, attribute_value):
-        return snt.Sequential([
-            snt.nets.MLP([self._attr_embedding_dim] * 3, activate_final=True),
+        tf.summary.histogram('cont_attribute_value_histogram', attribute_value)
+        embedding = snt.Sequential([
+            snt.nets.MLP([self._attr_embedding_dim], activate_final=True),
             snt.LayerNorm()
         ])(tf.cast(attribute_value, dtype=tf.float32))
+        tf.summary.histogram('cont_embedding_histogram', embedding)
+        return embedding
 
 
 class CategoricalAttribute(Attribute):
@@ -51,7 +54,9 @@ class CategoricalAttribute(Attribute):
 
     def _build(self, attribute_value):
         int_attribute_value = tf.cast(attribute_value, dtype=tf.int32)
+        tf.summary.histogram('cat_attribute_value_histogram', int_attribute_value)
         embedding = snt.Embed(self._num_categories, self._attr_embedding_dim)(int_attribute_value)
+        tf.summary.histogram('cat_embedding_histogram', embedding)
         return tf.squeeze(embedding, axis=1)
 
 
