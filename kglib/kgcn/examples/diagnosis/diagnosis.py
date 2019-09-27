@@ -240,4 +240,4 @@ def write_predictions_to_grakn(graphs, tx):
 
 
 if __name__ == "__main__":
-    diagnosis_example()
+    diagnosis_example(num_training_iterations=4000)
