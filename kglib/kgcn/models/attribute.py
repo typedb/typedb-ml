@@ -40,7 +40,7 @@ class ContinuousAttribute(Attribute):
         return snt.Sequential([
             snt.nets.MLP([self._attr_embedding_dim] * 3, activate_final=True),
             snt.LayerNorm()
-        ])(attribute_value)
+        ])(tf.cast(attribute_value, dtype=tf.float32))
 
 
 class CategoricalAttribute(Attribute):
