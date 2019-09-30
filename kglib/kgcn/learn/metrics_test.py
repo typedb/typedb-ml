@@ -22,7 +22,7 @@ import unittest
 import numpy as np
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn.learn.metrics import compute_accuracy
+from kglib.kgcn.learn.metrics import compute_accuracy, existence_accuracy
 
 
 class TestComputeAccuracy(unittest.TestCase):
@@ -60,6 +60,46 @@ class TestComputeAccuracy(unittest.TestCase):
 
         expected_correct = 2 / 5
         expected_solved = 0
+
+        self.assertEqual(expected_correct, correct)
+        self.assertEqual(expected_solved, solved)
+
+
+class TestExistenceAccuracy(unittest.TestCase):
+
+    def test_compute_accuracy_is_as_expected(self):
+
+        t_nodes = np.array([[1, 0, 0], [0, 0, 1], [0, 0, 1]], dtype=np.float32)
+        o_nodes = np.array([[0, 1, 0], [0, 1, 0], [0, 0, 1]], dtype=np.float32)
+        t_edges = np.array([[0, 1, 0], [1, 0, 0]], dtype=np.float32)
+        o_edges = np.array([[1, 0, 0], [1, 0, 0]], dtype=np.float32)
+
+        globals = None
+        senders = np.array([0, 1])
+        receivers = np.array([1, 2])
+        n_node = np.array([3])
+        n_edge = np.array([2])
+
+        target = GraphsTuple(nodes=t_nodes,
+                             edges=t_edges,
+                             globals=globals,
+                             receivers=receivers,
+                             senders=senders,
+                             n_node=n_node,
+                             n_edge=n_edge)
+
+        output = GraphsTuple(nodes=o_nodes,
+                             edges=o_edges,
+                             globals=globals,
+                             receivers=receivers,
+                             senders=senders,
+                             n_node=n_node,
+                             n_edge=n_edge)
+
+        correct, solved = existence_accuracy(target, output)
+
+        expected_correct = 2/3
+        expected_solved = 0.0
 
         self.assertEqual(expected_correct, correct)
         self.assertEqual(expected_solved, solved)

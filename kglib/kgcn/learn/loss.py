@@ -53,12 +53,12 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
     """
     loss_ops = []
     for output_op in output_ops:
-        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))),
+        node_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([1., 0., 0.]))),
                                           axis=1)
         target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
         output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
 
-        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([0., 0., 1.]))),
+        edge_mask_op = tf.math.reduce_any(tf.math.not_equal(target_op.nodes, tf.constant(np.array([1., 0., 0.]))),
                                           axis=1)
         target_edges = tf.boolean_mask(target_op.nodes, edge_mask_op)
         output_edges = tf.boolean_mask(output_op.nodes, edge_mask_op)
