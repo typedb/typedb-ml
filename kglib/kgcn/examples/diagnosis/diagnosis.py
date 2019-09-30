@@ -233,7 +233,7 @@ def write_predictions_to_grakn(graphs, tx):
                              f'insert'
                              f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
-                             f'has probability-non-exists {p[1]:.3f},'
+                             f'has probability-non-exists {p[1]:.3f},'  
                              f'has probability-preexists {p[0]:.3f};')
                     tx.query(query)
     tx.commit()

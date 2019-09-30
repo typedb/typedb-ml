@@ -29,7 +29,7 @@ from kglib.kgcn.models.embedding import common_embedding, node_embedding
 
 
 def softmax(x):
-    return np.exp(x) / sum(np.exp(x))
+    return np.exp(x) / np.sum(np.exp(x))
 
 
 def make_mlp_model(latent_size=16, num_layers=2):

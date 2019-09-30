@@ -22,8 +22,8 @@ import time
 import tensorflow as tf
 
 from kglib.kgcn.learn.feed import create_placeholders, create_feed_dict, make_all_runnable_in_session
-from kglib.kgcn.learn.loss import loss_ops_from_difference
-from kglib.kgcn.learn.metrics import compute_accuracy
+from kglib.kgcn.learn.loss import loss_ops_preexisting_no_penalty
+from kglib.kgcn.learn.metrics import existence_accuracy
 
 
 class KGCNLearner:
@@ -67,11 +67,11 @@ class KGCNLearner:
         output_ops_ge = self._model(input_ph, self._num_processing_steps_ge)
 
         # Training loss.
-        loss_ops_tr = loss_ops_from_difference(target_ph, output_ops_tr)
+        loss_ops_tr = loss_ops_preexisting_no_penalty(target_ph, output_ops_tr)
         # Loss across processing steps.
         loss_op_tr = sum(loss_ops_tr) / self._num_processing_steps_tr
         # Test/generalization loss.
-        loss_ops_ge = loss_ops_from_difference(target_ph, output_ops_ge)
+        loss_ops_ge = loss_ops_preexisting_no_penalty(target_ph, output_ops_ge)
         loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
 
         # Optimizer
@@ -129,10 +129,10 @@ class KGCNLearner:
                         "outputs": output_ops_ge
                     },
                     feed_dict=feed_dict)
-                correct_tr, solved_tr = compute_accuracy(
-                    train_values["target"], train_values["outputs"][-1], use_edges=True)
-                correct_ge, solved_ge = compute_accuracy(
-                    test_values["target"], test_values["outputs"][-1], use_edges=True)
+                correct_tr, solved_tr = existence_accuracy(
+                    train_values["target"], train_values["outputs"][-1], use_edges=False)
+                correct_ge, solved_ge = existence_accuracy(
+                    test_values["target"], test_values["outputs"][-1], use_edges=False)
 
                 elapsed = time.time() - start_time
                 losses_tr.append(train_values["loss"])
