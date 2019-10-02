@@ -40,9 +40,9 @@ class KGCNLearner:
                  tr_target_graphs,
                  ge_input_graphs,
                  ge_target_graphs,
-                 num_training_iterations=10000,
+                 num_training_iterations=1000,
                  learning_rate=1e-3,
-                 log_every_epochs=50,
+                 log_every_epochs=20,
                  log_dir=None):
         """
         Args:
