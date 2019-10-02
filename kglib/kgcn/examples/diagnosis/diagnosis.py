@@ -29,7 +29,7 @@ from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 
 
-def diagnosis_example(num_graphs=60,
+def diagnosis_example(num_graphs=200,
                       num_processing_steps_tr=10,
                       num_processing_steps_ge=10,
                       num_training_iterations=2000,
