@@ -66,6 +66,9 @@ py_library(
         requirement('termcolor'),
         # requirement('wrapt'),
 
+        # Scipy deps
+        requirement('scipy')
+
     ],
     visibility=['//visibility:public']
 )

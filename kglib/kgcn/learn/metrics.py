@@ -20,7 +20,6 @@
 import numpy as np
 from graph_nets import utils_np
 
-from kglib.kgcn.models.core import softmax
 from scipy.special import softmax
 
 
