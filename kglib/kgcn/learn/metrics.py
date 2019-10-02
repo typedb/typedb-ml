@@ -20,6 +20,8 @@
 import numpy as np
 from graph_nets import utils_np
 
+from scipy.special import softmax
+
 
 def compute_accuracy(target, output, use_nodes=True, use_edges=True):
     """Calculate model accuracy.
@@ -51,6 +53,41 @@ def compute_accuracy(target, output, use_nodes=True, use_edges=True):
         yn = np.argmax(od["nodes"], axis=-1)
         xe = np.argmax(td["edges"], axis=-1)
         ye = np.argmax(od["edges"], axis=-1)
+        c = []
+        if use_nodes:
+            c.append(xn == yn)
+        if use_edges:
+            c.append(xe == ye)
+        c = np.concatenate(c, axis=0)
+        s = np.all(c)
+        cs.append(c)
+        ss.append(s)
+    correct = np.mean(np.concatenate(cs, axis=0))
+    solved = np.mean(np.stack(ss))
+    return correct, solved
+
+
+def existence_accuracy(target, output, use_nodes=True, use_edges=True):
+    if not use_nodes and not use_edges:
+        raise ValueError("Nodes or edges (or both) must be used")
+    tdds = utils_np.graphs_tuple_to_data_dicts(target)
+    odds = utils_np.graphs_tuple_to_data_dicts(output)
+    cs = []
+    ss = []
+    for td, od in zip(tdds, odds):
+
+        nodes_to_predict = td["nodes"][:, 0] == 0
+        xn = np.argmax(td["nodes"][:, 1:], axis=-1)
+        xn = xn[nodes_to_predict]
+        yn = np.argmax(softmax(od["nodes"][:, 1:], axis=1), axis=-1)
+        yn = yn[nodes_to_predict]
+
+        edges_to_predict = td["edges"][:, 0] == 0
+        xe = np.argmax(td["edges"][:, 1:], axis=-1)
+        xe = xe[edges_to_predict]
+        ye = np.argmax(softmax(od["edges"][:, 1:], axis=1), axis=-1)
+        ye = ye[edges_to_predict]
+
         c = []
         if use_nodes:
             c.append(xn == yn)

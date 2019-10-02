@@ -29,10 +29,10 @@ from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 
 
-def diagnosis_example(num_graphs=60,
+def diagnosis_example(num_graphs=200,
                       num_processing_steps_tr=10,
                       num_processing_steps_ge=10,
-                      num_training_iterations=2000,
+                      num_training_iterations=1000,
                       keyspace="diagnosis", uri="localhost:48555"):
 
     tr_ge_split = int(num_graphs*0.5)
@@ -230,7 +230,7 @@ def write_predictions_to_grakn(graphs, tx):
                              f'insert'
                              f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
-                             f'has probability-non-exists {p[1]:.3f},'
+                             f'has probability-non-exists {p[1]:.3f},'  
                              f'has probability-preexists {p[0]:.3f};')
                     tx.query(query)
     tx.commit()

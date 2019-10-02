@@ -67,7 +67,7 @@ def augment_data_fields(graph_data_iterator, fields_to_augment, augmented_field)
     """
 
     for data in graph_data_iterator:
-        data[augmented_field] = np.hstack([np.array(data[field], dtype=float) for field in fields_to_augment])
+        data[augmented_field] = np.hstack([np.array(data[field], dtype=np.float32) for field in fields_to_augment])
 
 
 def encode_solutions(graph, solution_field="solution", encoded_solution_field="encoded_solution",
