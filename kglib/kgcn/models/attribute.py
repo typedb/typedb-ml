@@ -18,6 +18,7 @@
 #
 
 import abc
+from functools import partial
 
 import sonnet as snt
 import tensorflow as tf

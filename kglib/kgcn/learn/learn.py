@@ -70,9 +70,12 @@ class KGCNLearner:
         loss_ops_tr = loss_ops_preexisting_no_penalty(target_ph, output_ops_tr)
         # Loss across processing steps.
         loss_op_tr = sum(loss_ops_tr) / self._num_processing_steps_tr
+
+        tf.summary.scalar('loss_op_tr', loss_op_tr)
         # Test/generalization loss.
         loss_ops_ge = loss_ops_preexisting_no_penalty(target_ph, output_ops_ge)
         loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
+        tf.summary.scalar('loss_op_ge', loss_op_ge)
 
         # Optimizer
         optimizer = tf.train.AdamOptimizer(learning_rate)
