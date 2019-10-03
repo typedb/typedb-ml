@@ -19,14 +19,15 @@
 
 import copy
 import inspect
+import time
 
 from grakn.client import GraknClient
 
 from kglib.kgcn.pipeline.pipeline import pipeline
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
-from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
-from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.iterate import multidigraph_data_iterator
+from kglib.utils.graph.query.query_graph import QueryGraph
+from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
 
 
 def diagnosis_example(num_graphs=200,
@@ -60,7 +61,7 @@ def diagnosis_example(num_graphs=200,
                                                  num_training_iterations=num_training_iterations,
                                                  continuous_attributes=CONTINUOUS_ATTRIBUTES,
                                                  categorical_attributes=CATEGORICAL_ATTRIBUTES,
-                                                 )
+                                                 output_dir=f"./events/{time.time()}/")
 
     with session.transaction().write() as tx:
         write_predictions_to_grakn(ge_graphs, tx)
@@ -240,4 +241,4 @@ def write_predictions_to_grakn(graphs, tx):
 
 
 if __name__ == "__main__":
-    diagnosis_example(num_training_iterations=4000)
+    diagnosis_example(num_training_iterations=1000)

@@ -43,7 +43,8 @@ def pipeline(graphs,
              type_embedding_dim=5,
              attr_embedding_dim=6,
              edge_output_size=3,
-             node_output_size=3):
+             node_output_size=3,
+             output_dir=None):
 
     ############################################################
     # Manipulate the graph data
@@ -104,10 +105,11 @@ def pipeline(graphs,
                                                  tr_target_graphs,
                                                  ge_input_graphs,
                                                  ge_target_graphs,
-                                                 num_training_iterations=num_training_iterations)
+                                                 num_training_iterations=num_training_iterations,
+                                                 log_dir=output_dir)
 
-    plot_across_training(*tr_info)
-    plot_predictions(ge_input_graphs, test_values, num_processing_steps_ge)
+    plot_across_training(*tr_info, output_file=f'{output_dir}learning.png')
+    plot_predictions(ge_input_graphs, test_values, num_processing_steps_ge, output_file=f'{output_dir}graph.png')
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 

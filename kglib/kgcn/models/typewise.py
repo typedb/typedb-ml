@@ -52,6 +52,8 @@ class TypewiseEncoder(snt.AbstractModule):
 
     def _build(self, features):
 
+        tf.summary.histogram('typewise_encoder_features_histogram', features)
+
         shape = tf.stack([tf.shape(features)[0], self._feature_length])
 
         encoded_features = tf.zeros(shape, dtype=tf.float32)
@@ -69,9 +71,12 @@ class TypewiseEncoder(snt.AbstractModule):
             # Use this encoder when the feat_type matches any of the types
             applicable_types_mask = tf.reduce_any(elementwise_equality, axis=1)
             indices_to_encode = tf.where(applicable_types_mask)
+
             feats_to_encode = tf.squeeze(tf.gather(features[:, 1:], indices_to_encode), axis=1)
             encoded_feats = encoder()(feats_to_encode)
 
             encoded_features += tf.scatter_nd(tf.cast(indices_to_encode, dtype=tf.int32), encoded_feats, shape)
+
+        tf.summary.histogram('typewise_encoder_encoded_features_histogram', encoded_features)
 
         return encoded_features

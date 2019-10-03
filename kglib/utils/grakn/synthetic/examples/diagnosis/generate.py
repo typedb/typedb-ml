@@ -86,8 +86,8 @@ def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:4
     pmf = PMF({
         'Flu':                  [False, True],
         'Meningitis':           [False, True],
-        'Light Sensitivity':    [False, normal_dist(0.5, 0.1)],
-        'Fever':                [False, normal_dist(0.3, 0.2)]
+        'Light Sensitivity':    [False, normal_dist(0.0, 0.001)],
+        'Fever':                [False, normal_dist(0.0, 0.001)]
     }, pmf_array, seed=0)
 
     print(pmf.to_dataframe())

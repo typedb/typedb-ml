@@ -39,7 +39,7 @@ class ContinuousAttribute(Attribute):
     def _build(self, attribute_value):
         tf.summary.histogram('cont_attribute_value_histogram', attribute_value)
         embedding = snt.Sequential([
-            snt.nets.MLP([self._attr_embedding_dim], activate_final=True, use_dropout=True),
+            snt.nets.MLP([self._attr_embedding_dim], activate_final=True),
             snt.LayerNorm()
         ])(tf.cast(attribute_value, dtype=tf.float32))
         tf.summary.histogram('cont_embedding_histogram', embedding)
