@@ -56,6 +56,7 @@ assemble_pip(
         'pyparsing==2.4.2',
         'python-dateutil==2.8.0',
         'pytz==2019.2',
+        'scipy==1.3.1',
         'semantic-version==2.8.2',
         'six==1.12.0',
         'tensorboard==1.14.0',
