@@ -94,10 +94,12 @@ class KGCNLearner:
         input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
 
         sess = tf.Session()
+        merged_summaries = tf.summary.merge_all()
+
+        train_writer = None
 
         if log_dir is not None:
             train_writer = tf.summary.FileWriter(log_dir, sess.graph)
-            merged_summaries = tf.summary.merge_all()
 
         sess.run(tf.global_variables_initializer())
 
@@ -132,7 +134,8 @@ class KGCNLearner:
                     },
                     feed_dict=feed_dict)
 
-                train_writer.add_summary(train_values["summary"], iteration)
+                if train_writer is not None:
+                    train_writer.add_summary(train_values["summary"], iteration)
 
                 feed_dict = create_feed_dict(input_ph, target_ph, ge_input_graphs, ge_target_graphs)
                 test_values = sess.run(
