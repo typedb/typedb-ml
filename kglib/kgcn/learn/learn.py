@@ -79,12 +79,16 @@ class KGCNLearner:
 
         # Optimizer
         optimizer = tf.train.AdamOptimizer(learning_rate)
-        step_op = optimizer.minimize(loss_op_tr)
+        grads_and_vars = optimizer.compute_gradients(loss_op_tr)
 
-        # grads = optimizer.compute_gradients(loss)
-        # grad_summ_op = tf.summary.merge([tf.summary.histogram("%s-grad" % g[1].name, g[0]) for g in grads])
-        # grad_vals = sess.run(fetches=grad_summ_op, feed_dict = feed_dict)
-        # writer['train'].add_summary(grad_vals)
+        for grad, var in grads_and_vars:
+            try:
+                print(var.name)
+                tf.summary.histogram('gradients/' + var.name, grad)
+            except:
+                pass
+
+        step_op = optimizer.apply_gradients(grads_and_vars)
 
         input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
 
