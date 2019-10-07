@@ -21,7 +21,7 @@ import unittest
 from kglib.kgcn.pipeline.pipeline import configure_embedders
 
 
-class TestConstructEmbedders(unittest.TestCase):
+class TestConfigureEmbedders(unittest.TestCase):
 
     def test_all_types_encoded(self):
         node_types = ['a', 'b', 'c']
