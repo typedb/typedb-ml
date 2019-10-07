@@ -28,8 +28,10 @@ from kglib.utils.test.utils import get_call_args
 
 
 class TestCommonEmbedding(unittest.TestCase):
-    def test_embedding_output_shape_as_expected(self):
+    def setUp(self):
         tf.enable_eager_execution()
+
+    def test_embedding_output_shape_as_expected(self):
         features = np.array([[1, 0, 0.7], [1, 2, 0.7], [0, 1, 0.5]], dtype=np.float32)
         type_embedding_dim = 5
         output = common_embedding(features, 3, type_embedding_dim)
@@ -38,11 +40,13 @@ class TestCommonEmbedding(unittest.TestCase):
 
 
 class TestAttributeEmbedding(unittest.TestCase):
+    def setUp(self):
+        tf.enable_eager_execution()
 
     def test_embedding_is_typewise(self):
         features = np.array([[1, 0, 0.7], [1, 2, 0.7], [0, 1, 0.5]])
 
-        mock_instance = Mock()
+        mock_instance = Mock(return_value=tf.convert_to_tensor(np.array([[1, 0.7], [1, 0.7], [0, 0.5]])))
         mock = Mock(return_value=mock_instance)
         patcher = patch('kglib.kgcn.models.embedding.TypewiseEncoder', spec=True, new=mock)
         mock_class = patcher.start()
@@ -62,9 +66,10 @@ class TestAttributeEmbedding(unittest.TestCase):
 
 class TestNodeEmbedding(unittest.TestCase):
 
-    def test_embedding_is_typewise(self):
+    def setUp(self):
         tf.enable_eager_execution()
 
+    def test_embedding_is_typewise(self):
         features = Mock()
         num_types = Mock()
         type_embedding_dim = Mock()
