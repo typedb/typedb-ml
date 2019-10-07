@@ -70,20 +70,36 @@ class KGCNLearner:
         loss_ops_tr = loss_ops_preexisting_no_penalty(target_ph, output_ops_tr)
         # Loss across processing steps.
         loss_op_tr = sum(loss_ops_tr) / self._num_processing_steps_tr
+
+        tf.summary.scalar('loss_op_tr', loss_op_tr)
         # Test/generalization loss.
         loss_ops_ge = loss_ops_preexisting_no_penalty(target_ph, output_ops_ge)
         loss_op_ge = loss_ops_ge[-1]  # Loss from final processing step.
+        tf.summary.scalar('loss_op_ge', loss_op_ge)
 
         # Optimizer
         optimizer = tf.train.AdamOptimizer(learning_rate)
-        step_op = optimizer.minimize(loss_op_tr)
+        gradients, variables = zip(*optimizer.compute_gradients(loss_op_tr))
+
+        for grad, var in zip(gradients, variables):
+            try:
+                print(var.name)
+                tf.summary.histogram('gradients/' + var.name, grad)
+            except:
+                pass
+
+        gradients, _ = tf.clip_by_global_norm(gradients, 5.0)
+        step_op = optimizer.apply_gradients(zip(gradients, variables))
 
         input_ph, target_ph = make_all_runnable_in_session(input_ph, target_ph)
 
         sess = tf.Session()
+        merged_summaries = tf.summary.merge_all()
+
+        train_writer = None
 
         if log_dir is not None:
-            tf.summary.FileWriter(log_dir, sess.graph)
+            train_writer = tf.summary.FileWriter(log_dir, sess.graph)
 
         sess.run(tf.global_variables_initializer())
 
@@ -105,16 +121,22 @@ class KGCNLearner:
         start_time = time.time()
         for iteration in range(num_training_iterations):
             feed_dict = create_feed_dict(input_ph, target_ph, tr_input_graphs, tr_target_graphs)
-            train_values = sess.run(
-                {
-                    "step": step_op,
-                    "target": target_ph,
-                    "loss": loss_op_tr,
-                    "outputs": output_ops_tr
-                },
-                feed_dict=feed_dict)
 
             if iteration % log_every_epochs == 0:
+
+                train_values = sess.run(
+                    {
+                        "step": step_op,
+                        "target": target_ph,
+                        "loss": loss_op_tr,
+                        "outputs": output_ops_tr,
+                        "summary": merged_summaries
+                    },
+                    feed_dict=feed_dict)
+
+                if train_writer is not None:
+                    train_writer.add_summary(train_values["summary"], iteration)
+
                 feed_dict = create_feed_dict(input_ph, target_ph, ge_input_graphs, ge_target_graphs)
                 test_values = sess.run(
                     {
@@ -140,6 +162,15 @@ class KGCNLearner:
                       " {:.4f}, Cge {:.4f}, Sge {:.4f}".format(
                         iteration, elapsed, train_values["loss"], test_values["loss"],
                         correct_tr, solved_tr, correct_ge, solved_ge))
+            else:
+                train_values = sess.run(
+                    {
+                        "step": step_op,
+                        "target": target_ph,
+                        "loss": loss_op_tr,
+                        "outputs": output_ops_tr
+                    },
+                    feed_dict=feed_dict)
 
         training_info = logged_iterations, losses_tr, losses_ge, corrects_tr, corrects_ge, solveds_tr, solveds_ge
         return train_values, test_values, training_info

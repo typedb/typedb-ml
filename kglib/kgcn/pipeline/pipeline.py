@@ -22,12 +22,13 @@ import numpy as np
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn.learn.learn import KGCNLearner
-from kglib.kgcn.models.attribute import CategoricalAttribute, BlankAttribute
+from kglib.kgcn.models.attribute import ContinuousAttribute, CategoricalAttribute, BlankAttribute
 from kglib.kgcn.models.core import softmax, KGCN
 from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph
 from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
-from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator
+from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator, \
+    multidigraph_edge_data_iterator
 
 
 def pipeline(graphs,
@@ -37,11 +38,13 @@ def pipeline(graphs,
              num_processing_steps_tr=10,
              num_processing_steps_ge=10,
              num_training_iterations=10000,
+             continuous_attributes=None,
              categorical_attributes=None,
              type_embedding_dim=5,
              attr_embedding_dim=6,
              edge_output_size=3,
-             node_output_size=3):
+             node_output_size=3,
+             output_dir=None):
 
     ############################################################
     # Manipulate the graph data
@@ -49,17 +52,23 @@ def pipeline(graphs,
 
     # Encode attribute values
     for graph in graphs:
-
-        for data in multidigraph_data_iterator(graph):
-            data['encoded_value'] = 0
-
         for node_data in multidigraph_node_data_iterator(graph):
             typ = node_data['type']
 
-            # Add the integer value of the category for each categorical attribute instance
-            for attr_typ, category_values in categorical_attributes.items():
-                if typ == attr_typ:
-                    node_data['encoded_value'] = category_values.index(node_data['value'])
+            if categorical_attributes is not None and typ in categorical_attributes.keys():
+                # Add the integer value of the category for each categorical attribute instance
+                category_values = categorical_attributes[typ]
+                node_data['encoded_value'] = category_values.index(node_data['value'])
+
+            elif continuous_attributes is not None and typ in continuous_attributes.keys():
+                min_val, max_val = continuous_attributes[typ]
+                node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
+
+            else:
+                node_data['encoded_value'] = 0
+
+        for edge_data in multidigraph_edge_data_iterator(graph):
+            edge_data['encoded_value'] = 0
 
     indexed_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in graphs]
     graphs = [duplicate_edges_in_reverse(graph) for graph in indexed_graphs]
@@ -78,29 +87,7 @@ def pipeline(graphs,
     # Build and run the KGCN
     ############################################################
 
-    type_categories_list = [i for i, _ in enumerate(node_types)]
-    non_attribute_nodes = type_categories_list.copy()
-
-    attr_embedders = dict()
-
-    # Construct categorical attribute embedders
-    for attr_typ, category_values in categorical_attributes.items():
-        num_categories = len(category_values)
-
-        def make_embedder():
-            return CategoricalAttribute(num_categories, attr_embedding_dim, name=attr_typ + '_cat_embedder')
-        attr_typ_index = node_types.index(attr_typ)
-
-        # Record the embedder, and the index of the type that it should encode
-        attr_embedders[make_embedder] = [attr_typ_index]
-
-        non_attribute_nodes.pop(attr_typ_index)
-
-    # All entities and relations (non-attributes) also need an embedder with matching output dimension, which does
-    # nothing. This is provided as a list of their indices
-    def make_blank_embedder():
-        return BlankAttribute(attr_embedding_dim)
-    attr_embedders[make_blank_embedder] = non_attribute_nodes
+    attr_embedders = configure_embedders(node_types, attr_embedding_dim, categorical_attributes, continuous_attributes)
 
     kgcn = KGCN(len(node_types),
                 len(edge_types),
@@ -118,10 +105,11 @@ def pipeline(graphs,
                                                  tr_target_graphs,
                                                  ge_input_graphs,
                                                  ge_target_graphs,
-                                                 num_training_iterations=num_training_iterations)
+                                                 num_training_iterations=num_training_iterations,
+                                                 log_dir=output_dir)
 
-    plot_across_training(*tr_info)
-    plot_predictions(ge_input_graphs, test_values, num_processing_steps_ge)
+    plot_across_training(*tr_info, output_file=f'{output_dir}learning.png')
+    plot_predictions(ge_input_graphs, test_values, num_processing_steps_ge, output_file=f'{output_dir}graph.png')
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 
@@ -136,3 +124,57 @@ def pipeline(graphs,
 
     _, _, _, _, _, solveds_tr, solveds_ge = tr_info
     return ge_graphs, solveds_tr, solveds_ge
+
+
+def configure_embedders(node_types, attr_embedding_dim, categorical_attributes, continuous_attributes):
+
+    def construct_embedder_funcs(node_types, attribute_config, embedder_func):
+
+        attr_embedders = dict()
+
+        # Construct attribute embedders
+        for attribute_type, attribute_props in attribute_config.items():
+
+            attr_typ_index = node_types.index(attribute_type)
+
+            # Record the embedder, and the index of the type that it should encode
+            attr_embedders[embedder_func(attribute_type, attribute_props)] = [attr_typ_index]
+
+        return attr_embedders
+
+    attr_embedders = dict()
+
+    if categorical_attributes is not None:
+
+        def embedder_func(attribute_type, category_values):
+            def make_embedder():
+                return CategoricalAttribute(len(category_values), attr_embedding_dim,
+                                            name=attribute_type + '_cat_embedder')
+            return make_embedder
+
+        attr_embedders.update(construct_embedder_funcs(node_types, categorical_attributes, embedder_func))
+
+    if continuous_attributes is not None:
+
+        def embedder_func(attribute_type, _):
+            def make_embedder():
+                return ContinuousAttribute(attr_embedding_dim, name=attribute_type + '_cat_embedder')
+            return make_embedder
+
+        attr_embedders.update(construct_embedder_funcs(node_types, continuous_attributes, embedder_func))
+
+    attribute_nodes = [l for el in list(attr_embedders.values()) for l in el]
+
+    non_attribute_nodes = []
+    for i, _ in enumerate(node_types):
+        if i not in attribute_nodes:
+            non_attribute_nodes.append(i)
+
+    # All entities and relations (non-attributes) also need an embedder with matching output dimension, which does
+    # nothing. This is provided as a list of their indices
+    def make_blank_embedder():
+        return BlankAttribute(attr_embedding_dim)
+
+    if len(non_attribute_nodes) > 0:
+        attr_embedders[make_blank_embedder] = non_attribute_nodes
+    return attr_embedders

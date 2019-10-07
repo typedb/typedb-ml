@@ -25,13 +25,17 @@ from kglib.kgcn.models.typewise import TypewiseEncoder
 def common_embedding(features, num_types, type_embedding_dim):
     preexistance_feat = tf.expand_dims(tf.cast(features[:, 0], dtype=tf.float32), axis=1)
     type_embedder = snt.Embed(num_types, type_embedding_dim)
-    type_embedding = type_embedder(tf.cast(features[:, 1], tf.int32))
+    norm = snt.LayerNorm()
+    type_embedding = norm(type_embedder(tf.cast(features[:, 1], tf.int32)))
+    tf.summary.histogram('type_embedding_histogram', type_embedding)
     return tf.concat([preexistance_feat, type_embedding], axis=1)
 
 
 def attribute_embedding(features, attr_encoders, attr_embedding_dim):
     typewise_attribute_encoder = TypewiseEncoder(attr_encoders, attr_embedding_dim)
-    return typewise_attribute_encoder(features[:, 1:])
+    attr_embedding = typewise_attribute_encoder(features[:, 1:])
+    tf.summary.histogram('attribute_embedding_histogram', attr_embedding)
+    return attr_embedding
 
 
 def node_embedding(features, num_types, type_embedding_dim, attr_encoders, attr_embedding_dim):

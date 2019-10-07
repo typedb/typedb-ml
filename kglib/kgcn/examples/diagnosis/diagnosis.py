@@ -19,14 +19,15 @@
 
 import copy
 import inspect
+import time
 
 from grakn.client import GraknClient
 
 from kglib.kgcn.pipeline.pipeline import pipeline
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
-from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
-from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.iterate import multidigraph_data_iterator
+from kglib.utils.graph.query.query_graph import QueryGraph
+from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
 
 
 def diagnosis_example(num_graphs=200,
@@ -58,8 +59,9 @@ def diagnosis_example(num_graphs=200,
                                                  num_processing_steps_tr=num_processing_steps_tr,
                                                  num_processing_steps_ge=num_processing_steps_ge,
                                                  num_training_iterations=num_training_iterations,
+                                                 continuous_attributes=CONTINUOUS_ATTRIBUTES,
                                                  categorical_attributes=CATEGORICAL_ATTRIBUTES,
-                                                 )
+                                                 output_dir=f"./events/{time.time()}/")
 
     with session.transaction().write() as tx:
         write_predictions_to_grakn(ge_graphs, tx)
@@ -71,6 +73,7 @@ def diagnosis_example(num_graphs=200,
 
 
 CATEGORICAL_ATTRIBUTES = {'name': ['meningitis', 'flu', 'fever', 'light-sensitivity']}
+CONTINUOUS_ATTRIBUTES = {'severity': (0, 1)}
 
 
 def create_concept_graphs(example_indices, grakn_session):
@@ -119,18 +122,19 @@ class QueryHandler:
                $p isa person, has example-id {example_id};
                $s isa symptom, has name $sn;
                $d isa disease, has name $dn;
-               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
+               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
                $c(cause: $d, effect: $s) isa causality;
                $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
                get;''')
 
     def base_query_graph(self):
-        p, s, sn, d, dn, sp, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'c'
+        vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
         g = QueryGraph()
-        g.add_vars(p, s, sn, d, dn, sp, c, **PREEXISTS)
+        g.add_vars(*vars, **PREEXISTS)
         g.add_has_edge(s, sn, **PREEXISTS)
         g.add_has_edge(d, dn, **PREEXISTS)
         g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
+        g.add_has_edge(sp, sev, **PREEXISTS)
         g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
         g.add_role_edge(c, s, 'effect', **PREEXISTS)
         g.add_role_edge(c, d, 'cause', **PREEXISTS)
@@ -153,7 +157,7 @@ class QueryHandler:
                $p isa person, has example-id {example_id};
                $s isa symptom, has name $sn;
                $d isa disease, has name $dn;
-               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
+               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
                $c(cause: $d, effect: $s) isa causality;
                $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
                get;''')

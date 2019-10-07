@@ -6,6 +6,9 @@ example-id sub attribute,
 name sub attribute,
     datatype string;
 
+severity sub attribute,
+    datatype double;
+
 person sub entity,
     key example-id,
     plays patient,
@@ -64,6 +67,7 @@ symptom sub entity,
     plays effect;
 
 symptom-presentation sub relation,
+    has severity,
     relates presented-symptom,
     relates symptomatic-patient;
 
