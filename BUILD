@@ -9,7 +9,6 @@ load("@graknlabs_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip
 assemble_pip(
     name = "assemble-pip",
     target = "//kglib:kglib",
-    version_file = "//:VERSION",
     package_name = "grakn-kglib",
     classifiers = [
         "Programming Language :: Python :: 3",
