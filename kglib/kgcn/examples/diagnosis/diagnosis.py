@@ -31,8 +31,8 @@ from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
 
 
 def diagnosis_example(num_graphs=200,
-                      num_processing_steps_tr=10,
-                      num_processing_steps_ge=10,
+                      num_processing_steps_tr=5,
+                      num_processing_steps_ge=5,
                       num_training_iterations=1000,
                       keyspace="diagnosis", uri="localhost:48555"):
 
@@ -116,6 +116,13 @@ CANDIDATE = dict(input=0, solution=1)
 
 
 class QueryHandler:
+    """
+    1. Supply a query
+    2. Supply a `QueryGraph` object to represent that query. That itself is a subclass of a networkx graph
+    3. Execute the query
+    4. Make a graph of the query results by taking the variables you got back and arranging the concepts as they are in the `QueryGraph`. This gives one graph for each result, for each query.
+    5. Combine all of these graphs into one single graph, and that’s your example subgraph
+    """
 
     def diagnosis_query(self, example_id):
         return inspect.cleandoc(f'''match
