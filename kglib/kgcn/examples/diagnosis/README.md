@@ -4,9 +4,9 @@
 
 Once you have installed KGLIB via pip (as above) you can run the example as follows:
 
-1. Start a Grakn server
+1. Make sure a Grakn server is running
 
-2. Load [the schema](../../../utils/grakn/synthetic/examples/diagnosis/schema.gql) for the example into Grakn. The template for the command is `./grakn console -k diagnosis -f path/to/schema.gql`
+2. Load [the schema](../../../utils/grakn/synthetic/examples/diagnosis/schema.gql) for the example into Grakn. The template for the command is `./grakn console -k diagnosis -f path/to/schema.gql` for a locally running instance of Grakn. Add `-r <address>:<port>` to point to a remote/Grakn KGMS instance
 
 3. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
 
@@ -14,7 +14,7 @@ Once you have installed KGLIB via pip (as above) you can run the example as foll
 
 4. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and examples of the predictions made.
 
-## Process
+## Diagnosis Pipeline
 
 The process conducted by the example is as follows:
 
@@ -25,7 +25,21 @@ The process conducted by the example is as follows:
 3. Run the pipeline
 4. Write the predictions made to Grakn
 
-## Results
+## Relation Prediction
+
+The learner predicts three classes for each graph element. These are:
+
+```
+[
+Element already existed in the graph (we wish to ignore these elements),
+Element does not exist in the graph,
+Element does exist in the graph
+]
+```
+
+In this way we perform relation prediction by proposing negative candidate relations (Grakn's rules help us with this). Then we train the learner to classify these negative candidates as **does not exist** and the correct relations as **does exist**.
+
+## Results Output
 
 ### Console Reporting
 
@@ -45,6 +59,7 @@ You should see output such as this for the diagnosis example:
 # 00140, T 38.5, Ltr 0.6478, Lge 0.6732, Ctr 0.7250, Str 0.6800, Cge 0.6450, Sge 0.4900
 # 00160, T 41.6, Ltr 0.6162, Lge 0.6426, Ctr 0.7350, Str 0.7300, Cge 0.7200, Sge 0.7100
 # 00180, T 44.7, Ltr 0.6110, Lge 0.6348, Ctr 0.7400, Str 0.7300, Cge 0.7200, Sge 0.7100
+...
 ```
 
 Take note of the key:
@@ -70,13 +85,15 @@ You will see plots of metrics for the training process (training iteration on th
 
 - The absolute loss across all of the elements in the dataset
 - The fraction of all graph elements predicted correctly across the dataset
-- The fraction of completely solved examples (subgraphs extracted from Grakn)
+- The fraction of completely solved examples (subgraphs extracted from Grakn that are solved in full)
 
-![learning metrics](/Users/jamesfletcher/programming/research/kglib/kgcn/images/learning.png)
+![learning metrics](images/learning.png)
 
 #### Visualise the Predictions
 
 We also receive a plot of some of the predictions made on the test set. 
+
+![predictions made on test set](images/graph_snippet.png)
 
 **Blue box:** Ground Truth 
 
@@ -90,77 +107,23 @@ We also receive a plot of some of the predictions made on the test set.
 
 This uses the same colour scheme as above, but opacity indicates a probability given by the model.
 
-The learner predicts three classes for each graph element. These are:
-
-```
-[
-Element already existed in the graph (we wish to ignore these elements),
-Element does not exist in the graph,
-Element does exist in the graph
-]
-```
-
-In this way we perform relation prediction by proposing negative candidate relations (Grakn's rules help us with this). Then we train the learner to classify these negative candidates as **does not exist** and the correct relations as **does exist**.
-
 These boxes shows the score assigned to the class **does exist**.
 
 Therefore, for good predictions we want to see no blue elements, and for the red elements to fade out as more messages are passed, the green elements becoming more certain.
-
-![predictions made on test set](/Users/jamesfletcher/programming/research/kglib/kgcn/images/graph_snippet.png)
-
-This visualisation has some flaws, and will be improved in the future.
-
-### Querying for the Train/Test Datasets
-
-We do this by creating *examples*, where each example is a subgraph extracted from a Grakn knowledge Graph. These subgraphs contain positive and negative instances of the relation to be predicted.
-
-A single subgraph is created by making multiple queries to Grakn. In the diagnosis example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return imformation about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. 
-
-In this example the queries used are:
-
-```
-match
-$p isa person, has example-id 0;
-$s isa symptom, has name $sn;
-$d isa disease, has name $dn;
-$sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
-$c(cause: $d, effect: $s) isa causality;
-$diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
-get;
-```
-
-```
-match
-$p isa person, has example-id 0;
-$s isa symptom, has name $sn;
-$d isa disease, has name $dn;
-$sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
-$c(cause: $d, effect: $s) isa causality;
-$diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
-get;
-```
-
-A single subgraph is extracted from Grakn by making these queries and combining the results into a graph. For your own domain you should find queries that will retrieve the most relevant information for the Relations you are trying to predict.
-
-We can visualise such a subgraph by running these two queries in Grakn Workbase:
-
-![queried subgraph](/Users/jamesfletcher/programming/research/kglib/kgcn/images/queried_subgraph.png)
-
-You can get the relevant version of Workbase from the Assets of the [latest release](https://github.com/graknlabs/workbase/releases/latest).
 
 ## How does Link Prediction work?
 
 The methodology used for Relation prediction is as follows:
 
-In the case of the diagnosis example, we aim to predict `diagnosis` Relations. We have the correct `diagnosis` relations, and we write a Grakn rule to insert `candidate-diagnosis` relations as negative examples. They are added wherever a real `diagnosis` Relation could logically exist, but does not.
+In this example, we aim to predict `diagnosis` Relations. We have the correct `diagnosis` relations, and we write a Grakn rule to insert `candidate-diagnosis` relations as negative targets. They are added wherever a real `diagnosis` Relation could logically exist, but does not.
 
-We then teach the KGCN to distinguish between the positive and negative examples.
+We then teach the KGCN to distinguish between the positive and negative targets.
 
-### Querying for the Train/Test Datasets
+## Querying for the Train/Test Datasets
 
 We do this by creating *examples*, where each example is a subgraph extracted from a Grakn knowledge Graph. These subgraphs contain positive and negative instances of the relation to be predicted.
 
-A single subgraph is created by making multiple queries to Grakn. In the diagnosis example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return imformation about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. 
+A single subgraph is created by making multiple queries to Grakn. In this example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return information about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. 
 
 In this example the queries used are:
 
@@ -192,33 +155,10 @@ We can visualise such a subgraph by running these two queries in Grakn Workbase:
 
 ![queried subgraph](images/queried_subgraph.png)
 
-You can get the relevant version of Workbase from the Assets of the [latest release](https://github.com/graknlabs/workbase/releases/latest).
+You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/graknlabs/workbase/releases/latest).
 
 ## Modifying the Example
 
 If you need to customise the learning or model used for your own use case, you'll need to make changes to the [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py) used.
 
-You should also consider tuning parameters and adjusting elements of the pipeline if you need to improve the accuracy that you see. Consider investigating the following:
-```
-num_graphs=200,
-num_processing_steps_tr=5,
-num_processing_steps_ge=5,
-num_training_iterations=1000,
-
-latent_size
-learning_rate
-num_layers
-
-whether to use node/edge/global blocks
-
-use of dropout
-embedding models
-```
-
-## Querying the Re-Ingested Results
-
-```
-match $pd($r1, $r2) isa predicted-diagnosis, has probability-exists $p; $p >= 0.8; 
-($r1, $r2) isa diagnosis; get; offset 0; limit 1000;
-```
-
+Consider tuning parameters and adjusting elements of the pipeline if you need to improve the accuracy that you see. Start by adjusting `num_processing_steps_tr`, `num_processing_steps_ge`, `num_training_iterations`.
