@@ -86,7 +86,7 @@ Use as input the node's features and the most up-to-date features of the edges t
 
 This approach is described as convolutional since the same transformations are re-used across the graph. It may help your understanding to analogise this to convolution over images, where the same transformation is applied over all pixel neighbourhoods.
 
-## How do we Frame Relation Prediction?
+## How Do We Frame Relation Prediction?
 
 In a typical use case, we have a specific Relation Type, `T`, that we want to predict. We want to predict the existence of `T` Relations based on the context that surrounds them in the graph. Our supervised learning approach requires ground truth examples.
 
@@ -102,7 +102,7 @@ Following this closed-world assumption, we use the absence of a `T` Relation as 
 
 Note that under an [open-world assumption](https://en.wikipedia.org/wiki/Open-world_assumption) a Relation in `($a1, $a2, ... ,$aN)` could exist but also be absent from the graph.
 
-#### How Do We Represent Negative Examples?
+### How Do We Represent Negative Examples?
 
 The KGCN needs to learn by example where it should predict new `T` Relations. Therefore, the learner needs to see all logically possible `T` Relations as candidates.
 
@@ -112,13 +112,13 @@ The learner's job is then to classify those candidates to indicate their likelih
 
 Due to Grakn's enforced schema, `T` Relations can logically only occur between certain Roleplayers. This means that the candidates to be added should be sparse - we don't see the combinatorial explosion of candidates that we would see in a homogenous subgraph.
 
-#### Adding Negative Relations Dynamically
+### Adding Negative Relations Dynamically
 
 Naturally, we don't wish to pollute our Knowledge Graph by inserting these `T` Relation candidates. Instead, we can make use of Grakn's reasoning engine here by defining a logical [Rule](http://dev.grakn.ai/docs/schema/rules) to dynamically create these candidates (see the rule in the [example schema](../utils/grakn/synthetic/examples/diagnosis/schema.gql)). After training our learner we can simply `undefine` the rule to return to an unpolluted state.
 
 ## Architectural Components
 
-Here we identify the core components used to build a working KGCN.
+Here we identify the core components used to build a working KGCN pipeline.
 
 ### Application
 
@@ -144,12 +144,14 @@ Can be customised from [pipeline](https://github.com/graknlabs/kglib/tree/master
 7. Record the predictions made, and return them in graphs
 
 ### KGCNLearner
-
+Found in [learn.py](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/learn/learn.py).
 - Performs the training loop
 - Manages the loss function and optimiser
 - Manages the TensorFlow session
 - Prints results for the training and generalistaion datasets during training 
 
 ### KGCN
+
+Found in [core.py](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/models/core.py).
 
 Defines the computation graph for a KGCN, including the initial embedding of values and the edge/node/graph feature update strategy during message-passing. This is the core that depends upon [Graph Nets](https://github.com/deepmind/graph_nets).
