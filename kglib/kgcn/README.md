@@ -30,17 +30,17 @@ Understand the full capabilities of KGCNs by examining the methodology outlined 
 
 We approach learning over a Knowledge Graph just as we do classical supervised learning. We learn from a ground truth set of training examples, but in this case each example is a subgraph.
 
-![Knowledge Graph Machine Learning](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Knowledge Graph Machine Learning.png)
-
 We extract these subgraphs from a Grakn Knowledge Graph. Extracting subgraphs is performed by making Graql queries to Grakn (multiple queries per example).
+
+![Knowledge Graph Machine Learning](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Knowledge Graph Machine Learning.png)
 
 We then encode these graphs and feed them to the KGCN. As an output we receive the same graph with predicted node property values. Those predicted properties can be used to regress or classify the Concepts of our subgraphs as we see fit.
 
-In this way we can frame Relation prediction as a node existence classification task.
+Using this method we can frame Relation prediction as a node existence classification task.
 
 ### Graphs In, Graphs Out
 
-We can now directly ingest a graph into TensorFlow and learn over that graph. For this we leverage DeepMind's [Graph Nets](https://github.com/deepmind/graph_nets) framework, detailed in [their paper](https://arxiv.org/pdf/1806.01261.pdf), (built in TensorFlow). This work is a generalisation of graph learning techniques, which offers plenty of ways to structure learning tailored to various knowledge graph problems.
+We can directly ingest a graph into TensorFlow and learn over that graph. This leverages DeepMind's [Graph Nets](https://github.com/deepmind/graph_nets) framework, detailed in [their paper](https://arxiv.org/pdf/1806.01261.pdf) (built in TensorFlow). This work is a generalisation of graph learning techniques, which offers plenty of ways to structure learning tailored to various knowledge graph problems.
 
 We extend this work for Grakn knowledge graphs, with a graph data flow as follows:
 
@@ -50,7 +50,11 @@ We extend this work for Grakn knowledge graphs, with a graph data flow as follow
 
 ## How Does Message Passing Work?
 
-A KGCN is a learned graph message-passing algorithm. Neural network components are learned, and are used to transform the messages that are passed around the graph.
+Message passing is an iterative process. On each `superstep` messages are passed simultaneously (such that they don't influence each other) between elements of the graph. These messages are then used to update the state of graph elements.
+
+A KGCN is a learned graph message-passing algorithm. Neural network components transform the messages that are passed around the graph. This transformation is learned in order to pass useful updates around the graph.
+
+In our case, the algorithm looks like this:
 
 ```
 for step in supersteps:
@@ -82,39 +86,35 @@ Use as input the node's features and the most up-to-date features of the edges t
 
 This approach is described as convolutional since the same transformations are re-used across the graph. It may help your understanding to analogise this to convolution over images, where the same transformation is applied over all pixel neighbourhoods.
 
-## How do we Frame Link Prediction?
+## How do we Frame Relation Prediction?
 
-In a typical use case, we have a specific Relation Type, `T`, that we want to predict. We want to predict the existence of `T` Relations based on the context that surrounds them in the graph. We approach this via supervised learning, which requires ground truth examples.
+In a typical use case, we have a specific Relation Type, `T`, that we want to predict. We want to predict the existence of `T` Relations based on the context that surrounds them in the graph. Our supervised learning approach requires ground truth examples.
 
-### Creating ground truth examples
+### Creating Ground Truth Examples
 
 Our approach is to extract subgraphs from a Grakn knowledge graph to use as ground truth examples. 
 
-`T` Relations that are present are treated as fact, and given positive target labels.
+Clearly, `T` Relations that are present are treated as fact, and given positive target labels. However, we must also consider *negative* examples of these `T` Relations.
 
-In our ground truth example subgraphs, we apply a [closed-world assumption](https://en.wikipedia.org/wiki/Closed-world_assumption). This means that for concepts `$a1`, `$a2`, ... ,`$aN` if a Relation does not exist in `($a1, $a2, ... ,$aN)`, this indicates that there is no such Relation in `($a1, $a2, ... ,$aN)`. Under an [open-world assumption](https://en.wikipedia.org/wiki/Open-world_assumption) a Relation in `($a1, $a2, ... ,$aN)` could simply be absent from the graph but true in reality.
-
-*This closed-world assumption means that we can treat `T` Relations that are present as fact, and give them positive target labels.*
+In our ground truth example subgraphs, we apply a [closed-world assumption](https://en.wikipedia.org/wiki/Closed-world_assumption). This means that for concepts `$a1`, `$a2`, ... ,`$aN` if a Relation does not exist in `($a1, $a2, ... ,$aN)`, this indicates that there is no such Relation in `($a1, $a2, ... ,$aN)`. 
 
 Following this closed-world assumption, we use the absence of a `T` Relation as a negative target.
 
-#### What about negative examples?
+Note that under an [open-world assumption](https://en.wikipedia.org/wiki/Open-world_assumption) a Relation in `($a1, $a2, ... ,$aN)` could exist but also be absent from the graph.
 
-Wherever in the subgraph a `T` Relations *could* exist, we create one, but give it a negative target label. In this way the learner always sees all logically possible `T` Relations as candidates. The learner's job is then to classify those candidates to indicate their likelihood of true existence.
+#### How Do We Represent Negative Examples?
 
-Thankfully due to Grakn's enforced schema, `T` Relations can only occur between certain roleplayers, and as such only candidates that make logical sense are added. This prevents the combinatorial explosion of candidates that we would see in a homogenous subgraph.
+The KGCN needs to learn by example where it should predict new `T` Relations. Therefore, the learner needs to see all logically possible `T` Relations as candidates.
+
+To achieve this, wherever in the subgraph a `T` Relation *could* exist, but does not, we create one (see below), giving the new Relation a negative target label. 
+
+The learner's job is then to classify those candidates to indicate their likelihood of true existence.
+
+Due to Grakn's enforced schema, `T` Relations can logically only occur between certain Roleplayers. This means that the candidates to be added should be sparse - we don't see the combinatorial explosion of candidates that we would see in a homogenous subgraph.
+
+#### Adding Negative Relations Dynamically
 
 Naturally, we don't wish to pollute our Knowledge Graph by inserting these `T` Relation candidates. Instead, we can make use of Grakn's reasoning engine here by defining a logical [Rule](http://dev.grakn.ai/docs/schema/rules) to dynamically create these candidates (see the rule in the [example schema](../utils/grakn/synthetic/examples/diagnosis/schema.gql)). After training our learner we can simply `undefine` the rule to return to an unpolluted state.
-
-#### Why do we frame the problem in this way?
-
-*We use these fabricated Relations as our negative examples.*
-
-*This means that we should extract subgraphs which contain* 
-
-*We then teach the KGCN to distinguish between the positive and negative examples.*
-
-
 
 ## Architectural Components
 
