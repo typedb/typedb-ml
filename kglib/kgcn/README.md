@@ -44,7 +44,7 @@ We can directly ingest a graph into TensorFlow and learn over that graph. This l
 
 We extend this work for Grakn knowledge graphs, with a graph data flow as follows:
 
-![Pipeline](images/pipeline.png)
+![Pipeline](images/learning_pipeline.png)
 
 
 
