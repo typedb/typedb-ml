@@ -32,7 +32,7 @@ We approach learning over a Knowledge Graph just as we do classical supervised l
 
 We extract these subgraphs from a Grakn Knowledge Graph. Extracting subgraphs is performed by making Graql queries to Grakn (multiple queries per example).
 
-![Knowledge Graph Machine Learning](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Knowledge Graph Machine Learning.png)
+![Knowledge Graph Machine Learning](images/Knowledge Graph Machine Learning.png)
 
 We then encode these graphs and feed them to the KGCN. As an output we receive the same graph with predicted node property values. Those predicted properties can be used to regress or classify the Concepts of our subgraphs as we see fit.
 
@@ -44,7 +44,7 @@ We can directly ingest a graph into TensorFlow and learn over that graph. This l
 
 We extend this work for Grakn knowledge graphs, with a graph data flow as follows:
 
-![Pipeline](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Pipeline.png)
+![Pipeline](images/Pipeline.png)
 
 
 
@@ -64,7 +64,7 @@ for step in supersteps:
 
 
 
-![Message Passing](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Message Passing.png)
+![Message Passing](images/Message Passing.png)
 
 
 
@@ -72,7 +72,7 @@ for step in supersteps:
 
 Use as input the current edge features and the features of the nodes it connects. Update the edge's features as the output of some neural network layers. Do this for all edges.
 
-![Edge Update](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Edge Update.png)
+![Edge Update](images/Edge Update.png)
 
 
 
@@ -80,7 +80,7 @@ Use as input the current edge features and the features of the nodes it connects
 
 Use as input the node's features and the most up-to-date features of the edges that connect to it. Update the node's features as the output of some neural network layers. Do this for all nodes.
 
-![Node Update](/Users/jamesfletcher/programming/research/kglib/kgcn/images/Node Update.png)
+![Node Update](images/Node Update.png)
 
 ### How is this Convolutional?
 
