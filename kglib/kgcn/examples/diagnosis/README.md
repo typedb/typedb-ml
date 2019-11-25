@@ -1,8 +1,14 @@
 # KGCN Diagnosis Example
 
+This example is entirely fabricated as a demonstration for how to construct a KGCN pipeline. Since the data for this example is generated synthetically, it also functions as a test platform for the KGCN model.
+
+Studying the schema for this example, we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. Lastly, people can be diagnosed with a disease.
+
+![Diagnosis Schema](images/diagnosis_schema.png)
+
 ## Running the Example
 
-Once you have installed KGLIB via pip (as above) you can run the example as follows:
+Once you have [installed KGLIB via pip](../../#getting-started---running-the-machine-learning-pipeline) you can run the example as follows:
 
 1. Make sure a Grakn server is running
 
@@ -151,11 +157,13 @@ get;
 
 A single subgraph is extracted from Grakn by making these queries and combining the results into a graph. For your own domain you should find queries that will retrieve the most relevant information for the Relations you are trying to predict.
 
-We can visualise such a subgraph by running these two queries in Grakn Workbase:
+We can visualise such a subgraph by running these two queries one after the other in Grakn Workbase:
 
 ![queried subgraph](images/queried_subgraph.png)
 
 You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/graknlabs/workbase/releases/latest).
+
+Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a great debugging tool.
 
 ## Modifying the Example
 
