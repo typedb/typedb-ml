@@ -6,9 +6,9 @@ Studying the schema for this example, we have people who present symptoms, with 
 
 ![Diagnosis Schema](images/diagnosis_schema.png)
 
-## Running the Example
+## Run the Example
 
-Once you have [installed KGLIB via pip](../../#getting-started---running-the-machine-learning-pipeline) you can run the example as follows:
+Once you have [installed KGLIB via pip](../../#getting-started---running-the-machine-learning-pipeline) you can run this example as follows:
 
 1. Make sure a Grakn server is running
 
@@ -20,15 +20,15 @@ Once you have [installed KGLIB via pip](../../#getting-started---running-the-mac
 
 4. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and examples of the predictions made.
 
-## Diagnosis Pipeline
+## Steps in the Example
 
-The process conducted by the example is as follows:
+The process conducted by this pipeline is as follows:
 
 1. Generate synthetic graphs, each graph is used as an *example*
    - This requires specifying queries that will retrieve Concepts from Grakn
    - The answers from these queries are used to create subgraphs, stored in-memory as networkx graphs
 2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
-3. Run the pipeline
+3. Run the learning [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py)
 4. Write the predictions made to Grakn
 
 ## Relation Prediction
@@ -37,13 +37,13 @@ The learner predicts three classes for each graph element. These are:
 
 ```
 [
-Element already existed in the graph (we wish to ignore these elements),
-Element does not exist in the graph,
-Element does exist in the graph
+	Element already existed in the graph,
+	Element does not exist in the graph,
+	Element does exist in the graph
 ]
 ```
 
-In this way we perform relation prediction by proposing negative candidate relations (Grakn's rules help us with this). Then we train the learner to classify these negative candidates as **does not exist** and the correct relations as **does exist**.
+In this way we perform relation prediction by proposing negative candidate relations (Grakn's rules help us with this). Then we train the learner to classify these negative candidates as **does not exist** and the correct relations as **does exist**. We wish to ignore elements that already existed in the graph.
 
 ## Results Output
 

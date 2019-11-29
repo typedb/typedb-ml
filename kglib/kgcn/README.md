@@ -128,7 +128,7 @@ e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kg
    - This requires specifying queries that will retrieve Concepts from Grakn
    - The answers from these queries are used to create subgraphs, stored in-memory as networkx graphs
 2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
-3. Run the pipeline
+3. Run the [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py)
 4. Write the predictions made to Grakn
 
 ### Pipeline
