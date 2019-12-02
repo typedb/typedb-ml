@@ -2,7 +2,7 @@
 
 This example is entirely fabricated as a demonstration for how to construct a KGCN pipeline. Since the data for this example is generated synthetically, it also functions as a test platform for the KGCN model.
 
-Studying the schema for this example, we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. Lastly, people can be diagnosed with a disease.
+Studying the schema for this example, we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. Lastly, people can be diagnosed with a disease. We aim to predict new `diagnosis` relations.
 
 ![Diagnosis Schema](images/diagnosis_schema.png)
 
@@ -18,7 +18,7 @@ Once you have [installed KGLIB via pip](../../#getting-started---running-the-mac
 
    The whole example should complete in under 10 minutes
 
-4. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and examples of the predictions made.
+4. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and samples of the predictions made.
 
 ## Steps in the Example
 
@@ -31,7 +31,7 @@ The process conducted by this pipeline is as follows:
 3. Run the learning [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py)
 4. Write the predictions made to Grakn
 
-## Relation Prediction
+## How does Relation Prediction Work?
 
 The learner predicts three classes for each graph element. These are:
 
@@ -72,20 +72,22 @@ Take note of the key:
 
 - \# - iteration number
 - T - elapsed seconds
-- Ltr - training loss
-- Lge - test/generalization loss
+- Ltr - the loss over the training set
+- Lge - the loss over the test set
 - Ctr - training fraction nodes/edges labeled correctly
-- Str - training fraction examples solved correctly
-- Cge - test/generalization fraction nodes/edges labeled correctly
-- Sge - test/generalization fraction examples solved correctly
+- Str - fraction of examples solved correctly for the training set
+- Cge - fraction of nodes/edges labeled correctly for the test set
+- Sge - fraction of examples solved correctly for the test set
 
 The element we are most interested in is `Sge`, the proportion of subgraphs where all elements of the subgraph were classified correctly. This therefore represents an entirely correctly predicted example.
+
+Here and in the Graph Nets codebase, the terms test set and generalisation set are synonymous.
 
 ### Diagrams
 
 #### Training Metrics
 
-Upon running the example you will also get plots from matplotlib saved to your working directory.
+Upon running the example you will also get plots from matplotlib saved to the `events` directory.
 
 You will see plots of metrics for the training process (training iteration on the x-axis) for the training set (solid line), and test set (dotted line). From left to right:
 
@@ -117,7 +119,7 @@ These boxes shows the score assigned to the class **does exist**.
 
 Therefore, for good predictions we want to see no blue elements, and for the red elements to fade out as more messages are passed, the green elements becoming more certain.
 
-## How does Link Prediction work?
+## How do We Predict a Diagnosis?
 
 The methodology used for Relation prediction is as follows:
 
@@ -163,7 +165,7 @@ We can visualise such a subgraph by running these two queries one after the othe
 
 You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/graknlabs/workbase/releases/latest).
 
-Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a great debugging tool.
+Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a very useful debugging tool.
 
 ## Modifying the Example
 

@@ -12,7 +12,9 @@ To respond to these scenarios, KGLIB is the centre of all research projects cond
 
 At present this repo contains one project: [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn). Go there for more info on getting started with a working example.
 
-## Quickstart
+## Installation
+### Installing with Pip
+
 **Requirements**
 
 - Python >= 3.6
@@ -24,7 +26,9 @@ At present this repo contains one project: [*Knowledge Graph Convolutional Netwo
 **Run**
 Take a look at [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) to see a walkthrough of how to use the library.
 
-**Building from source**
+### Building from source
+
+For typical usage you should not need to build from source and should install with pip. In the case that you need to modify KGLIB and create a pip distribution with your own changes then follow these steps.
 
 Clone KGLIB:
 
@@ -38,7 +42,7 @@ git clone git@github.com:graknlabs/kglib.git
 cd kglib
 ```
 
-To build all targets can be built:
+To build all targets:
 
 ```
 bazel build //...
@@ -122,8 +126,8 @@ We can extend N-ary Relation and Attribute prediction to include Entity predicti
 #### Building Concept Embeddings
 
 Embeddings of Things and/or Types are universally useful for performing other downstream machine learning or data science tasks. Their usefulness comes in storing the context of a Concept in the graph as a numerical vector. 
-These vectors are easy to ingest into other ML pipelines.
-The benefit of building general-purpose embeddings is therefore to make use of them in multiple other pipelines. This reduces the expense of traversing the Knowledge Graph, since this task can be performed once and the output re-used more than once.
+
+These vectors are easy to ingest into other ML pipelines. The benefit of building general-purpose embeddings is therefore to make use of them in multiple pipelines. This reduces the expense of traversing the Knowledge Graph, since this task can be performed once and the output re-used more than once.
 
 ***In KGLIB*** [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) can be used to build general-purpose embeddings. This requires additional functionality, since a generic loss function is required in order to train the model in an unsupervised fashion. At its simplest, this can be achieved by measuring the shortest distance across the KG between two Things. This can be achieved trivially in Grakn using [`compute path`](https://dev.grakn.ai/docs/query/compute-query#compute-the-shortest-path).
 
@@ -153,7 +157,7 @@ Grakn's highly flexible knowledge representation features means that this isn't 
 
 The challenge here is to find a mapping between the structure of the two KGs. If Types or Things (Type instances) overlap between the two KGs, then they need to be merged.
 
-This decomposes the problem to that of matching between the two KGs. Grakn's schema helps with this task, since we can use this to perform matching between the structures of the two KGs, and thereby find a mapping between them. Matching of data can be framed as either link prediction, or a comparison of graph embeddings.
+This decomposes the problem to that of matching between the two KGs. Grakn's schema helps with this task, since we can use this to perform matching between the structures of the two KGs, and thereby find a mapping between them. Matching of data could be framed as either link prediction, or a comparison of graph embeddings.
 
 #### Automated Knowledge Graph Creation
 
