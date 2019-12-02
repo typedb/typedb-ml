@@ -3,9 +3,9 @@ commands:
 
   install-bazel-linux-rbe:
     steps:
-      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/04c69fbe5277bf2ed9e2baf5e9a53ac3c9ebee80/ci/install-bazel-linux.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-linux.sh
       - run: bash ./install-bazel-linux.sh && rm ./install-bazel-linux.sh
-      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/04c69fbe5277bf2ed9e2baf5e9a53ac3c9ebee80/ci/install-bazel-rbe.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-rbe.sh
       - run: bash ./install-bazel-rbe.sh && rm ./install-bazel-rbe.sh
 
   run-grakn-server:
