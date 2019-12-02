@@ -172,37 +172,29 @@ def element_color(gt_plot, probability, element_props):
     blue for existing elements, green for those to infer, red for candidates, all with transparency
     """
 
-    existing = dict(input=1, solution=0)
-    to_infer = dict(input=0, solution=2)
-    candidate = dict(input=0, solution=1)
+    existing = 0
+    candidate = 1
+    to_infer = 2
 
-    to_infer = all([element_props.get(key) == value for key, value in to_infer.items()])
-    candidate = all([element_props.get(key) == value for key, value in candidate.items()])
-    existing = all([element_props.get(key) == value for key, value in existing.items()])
+    solution = element_props.get('solution')
 
-    output_label_color = np.array([0.0, 0.0, 0.0, probability])
+    color_config = {
+        to_infer: {'color': [0.0, 1.0, 0.0], 'gt_opacity': 1.0},
+        candidate: {'color': [1.0, 0.0, 0.0], 'gt_opacity': 1.0},
+        existing: {'color': [0.0, 0.0, 1.0], 'gt_opacity': 0.2}
+    }
+
+    chosen_config = color_config[solution]
 
     if gt_plot:
-        if to_infer:
-            return dict(element=np.array([0.0, 1.0, 0.0, 1.0]), label=np.array([0.0, 0.0, 0.0, 1.0]))
-        elif existing:
-            return dict(element=np.array([0.0, 0.0, 1.0, 0.2]), label=np.array([0.0, 0.0, 0.0, 0.2]))
-        elif candidate:
-            return dict(element=np.array([1.0, 0.0, 0.0, 1.0]), label=np.array([0.0, 0.0, 0.0, 1.0]))
-        else:
-            raise ValueError('Node to colour did not fit any category')
+        opacity = chosen_config['gt_opacity']
     else:
-        if to_infer:
-            return dict(element=np.array([0.0, 1.0, 0.0, probability]),
-                        label=output_label_color)
-        elif existing:
-            return dict(element=np.array([0.0, 0.0, 1.0, probability]),
-                        label=output_label_color)
-        elif candidate:
-            return dict(element=np.array([1.0, 0.0, 0.0, probability]),
-                        label=output_label_color)
-        else:
-            raise ValueError('Node to colour did not fit any category')
+        opacity = probability
+
+    label = np.array([0.0, 0.0, 0.0] + [opacity])
+    color = np.array(chosen_config['color'] + [opacity])
+
+    return dict(element=color, label=label)
 
 
 def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, gt_plot):
