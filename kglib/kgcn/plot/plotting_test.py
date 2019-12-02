@@ -34,9 +34,9 @@ class TestPlotPredictions(unittest.TestCase):
 
         graph = nx.MultiDiGraph(name=0)
 
-        existing = dict(input=1, solution=0)
-        to_infer = dict(input=0, solution=2)
-        candidate = dict(input=0, solution=1)
+        existing = dict(solution=0)
+        to_infer = dict(solution=2)
+        candidate = dict(solution=1)
 
         # people
         graph.add_node(0, type='person', **existing)
