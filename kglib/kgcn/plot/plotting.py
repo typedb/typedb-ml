@@ -162,15 +162,11 @@ def last_dim_was_class_winner(x):
     return (np.argmax(x, axis=-1) == 2) * 1
 
 
-def above_base(val, base=0.0):
-    return val * (1.0 - base) + base
-
-
 def element_color(gt_plot, probability, element_props):
     """
     Determine the color values to use for a node/edge and its label
     gt plot:
-    blue for existing elements, green for those to infer, red and transparent for candidates (as there could be many)
+    blue for existing elements, green for those to infer, red candidates
 
     output plot:
     blue for existing elements, green for those to infer, red for candidates, all with transparency
@@ -184,27 +180,26 @@ def element_color(gt_plot, probability, element_props):
     candidate = all([element_props.get(key) == value for key, value in candidate.items()])
     existing = all([element_props.get(key) == value for key, value in existing.items()])
 
-    default_gt_label_color = np.array([0.0, 0.0, 0.0, 1.0])
-    output_label_color = np.array([0.0, 0.0, 0.0, above_base(probability, base=0.0)])
+    output_label_color = np.array([0.0, 0.0, 0.0, probability])
 
     if gt_plot:
         if to_infer:
-            return dict(element=np.array([0.0, 1.0, 0.0, 1.0]), label=default_gt_label_color)
+            return dict(element=np.array([0.0, 1.0, 0.0, 1.0]), label=np.array([0.0, 0.0, 0.0, 1.0]))
         elif existing:
-            return dict(element=np.array([0.0, 0.0, 1.0, 1.0]), label=default_gt_label_color)
+            return dict(element=np.array([0.0, 0.0, 1.0, 0.2]), label=np.array([0.0, 0.0, 0.0, 0.2]))
         elif candidate:
-            return dict(element=np.array([1.0, 0.0, 0.0, 0.1]), label=np.array([0.0, 0.0, 0.0, 0.1]))
+            return dict(element=np.array([1.0, 0.0, 0.0, 1.0]), label=np.array([0.0, 0.0, 0.0, 1.0]))
         else:
             raise ValueError('Node to colour did not fit any category')
     else:
         if to_infer:
-            return dict(element=np.array([0.0, above_base(probability), 0.0, above_base(probability, base=0.0)]),
+            return dict(element=np.array([0.0, 1.0, 0.0, probability]),
                         label=output_label_color)
         elif existing:
-            return dict(element=np.array([0.0, 0.0, above_base(probability), above_base(probability, base=0.0)]),
+            return dict(element=np.array([0.0, 0.0, 1.0, probability]),
                         label=output_label_color)
         elif candidate:
-            return dict(element=np.array([above_base(probability), 0.0, 0.0, above_base(probability, base=0.0)]),
+            return dict(element=np.array([1.0, 0.0, 0.0, probability]),
                         label=output_label_color)
         else:
             raise ValueError('Node to colour did not fit any category')
