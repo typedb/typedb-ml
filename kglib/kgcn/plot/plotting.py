@@ -100,6 +100,9 @@ def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_
         ground_truth_node_prob = target["nodes"][:, -1]
         ground_truth_edge_prob = target["edges"][:, -1]
 
+        non_preexist_node_mask = mask_preexists(target["nodes"])
+        non_preexist_edge_mask = mask_preexists(target["edges"])
+
         # Ground truth.
         iax = j * (2 + num_steps_to_plot) + 1
         ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, ground_truth_node_prob, ground_truth_edge_prob, True)
@@ -118,16 +121,16 @@ def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_
         # Prediction.
         for k, outp in enumerate(output):
             iax = j * (2 + num_steps_to_plot) + 2 + k
-            node_prob = softmax_prob_last_dim(outp["nodes"])
-            edge_prob = softmax_prob_last_dim(outp["edges"])
+            node_prob = softmax_prob_last_dim(outp["nodes"]) * non_preexist_node_mask
+            edge_prob = softmax_prob_last_dim(outp["edges"]) * non_preexist_edge_mask
             ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
 
         # Class Winners
         # Displays whether the class represented by the last dimension was the winner
-        node_prob = last_dim_was_class_winner(output[-1]["nodes"])
-        edge_prob = last_dim_was_class_winner(output[-1]["edges"])
+        node_prob = last_dim_was_class_winner(output[-1]["nodes"]) * non_preexist_node_mask
+        edge_prob = last_dim_was_class_winner(output[-1]["edges"]) * non_preexist_edge_mask
 
         iax = j * (2 + num_steps_to_plot) + 2 + len(output)
         ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
@@ -144,6 +147,10 @@ def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_
         ax.set_title("Model-predicted winners")
 
     plt.savefig(output_file, bbox_inches='tight')
+
+
+def mask_preexists(arr):
+    return (arr[:, 0] == 0) * 1
 
 
 def softmax_prob_last_dim(x):
