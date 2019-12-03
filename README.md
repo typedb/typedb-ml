@@ -6,7 +6,7 @@
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-grakn-796de3.svg)](https://stackoverflow.com/questions/tagged/grakn)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-graql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/graql)
 
-[Grakn](https://github.com/graknlabs/grakn) lets us create Knowledge Graphs from our data. But what challenges do we encounter where querying alone won’t cut it? What library can address these challenges?
+[Grakn](https://github.com/graknlabs/grakn) lets us create Knowledge Graphs from our data. But what challenges do we encounter where querying alone won't cut it? What library can address these challenges?
 
 To respond to these scenarios, KGLIB is the centre of all research projects conducted at Grakn Labs. In particular, its focus is on the integration of machine learning with the Grakn Knowledge Graph. More on this below, in [*Knowledge Graph Tasks*](https://github.com/graknlabs/kglib#knowledge-graph-tasks).
 
@@ -77,7 +77,7 @@ Below is a set of tasks to be conducted over Knowledge Graphs (KGs) that we have
 
 We describe these tasks in more detail below. Where a solution is readily available in KGLIB, it is listed against the relevant task(s).
 
-We openly invite collaboration to solve these problems! All contributions are welcome  — code, issues, ideas, discussions, pointers to existing tools, and relevant datasets will all help this project evolve!
+We openly invite collaboration to solve these problems! All contributions are welcome - code, issues, ideas, discussions, pointers to existing tools, and relevant datasets will all help this project evolve!
 
 If you wish to discuss your ideas more conversationally, and to follow the development conversation, please join the [Grakn Slack](https://grakn.ai/slack), and join the #kglib channel. Alternatively, start a new topic on the [Grakn Discussion Forum](https://discuss.grakn.ai).
 
