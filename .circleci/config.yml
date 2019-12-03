@@ -63,10 +63,9 @@ jobs:
       - checkout
       - install-python
       - run: |
-          echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
           export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
           export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
-          bazel run //:deploy-pip -- snapshot
+          bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
 
   test-deployment-pip:
       machine: true
@@ -78,7 +77,7 @@ jobs:
         - run:
             name: Run test-deployment-pip for kglib
             command: |
-              echo -n "$(cat VERSION)-$CIRCLE_SHA1" > VERSION
+              echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
               sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
               cat tests/deployment/requirements.txt
               pip install -r tests/deployment/requirements.txt
@@ -131,7 +130,7 @@ jobs:
       - run: |
           export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
           export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
-          bazel run //:deploy-pip -- release
+          bazel run --define version=$(cat VERSION) //:deploy-pip -- release
 
   release-cleanup:
     machine: true
