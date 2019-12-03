@@ -100,6 +100,9 @@ def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_
         ground_truth_node_prob = target["nodes"][:, -1]
         ground_truth_edge_prob = target["edges"][:, -1]
 
+        non_preexist_node_mask = mask_preexists(target["nodes"])
+        non_preexist_edge_mask = mask_preexists(target["edges"])
+
         # Ground truth.
         iax = j * (2 + num_steps_to_plot) + 1
         ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, ground_truth_node_prob, ground_truth_edge_prob, True)
@@ -118,16 +121,16 @@ def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_
         # Prediction.
         for k, outp in enumerate(output):
             iax = j * (2 + num_steps_to_plot) + 2 + k
-            node_prob = softmax_prob_last_dim(outp["nodes"])
-            edge_prob = softmax_prob_last_dim(outp["edges"])
+            node_prob = softmax_prob_last_dim(outp["nodes"]) * non_preexist_node_mask
+            edge_prob = softmax_prob_last_dim(outp["edges"]) * non_preexist_edge_mask
             ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
             ax.set_title("Model-predicted\nStep {:02d} / {:02d}".format(
                 step_indices[k] + 1, step_indices[-1] + 1))
 
         # Class Winners
         # Displays whether the class represented by the last dimension was the winner
-        node_prob = last_dim_was_class_winner(output[-1]["nodes"])
-        edge_prob = last_dim_was_class_winner(output[-1]["edges"])
+        node_prob = last_dim_was_class_winner(output[-1]["nodes"]) * non_preexist_node_mask
+        edge_prob = last_dim_was_class_winner(output[-1]["edges"]) * non_preexist_edge_mask
 
         iax = j * (2 + num_steps_to_plot) + 2 + len(output)
         ax = draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, False)
@@ -146,6 +149,10 @@ def plot_predictions(raw_graphs, test_values, num_processing_steps_ge, solution_
     plt.savefig(output_file, bbox_inches='tight')
 
 
+def mask_preexists(arr):
+    return (arr[:, 0] == 0) * 1
+
+
 def softmax_prob_last_dim(x):
     e = np.exp(x)
     return e[:, -1] / np.sum(e, axis=-1)
@@ -155,52 +162,39 @@ def last_dim_was_class_winner(x):
     return (np.argmax(x, axis=-1) == 2) * 1
 
 
-def above_base(val, base=0.0):
-    return val * (1.0 - base) + base
-
-
 def element_color(gt_plot, probability, element_props):
     """
     Determine the color values to use for a node/edge and its label
     gt plot:
-    blue for existing elements, green for those to infer, red and transparent for candidates (as there could be many)
+    blue for existing elements, green for those to infer, red candidates
 
     output plot:
     blue for existing elements, green for those to infer, red for candidates, all with transparency
     """
 
-    existing = dict(input=1, solution=0)
-    to_infer = dict(input=0, solution=2)
-    candidate = dict(input=0, solution=1)
+    existing = 0
+    candidate = 1
+    to_infer = 2
 
-    to_infer = all([element_props.get(key) == value for key, value in to_infer.items()])
-    candidate = all([element_props.get(key) == value for key, value in candidate.items()])
-    existing = all([element_props.get(key) == value for key, value in existing.items()])
+    solution = element_props.get('solution')
 
-    default_gt_label_color = np.array([0.0, 0.0, 0.0, 1.0])
-    output_label_color = np.array([0.0, 0.0, 0.0, above_base(probability, base=0.0)])
+    color_config = {
+        to_infer: {'color': [0.0, 1.0, 0.0], 'gt_opacity': 1.0},
+        candidate: {'color': [1.0, 0.0, 0.0], 'gt_opacity': 1.0},
+        existing: {'color': [0.0, 0.0, 1.0], 'gt_opacity': 0.2}
+    }
+
+    chosen_config = color_config[solution]
 
     if gt_plot:
-        if to_infer:
-            return dict(element=np.array([0.0, 1.0, 0.0, 1.0]), label=default_gt_label_color)
-        elif existing:
-            return dict(element=np.array([0.0, 0.0, 1.0, 1.0]), label=default_gt_label_color)
-        elif candidate:
-            return dict(element=np.array([1.0, 0.0, 0.0, 0.1]), label=np.array([0.0, 0.0, 0.0, 0.1]))
-        else:
-            raise ValueError('Node to colour did not fit any category')
+        opacity = chosen_config['gt_opacity']
     else:
-        if to_infer:
-            return dict(element=np.array([0.0, above_base(probability), 0.0, above_base(probability, base=0.0)]),
-                        label=output_label_color)
-        elif existing:
-            return dict(element=np.array([0.0, 0.0, above_base(probability), above_base(probability, base=0.0)]),
-                        label=output_label_color)
-        elif candidate:
-            return dict(element=np.array([above_base(probability), 0.0, 0.0, above_base(probability, base=0.0)]),
-                        label=output_label_color)
-        else:
-            raise ValueError('Node to colour did not fit any category')
+        opacity = probability
+
+    label = np.array([0.0, 0.0, 0.0] + [opacity])
+    color = np.array(chosen_config['color'] + [opacity])
+
+    return dict(element=color, label=label)
 
 
 def draw_subplot(graph, fig, pos, node_size, h, w, iax, node_prob, edge_prob, gt_plot):

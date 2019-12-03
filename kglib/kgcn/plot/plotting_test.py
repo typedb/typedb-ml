@@ -34,9 +34,9 @@ class TestPlotPredictions(unittest.TestCase):
 
         graph = nx.MultiDiGraph(name=0)
 
-        existing = dict(input=1, solution=0)
-        to_infer = dict(input=0, solution=2)
-        candidate = dict(input=0, solution=1)
+        existing = dict(solution=0)
+        to_infer = dict(solution=2)
+        candidate = dict(solution=1)
 
         # people
         graph.add_node(0, type='person', **existing)
@@ -47,18 +47,29 @@ class TestPlotPredictions(unittest.TestCase):
         graph.add_edge(2, 0, type='parent', **to_infer)
         graph.add_edge(2, 1, type='child', **candidate)
 
-        graph_tuple = GraphsTuple(nodes=np.array([[1., 0., 0.],
-                                                  [1., 1., 0.],
-                                                  [1., 0., 1.]]),
-                                  edges=np.array([[1., 0., 0.],
-                                                  [1., 1., 0.]]),
-                                  receivers=np.array([1, 2], dtype=np.int32),
-                                  senders=np.array([0, 1], dtype=np.int32),
-                                  globals=np.array([[0., 0., 0., 0., 0.]], dtype=np.float32),
-                                  n_node=np.array([3], dtype=np.int32),
-                                  n_edge=np.array([2], dtype=np.int32))
+        graph_tuple_target = GraphsTuple(nodes=np.array([[1., 0., 0.],
+                                                         [0., 1., 0.],
+                                                         [0., 0., 1.]]),
+                                         edges=np.array([[0., 0., 1.],
+                                                         [0., 1., 0.]]),
+                                         receivers=np.array([1, 2], dtype=np.int32),
+                                         senders=np.array([0, 1], dtype=np.int32),
+                                         globals=np.array([[0., 0., 0., 0., 0.]], dtype=np.float32),
+                                         n_node=np.array([3], dtype=np.int32),
+                                         n_edge=np.array([2], dtype=np.int32))
 
-        test_values = {"target": graph_tuple, "outputs": [graph_tuple for _ in range(6)]}
+        graph_tuple_output = GraphsTuple(nodes=np.array([[1., 0., 0.],
+                                                         [1., 1., 0.],
+                                                         [1., 0., 1.]]),
+                                         edges=np.array([[1., 0., 0.],
+                                                         [1., 1., 0.]]),
+                                         receivers=np.array([1, 2], dtype=np.int32),
+                                         senders=np.array([0, 1], dtype=np.int32),
+                                         globals=np.array([[0., 0., 0., 0., 0.]], dtype=np.float32),
+                                         n_node=np.array([3], dtype=np.int32),
+                                         n_edge=np.array([2], dtype=np.int32))
+
+        test_values = {"target": graph_tuple_target, "outputs": [graph_tuple_output for _ in range(6)]}
 
         filename = f'./graph_{datetime.datetime.now()}.png'
 

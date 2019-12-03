@@ -4,7 +4,7 @@ This example is entirely fabricated as a demonstration for how to construct a KG
 
 Studying the schema for this example, we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. Lastly, people can be diagnosed with a disease.
 
-![Diagnosis Schema](images/diagnosis_schema.png)
+![Diagnosis Schema](.images/diagnosis_schema.png)
 
 ## Running the Example
 
@@ -93,13 +93,13 @@ You will see plots of metrics for the training process (training iteration on th
 - The fraction of all graph elements predicted correctly across the dataset
 - The fraction of completely solved examples (subgraphs extracted from Grakn that are solved in full)
 
-![learning metrics](images/learning.png)
+![learning metrics](.images/learning.png)
 
 #### Visualise the Predictions
 
 We also receive a plot of some of the predictions made on the test set. 
 
-![predictions made on test set](images/graph_snippet.png)
+![predictions made on test set](.images/graph_snippet.png)
 
 **Blue box:** Ground Truth 
 
@@ -159,7 +159,7 @@ A single subgraph is extracted from Grakn by making these queries and combining 
 
 We can visualise such a subgraph by running these two queries one after the other in Grakn Workbase:
 
-![queried subgraph](images/queried_subgraph.png)
+![queried subgraph](.images/queried_subgraph.png)
 
 You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/graknlabs/workbase/releases/latest).
 
