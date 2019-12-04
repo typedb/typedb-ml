@@ -24,7 +24,7 @@ from graph_nets.utils_np import graphs_tuple_to_networkxs
 from kglib.kgcn.learn.learn import KGCNLearner
 from kglib.kgcn.models.attribute import ContinuousAttribute, CategoricalAttribute, BlankAttribute
 from kglib.kgcn.models.core import softmax, KGCN
-from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph
+from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph, encode_values
 from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator, \
@@ -51,29 +51,13 @@ def pipeline(graphs,
     ############################################################
 
     # Encode attribute values
-    for graph in graphs:
-        for node_data in multidigraph_node_data_iterator(graph):
-            typ = node_data['type']
-
-            if categorical_attributes is not None and typ in categorical_attributes.keys():
-                # Add the integer value of the category for each categorical attribute instance
-                category_values = categorical_attributes[typ]
-                node_data['encoded_value'] = category_values.index(node_data['value'])
-
-            elif continuous_attributes is not None and typ in continuous_attributes.keys():
-                min_val, max_val = continuous_attributes[typ]
-                node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
-
-            else:
-                node_data['encoded_value'] = 0
-
-        for edge_data in multidigraph_edge_data_iterator(graph):
-            edge_data['encoded_value'] = 0
+    graphs = [encode_values(graph, categorical_attributes, continuous_attributes) for graph in graphs]
 
     indexed_graphs = [nx.convert_node_labels_to_integers(graph, label_attribute='concept') for graph in graphs]
     graphs = [duplicate_edges_in_reverse(graph) for graph in indexed_graphs]
 
-    graphs = [encode_types(graph, node_types, edge_types) for graph in graphs]
+    graphs = [encode_types(graph, multidigraph_node_data_iterator, node_types) for graph in graphs]
+    graphs = [encode_types(graph, multidigraph_edge_data_iterator, edge_types) for graph in graphs]
 
     input_graphs = [create_input_graph(graph) for graph in graphs]
     target_graphs = [create_target_graph(graph) for graph in graphs]
@@ -109,7 +93,7 @@ def pipeline(graphs,
                                                  log_dir=output_dir)
 
     plot_across_training(*tr_info, output_file=f'{output_dir}learning.png')
-    plot_predictions(ge_input_graphs, test_values, num_processing_steps_ge, output_file=f'{output_dir}graph.png')
+    plot_predictions(graphs[tr_ge_split:], test_values, num_processing_steps_ge, output_file=f'{output_dir}graph.png')
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 

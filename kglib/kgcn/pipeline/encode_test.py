@@ -21,28 +21,28 @@ import unittest
 
 import numpy as np
 
-from kglib.kgcn.pipeline.encode import augment_data_fields
+from kglib.kgcn.pipeline.encode import stack_features
 
 
 class TestAugmentDataFields(unittest.TestCase):
 
     def test_numpy_fields_augmented_as_expected(self):
-        data = [dict(attr1=np.array([0, 1, 0]), attr2=np.array([5]))]
+        features = [np.array([0, 1, 0]), np.array([5])]
 
-        augment_data_fields(data, ('attr1', 'attr2'), 'features')
+        stacked = stack_features(features)
 
-        expected_data = [dict(attr1=np.array([0, 1, 0]), attr2=np.array([5]), features=np.array([0, 1, 0, 5]))]
+        expected = np.array([0, 1, 0, 5])
 
-        np.testing.assert_equal(expected_data, data)
+        np.testing.assert_equal(expected, stacked)
 
     def test_augmenting_non_numpy_numeric(self):
-        data = [dict(attr1=np.array([0, 1, 0]), attr2=5)]
+        data = [np.array([0, 1, 0]), 5]
 
-        augment_data_fields(data, ('attr1', 'attr2'), 'features')
+        stacked = stack_features(data)
 
-        expected_data = [dict(attr1=np.array([0, 1, 0]), attr2=5, features=np.array([0, 1, 0, 5]))]
+        expected = np.array([0, 1, 0, 5])
 
-        np.testing.assert_equal(expected_data, data)
+        np.testing.assert_equal(stacked, expected)
 
 
 if __name__ == "__main__":
