@@ -18,8 +18,8 @@
 #
 import unittest
 
-from kglib.kgcn.pipeline.pipeline import construct_non_attribute_embedders, construct_categorical_embedders, \
-    construct_continuous_embedders
+from kglib.kgcn.pipeline.embed import construct_categorical_embedders, construct_continuous_embedders, \
+    construct_non_attribute_embedders
 
 
 def construct_embedders(node_types, attr_embedding_dim, categorical_attributes, continuous_attributes):
