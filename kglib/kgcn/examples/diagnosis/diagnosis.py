@@ -108,11 +108,11 @@ def create_concept_graphs(example_indices, grakn_session):
 # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
 PREEXISTS = dict(input=1, solution=0)
 
-# Elements to infer are the graph elements whose existence we want to predict to be true, they are positive examples
-TO_INFER = dict(input=0, solution=2)
-
 # Candidates are neither present in the input nor in the solution, they are negative examples
 CANDIDATE = dict(input=0, solution=1)
+
+# Elements to infer are the graph elements whose existence we want to predict to be true, they are positive examples
+TO_INFER = dict(input=0, solution=2)
 
 
 class QueryHandler:

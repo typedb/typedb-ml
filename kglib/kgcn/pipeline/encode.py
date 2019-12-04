@@ -23,86 +23,87 @@ from kglib.utils.graph.iterate import multidigraph_data_iterator, multidigraph_n
     multidigraph_edge_data_iterator
 
 
-def encode_types(graph, node_types, edge_types):
-    node_iterator = multidigraph_node_data_iterator(graph)
-    encode_categorically(node_iterator, node_types, 'type', 'categorical_type')
+def encode_values(graph, categorical_attributes, continuous_attributes):
+    for node_data in multidigraph_node_data_iterator(graph):
+        typ = node_data['type']
 
-    edge_iterator = multidigraph_edge_data_iterator(graph)
-    encode_categorically(edge_iterator, edge_types, 'type', 'categorical_type')
-    return graph
+        if categorical_attributes is not None and typ in categorical_attributes.keys():
+            # Add the integer value of the category for each categorical attribute instance
+            category_values = categorical_attributes[typ]
+            node_data['encoded_value'] = category_values.index(node_data['value'])
 
+        elif continuous_attributes is not None and typ in continuous_attributes.keys():
+            min_val, max_val = continuous_attributes[typ]
+            node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
 
-def create_input_graph(graph, features_field="features"):
-    input_graph = graph.copy()
-    augment_data_fields(multidigraph_data_iterator(input_graph),
-                        ("input", "categorical_type", "encoded_value"),
-                        features_field)
-    input_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
-    return input_graph
-
-
-def create_target_graph(graph, features_field="features"):
-    target_graph = graph.copy()
-    target_graph = encode_solutions(target_graph, solution_field="solution", encoded_solution_field="encoded_solution",
-                                    encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]]))
-    augment_data_fields(multidigraph_data_iterator(target_graph),
-                        ("encoded_solution",),
-                        features_field)
-    target_graph.graph[features_field] = np.array([0.0] * 5, dtype=np.float32)
-    return target_graph
-
-
-def augment_data_fields(graph_data_iterator, fields_to_augment, augmented_field):
-    """
-    Returns a graph with features built from augmenting data fields found in the graph
-
-    Args:
-        graph_data_iterator: iterator over the data for elements in a graph
-        fields_to_augment: the fields of the data dictionaries to augment together
-        augmented_field: the field in which to store the augmented fields
-
-    Returns:
-        None, updates the graph in-place
-
-    """
-
-    for data in graph_data_iterator:
-        data[augmented_field] = np.hstack([np.array(data[field], dtype=np.float32) for field in fields_to_augment])
-
-
-def encode_solutions(graph, solution_field="solution", encoded_solution_field="encoded_solution",
-                     encodings=np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])):
-    """
-    Determines the encoding to use for a solution category
-    Args:
-        graph: Graph to update
-        solution_field: The property in the graph that holds the value of the solution
-        encoded_solution_field: The property in the graph to use to hold the new solution value
-        encodings: An array, a row from which will be picked as the new solution based on using the current solution
-            as a row index
-
-    Returns: Graph with updated `encoded_solution_field`
-
-    """
-
-    for data in multidigraph_data_iterator(graph):
-        solution = data[solution_field]
-        data[encoded_solution_field] = encodings[solution]
+        else:
+            node_data['encoded_value'] = 0
+    for edge_data in multidigraph_edge_data_iterator(graph):
+        edge_data['encoded_value'] = 0
 
     return graph
 
 
-def encode_categorically(graph_data_iterator, all_categories, category_field, encoding_field):
+def encode_types(graph, iterator_func, types):
     """
     Encodes the type found in graph data as an integer according to the index it is found in `all_types`
     Args:
-        graph_data_iterator: An iterator of data in the graph (node data, edge data or combined node and edge data)
-        all_categories: The full list of categories to be encoded in this order
-        category_field: The data field containing the category to encode
-        encoding_field: The data field to use to store the encoding
-
+        graph: The graph to encode
+        iterator_func: An function to create an iterator of data in the graph (node data, edge data or combined node and edge data)
+        types: The full list of types to be encoded in this order
+        
     Returns:
+        The graph, which is also is updated in-place
 
     """
-    for data in graph_data_iterator:
-        data[encoding_field] = all_categories.index(data[category_field])
+    iterator = iterator_func(graph)
+
+    for data in iterator:
+        data['categorical_type'] = types.index(data['type'])
+
+    return graph
+
+
+def create_input_graph(graph):
+    input_graph = graph.copy()
+
+    for data in multidigraph_data_iterator(input_graph):
+        if data["solution"] == 0:
+            preexists = 1
+        else:
+            preexists = 0
+
+        features = stack_features([preexists, data["categorical_type"], data["encoded_value"]])
+        data.clear()
+        data["features"] = features
+
+    input_graph.graph["features"] = np.array([0.0] * 5, dtype=np.float32)
+    return input_graph
+
+
+def create_target_graph(graph):
+    target_graph = graph.copy()
+    solution_one_hot_encoding = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]], dtype=np.float32)
+
+    for data in multidigraph_data_iterator(target_graph):
+        features = solution_one_hot_encoding[data["solution"]]
+        data.clear()
+        data["features"] = features
+
+    target_graph.graph["features"] = np.array([0.0] * 5, dtype=np.float32)
+    return target_graph
+
+
+def stack_features(features):
+    """
+    Stacks features together into a single vector
+
+    Args:
+        features: iterable of features, features can be a single value or iterable
+
+    Returns:
+        Numpy array (vector) of stacked features
+
+    """
+
+    return np.hstack([np.array(feature, dtype=np.float32) for feature in features])
