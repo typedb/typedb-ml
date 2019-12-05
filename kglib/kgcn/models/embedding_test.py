@@ -23,18 +23,18 @@ import numpy as np
 import tensorflow as tf
 from unittest.mock import Mock
 from unittest.mock import patch
-from kglib.kgcn.models.embedding import common_embedding, attribute_embedding, node_embedding
+from kglib.kgcn.models.embedding import embed_type, embed_attribute
 from kglib.utils.test.utils import get_call_args
 
 
-class TestCommonEmbedding(unittest.TestCase):
+class TestTypeEmbedding(unittest.TestCase):
     def setUp(self):
         tf.enable_eager_execution()
 
     def test_embedding_output_shape_as_expected(self):
         features = np.array([[1, 0, 0.7], [1, 2, 0.7], [0, 1, 0.5]], dtype=np.float32)
         type_embedding_dim = 5
-        output = common_embedding(features, 3, type_embedding_dim)
+        output = embed_type(features, 3, type_embedding_dim)
 
         np.testing.assert_array_equal(np.array([3, 6]), output.shape)
 
@@ -54,7 +54,7 @@ class TestAttributeEmbedding(unittest.TestCase):
         attr_encoders = Mock()
         attr_embedding_dim = Mock()
 
-        attribute_embedding(features, attr_encoders, attr_embedding_dim)  # Function under test
+        embed_attribute(features, attr_encoders, attr_embedding_dim)  # Function under test
 
         mock_class.assert_called_once_with(attr_encoders, attr_embedding_dim)
         call_args = get_call_args(mock_instance)
@@ -62,38 +62,6 @@ class TestAttributeEmbedding(unittest.TestCase):
         np.testing.assert_array_equal([[np.array([[0, 0.7], [2, 0.7], [1, 0.5]])]], call_args)
 
         patcher.stop()
-
-
-class TestNodeEmbedding(unittest.TestCase):
-
-    def setUp(self):
-        tf.enable_eager_execution()
-
-    def test_embedding_is_typewise(self):
-        features = Mock()
-        num_types = Mock()
-        type_embedding_dim = Mock()
-        attr_encoders = Mock()
-        attr_embedding_dim = Mock()
-
-        mock_attribute_embedding = Mock(return_value=np.ones((3, 5)))
-
-        mock_common_embedding = Mock(return_value=np.ones((3, 4)))
-
-        patcher_attr = patch('kglib.kgcn.models.embedding.attribute_embedding', spec=True,
-                             new=mock_attribute_embedding)
-        patcher_attr.start()
-
-        patcher_common = patch('kglib.kgcn.models.embedding.common_embedding', spec=True,
-                               new=mock_common_embedding)
-        patcher_common.start()
-
-        embedding = node_embedding(features, num_types, type_embedding_dim, attr_encoders, attr_embedding_dim)
-
-        np.testing.assert_array_equal(np.ones((3, 9)), embedding.numpy())
-
-        patcher_attr.stop()
-        patcher_common.stop()
 
 
 if __name__ == "__main__":

@@ -23,8 +23,7 @@ from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn.learn.learn import KGCNLearner
 from kglib.kgcn.models.core import softmax, KGCN
-from kglib.kgcn.pipeline.embed import construct_categorical_embedders, construct_continuous_embedders, \
-    construct_non_attribute_embedders
+from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
 from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph, encode_values
 from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
@@ -72,23 +71,13 @@ def pipeline(graphs,
     # Build and run the KGCN
     ############################################################
 
-    # Create embedders for the different attribute types
-    attr_embedders = dict()
+    thing_embedder = ThingEmbedder(node_types, type_embedding_dim, attr_embedding_dim, categorical_attributes,
+                                   continuous_attributes)
 
-    if categorical_attributes is not None:
-        attr_embedders.update(construct_categorical_embedders(node_types, attr_embedding_dim, categorical_attributes))
+    role_embedder = RoleEmbedder(len(edge_types), type_embedding_dim)
 
-    if continuous_attributes is not None:
-        attr_embedders.update(construct_continuous_embedders(node_types, attr_embedding_dim, continuous_attributes))
-
-    attr_embedders.update(construct_non_attribute_embedders(node_types, attr_embedding_dim, categorical_attributes,
-                                                            continuous_attributes))
-
-    kgcn = KGCN(len(node_types),
-                len(edge_types),
-                type_embedding_dim,
-                attr_embedding_dim,
-                attr_embedders,
+    kgcn = KGCN(thing_embedder,
+                role_embedder,
                 edge_output_size=edge_output_size,
                 node_output_size=node_output_size)
 

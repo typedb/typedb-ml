@@ -34,6 +34,16 @@ py_test(
 )
 
 py_test(
+    name = "embedding_IT",
+    srcs = [
+        "embedding_IT.py"
+    ],
+    deps = [
+        "models"
+    ]
+)
+
+py_test(
     name = "typewise_test",
     srcs = [
         "typewise_test.py"

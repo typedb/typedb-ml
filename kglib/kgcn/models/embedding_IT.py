@@ -16,9 +16,10 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import unittest
 
-from kglib.kgcn.pipeline.embed import construct_categorical_embedders, construct_continuous_embedders, \
+from kglib.kgcn.models.embedding import construct_categorical_embedders, construct_continuous_embedders, \
     construct_non_attribute_embedders
 
 
@@ -36,7 +37,7 @@ def construct_embedders(node_types, attr_embedding_dim, categorical_attributes, 
     return attr_embedders
 
 
-class TestConfigureEmbedders(unittest.TestCase):
+class TestConstructingEmbedders(unittest.TestCase):
 
     def test_all_types_encoded(self):
         node_types = ['a', 'b', 'c']
@@ -71,3 +72,7 @@ class TestConfigureEmbedders(unittest.TestCase):
 
         for types in attr_embedders.values():
             self.assertNotEqual(types, [])
+
+
+if __name__ == "__main__":
+    unittest.main()
