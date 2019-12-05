@@ -25,6 +25,7 @@ import numpy as np
 from kglib.kgcn.learn.learn import KGCNLearner
 from kglib.kgcn.models.attribute import BlankAttribute
 from kglib.kgcn.models.core import KGCN
+from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
 
 
 class ITKGCNLearner(unittest.TestCase):
@@ -47,10 +48,12 @@ class ITKGCNLearner(unittest.TestCase):
         target_graph.add_node(2, type='company', features=np.array([0, 1, 0], dtype=np.float32))
         target_graph.graph['features'] = np.zeros(5, dtype=np.float32)
 
-        attr_embedding_dim = 6
-        attr_embedders = {lambda: BlankAttribute(attr_embedding_dim): [0, 1, 2]}
+        thing_embedder = ThingEmbedder(node_types=['person', 'employment', 'employee'], type_embedding_dim=5,
+                                       attr_embedding_dim=6, categorical_attributes={}, continuous_attributes={})
 
-        kgcn = KGCN(3, 2, 5, attr_embedding_dim, attr_embedders, edge_output_size=3, node_output_size=3)
+        role_embedder = RoleEmbedder(num_edge_types=2, type_embedding_dim=5)
+
+        kgcn = KGCN(thing_embedder, role_embedder, edge_output_size=3, node_output_size=3)
 
         learner = KGCNLearner(kgcn, num_processing_steps_tr=2, num_processing_steps_ge=2)
 
