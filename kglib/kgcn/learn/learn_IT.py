@@ -23,7 +23,6 @@ import networkx as nx
 import numpy as np
 
 from kglib.kgcn.learn.learn import KGCNLearner
-from kglib.kgcn.models.attribute import BlankAttribute
 from kglib.kgcn.models.core import KGCN
 from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
 
