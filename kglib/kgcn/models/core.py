@@ -17,15 +17,11 @@
 #  under the License.
 #
 
-from functools import partial
-
 import numpy as np
 import sonnet as snt
 from graph_nets import modules
 from graph_nets import utils_tf
 from graph_nets.modules import GraphIndependent
-
-from kglib.kgcn.models.embedding import common_embedding, node_embedding
 
 
 def softmax(x):
@@ -81,11 +77,8 @@ class KGCN(snt.AbstractModule):
     """
 
     def __init__(self,
-                 num_node_types,
-                 num_edge_types,
-                 type_embedding_dim,
-                 attr_embedding_dim,
-                 attr_embedders,
+                 thing_embedder,
+                 role_embedder,
                  edge_output_size=3,
                  node_output_size=3,
                  latent_size=16,
@@ -93,11 +86,9 @@ class KGCN(snt.AbstractModule):
                  name="KGCN"):
         super(KGCN, self).__init__(name=name)
 
-        self._num_node_types = num_node_types
-        self._num_edge_types = num_edge_types
-        self._type_embedding_dim = type_embedding_dim
-        self._attr_embedding_dim = attr_embedding_dim
-        self._attr_embedders = attr_embedders
+        self._thing_embedder = thing_embedder
+        self._role_embedder = role_embedder
+
         self._latent_size = latent_size
         self._num_layers = num_layers
 
@@ -117,21 +108,12 @@ class KGCN(snt.AbstractModule):
             self._output_transform = modules.GraphIndependent(edge_fn, node_fn, None)
 
     def _edge_model(self):
-        common_embedding_module = snt.Module(
-            partial(common_embedding, num_types=self._num_edge_types,
-                    type_embedding_dim=self._type_embedding_dim)
-        )
-
-        return snt.Sequential([common_embedding_module,
+        return snt.Sequential([self._role_embedder,
                                snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
                                snt.LayerNorm()])
 
     def _node_model(self):
-        node_embedding_module = snt.Module(
-            partial(node_embedding, num_types=self._num_node_types, type_embedding_dim=self._type_embedding_dim,
-                    attr_encoders=self._attr_embedders, attr_embedding_dim=self._attr_embedding_dim)
-        )
-        return snt.Sequential([node_embedding_module,
+        return snt.Sequential([self._thing_embedder,
                                snt.nets.MLP([self._latent_size] * self._num_layers, activate_final=True),
                                snt.LayerNorm()])
 

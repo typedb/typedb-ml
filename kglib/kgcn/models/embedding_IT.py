@@ -16,19 +16,37 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+
 import unittest
 
-from kglib.kgcn.pipeline.pipeline import configure_embedders
+from kglib.kgcn.models.embedding import construct_categorical_embedders, construct_continuous_embedders, \
+    construct_non_attribute_embedders
 
 
-class TestConfigureEmbedders(unittest.TestCase):
+def construct_embedders(node_types, attr_embedding_dim, categorical_attributes, continuous_attributes):
+    attr_embedders = dict()
+
+    if categorical_attributes is not None:
+        attr_embedders.update(construct_categorical_embedders(node_types, attr_embedding_dim, categorical_attributes))
+
+    if continuous_attributes is not None:
+        attr_embedders.update(construct_continuous_embedders(node_types, attr_embedding_dim, continuous_attributes))
+
+    attr_embedders.update(construct_non_attribute_embedders(node_types, attr_embedding_dim, categorical_attributes,
+                                                            continuous_attributes))
+    return attr_embedders
+
+
+class TestConstructingEmbedders(unittest.TestCase):
 
     def test_all_types_encoded(self):
         node_types = ['a', 'b', 'c']
         attr_embedding_dim = 5
         categorical_attributes = {'a': ['option1', 'option2']}
         continuous_attributes = {'b': (0, 1)}
-        attr_embedders = configure_embedders(node_types, attr_embedding_dim, categorical_attributes, continuous_attributes)
+
+        attr_embedders = construct_embedders(node_types, attr_embedding_dim, categorical_attributes,
+                                             continuous_attributes)
         all_types = [l for el in list(attr_embedders.values()) for l in el]
 
         expected_types = [0, 1, 2]
@@ -40,7 +58,10 @@ class TestConfigureEmbedders(unittest.TestCase):
         attr_embedding_dim = 5
         categorical_attributes = {'a': ['option1', 'option2'], 'c': ['option3', 'option4']}
         continuous_attributes = {'b': (0, 1)}
-        attr_embedders = configure_embedders(node_types, attr_embedding_dim, categorical_attributes, continuous_attributes)
+
+        attr_embedders = construct_embedders(node_types, attr_embedding_dim, categorical_attributes,
+                                             continuous_attributes)
+
         all_types = [l for el in list(attr_embedders.values()) for l in el]
         all_types.sort()
 
@@ -51,3 +72,7 @@ class TestConfigureEmbedders(unittest.TestCase):
 
         for types in attr_embedders.values():
             self.assertNotEqual(types, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

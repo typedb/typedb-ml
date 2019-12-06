@@ -24,6 +24,7 @@ import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
 
 from kglib.kgcn.models.core import KGCN
+from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
 
 
 class ITKGCN(unittest.TestCase):
@@ -39,8 +40,13 @@ class ITKGCN(unittest.TestCase):
                             n_node=tf.convert_to_tensor(np.array([3], dtype=np.int32)),
                             n_edge=tf.convert_to_tensor(np.array([2], dtype=np.int32)))
 
-        attr_embedders = {lambda: lambda x: tf.constant(np.zeros((3, 6), dtype=np.float32)): [0, 1, 2]}
-        kgcn = KGCN(3, 2, 5, 6, attr_embedders, edge_output_size=3, node_output_size=3)
+        thing_embedder = ThingEmbedder(node_types=['a', 'b', 'c'], type_embedding_dim=5, attr_embedding_dim=6,
+                                       categorical_attributes={'a': ['a1', 'a2', 'a3'], 'b': ['b1', 'b2', 'b3']},
+                                       continuous_attributes={'c': (0, 1)})
+
+        role_embedder = RoleEmbedder(num_edge_types=2, type_embedding_dim=5)
+
+        kgcn = KGCN(thing_embedder, role_embedder, edge_output_size=3, node_output_size=3)
 
         kgcn(graph, 2)
 
