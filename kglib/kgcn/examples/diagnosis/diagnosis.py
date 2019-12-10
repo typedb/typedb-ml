@@ -72,8 +72,9 @@ def diagnosis_example(num_graphs=200,
     return solveds_tr, solveds_ge
 
 
-CATEGORICAL_ATTRIBUTES = {'name': ['meningitis', 'flu', 'fever', 'light-sensitivity']}
-CONTINUOUS_ATTRIBUTES = {'severity': (0, 1)}
+CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
+                                   'Alcohol']}
+CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
 
 
 def create_concept_graphs(example_indices, grakn_session):
@@ -123,6 +124,74 @@ class QueryHandler:
     4. Make a graph of the query results by taking the variables you got back and arranging the concepts as they are in the `QueryGraph`. This gives one graph for each result, for each query.
     5. Combine all of these graphs into one single graph, and that’s your example subgraph
     """
+
+    def hereditary_query(self, example_id):
+        return inspect.cleandoc(f'''match
+               $p isa person, has example-id {example_id};
+               $par isa person;
+               $ps(child: $p, parent: $par) isa parentship;
+               $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
+               $d isa disease, has name $n;
+               get;''')
+
+    def hereditary_query_graph(self):
+        vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
+        g = QueryGraph()
+        g.add_vars(*vars, **PREEXISTS)
+        g.add_role_edge(ps, p, 'child', **PREEXISTS)
+        g.add_role_edge(ps, par, 'parent', **PREEXISTS)
+        g.add_role_edge(diag, par, 'patient', **PREEXISTS)
+        g.add_role_edge(diag, d, 'diagnosed-disease', **PREEXISTS)
+        g.add_has_edge(d, n, **PREEXISTS)
+
+        return g
+
+    def consumption_query(self, example_id):
+        return inspect.cleandoc(f'''match
+               $p isa person, has example-id {example_id};
+               $s isa substance, has name $n;
+               $c(consumer: $p, consumed-substance: $s) isa consumption, 
+               has units-per-week $u; get;''')
+
+    def consumption_query_graph(self):
+        vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
+        g = QueryGraph()
+        g.add_vars(*vars, **PREEXISTS)
+        g.add_has_edge(s, n, **PREEXISTS)
+        g.add_role_edge(c, p, 'consumer', **PREEXISTS)
+        g.add_role_edge(c, s, 'consumed-substance', **PREEXISTS)
+        g.add_has_edge(c, u, **PREEXISTS)
+
+        return g
+
+    def person_age_query(self, example_id):
+        return inspect.cleandoc(f'''match 
+                $p isa person, has example-id {example_id}, has age $a; 
+                get;''')
+
+    def person_age_query_graph(self):
+        vars = p, a = 'p', 'a'
+        g = QueryGraph()
+        g.add_vars(*vars, **PREEXISTS)
+        g.add_has_edge(p, a, **PREEXISTS)
+
+        return g
+
+    def risk_factor_query(self, example_id):
+        return inspect.cleandoc(f'''match 
+                $d isa disease; 
+                $p isa person, has example-id {example_id}; 
+                $r(person-at-risk: $p, risked-disease: $d) isa risk-factor; 
+                get;''')
+
+    def risk_factor_query_graph(self):
+        vars = p, d, r = 'p', 'd', 'r'
+        g = QueryGraph()
+        g.add_vars(*vars, **PREEXISTS)
+        g.add_role_edge(r, p, 'person-at-risk', **PREEXISTS)
+        g.add_role_edge(r, d, 'risked-disease', **PREEXISTS)
+
+        return g
 
     def diagnosis_query(self, example_id):
         return inspect.cleandoc(f'''match
@@ -185,6 +254,10 @@ class QueryHandler:
         return [
             (self.diagnosis_query(example_id), lambda x: x, self.diagnosis_query_graph()),
             (self.candidate_diagnosis_query(example_id), lambda x: x, self.candidate_diagnosis_query_graph()),
+            (self.risk_factor_query(example_id), lambda x: x, self.risk_factor_query_graph()),
+            (self.person_age_query(example_id), lambda x: x, self.person_age_query_graph()),
+            (self.consumption_query(example_id), lambda x: x, self.consumption_query_graph()),
+            (self.hereditary_query(example_id), lambda x: x, self.hereditary_query_graph())
         ]
 
 
@@ -238,8 +311,9 @@ def write_predictions_to_grakn(graphs, tx):
                     query = (f'match'
                              f'$p id {person.id};'
                              f'$d id {disease.id};'
+                             f'$kgcn isa kgcn;'
                              f'insert'
-                             f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
+                             f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
                              f'has probability-non-exists {p[1]:.3f},'  
                              f'has probability-preexists {p[0]:.3f};')
