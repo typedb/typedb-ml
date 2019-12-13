@@ -29,7 +29,7 @@ assemble_pip(
     license = "Apache-2.0",
     install_requires=[
         'enum-compat==0.0.2',
-        'grakn-client==1.5.4',
+        'grakn-client==1.6.0',
         'absl-py==0.8.0',
         'astor==0.8.0',
         'cloudpickle==1.2.2',
