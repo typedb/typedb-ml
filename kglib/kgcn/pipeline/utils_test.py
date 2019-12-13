@@ -37,30 +37,30 @@ class TestDuplicateEdgesInReverse(GraphTestCase):
         par0 = Thing('V789', 'parentship', 'relation')
 
         # people
-        graph.add_node(p0, type='person', input=1, solution=1)
-        graph.add_node(p1, type='person', input=1, solution=1)
+        graph.add_node(p0, type='person', solution=1)
+        graph.add_node(p1, type='person', solution=1)
 
         # parentships
-        graph.add_node(par0, type='parentship', input=1, solution=1)
-        graph.add_edge(par0, p0, type='parent', input=1, solution=1)
-        graph.add_edge(par0, p1, type='child', input=1, solution=1)
+        graph.add_node(par0, type='parentship', solution=1)
+        graph.add_edge(par0, p0, type='parent', solution=1)
+        graph.add_edge(par0, p1, type='child', solution=1)
 
         duplicate_edges_in_reverse(graph)
 
         expected_graph = nx.MultiDiGraph(name=0)
 
         # people
-        expected_graph.add_node(p0, type='person', input=1, solution=1)
-        expected_graph.add_node(p1, type='person', input=1, solution=1)
+        expected_graph.add_node(p0, type='person', solution=1)
+        expected_graph.add_node(p1, type='person', solution=1)
 
         # parentships
-        expected_graph.add_node(par0, type='parentship', input=1, solution=1)
-        expected_graph.add_edge(par0, p0, type='parent', input=1, solution=1)
-        expected_graph.add_edge(par0, p1, type='child', input=1, solution=1)
+        expected_graph.add_node(par0, type='parentship', solution=1)
+        expected_graph.add_edge(par0, p0, type='parent', solution=1)
+        expected_graph.add_edge(par0, p1, type='child', solution=1)
 
         # Duplicates
-        expected_graph.add_edge(p0, par0, type='parent', input=1, solution=1)
-        expected_graph.add_edge(p1, par0, type='child', input=1, solution=1)
+        expected_graph.add_edge(p0, par0, type='parent', solution=1)
+        expected_graph.add_edge(p1, par0, type='child', solution=1)
         self.assertGraphsEqual(expected_graph, graph)
 
 

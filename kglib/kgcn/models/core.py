@@ -51,21 +51,19 @@ class MLPGraphIndependent(snt.AbstractModule):
         with self._enter_variable_scope():
             self._network = GraphIndependent(
                 edge_model_fn=make_mlp_model,
-                node_model_fn=make_mlp_model,
-                global_model_fn=make_mlp_model)
+                node_model_fn=make_mlp_model)
 
     def _build(self, inputs):
         return self._network(inputs)
 
 
-class MLPGraphNetwork(snt.AbstractModule):
-    """GraphNetwork with MLP edge, node, and global models."""
+class MLPInteractionNetwork(snt.AbstractModule):
+    """InteractionNetwork with MLP edge, node, and global models."""
 
-    def __init__(self, name="MLPGraphNetwork"):
-        super(MLPGraphNetwork, self).__init__(name=name)
+    def __init__(self, name="MLPInteractionNetwork"):
+        super(MLPInteractionNetwork, self).__init__(name=name)
         with self._enter_variable_scope():
-            self._network = modules.GraphNetwork(make_mlp_model, make_mlp_model,
-                                                 make_mlp_model)
+            self._network = modules.InteractionNetwork(make_mlp_model, make_mlp_model)
 
     def _build(self, inputs):
         return self._network(inputs)
@@ -103,9 +101,9 @@ class KGCN(snt.AbstractModule):
             node_fn = lambda: snt.Linear(node_output_size, name="node_output")
         with self._enter_variable_scope():
             self._encoder = self._kg_encoder()
-            self._core = MLPGraphNetwork()
+            self._core = MLPInteractionNetwork()
             self._decoder = MLPGraphIndependent()
-            self._output_transform = modules.GraphIndependent(edge_fn, node_fn, None)
+            self._output_transform = modules.GraphIndependent(edge_fn, node_fn)
 
     def _edge_model(self):
         return snt.Sequential([self._role_embedder,
@@ -118,7 +116,7 @@ class KGCN(snt.AbstractModule):
                                snt.LayerNorm()])
 
     def _kg_encoder(self):
-        return GraphIndependent(self._edge_model, self._node_model, make_mlp_model, name='kg_encoder')
+        return GraphIndependent(self._edge_model, self._node_model, name='kg_encoder')
 
     def _build(self, input_op, num_processing_steps):
         latent = self._encoder(input_op)

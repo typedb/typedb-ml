@@ -23,7 +23,6 @@ import networkx as nx
 import numpy as np
 
 from kglib.kgcn.learn.learn import KGCNLearner
-from kglib.kgcn.models.attribute import BlankAttribute
 from kglib.kgcn.models.core import KGCN
 from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
 
@@ -31,24 +30,22 @@ from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
 class ITKGCNLearner(unittest.TestCase):
     def test_learner_runs(self):
         input_graph = nx.MultiDiGraph()
-        # TODO Remove 'input' and 'solution' fields, only needed for plotting which should be separated
-        input_graph.add_node(0, type='person', features=np.array([0, 1, 2], dtype=np.float32))
-        input_graph.add_edge(1, 0, type='employee', features=np.array([0, 1, 2], dtype=np.float32))
-        input_graph.add_node(1, type='employment', features=np.array([0, 1, 2], dtype=np.float32))
-        input_graph.add_edge(1, 2, type='employer', features=np.array([0, 1, 2], dtype=np.float32))
-        input_graph.add_node(2, type='company', features=np.array([0, 1, 2], dtype=np.float32))
+        input_graph.add_node(0, features=np.array([0, 1, 2], dtype=np.float32))
+        input_graph.add_edge(1, 0, features=np.array([0, 1, 2], dtype=np.float32))
+        input_graph.add_node(1, features=np.array([0, 1, 2], dtype=np.float32))
+        input_graph.add_edge(1, 2, features=np.array([0, 1, 2], dtype=np.float32))
+        input_graph.add_node(2, features=np.array([0, 1, 2], dtype=np.float32))
         input_graph.graph['features'] = np.zeros(5, dtype=np.float32)
 
         target_graph = nx.MultiDiGraph()
-        # TODO Remove 'input' and 'solution' fields, only needed for plotting which should be separated
-        target_graph.add_node(0, type='person', features=np.array([0, 1, 0], dtype=np.float32))
-        target_graph.add_edge(1, 0, type='employee', features=np.array([0, 0, 1], dtype=np.float32))
-        target_graph.add_node(1, type='employment', features=np.array([0, 0, 1], dtype=np.float32))
-        target_graph.add_edge(1, 2, type='employer', features=np.array([0, 0, 1], dtype=np.float32))
-        target_graph.add_node(2, type='company', features=np.array([0, 1, 0], dtype=np.float32))
+        target_graph.add_node(0, features=np.array([0, 1, 0], dtype=np.float32))
+        target_graph.add_edge(1, 0, features=np.array([0, 0, 1], dtype=np.float32))
+        target_graph.add_node(1, features=np.array([0, 0, 1], dtype=np.float32))
+        target_graph.add_edge(1, 2, features=np.array([0, 0, 1], dtype=np.float32))
+        target_graph.add_node(2, features=np.array([0, 1, 0], dtype=np.float32))
         target_graph.graph['features'] = np.zeros(5, dtype=np.float32)
 
-        thing_embedder = ThingEmbedder(node_types=['person', 'employment', 'employee'], type_embedding_dim=5,
+        thing_embedder = ThingEmbedder(node_types=['a', 'b', 'c'], type_embedding_dim=5,
                                        attr_embedding_dim=6, categorical_attributes={}, continuous_attributes={})
 
         role_embedder = RoleEmbedder(num_edge_types=2, type_embedding_dim=5)
