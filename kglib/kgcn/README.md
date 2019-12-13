@@ -32,7 +32,7 @@ We approach learning over a Knowledge Graph just as we do classical supervised l
 
 We extract these subgraphs from a Grakn Knowledge Graph. Extracting subgraphs is performed by making Graql queries to Grakn (multiple queries per example).
 
-![Knowledge Graph Machine Learning](images/knowledge_graph_machine_learning.png)
+![Knowledge Graph Machine Learning](.images/knowledge_graph_machine_learning.png)
 
 We then encode these graphs and feed them to the KGCN. As an output we receive the same graph with predicted node property values. Those predicted properties can be used to regress or classify the Concepts of our subgraphs as we see fit.
 
@@ -44,7 +44,7 @@ We can directly ingest a graph into TensorFlow and learn over that graph. This l
 
 We extend this work for Grakn knowledge graphs, with a graph data flow as follows:
 
-![Pipeline](images/learning_pipeline.png)
+![Pipeline](.images/learning_pipeline.png)
 
 
 
@@ -62,25 +62,19 @@ for step in supersteps:
   update all nodes;
 ```
 
-
-
-![Message Passing](images/message_passing.png)
-
-
+![Message Passing](.images/message_passing.png)
 
 ### Edge Block
 
 Use as input the current edge features and the features of the nodes it connects. Update the edge's features as the output of some neural network layers. Do this for all edges.
 
-![Edge Update](images/edge_update.png)
-
-
+<img src = ".images/edge_update.png" style="width:50%">
 
 ### Node Block
 
 Use as input the node's features and the most up-to-date features of the edges that connect to it. Update the node's features as the output of some neural network layers. Do this for all nodes.
 
-![Node Update](images/node_update.png)
+<img src = ".images/node_update.png" style="width:50%">
 
 ### How is this Convolutional?
 

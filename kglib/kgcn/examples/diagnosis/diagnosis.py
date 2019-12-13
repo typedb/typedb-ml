@@ -72,19 +72,18 @@ def diagnosis_example(num_graphs=200,
     return solveds_tr, solveds_ge
 
 
-CATEGORICAL_ATTRIBUTES = {'name': ['meningitis', 'flu', 'fever', 'light-sensitivity']}
-CONTINUOUS_ATTRIBUTES = {'severity': (0, 1)}
+CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
+                                   'Alcohol']}
+CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
 
 
 def create_concept_graphs(example_indices, grakn_session):
     graphs = []
-    qh = QueryHandler()
-
     infer = True
 
     for example_id in example_indices:
         print(f'Creating graph for example {example_id}')
-        graph_query_handles = qh.get_query_handles(example_id)
+        graph_query_handles = get_query_handles(example_id)
         with grakn_session.transaction().read() as tx:
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
@@ -115,7 +114,7 @@ CANDIDATE = dict(solution=1)
 TO_INFER = dict(solution=2)
 
 
-class QueryHandler:
+def get_query_handles(example_id):
     """
     1. Supply a query
     2. Supply a `QueryGraph` object to represent that query. That itself is a subclass of a networkx graph
@@ -124,87 +123,170 @@ class QueryHandler:
     5. Combine all of these graphs into one single graph, and that’s your example subgraph
     """
 
-    def diagnosis_query(self, example_id):
-        return inspect.cleandoc(f'''match
-               $p isa person, has example-id {example_id};
-               $s isa symptom, has name $sn;
-               $d isa disease, has name $dn;
-               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
-               $c(cause: $d, effect: $s) isa causality;
-               $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
-               get;''')
+    # === Hereditary Feature ===
+    hereditary_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $par isa person;
+           $ps(child: $p, parent: $par) isa parentship;
+           $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
+           $d isa disease, has name $n;
+           get;''')
 
-    def base_query_graph(self):
-        vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
-        g = QueryGraph()
-        g.add_vars(*vars, **PREEXISTS)
-        g.add_has_edge(s, sn, **PREEXISTS)
-        g.add_has_edge(d, dn, **PREEXISTS)
-        g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
-        g.add_has_edge(sp, sev, **PREEXISTS)
-        g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
-        g.add_role_edge(c, s, 'effect', **PREEXISTS)
-        g.add_role_edge(c, d, 'cause', **PREEXISTS)
+    vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_role_edge(ps, p, 'child', **PREEXISTS)
+    g.add_role_edge(ps, par, 'parent', **PREEXISTS)
+    g.add_role_edge(diag, par, 'patient', **PREEXISTS)
+    g.add_role_edge(diag, d, 'diagnosed-disease', **PREEXISTS)
+    g.add_has_edge(d, n, **PREEXISTS)
 
-        return g
+    hereditary_query_graph = g
 
-    def diagnosis_query_graph(self):
-        g = self.base_query_graph()
-        g = copy.copy(g)
+    # === Consumption Feature ===
+    consumption_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $s isa substance, has name $n;
+           $c(consumer: $p, consumed-substance: $s) isa consumption, 
+           has units-per-week $u; get;''')
 
-        diag, d, p = 'diag', 'd', 'p'
-        g.add_vars(diag, **TO_INFER)
-        g.add_role_edge(diag, d, 'diagnosed-disease', **TO_INFER)
-        g.add_role_edge(diag, p, 'patient', **TO_INFER)
+    vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_has_edge(s, n, **PREEXISTS)
+    g.add_role_edge(c, p, 'consumer', **PREEXISTS)
+    g.add_role_edge(c, s, 'consumed-substance', **PREEXISTS)
+    g.add_has_edge(c, u, **PREEXISTS)
 
-        return g
+    consumption_query_graph = g
 
-    def candidate_diagnosis_query(self, example_id):
-        return inspect.cleandoc(f'''match
-               $p isa person, has example-id {example_id};
-               $s isa symptom, has name $sn;
-               $d isa disease, has name $dn;
-               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
-               $c(cause: $d, effect: $s) isa causality;
-               $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
-               get;''')
+    # === Age Feature ===
+    person_age_query = inspect.cleandoc(f'''match 
+            $p isa person, has example-id {example_id}, has age $a; 
+            get;''')
 
-    def candidate_diagnosis_query_graph(self):
-        g = self.base_query_graph()
-        g = copy.copy(g)
 
-        diag, d, p = 'diag', 'd', 'p'
-        g.add_vars(diag, **CANDIDATE)
-        g.add_role_edge(diag, d, 'candidate-diagnosed-disease', **CANDIDATE)
-        g.add_role_edge(diag, p, 'candidate-patient', **CANDIDATE)
+    vars = p, a = 'p', 'a'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_has_edge(p, a, **PREEXISTS)
 
-        return g
+    person_age_query_graph = g
 
-    def get_query_handles(self, example_id):
+    # === Risk Factors Feature ===
+    risk_factor_query = inspect.cleandoc(f'''match 
+            $d isa disease; 
+            $p isa person, has example-id {example_id}; 
+            $r(person-at-risk: $p, risked-disease: $d) isa risk-factor; 
+            get;''')
 
-        return [
-            (self.diagnosis_query(example_id), lambda x: x, self.diagnosis_query_graph()),
-            (self.candidate_diagnosis_query(example_id), lambda x: x, self.candidate_diagnosis_query_graph()),
-        ]
+    vars = p, d, r = 'p', 'd', 'r'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_role_edge(r, p, 'person-at-risk', **PREEXISTS)
+    g.add_role_edge(r, d, 'risked-disease', **PREEXISTS)
+
+    risk_factor_query_graph = g
+
+    # === Diagnosis ===
+    diagnosis_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $s isa symptom, has name $sn;
+           $d isa disease, has name $dn;
+           $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
+           $c(cause: $d, effect: $s) isa causality;
+           $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
+           get;''')
+
+    vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_has_edge(s, sn, **PREEXISTS)
+    g.add_has_edge(d, dn, **PREEXISTS)
+    g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
+    g.add_has_edge(sp, sev, **PREEXISTS)
+    g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
+    g.add_role_edge(c, s, 'effect', **PREEXISTS)
+    g.add_role_edge(c, d, 'cause', **PREEXISTS)
+
+    base_query_graph = g
+
+    g = copy.copy(base_query_graph)
+
+    diag, d, p = 'diag', 'd', 'p'
+    g.add_vars(diag, **TO_INFER)
+    g.add_role_edge(diag, d, 'diagnosed-disease', **TO_INFER)
+    g.add_role_edge(diag, p, 'patient', **TO_INFER)
+
+    diagnosis_query_graph = g
+
+    # === Candidate Diagnosis ===
+    candidate_diagnosis_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $s isa symptom, has name $sn;
+           $d isa disease, has name $dn;
+           $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
+           $c(cause: $d, effect: $s) isa causality;
+           $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
+           get;''')
+
+    g = copy.copy(base_query_graph)
+
+    diag, d, p = 'diag', 'd', 'p'
+    g.add_vars(diag, **CANDIDATE)
+    g.add_role_edge(diag, d, 'candidate-diagnosed-disease', **CANDIDATE)
+    g.add_role_edge(diag, p, 'candidate-patient', **CANDIDATE)
+    candidate_diagnosis_query_graph = g
+
+    return [
+        (diagnosis_query, lambda x: x, diagnosis_query_graph),
+        (candidate_diagnosis_query, lambda x: x, candidate_diagnosis_query_graph),
+        (risk_factor_query, lambda x: x, risk_factor_query_graph),
+        (person_age_query, lambda x: x, person_age_query_graph),
+        (consumption_query, lambda x: x, consumption_query_graph),
+        (hereditary_query, lambda x: x, hereditary_query_graph)
+    ]
 
 
 def get_thing_types(tx):
-    schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
+    """
+    Get all schema types, excluding those for implicit attribute relations, base types, and candidate types
+    Args:
+        tx: Grakn transaction
+
+    Returns:
+        Grakn types
+    """
+    schema_concepts = tx.query(
+        "match $x sub thing; "
+        "not {$x sub @has-attribute;}; "
+        "not {$x sub @key-attribute;}; "
+        "get;").get('x')
     thing_types = [schema_concept.label() for schema_concept in schema_concepts]
     [thing_types.remove(el) for el in
-     ['thing', 'relation', 'entity', 'attribute', '@has-attribute', '@key-attribute', 'candidate-diagnosis',
-      'example-id', '@key-example-id', '@key-name', '@has-probability-exists', '@has-probability-non-exists',
-      '@has-probability-preexists', 'probability-exists', 'probability-non-exists', 'probability-preexists']]
+     ['thing', 'relation', 'entity', 'attribute', 'candidate-diagnosis', 'example-id', 'probability-exists',
+      'probability-non-exists', 'probability-preexists']]
     return thing_types
 
 
 def get_role_types(tx):
-    schema_concepts = tx.query("match $x sub role; get;").collect_concepts()
+    """
+    Get all schema roles, excluding those for implicit attribute relations, the base role type, and candidate roles
+    Args:
+        tx: Grakn transaction
+
+    Returns:
+        Grakn roles
+    """
+    schema_concepts = tx.query(
+        "match $x sub role; "
+        "not{$x sub @key-attribute-value;}; "
+        "not{$x sub @key-attribute-owner;}; "
+        "not{$x sub @has-attribute-value;}; "
+        "not{$x sub @has-attribute-owner;};"
+        "get;").get('x')
     role_types = ['has'] + [role.label() for role in schema_concepts]
-    [role_types.remove(el) for el in
-     ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
-      'candidate-diagnosed-disease', '@key-example-id-value', '@key-example-id-owner',
-      '@key-name-value', '@key-name-owner']]
+    [role_types.remove(el) for el in ['role', 'candidate-patient', 'candidate-diagnosed-disease']]
     return role_types
 
 
@@ -238,8 +320,9 @@ def write_predictions_to_grakn(graphs, tx):
                     query = (f'match'
                              f'$p id {person.id};'
                              f'$d id {disease.id};'
+                             f'$kgcn isa kgcn;'
                              f'insert'
-                             f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
+                             f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
                              f'has probability-non-exists {p[1]:.3f},'  
                              f'has probability-preexists {p[0]:.3f};')
