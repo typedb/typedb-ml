@@ -79,13 +79,11 @@ CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (
 
 def create_concept_graphs(example_indices, grakn_session):
     graphs = []
-    qh = QueryHandler()
-
     infer = True
 
     for example_id in example_indices:
         print(f'Creating graph for example {example_id}')
-        graph_query_handles = qh.get_query_handles(example_id)
+        graph_query_handles = get_query_handles(example_id)
         with grakn_session.transaction().read() as tx:
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
@@ -116,7 +114,7 @@ CANDIDATE = dict(solution=1)
 TO_INFER = dict(solution=2)
 
 
-class QueryHandler:
+def get_query_handles(example_id):
     """
     1. Supply a query
     2. Supply a `QueryGraph` object to represent that query. That itself is a subclass of a networkx graph
@@ -125,140 +123,129 @@ class QueryHandler:
     5. Combine all of these graphs into one single graph, and that’s your example subgraph
     """
 
-    def hereditary_query(self, example_id):
-        return inspect.cleandoc(f'''match
-               $p isa person, has example-id {example_id};
-               $par isa person;
-               $ps(child: $p, parent: $par) isa parentship;
-               $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
-               $d isa disease, has name $n;
-               get;''')
+    # === Hereditary Feature ===
+    hereditary_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $par isa person;
+           $ps(child: $p, parent: $par) isa parentship;
+           $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
+           $d isa disease, has name $n;
+           get;''')
 
-    def hereditary_query_graph(self):
-        vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
-        g = QueryGraph()
-        g.add_vars(*vars, **PREEXISTS)
-        g.add_role_edge(ps, p, 'child', **PREEXISTS)
-        g.add_role_edge(ps, par, 'parent', **PREEXISTS)
-        g.add_role_edge(diag, par, 'patient', **PREEXISTS)
-        g.add_role_edge(diag, d, 'diagnosed-disease', **PREEXISTS)
-        g.add_has_edge(d, n, **PREEXISTS)
+    vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_role_edge(ps, p, 'child', **PREEXISTS)
+    g.add_role_edge(ps, par, 'parent', **PREEXISTS)
+    g.add_role_edge(diag, par, 'patient', **PREEXISTS)
+    g.add_role_edge(diag, d, 'diagnosed-disease', **PREEXISTS)
+    g.add_has_edge(d, n, **PREEXISTS)
 
-        return g
+    hereditary_query_graph = g
 
-    def consumption_query(self, example_id):
-        return inspect.cleandoc(f'''match
-               $p isa person, has example-id {example_id};
-               $s isa substance, has name $n;
-               $c(consumer: $p, consumed-substance: $s) isa consumption, 
-               has units-per-week $u; get;''')
+    # === Consumption Feature ===
+    consumption_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $s isa substance, has name $n;
+           $c(consumer: $p, consumed-substance: $s) isa consumption, 
+           has units-per-week $u; get;''')
 
-    def consumption_query_graph(self):
-        vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
-        g = QueryGraph()
-        g.add_vars(*vars, **PREEXISTS)
-        g.add_has_edge(s, n, **PREEXISTS)
-        g.add_role_edge(c, p, 'consumer', **PREEXISTS)
-        g.add_role_edge(c, s, 'consumed-substance', **PREEXISTS)
-        g.add_has_edge(c, u, **PREEXISTS)
+    vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_has_edge(s, n, **PREEXISTS)
+    g.add_role_edge(c, p, 'consumer', **PREEXISTS)
+    g.add_role_edge(c, s, 'consumed-substance', **PREEXISTS)
+    g.add_has_edge(c, u, **PREEXISTS)
 
-        return g
+    consumption_query_graph = g
 
-    def person_age_query(self, example_id):
-        return inspect.cleandoc(f'''match 
-                $p isa person, has example-id {example_id}, has age $a; 
-                get;''')
+    # === Age Feature ===
+    person_age_query = inspect.cleandoc(f'''match 
+            $p isa person, has example-id {example_id}, has age $a; 
+            get;''')
 
-    def person_age_query_graph(self):
-        vars = p, a = 'p', 'a'
-        g = QueryGraph()
-        g.add_vars(*vars, **PREEXISTS)
-        g.add_has_edge(p, a, **PREEXISTS)
 
-        return g
+    vars = p, a = 'p', 'a'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_has_edge(p, a, **PREEXISTS)
 
-    def risk_factor_query(self, example_id):
-        return inspect.cleandoc(f'''match 
-                $d isa disease; 
-                $p isa person, has example-id {example_id}; 
-                $r(person-at-risk: $p, risked-disease: $d) isa risk-factor; 
-                get;''')
+    person_age_query_graph = g
 
-    def risk_factor_query_graph(self):
-        vars = p, d, r = 'p', 'd', 'r'
-        g = QueryGraph()
-        g.add_vars(*vars, **PREEXISTS)
-        g.add_role_edge(r, p, 'person-at-risk', **PREEXISTS)
-        g.add_role_edge(r, d, 'risked-disease', **PREEXISTS)
+    # === Risk Factors Feature ===
+    risk_factor_query = inspect.cleandoc(f'''match 
+            $d isa disease; 
+            $p isa person, has example-id {example_id}; 
+            $r(person-at-risk: $p, risked-disease: $d) isa risk-factor; 
+            get;''')
 
-        return g
+    vars = p, d, r = 'p', 'd', 'r'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_role_edge(r, p, 'person-at-risk', **PREEXISTS)
+    g.add_role_edge(r, d, 'risked-disease', **PREEXISTS)
 
-    def diagnosis_query(self, example_id):
-        return inspect.cleandoc(f'''match
-               $p isa person, has example-id {example_id};
-               $s isa symptom, has name $sn;
-               $d isa disease, has name $dn;
-               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
-               $c(cause: $d, effect: $s) isa causality;
-               $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
-               get;''')
+    risk_factor_query_graph = g
 
-    def base_query_graph(self):
-        vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
-        g = QueryGraph()
-        g.add_vars(*vars, **PREEXISTS)
-        g.add_has_edge(s, sn, **PREEXISTS)
-        g.add_has_edge(d, dn, **PREEXISTS)
-        g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
-        g.add_has_edge(sp, sev, **PREEXISTS)
-        g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
-        g.add_role_edge(c, s, 'effect', **PREEXISTS)
-        g.add_role_edge(c, d, 'cause', **PREEXISTS)
+    # === Diagnosis ===
+    diagnosis_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $s isa symptom, has name $sn;
+           $d isa disease, has name $dn;
+           $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
+           $c(cause: $d, effect: $s) isa causality;
+           $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
+           get;''')
 
-        return g
+    vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
+    g = QueryGraph()
+    g.add_vars(*vars, **PREEXISTS)
+    g.add_has_edge(s, sn, **PREEXISTS)
+    g.add_has_edge(d, dn, **PREEXISTS)
+    g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
+    g.add_has_edge(sp, sev, **PREEXISTS)
+    g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
+    g.add_role_edge(c, s, 'effect', **PREEXISTS)
+    g.add_role_edge(c, d, 'cause', **PREEXISTS)
 
-    def diagnosis_query_graph(self):
-        g = self.base_query_graph()
-        g = copy.copy(g)
+    base_query_graph = g
 
-        diag, d, p = 'diag', 'd', 'p'
-        g.add_vars(diag, **TO_INFER)
-        g.add_role_edge(diag, d, 'diagnosed-disease', **TO_INFER)
-        g.add_role_edge(diag, p, 'patient', **TO_INFER)
+    g = copy.copy(base_query_graph)
 
-        return g
+    diag, d, p = 'diag', 'd', 'p'
+    g.add_vars(diag, **TO_INFER)
+    g.add_role_edge(diag, d, 'diagnosed-disease', **TO_INFER)
+    g.add_role_edge(diag, p, 'patient', **TO_INFER)
 
-    def candidate_diagnosis_query(self, example_id):
-        return inspect.cleandoc(f'''match
-               $p isa person, has example-id {example_id};
-               $s isa symptom, has name $sn;
-               $d isa disease, has name $dn;
-               $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
-               $c(cause: $d, effect: $s) isa causality;
-               $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
-               get;''')
+    diagnosis_query_graph = g
 
-    def candidate_diagnosis_query_graph(self):
-        g = self.base_query_graph()
-        g = copy.copy(g)
+    # === Candidate Diagnosis ===
+    candidate_diagnosis_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $s isa symptom, has name $sn;
+           $d isa disease, has name $dn;
+           $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
+           $c(cause: $d, effect: $s) isa causality;
+           $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
+           get;''')
 
-        diag, d, p = 'diag', 'd', 'p'
-        g.add_vars(diag, **CANDIDATE)
-        g.add_role_edge(diag, d, 'candidate-diagnosed-disease', **CANDIDATE)
-        g.add_role_edge(diag, p, 'candidate-patient', **CANDIDATE)
+    g = copy.copy(base_query_graph)
 
-        return g
+    diag, d, p = 'diag', 'd', 'p'
+    g.add_vars(diag, **CANDIDATE)
+    g.add_role_edge(diag, d, 'candidate-diagnosed-disease', **CANDIDATE)
+    g.add_role_edge(diag, p, 'candidate-patient', **CANDIDATE)
+    candidate_diagnosis_query_graph = g
 
-    def get_query_handles(self, example_id):
-
-        return [
-            (self.diagnosis_query(example_id), lambda x: x, self.diagnosis_query_graph()),
-            (self.candidate_diagnosis_query(example_id), lambda x: x, self.candidate_diagnosis_query_graph()),
-            (self.risk_factor_query(example_id), lambda x: x, self.risk_factor_query_graph()),
-            (self.person_age_query(example_id), lambda x: x, self.person_age_query_graph()),
-            (self.consumption_query(example_id), lambda x: x, self.consumption_query_graph()),
-            (self.hereditary_query(example_id), lambda x: x, self.hereditary_query_graph())
-        ]
+    return [
+        (diagnosis_query, lambda x: x, diagnosis_query_graph),
+        (candidate_diagnosis_query, lambda x: x, candidate_diagnosis_query_graph),
+        (risk_factor_query, lambda x: x, risk_factor_query_graph),
+        (person_age_query, lambda x: x, person_age_query_graph),
+        (consumption_query, lambda x: x, consumption_query_graph),
+        (hereditary_query, lambda x: x, hereditary_query_graph)
+    ]
 
 
 def get_thing_types(tx):
