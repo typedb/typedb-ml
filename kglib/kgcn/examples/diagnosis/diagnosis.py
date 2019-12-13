@@ -249,22 +249,44 @@ def get_query_handles(example_id):
 
 
 def get_thing_types(tx):
-    schema_concepts = tx.query("match $x sub thing; get;").collect_concepts()
+    """
+    Get all schema types, excluding those for implicit attribute relations, base types, and candidate types
+    Args:
+        tx: Grakn transaction
+
+    Returns:
+        Grakn types
+    """
+    schema_concepts = tx.query(
+        "match $x sub thing; "
+        "not {$x sub @has-attribute;}; "
+        "not {$x sub @key-attribute;}; "
+        "get;").get('x')
     thing_types = [schema_concept.label() for schema_concept in schema_concepts]
     [thing_types.remove(el) for el in
-     ['thing', 'relation', 'entity', 'attribute', '@has-attribute', '@key-attribute', 'candidate-diagnosis',
-      'example-id', '@key-example-id', '@key-name', '@has-probability-exists', '@has-probability-non-exists',
-      '@has-probability-preexists', 'probability-exists', 'probability-non-exists', 'probability-preexists']]
+     ['thing', 'relation', 'entity', 'attribute', 'candidate-diagnosis', 'example-id', 'probability-exists',
+      'probability-non-exists', 'probability-preexists']]
     return thing_types
 
 
 def get_role_types(tx):
-    schema_concepts = tx.query("match $x sub role; get;").collect_concepts()
+    """
+    Get all schema roles, excluding those for implicit attribute relations, the base role type, and candidate roles
+    Args:
+        tx: Grakn transaction
+
+    Returns:
+        Grakn roles
+    """
+    schema_concepts = tx.query(
+        "match $x sub role; "
+        "not{$x sub @key-attribute-value;}; "
+        "not{$x sub @key-attribute-owner;}; "
+        "not{$x sub @has-attribute-value;}; "
+        "not{$x sub @has-attribute-owner;};"
+        "get;").get('x')
     role_types = ['has'] + [role.label() for role in schema_concepts]
-    [role_types.remove(el) for el in
-     ['role', '@has-attribute-value', '@has-attribute-owner', 'candidate-patient',
-      'candidate-diagnosed-disease', '@key-example-id-value', '@key-example-id-owner',
-      '@key-name-value', '@key-name-owner']]
+    [role_types.remove(el) for el in ['role', 'candidate-patient', 'candidate-diagnosed-disease']]
     return role_types
 
 
