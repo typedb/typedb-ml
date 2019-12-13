@@ -2,7 +2,7 @@
 
 This example is entirely fabricated as a demonstration for how to construct a KGCN pipeline. Since the data for this example is generated synthetically, it also functions as a test platform for the KGCN model.
 
-Studying the schema for this example, we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. Lastly, people can be diagnosed with a disease.
+Studying the schema for this example (using Grakn Workbase's Schema Designer), we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. We also know information that contributes to risk-factors for certain diseases. These risk factors are determined by rules defined in the schema. Lastly, people can be diagnosed with a disease.
 
 ![Diagnosis Schema](.images/diagnosis_schema.png)
 
@@ -55,16 +55,16 @@ You should see output such as this for the diagnosis example:
 
 ```
 # (iteration number), T (elapsed seconds), Ltr (training loss), Lge (test/generalization loss), Ctr (training fraction nodes/edges labeled correctly), Str (training fraction examples solved correctly), Cge (test/generalization fraction nodes/edges labeled correctly), Sge (test/generalization fraction examples solved correctly)
-# 00000, T 9.3, Ltr 1.1901, Lge 1.0979, Ctr 0.5350, Str 0.1600, Cge 0.5000, Sge 0.0900
-# 00020, T 19.5, Ltr 0.7894, Lge 0.7860, Ctr 0.5050, Str 0.0100, Cge 0.4350, Sge 0.0700
-# 00040, T 22.8, Ltr 0.7248, Lge 0.7438, Ctr 0.6400, Str 0.4300, Cge 0.5250, Sge 0.3200
-# 00060, T 26.0, Ltr 0.7091, Lge 0.7189, Ctr 0.6200, Str 0.5000, Cge 0.4800, Sge 0.4300
-# 00080, T 29.1, Ltr 0.6837, Lge 0.6347, Ctr 0.7350, Str 0.7300, Cge 0.7250, Sge 0.7200
-# 00100, T 32.2, Ltr 0.6551, Lge 0.6519, Ctr 0.7350, Str 0.7300, Cge 0.7250, Sge 0.7200
-# 00120, T 35.3, Ltr 0.6438, Lge 0.6739, Ctr 0.7200, Str 0.6200, Cge 0.6850, Sge 0.6300
-# 00140, T 38.5, Ltr 0.6478, Lge 0.6732, Ctr 0.7250, Str 0.6800, Cge 0.6450, Sge 0.4900
-# 00160, T 41.6, Ltr 0.6162, Lge 0.6426, Ctr 0.7350, Str 0.7300, Cge 0.7200, Sge 0.7100
-# 00180, T 44.7, Ltr 0.6110, Lge 0.6348, Ctr 0.7400, Str 0.7300, Cge 0.7200, Sge 0.7100
+# 00000, T 4.4, Ltr 0.7928, Lge 0.7518, Ctr 0.4900, Str 0.0000, Cge 0.5000, Sge 0.0000
+# 00020, T 9.8, Ltr 0.7036, Lge 0.6957, Ctr 0.5100, Str 0.0200, Cge 0.5000, Sge 0.0000
+# 00040, T 12.1, Ltr 0.5384, Lge 0.4540, Ctr 0.7900, Str 0.6100, Cge 0.8100, Sge 0.6300
+# 00060, T 14.4, Ltr 0.7434, Lge 0.3631, Ctr 0.7650, Str 0.5400, Cge 0.8850, Sge 0.7900
+# 00080, T 16.7, Ltr 0.3643, Lge 0.2464, Ctr 0.9200, Str 0.8800, Cge 0.9350, Sge 0.8900
+# 00100, T 19.0, Ltr 0.2806, Lge 0.1590, Ctr 0.9600, Str 0.9600, Cge 0.9650, Sge 0.9500
+# 00120, T 21.3, Ltr 0.5488, Lge 0.2577, Ctr 0.9100, Str 0.8400, Cge 0.9300, Sge 0.8800
+# 00140, T 23.5, Ltr 0.2913, Lge 0.2590, Ctr 0.9650, Str 0.9600, Cge 0.9200, Sge 0.8600
+# 00160, T 25.8, Ltr 0.2603, Lge 0.1476, Ctr 0.9650, Str 0.9600, Cge 0.9700, Sge 0.9600
+# 00180, T 28.1, Ltr 0.2656, Lge 0.1411, Ctr 0.9650, Str 0.9600, Cge 0.9700, Sge 0.9600
 ...
 ```
 
@@ -99,7 +99,7 @@ You will see plots of metrics for the training process (training iteration on th
 
 We also receive a plot of some of the predictions made on the test set. 
 
-![predictions made on test set](.images/graph_snippet.png)
+![predictions made on test set](.images/graph.png)
 
 **Blue box:** Ground Truth 
 
@@ -129,41 +129,17 @@ We then teach the KGCN to distinguish between the positive and negative targets.
 
 We do this by creating *examples*, where each example is a subgraph extracted from a Grakn knowledge Graph. These subgraphs contain positive and negative instances of the relation to be predicted.
 
-A single subgraph is created by making multiple queries to Grakn. In this example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return information about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. 
-
-In this example the queries used are:
-
-```
-match
-$p isa person, has example-id 0;
-$s isa symptom, has name $sn;
-$d isa disease, has name $dn;
-$sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
-$c(cause: $d, effect: $s) isa causality;
-$diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
-get;
-```
-
-```
-match
-$p isa person, has example-id 0;
-$s isa symptom, has name $sn;
-$d isa disease, has name $dn;
-$sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation;
-$c(cause: $d, effect: $s) isa causality;
-$diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
-get;
-```
+A single subgraph is created by making multiple queries to Grakn. In this example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return information about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. For this example you can find the queries made in [diagnosis.py](diagnosis.py).
 
 A single subgraph is extracted from Grakn by making these queries and combining the results into a graph. For your own domain you should find queries that will retrieve the most relevant information for the Relations you are trying to predict.
 
-We can visualise such a subgraph by running these two queries one after the other in Grakn Workbase:
+We can visualise such a subgraph by running these queries one after the other in Grakn Workbase:
 
 ![queried subgraph](.images/queried_subgraph.png)
 
 You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/graknlabs/workbase/releases/latest).
 
-Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a great debugging tool.
+Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a great understanding and debugging tool.
 
 ## Modifying the Example
 
