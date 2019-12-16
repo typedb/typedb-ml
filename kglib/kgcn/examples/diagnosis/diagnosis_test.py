@@ -24,8 +24,9 @@ import grakn.client
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn.examples.diagnosis.diagnosis import write_predictions_to_grakn
+from kglib.kgcn.examples.diagnosis.diagnosis import write_predictions_to_grakn, obfuscate_labels
 from kglib.utils.grakn.object.thing import Thing
+from kglib.utils.graph.test.case import GraphTestCase
 
 
 class TestWritePredictionsToGrakn(unittest.TestCase):
@@ -88,6 +89,35 @@ class TestWritePredictionsToGrakn(unittest.TestCase):
         tx.query.assert_not_called()
 
         tx.commit.assert_called()
+
+
+class TestObfuscateLabels(GraphTestCase):
+
+    def test_labels_obfuscated_as_expected(self):
+
+        graph = nx.MultiDiGraph()
+
+        graph.add_node(0, type='person')
+        graph.add_node(1, type='disease')
+        graph.add_node(2, type='candidate-diagnosis')
+
+        graph.add_edge(2, 0, type='candidate-patient')
+        graph.add_edge(2, 1, type='candidate-diagnosed-disease')
+
+        obfuscate_labels(graph, {'candidate-diagnosis': 'diagnosis',
+                                 'candidate-patient': 'patient',
+                                 'candidate-diagnosed-disease': 'diagnosed-disease'})
+
+        expected_graph = nx.MultiDiGraph()
+        expected_graph.add_node(0, type='person')
+        expected_graph.add_node(1, type='disease')
+        expected_graph.add_node(2, type='diagnosis')
+
+        expected_graph.add_edge(2, 0, type='patient')
+        expected_graph.add_edge(2, 1, type='diagnosed-disease')
+
+        self.assertGraphsEqual(graph, expected_graph)
+
 
 
 if __name__ == "__main__":

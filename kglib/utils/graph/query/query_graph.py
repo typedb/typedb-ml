@@ -25,42 +25,45 @@ class QueryGraph(nx.MultiDiGraph):
     A custom graph to represent a query. Has additional helper methods specific to adding Graql patterns.
     """
 
-    def add_vars(self, *vars, **attr):
+    def add_vars(self, vars, solution):
         """
         Add Graql variables, stored as nodes in the graph
         Args:
-            *vars: String variables
-            **attr: Properties to be added to the data stored on each variable node
+            vars: String variables
+            solution: Indicator of the ground truth class that the variables belongs to
 
         Returns:
-            None
+            self
         """
         for var in vars:
-            self.add_node(var, **attr)
+            self.add_node(var, solution=solution)
+        return self
 
-    def add_has_edge(self, owner_var, attribute_var, **attr):
+    def add_has_edge(self, owner_var, attribute_var, solution):
         """
         Add a "has" edge to represent ownership of an attribute
         Args:
             owner_var: The variable of the owner
             attribute_var: The variable of the owned attribute
-            **attr: Properties to be added to the data stored on the "has" edge added
+            solution: Indicator of the ground truth class that the edge belongs to
 
         Returns:
-            None
+            self
         """
-        self.add_edge(owner_var, attribute_var, type='has', **attr)
+        self.add_edge(owner_var, attribute_var, type='has', solution=solution)
+        return self
 
-    def add_role_edge(self, relation_var, roleplayer_var, role_label, **attr):
+    def add_role_edge(self, relation_var, roleplayer_var, role_label, solution):
         """
         Add an edge to represent the role a variable plays in a relation
         Args:
             relation_var: The variable of the relation
             roleplayer_var: The variable of the roleplayer in the relation
             role_label: The role the roleplayer plays in the relation
-            **attr: Properties to be added to the data stored on the role edge added
+            solution: Indicator of the ground truth class that the edge belongs to
 
         Returns:
-            None
+            self
         """
-        self.add_edge(relation_var, roleplayer_var, type=role_label, **attr)
+        self.add_edge(relation_var, roleplayer_var, type=role_label, solution=solution)
+        return self

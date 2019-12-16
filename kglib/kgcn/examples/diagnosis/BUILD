@@ -8,6 +8,7 @@ py_test(
     ],
     deps = [
         "diagnosis",
+        "//kglib/utils/graph/test",
         requirement('numpy'),
         requirement('networkx'),
         requirement('decorator'),
