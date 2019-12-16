@@ -246,13 +246,14 @@ def get_query_handles(example_id):
                            .add_role_edge(c, d, 'cause', PREEXISTS))
 
     # === Diagnosis ===
+
+    vars = diag, d, p, dn = 'diag', 'd', 'p', 'dn'
+
     diagnosis_query = inspect.cleandoc(f'''match
            $p isa person, has example-id {example_id};
            $d isa disease, has name $dn;
            $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
            get;''')
-
-    vars = diag, d, p = 'diag', 'd', 'p'
 
     diagnosis_query_graph = (QueryGraph()
                              .add_vars(vars, TO_INFER)
