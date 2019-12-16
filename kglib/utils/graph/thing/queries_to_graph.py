@@ -29,8 +29,12 @@ def concept_dict_from_concept_map(concept_map):
     """
     Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
     information required about those concepts.
-    :param concept_map: A dict of Concepts provided by Grakn keyed by query variables
-    :return: A dictionary of concepts keyed by query variables
+
+    Args:
+        concept_map: A dict of Concepts provided by Grakn keyed by query variables
+
+    Returns:
+        A dictionary of concepts keyed by query variables
     """
     return {variable: build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
 
@@ -38,9 +42,13 @@ def concept_dict_from_concept_map(concept_map):
 def combine_2_graphs(graph1, graph2):
     """
     Combine two graphs into one. Do this by recognising common nodes between the two.
-    :param graph1: Graph to compare
-    :param graph2: Graph to compare
-    :return: Combined graph
+
+    Args:
+        graph1: Graph to compare
+        graph2: Graph to compare
+
+    Returns:
+        Combined graph
     """
 
     for node, data in graph1.nodes(data=True):
@@ -67,8 +75,12 @@ def combine_2_graphs(graph1, graph2):
 def combine_n_graphs(graphs_list):
     """
     Combine N graphs into one. Do this by recognising common nodes between the two.
-    :param graphs_list: List of graphs to combine
-    :return: Combined graph
+
+    Args:
+        graphs_list: List of graphs to combine
+
+    Returns:
+        Combined graph
     """
     return reduce(lambda x, y: combine_2_graphs(x, y), graphs_list)
 
@@ -78,14 +90,19 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
     queries (variable graphs)of those queries, over a Grakn transaction
-    :param infer:
-    :param query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
-    and a variable_graph
-    :param grakn_transaction: A Grakn transaction
-    :param concept_dict_converter: The function to use to convert from concept_dicts to a Grakn model. This could be
-    a typical model or a mathematical model
-    :return: A networkx graph
+
+    Args:
+        infer: whether to use Grakn's inference engine
+        query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
+            and a variable_graph
+        grakn_transaction: A Grakn transaction
+        concept_dict_converter: The function to use to convert from concept_dicts to a Grakn model. This could be
+            a typical model or a mathematical model
+
+    Returns:
+        A networkx graph
     """
+
     query_concept_graphs = []
 
     for query, sampler, variable_graph in query_sampler_variable_graph_tuples:

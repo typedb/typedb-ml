@@ -30,6 +30,8 @@ from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
 
+KEYSPACE = "diagnosis"
+URI = "localhost:48555"
 
 # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
 PREEXISTS = dict(solution=0)
@@ -40,19 +42,41 @@ CANDIDATE = dict(solution=1)
 # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive samples
 TO_INFER = dict(solution=2)
 
+# Categorical Attribute types and the values of their categories
 CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
                                    'Alcohol']}
+# Continuous Attribute types and their min and max values
 CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
 
 TYPES_TO_IGNORE = ['candidate-diagnosis', 'example-id', 'probability-exists', 'probability-non-exists', 'probability-preexists']
 ROLES_TO_IGNORE = ['candidate-patient', 'candidate-diagnosed-disease']
+
+# The learner should see candidate relations the same as the ground truth relations, so adjust these candidates to
+# look like their ground truth counterparts
+TYPES_AND_ROLES_TO_OBFUSCATE = {'candidate-diagnosis': 'diagnosis',
+                                'candidate-patient': 'patient',
+                                'candidate-diagnosed-disease': 'diagnosed-disease'}
 
 
 def diagnosis_example(num_graphs=200,
                       num_processing_steps_tr=5,
                       num_processing_steps_ge=5,
                       num_training_iterations=1000,
-                      keyspace="diagnosis", uri="localhost:48555"):
+                      keyspace=KEYSPACE, uri=URI):
+    """
+    Run the diagnosis example from start to finish, including traceably ingesting predictions back into Grakn
+
+    Args:
+        num_graphs: Number of graphs to use for training and testing combined
+        num_processing_steps_tr: The number of message-passing steps for training
+        num_processing_steps_ge: The number of message-passing steps for testing
+        num_training_iterations: The number of training epochs
+        keyspace: The name of the keyspace to retrieve example subgraphs from
+        uri: The uri of the running Grakn instance
+
+    Returns:
+        Final accuracies for training and for testing
+    """
 
     tr_ge_split = int(num_graphs*0.5)
 
@@ -94,6 +118,16 @@ def diagnosis_example(num_graphs=200,
 
 
 def create_concept_graphs(example_indices, grakn_session):
+    """
+    Builds an in-memory graph for each example, with an example_id as an anchor for each example subgraph.
+    Args:
+        example_indices: The values used to anchor the subgraph queries within the entire knowledge graph
+        grakn_session: Grakn Session
+
+    Returns:
+        In-memory graphs of Grakn subgraphs
+    """
+
     graphs = []
     infer = True
 
@@ -106,13 +140,10 @@ def create_concept_graphs(example_indices, grakn_session):
 
         # Remove label leakage - change type labels that indicate candidates into non-candidates
         for data in multidigraph_data_iterator(graph):
-            typ = data['type']
-            if typ == 'candidate-diagnosis':
-                data.update(type='diagnosis')
-            elif typ == 'candidate-patient':
-                data.update(type='patient')
-            elif typ == 'candidate-diagnosed-disease':
-                data.update(type='diagnosed-disease')
+            for label_to_obfuscate, with_label in TYPES_AND_ROLES_TO_OBFUSCATE.items():
+                if data['type'] == label_to_obfuscate:
+                    data.update(type=with_label)
+                    break
 
         graph.name = example_id
         graphs.append(graph)
@@ -122,11 +153,15 @@ def create_concept_graphs(example_indices, grakn_session):
 
 def get_query_handles(example_id):
     """
-    1. Supply a query
-    2. Supply a `QueryGraph` object to represent that query. That itself is a subclass of a networkx graph
-    3. Execute the query
-    4. Make a graph of the query results by taking the variables you got back and arranging the concepts as they are in the `QueryGraph`. This gives one graph for each result, for each query.
-    5. Combine all of these graphs into one single graph, and that’s your example subgraph
+    Creates an iterable, each element containing a Graql query, a function to sample the answers, and a QueryGraph
+    object which must be the Grakn graph representation of the query. This tuple is termed a "query_handle"
+
+    Args:
+        example_id: A uniquely identifiable attribute value used to anchor the results of the queries to a specific
+                    subgraph
+
+    Returns:
+        query handles
     """
 
     # === Hereditary Feature ===
@@ -170,7 +205,6 @@ def get_query_handles(example_id):
     person_age_query = inspect.cleandoc(f'''match 
             $p isa person, has example-id {example_id}, has age $a; 
             get;''')
-
 
     vars = p, a = 'p', 'a'
     g = QueryGraph()
