@@ -34,13 +34,13 @@ KEYSPACE = "diagnosis"
 URI = "localhost:48555"
 
 # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
-PREEXISTS = dict(solution=0)
+PREEXISTS = 0
 
 # Candidates are neither present in the input nor in the solution, they are negative samples
-CANDIDATE = dict(solution=1)
+CANDIDATE = 1
 
 # Elements to infer are the graph elements whose existence we want to predict to be true, they are positive samples
-TO_INFER = dict(solution=2)
+TO_INFER = 2
 
 # Categorical Attribute types and the values of their categories
 CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
@@ -174,15 +174,13 @@ def get_query_handles(example_id):
            get;''')
 
     vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
-    g = QueryGraph()
-    g.add_vars(*vars, **PREEXISTS)
-    g.add_role_edge(ps, p, 'child', **PREEXISTS)
-    g.add_role_edge(ps, par, 'parent', **PREEXISTS)
-    g.add_role_edge(diag, par, 'patient', **PREEXISTS)
-    g.add_role_edge(diag, d, 'diagnosed-disease', **PREEXISTS)
-    g.add_has_edge(d, n, **PREEXISTS)
-
-    hereditary_query_graph = g
+    hereditary_query_graph = (QueryGraph()
+                              .add_vars(vars, PREEXISTS)
+                              .add_role_edge(ps, p, 'child', PREEXISTS)
+                              .add_role_edge(ps, par, 'parent', PREEXISTS)
+                              .add_role_edge(diag, par, 'patient', PREEXISTS)
+                              .add_role_edge(diag, d, 'diagnosed-disease', PREEXISTS)
+                              .add_has_edge(d, n, PREEXISTS))
 
     # === Consumption Feature ===
     consumption_query = inspect.cleandoc(f'''match
@@ -192,14 +190,12 @@ def get_query_handles(example_id):
            has units-per-week $u; get;''')
 
     vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
-    g = QueryGraph()
-    g.add_vars(*vars, **PREEXISTS)
-    g.add_has_edge(s, n, **PREEXISTS)
-    g.add_role_edge(c, p, 'consumer', **PREEXISTS)
-    g.add_role_edge(c, s, 'consumed-substance', **PREEXISTS)
-    g.add_has_edge(c, u, **PREEXISTS)
-
-    consumption_query_graph = g
+    consumption_query_graph = (QueryGraph()
+                               .add_vars(vars, PREEXISTS)
+                               .add_has_edge(s, n, PREEXISTS)
+                               .add_role_edge(c, p, 'consumer', PREEXISTS)
+                               .add_role_edge(c, s, 'consumed-substance', PREEXISTS)
+                               .add_has_edge(c, u, PREEXISTS))
 
     # === Age Feature ===
     person_age_query = inspect.cleandoc(f'''match 
@@ -207,11 +203,9 @@ def get_query_handles(example_id):
             get;''')
 
     vars = p, a = 'p', 'a'
-    g = QueryGraph()
-    g.add_vars(*vars, **PREEXISTS)
-    g.add_has_edge(p, a, **PREEXISTS)
-
-    person_age_query_graph = g
+    person_age_query_graph = (QueryGraph()
+                              .add_vars(vars, PREEXISTS)
+                              .add_has_edge(p, a, PREEXISTS))
 
     # === Risk Factors Feature ===
     risk_factor_query = inspect.cleandoc(f'''match 
@@ -221,12 +215,10 @@ def get_query_handles(example_id):
             get;''')
 
     vars = p, d, r = 'p', 'd', 'r'
-    g = QueryGraph()
-    g.add_vars(*vars, **PREEXISTS)
-    g.add_role_edge(r, p, 'person-at-risk', **PREEXISTS)
-    g.add_role_edge(r, d, 'risked-disease', **PREEXISTS)
-
-    risk_factor_query_graph = g
+    risk_factor_query_graph = (QueryGraph()
+                               .add_vars(vars, PREEXISTS)
+                               .add_role_edge(r, p, 'person-at-risk', PREEXISTS)
+                               .add_role_edge(r, d, 'risked-disease', PREEXISTS))
 
     # === Diagnosis ===
     diagnosis_query = inspect.cleandoc(f'''match
@@ -239,26 +231,22 @@ def get_query_handles(example_id):
            get;''')
 
     vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
-    g = QueryGraph()
-    g.add_vars(*vars, **PREEXISTS)
-    g.add_has_edge(s, sn, **PREEXISTS)
-    g.add_has_edge(d, dn, **PREEXISTS)
-    g.add_role_edge(sp, s, 'presented-symptom', **PREEXISTS)
-    g.add_has_edge(sp, sev, **PREEXISTS)
-    g.add_role_edge(sp, p, 'symptomatic-patient', **PREEXISTS)
-    g.add_role_edge(c, s, 'effect', **PREEXISTS)
-    g.add_role_edge(c, d, 'cause', **PREEXISTS)
-
-    base_query_graph = g
-
-    g = copy.copy(base_query_graph)
+    base_query_graph = (QueryGraph()
+                        .add_vars(vars, PREEXISTS)
+                        .add_has_edge(s, sn, PREEXISTS)
+                        .add_has_edge(d, dn, PREEXISTS)
+                        .add_role_edge(sp, s, 'presented-symptom', PREEXISTS)
+                        .add_has_edge(sp, sev, PREEXISTS)
+                        .add_role_edge(sp, p, 'symptomatic-patient', PREEXISTS)
+                        .add_role_edge(c, s, 'effect', PREEXISTS)
+                        .add_role_edge(c, d, 'cause', PREEXISTS))
 
     diag, d, p = 'diag', 'd', 'p'
-    g.add_vars(diag, **TO_INFER)
-    g.add_role_edge(diag, d, 'diagnosed-disease', **TO_INFER)
-    g.add_role_edge(diag, p, 'patient', **TO_INFER)
 
-    diagnosis_query_graph = g
+    diagnosis_query_graph = (copy.copy(base_query_graph)
+                             .add_vars([diag], TO_INFER)
+                             .add_role_edge(diag, d, 'diagnosed-disease', TO_INFER)
+                             .add_role_edge(diag, p, 'patient', TO_INFER))
 
     # === Candidate Diagnosis ===
     candidate_diagnosis_query = inspect.cleandoc(f'''match
@@ -270,13 +258,10 @@ def get_query_handles(example_id):
            $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
            get;''')
 
-    g = copy.copy(base_query_graph)
-
-    diag, d, p = 'diag', 'd', 'p'
-    g.add_vars(diag, **CANDIDATE)
-    g.add_role_edge(diag, d, 'candidate-diagnosed-disease', **CANDIDATE)
-    g.add_role_edge(diag, p, 'candidate-patient', **CANDIDATE)
-    candidate_diagnosis_query_graph = g
+    candidate_diagnosis_query_graph = (copy.copy(base_query_graph)
+                                       .add_vars([diag], CANDIDATE)
+                                       .add_role_edge(diag, d, 'candidate-diagnosed-disease', CANDIDATE)
+                                       .add_role_edge(diag, p, 'candidate-patient', CANDIDATE))
 
     return [
         (diagnosis_query, lambda x: x, diagnosis_query_graph),
