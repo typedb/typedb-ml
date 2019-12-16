@@ -138,17 +138,21 @@ def create_concept_graphs(example_indices, grakn_session):
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
 
-        # Remove label leakage - change type labels that indicate candidates into non-candidates
-        for data in multidigraph_data_iterator(graph):
-            for label_to_obfuscate, with_label in TYPES_AND_ROLES_TO_OBFUSCATE.items():
-                if data['type'] == label_to_obfuscate:
-                    data.update(type=with_label)
-                    break
+        obfuscate_labels(graph, TYPES_AND_ROLES_TO_OBFUSCATE)
 
         graph.name = example_id
         graphs.append(graph)
 
     return graphs
+
+
+def obfuscate_labels(graph, types_and_roles_to_obfuscate):
+    # Remove label leakage - change type labels that indicate candidates into non-candidates
+    for data in multidigraph_data_iterator(graph):
+        for label_to_obfuscate, with_label in types_and_roles_to_obfuscate.items():
+            if data['type'] == label_to_obfuscate:
+                data.update(type=with_label)
+                break
 
 
 def get_query_handles(example_id):
