@@ -26,6 +26,7 @@ py_library(
         "//kglib/kgcn/plot",
         "//kglib/kgcn/models",
         "//kglib/utils/grakn/synthetic",
+        "//kglib/utils/grakn/type",
         "@graknlabs_client_python//:client_python",
     ],
     visibility=['//visibility:public']

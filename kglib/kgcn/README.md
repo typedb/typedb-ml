@@ -1,6 +1,6 @@
 # Knowledge Graph Convolutional Networks
 
-This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN). This work is in its second major iteration since inception.
+This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN).
 
 ### Getting Started - Running the Machine Learning Pipeline
 
