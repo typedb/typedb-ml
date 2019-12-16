@@ -194,9 +194,9 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
             with session.transaction().read() as tx:
                 combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
 
-                person_exp = build_thing(list(tx.query('match $x isa person; get;'))[0].get('x'))
-                name_exp = build_thing(list(tx.query('match $x isa name; get;'))[0].get('x'))
-                parentship_exp = build_thing(list(tx.query('match $x isa parentship; get;'))[0].get('x'))
+                person_exp = build_thing(next(tx.query('match $x isa person; get;')).get('x'))
+                name_exp = build_thing(next(tx.query('match $x isa name; get;')).get('x'))
+                parentship_exp = build_thing(next(tx.query('match $x isa parentship; get;')).get('x'))
 
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
