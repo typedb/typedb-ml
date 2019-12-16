@@ -25,6 +25,7 @@ from grakn.client import GraknClient
 
 from kglib.kgcn.pipeline.pipeline import pipeline
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
+from kglib.utils.grakn.type.type import get_thing_types, get_role_types
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
@@ -48,7 +49,11 @@ def diagnosis_example(num_graphs=200,
     with session.transaction().read() as tx:
         # Change the terminology here onwards from thing -> node and role -> edge
         node_types = get_thing_types(tx)
+        [node_types.remove(el) for el in
+         ['candidate-diagnosis', 'example-id', 'probability-exists', 'probability-non-exists', 'probability-preexists']]
+
         edge_types = get_role_types(tx)
+        [edge_types.remove(el) for el in ['candidate-patient', 'candidate-diagnosed-disease']]
         print(f'Found node types: {node_types}')
         print(f'Found edge types: {edge_types}')
 
@@ -246,48 +251,6 @@ def get_query_handles(example_id):
         (consumption_query, lambda x: x, consumption_query_graph),
         (hereditary_query, lambda x: x, hereditary_query_graph)
     ]
-
-
-def get_thing_types(tx):
-    """
-    Get all schema types, excluding those for implicit attribute relations, base types, and candidate types
-    Args:
-        tx: Grakn transaction
-
-    Returns:
-        Grakn types
-    """
-    schema_concepts = tx.query(
-        "match $x sub thing; "
-        "not {$x sub @has-attribute;}; "
-        "not {$x sub @key-attribute;}; "
-        "get;")
-    thing_types = [schema_concept.get('x').label() for schema_concept in schema_concepts]
-    [thing_types.remove(el) for el in
-     ['thing', 'relation', 'entity', 'attribute', 'candidate-diagnosis', 'example-id', 'probability-exists',
-      'probability-non-exists', 'probability-preexists']]
-    return thing_types
-
-
-def get_role_types(tx):
-    """
-    Get all schema roles, excluding those for implicit attribute relations, the base role type, and candidate roles
-    Args:
-        tx: Grakn transaction
-
-    Returns:
-        Grakn roles
-    """
-    schema_concepts = tx.query(
-        "match $x sub role; "
-        "not{$x sub @key-attribute-value;}; "
-        "not{$x sub @key-attribute-owner;}; "
-        "not{$x sub @has-attribute-value;}; "
-        "not{$x sub @has-attribute-owner;};"
-        "get;")
-    role_types = ['has'] + [role.get('x').label() for role in schema_concepts]
-    [role_types.remove(el) for el in ['role', 'candidate-patient', 'candidate-diagnosed-disease']]
-    return role_types
 
 
 def write_predictions_to_grakn(graphs, tx):
