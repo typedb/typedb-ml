@@ -31,6 +31,23 @@ from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
 
 
+# Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
+PREEXISTS = dict(solution=0)
+
+# Candidates are neither present in the input nor in the solution, they are negative samples
+CANDIDATE = dict(solution=1)
+
+# Elements to infer are the graph elements whose existence we want to predict to be true, they are positive samples
+TO_INFER = dict(solution=2)
+
+CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
+                                   'Alcohol']}
+CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
+
+TYPES_TO_IGNORE = ['candidate-diagnosis', 'example-id', 'probability-exists', 'probability-non-exists', 'probability-preexists']
+ROLES_TO_IGNORE = ['candidate-patient', 'candidate-diagnosed-disease']
+
+
 def diagnosis_example(num_graphs=200,
                       num_processing_steps_tr=5,
                       num_processing_steps_ge=5,
@@ -49,11 +66,10 @@ def diagnosis_example(num_graphs=200,
     with session.transaction().read() as tx:
         # Change the terminology here onwards from thing -> node and role -> edge
         node_types = get_thing_types(tx)
-        [node_types.remove(el) for el in
-         ['candidate-diagnosis', 'example-id', 'probability-exists', 'probability-non-exists', 'probability-preexists']]
+        [node_types.remove(el) for el in TYPES_TO_IGNORE]
 
         edge_types = get_role_types(tx)
-        [edge_types.remove(el) for el in ['candidate-patient', 'candidate-diagnosed-disease']]
+        [edge_types.remove(el) for el in ROLES_TO_IGNORE]
         print(f'Found node types: {node_types}')
         print(f'Found edge types: {edge_types}')
 
@@ -75,11 +91,6 @@ def diagnosis_example(num_graphs=200,
     client.close()
 
     return solveds_tr, solveds_ge
-
-
-CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
-                                   'Alcohol']}
-CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
 
 
 def create_concept_graphs(example_indices, grakn_session):
@@ -107,16 +118,6 @@ def create_concept_graphs(example_indices, grakn_session):
         graphs.append(graph)
 
     return graphs
-
-
-# Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
-PREEXISTS = dict(solution=0)
-
-# Candidates are neither present in the input nor in the solution, they are negative samples
-CANDIDATE = dict(solution=1)
-
-# Elements to infer are the graph elements whose existence we want to predict to be true, they are positive samples
-TO_INFER = dict(solution=2)
 
 
 def get_query_handles(example_id):
