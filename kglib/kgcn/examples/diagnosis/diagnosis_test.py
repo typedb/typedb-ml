@@ -53,8 +53,9 @@ class TestWritePredictionsToGrakn(unittest.TestCase):
         expected_query = (f'match'
                           f'$p id V123;'
                           f'$d id V1235;'
+                          f'$kgcn isa kgcn;'
                           f'insert'
-                          f'$pd(predicted-patient: $p, predicted-diagnosed-disease: $d) isa predicted-diagnosis,'
+                          f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
                           f'has probability-exists 0.993,'
                           f'has probability-non-exists 0.007,'
                           f'has probability-preexists 0.000;')
