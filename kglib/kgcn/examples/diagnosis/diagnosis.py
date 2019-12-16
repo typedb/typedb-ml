@@ -224,50 +224,55 @@ def get_query_handles(example_id):
                                .add_role_edge(r, p, 'person-at-risk', PREEXISTS)
                                .add_role_edge(r, d, 'risked-disease', PREEXISTS))
 
-    # === Diagnosis ===
-    diagnosis_query = inspect.cleandoc(f'''match
+    # === Symptom ===
+    vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
+
+    symptom_query = inspect.cleandoc(f'''match
            $p isa person, has example-id {example_id};
            $s isa symptom, has name $sn;
            $d isa disease, has name $dn;
            $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
            $c(cause: $d, effect: $s) isa causality;
+           get;''')
+
+    symptom_query_graph = (QueryGraph()
+                           .add_vars(vars, PREEXISTS)
+                           .add_has_edge(s, sn, PREEXISTS)
+                           .add_has_edge(d, dn, PREEXISTS)
+                           .add_role_edge(sp, s, 'presented-symptom', PREEXISTS)
+                           .add_has_edge(sp, sev, PREEXISTS)
+                           .add_role_edge(sp, p, 'symptomatic-patient', PREEXISTS)
+                           .add_role_edge(c, s, 'effect', PREEXISTS)
+                           .add_role_edge(c, d, 'cause', PREEXISTS))
+
+    # === Diagnosis ===
+    diagnosis_query = inspect.cleandoc(f'''match
+           $p isa person, has example-id {example_id};
+           $d isa disease, has name $dn;
            $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
            get;''')
 
-    vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
-    base_query_graph = (QueryGraph()
-                        .add_vars(vars, PREEXISTS)
-                        .add_has_edge(s, sn, PREEXISTS)
-                        .add_has_edge(d, dn, PREEXISTS)
-                        .add_role_edge(sp, s, 'presented-symptom', PREEXISTS)
-                        .add_has_edge(sp, sev, PREEXISTS)
-                        .add_role_edge(sp, p, 'symptomatic-patient', PREEXISTS)
-                        .add_role_edge(c, s, 'effect', PREEXISTS)
-                        .add_role_edge(c, d, 'cause', PREEXISTS))
+    vars = diag, d, p = 'diag', 'd', 'p'
 
-    diag, d, p = 'diag', 'd', 'p'
-
-    diagnosis_query_graph = (copy.copy(base_query_graph)
-                             .add_vars([diag], TO_INFER)
+    diagnosis_query_graph = (QueryGraph()
+                             .add_vars(vars, TO_INFER)
                              .add_role_edge(diag, d, 'diagnosed-disease', TO_INFER)
                              .add_role_edge(diag, p, 'patient', TO_INFER))
 
     # === Candidate Diagnosis ===
     candidate_diagnosis_query = inspect.cleandoc(f'''match
            $p isa person, has example-id {example_id};
-           $s isa symptom, has name $sn;
            $d isa disease, has name $dn;
-           $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
-           $c(cause: $d, effect: $s) isa causality;
            $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
            get;''')
 
-    candidate_diagnosis_query_graph = (copy.copy(base_query_graph)
-                                       .add_vars([diag], CANDIDATE)
+    candidate_diagnosis_query_graph = (QueryGraph()
+                                       .add_vars(vars, CANDIDATE)
                                        .add_role_edge(diag, d, 'candidate-diagnosed-disease', CANDIDATE)
                                        .add_role_edge(diag, p, 'candidate-patient', CANDIDATE))
 
     return [
+        (symptom_query, lambda  x: x, symptom_query_graph),
         (diagnosis_query, lambda x: x, diagnosis_query_graph),
         (candidate_diagnosis_query, lambda x: x, candidate_diagnosis_query_graph),
         (risk_factor_query, lambda x: x, risk_factor_query_graph),
