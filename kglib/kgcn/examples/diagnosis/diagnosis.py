@@ -261,8 +261,8 @@ def get_thing_types(tx):
         "match $x sub thing; "
         "not {$x sub @has-attribute;}; "
         "not {$x sub @key-attribute;}; "
-        "get;").get('x')
-    thing_types = [schema_concept.label() for schema_concept in schema_concepts]
+        "get;")
+    thing_types = [schema_concept.get('x').label() for schema_concept in schema_concepts]
     [thing_types.remove(el) for el in
      ['thing', 'relation', 'entity', 'attribute', 'candidate-diagnosis', 'example-id', 'probability-exists',
       'probability-non-exists', 'probability-preexists']]
@@ -284,8 +284,8 @@ def get_role_types(tx):
         "not{$x sub @key-attribute-owner;}; "
         "not{$x sub @has-attribute-value;}; "
         "not{$x sub @has-attribute-owner;};"
-        "get;").get('x')
-    role_types = ['has'] + [role.label() for role in schema_concepts]
+        "get;")
+    role_types = ['has'] + [role.get('x').label() for role in schema_concepts]
     [role_types.remove(el) for el in ['role', 'candidate-patient', 'candidate-diagnosed-disease']]
     return role_types
 
