@@ -1,4 +1,4 @@
-# Knowledge Graph Convolutional Networks
+# KGCNs - Knowledge Graph Convolutional Networks
 
 This project introduces a novel model: the *Knowledge Graph Convolutional Network* (KGCN).
 
