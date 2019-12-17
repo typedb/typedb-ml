@@ -246,7 +246,7 @@ def get_query_handles(example_id):
 
     # === Diagnosis ===
 
-    vars = diag, d, p, dn = 'diag', 'd', 'p', 'dn'
+    diag, d, p, dn = 'diag', 'd', 'p', 'dn'
 
     diagnosis_query = inspect.cleandoc(f'''match
            $p isa person, has example-id {example_id};
@@ -255,7 +255,8 @@ def get_query_handles(example_id):
            get;''')
 
     diagnosis_query_graph = (QueryGraph()
-                             .add_vars(vars, TO_INFER)
+                             .add_vars([diag], TO_INFER)
+                             .add_vars([d, p, dn], PREEXISTS)
                              .add_role_edge(diag, d, 'diagnosed-disease', TO_INFER)
                              .add_role_edge(diag, p, 'patient', TO_INFER))
 
@@ -267,12 +268,13 @@ def get_query_handles(example_id):
            get;''')
 
     candidate_diagnosis_query_graph = (QueryGraph()
-                                       .add_vars(vars, CANDIDATE)
+                                       .add_vars([diag], CANDIDATE)
+                                       .add_vars([d, p, dn], PREEXISTS)
                                        .add_role_edge(diag, d, 'candidate-diagnosed-disease', CANDIDATE)
                                        .add_role_edge(diag, p, 'candidate-patient', CANDIDATE))
 
     return [
-        (symptom_query, lambda  x: x, symptom_query_graph),
+        (symptom_query, lambda x: x, symptom_query_graph),
         (diagnosis_query, lambda x: x, diagnosis_query_graph),
         (candidate_diagnosis_query, lambda x: x, candidate_diagnosis_query_graph),
         (risk_factor_query, lambda x: x, risk_factor_query_graph),
