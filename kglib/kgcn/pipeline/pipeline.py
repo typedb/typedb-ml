@@ -44,7 +44,10 @@ def pipeline(graphs,
              attr_embedding_dim=6,
              edge_output_size=3,
              node_output_size=3,
-             output_dir=None):
+             output_dir=None,
+             do_test=False,
+             save_fle="test_model.ckpt",
+             reload_fle=""):
 
     ############################################################
     # Manipulate the graph data
@@ -82,18 +85,28 @@ def pipeline(graphs,
                 node_output_size=node_output_size)
 
     learner = KGCNLearner(kgcn,
-                          num_processing_steps_tr=num_processing_steps_tr,
-                          num_processing_steps_ge=num_processing_steps_ge)
+                          num_processing_steps_tr=num_processing_steps_tr, # These processing steps indicate how many message-passing iterations to do for every training / testing step
+                          num_processing_steps_ge=num_processing_steps_ge,
+                          save_fle=output_dir / save_fle,
+                          reload_fle=output_dir / reload_fle)
 
-    train_values, test_values, tr_info = learner(tr_input_graphs,
+    # only test
+    if not (output_dir / reload_fle).is_dir() and do_test == True:
+        test_values, tr_info = learner.test(ge_input_graphs,
+                                            ge_target_graphs,
+                                            log_dir=output_dir)
+    # train
+    else:
+        train_values, test_values, tr_info = learner(input_graphs,
                                                  tr_target_graphs,
                                                  ge_input_graphs,
                                                  ge_target_graphs,
                                                  num_training_iterations=num_training_iterations,
                                                  log_dir=output_dir)
 
-    plot_across_training(*tr_info, output_file=f'{output_dir}learning.png')
-    plot_predictions(graphs[tr_ge_split:], test_values, num_processing_steps_ge, output_file=f'{output_dir}graph.png')
+
+    plot_across_training(*tr_info, output_file=f'{output_dir}/learning.png')
+    plot_predictions(graphs[tr_ge_split:], test_values, num_processing_steps_ge, output_file=f'{output_dir}/graph.png')
 
     logit_graphs = graphs_tuple_to_networkxs(test_values["outputs"][-1])
 
