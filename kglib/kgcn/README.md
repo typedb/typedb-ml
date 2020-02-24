@@ -40,7 +40,7 @@ Using this method we can frame Relation prediction as a node existence classific
 
 ### Graphs In, Graphs Out
 
-We can directly ingest a graph into TensorFlow and learn over that graph. This leverages DeepMind's [Graph Nets](https://github.com/deepmind/graph_nets) framework, detailed in [their paper](https://arxiv.org/pdf/1806.01261.pdf) (built in TensorFlow). This work is a generalisation of graph learning techniques, which offers plenty of ways to structure learning tailored to various knowledge graph problems.
+We can directly ingest a graph into TensorFlow and learn over that graph. This leverages DeepMind's [Graph Nets](https://github.com/deepmind/graph_nets) framework, detailed in [their paper](https://arxiv.org/abs/1806.01261) (built in TensorFlow). This work is a generalisation of graph learning techniques, which offers plenty of ways to structure learning tailored to various knowledge graph problems.
 
 We extend this work for Grakn knowledge graphs, with a graph data flow as follows:
 
