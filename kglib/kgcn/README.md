@@ -116,7 +116,7 @@ Here we identify the core components used to build a working KGCN pipeline.
 
 ### Application
 
-e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py)
+e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis)
 
 1. Fetch subgraphs, each subgraph is used as an *example*
    - This requires specifying queries that will retrieve Concepts from Grakn
