@@ -87,8 +87,8 @@ def pipeline(graphs,
     learner = KGCNLearner(kgcn,
                           num_processing_steps_tr=num_processing_steps_tr, # These processing steps indicate how many message-passing iterations to do for every training / testing step
                           num_processing_steps_ge=num_processing_steps_ge,
-                          save_fle=output_dir / save_fle,
-                          reload_fle=output_dir / reload_fle)
+                          save_fle=f'{output_dir}/{save_fle}',
+                          reload_fle=f'{output_dir}/{reload_fle}')
 
     # only test
     if not (output_dir / reload_fle).is_dir() and do_test == True:
