@@ -19,6 +19,7 @@
 
 import networkx as nx
 import numpy as np
+from pathlib import Path
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
 from kglib.kgcn.learn.learn import KGCNLearner
@@ -91,7 +92,7 @@ def pipeline(graphs,
                           reload_fle=f'{output_dir}/{reload_fle}')
 
     # only test
-    if not (output_dir / reload_fle).is_dir() and do_test == True:
+    if not Path(output_dir / reload_fle).is_dir() and do_test == True:
         test_values, tr_info = learner.test(ge_input_graphs,
                                             ge_target_graphs,
                                             log_dir=output_dir)
