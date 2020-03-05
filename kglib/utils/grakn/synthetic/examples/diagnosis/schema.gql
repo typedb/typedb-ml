@@ -124,7 +124,7 @@ when {
     $p isa person;
     $parent isa person;
     $cause(parent: $parent, child: $p) isa parentship;
-    (patient: $parent, diagnosed-disease: $d) isa diagnosis;
+    $dia(patient: $parent, diagnosed-disease: $d) isa diagnosis;
     $d isa disease, has name "Diabetes Type II";
 }, then {
 	(person-at-risk: $p, risked-disease: $d) isa hereditary-risk-factor;
