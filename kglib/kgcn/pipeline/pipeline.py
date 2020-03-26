@@ -92,13 +92,13 @@ def pipeline(graphs,
                           reload_fle=f'{output_dir}/{reload_fle}')
 
     # only test
-    if not Path(output_dir / reload_fle).is_dir() and do_test == True:
-        test_values, tr_info = learner.test(ge_input_graphs,
+    if not (Path(output_dir) / reload_fle).is_dir() and do_test is True:
+        test_values, tr_info = learner.infer(ge_input_graphs,
                                             ge_target_graphs,
                                             log_dir=output_dir)
     # train
     else:
-        train_values, test_values, tr_info = learner(input_graphs,
+        train_values, test_values, tr_info = learner.train(input_graphs,
                                                  tr_target_graphs,
                                                  ge_input_graphs,
                                                  ge_target_graphs,
