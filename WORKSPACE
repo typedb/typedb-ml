@@ -98,7 +98,8 @@ load(
     "graknlabs_protocol",
     "graknlabs_client_java",
     "graknlabs_console",
-    "graknlabs_benchmark"
+    "graknlabs_benchmark",
+    "graknlabs_grabl_tracing"
 )
 graknlabs_graql()
 graknlabs_common()
@@ -106,6 +107,11 @@ graknlabs_protocol()
 graknlabs_client_java()
 graknlabs_console()
 graknlabs_benchmark()
+graknlabs_grabl_tracing()
+
+load("@graknlabs_grabl_tracing//dependencies/maven:dependencies.bzl",
+graknlabs_grabl_tracing_maven_dependencies="maven_dependencies")
+graknlabs_grabl_tracing_maven_dependencies()
 
 # Skip since these are already present above
 #load("@graknlabs_build_tools//distribution:dependencies.bzl", "graknlabs_bazel_distribution")
