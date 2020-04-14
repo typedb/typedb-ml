@@ -19,5 +19,5 @@ def graknlabs_client_python():
     git_repository(
         name = "graknlabs_client_python",
         remote = "https://github.com/graknlabs/client-python",
-        commit = "a006034518564240f9c8c4fe1455855c29678534" # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_client_python
+        commit = "d44054f2001421ddcf14338e33a6bfac5f90e8a3" # sync-marker: do not remove this comment, this is used for sync-dependencies by @graknlabs_client_python
     )
