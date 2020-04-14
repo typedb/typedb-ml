@@ -20,6 +20,9 @@ commands:
     steps:
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
+      - run: sudo unlink /usr/bin/python3
+      - run: sudo ln -s $(which python3) /usr/bin/python3
+      - run: sudo sed -i -e 's|python3|python|g' $(which lsb_release)
 
 jobs:
   build:
@@ -38,7 +41,7 @@ jobs:
       - install-bazel-linux-rbe
       - checkout
       - install-python
-      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
 
   test-end-to-end:
     machine: true
@@ -47,7 +50,7 @@ jobs:
       - install-bazel-linux-rbe
       - checkout
       - install-python
-      - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+      - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
 
   test-markdown-link-health:
     machine: true
