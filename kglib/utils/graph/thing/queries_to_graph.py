@@ -25,7 +25,7 @@ from kglib.utils.grakn.object.thing import build_thing
 from kglib.utils.graph.thing.concept_dict_to_graph import concept_dict_to_graph
 
 
-def concept_dict_from_concept_map(concept_map):
+def concept_dict_from_concept_map(concept_map, tx):
     """
     Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
     information required about those concepts.
@@ -36,7 +36,7 @@ def concept_dict_from_concept_map(concept_map):
     Returns:
         A dictionary of concepts keyed by query variables
     """
-    return {variable: build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
+    return {variable: build_thing(grakn_concept, tx) for variable, grakn_concept in concept_map.map().items()}
 
 
 def combine_2_graphs(graph1, graph2):
@@ -109,7 +109,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
         concept_maps = sampler(grakn_transaction.query(query, infer=infer))
 
-        concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
+        concept_dicts = [concept_dict_from_concept_map(concept_map, grakn_transaction) for concept_map in concept_maps]
 
         answer_concept_graphs = []
         for concept_dict in concept_dicts:
