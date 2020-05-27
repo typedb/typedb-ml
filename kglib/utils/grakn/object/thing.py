@@ -49,16 +49,16 @@ class Thing(PropertyComparable):
         return self.__str__()
 
 
-def build_thing(grakn_thing):
+def build_thing(grakn_thing, tx):
 
     id = grakn_thing.id
     type_label = grakn_thing.type().label()
-    base_type_label = grakn_thing.base_type.lower()
+    base_type_label = grakn_thing.as_remote(tx).base_type.replace('_TYPE', '').lower()
 
     assert(base_type_label in ['entity', 'relation', 'attribute'])
 
     if base_type_label == 'attribute':
-        data_type = grakn_thing.type().data_type().name.lower()
+        data_type = grakn_thing.as_remote(tx).type().data_type().name.lower()
         assert data_type in DATA_TYPE_NAMES
         value = grakn_thing.value()
 
