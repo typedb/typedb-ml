@@ -1,4 +1,4 @@
-load("@io_bazel_rules_python//python:python.bzl", "py_test")
+load("@rules_python//python:defs.bzl", "py_test")
 
 py_test(
     name = "diagnosis",
