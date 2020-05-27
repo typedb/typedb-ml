@@ -1,4 +1,4 @@
-load("@io_bazel_rules_python//python:python.bzl", "py_library")
+load("@rules_python//python:defs.bzl", "py_library")
 load("@pypi_dependencies//:requirements.bzl", "requirement")
 
 
