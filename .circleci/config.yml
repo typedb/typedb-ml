@@ -26,7 +26,8 @@ commands:
 
 jobs:
   build:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - install-bazel-linux-rbe
@@ -35,7 +36,8 @@ jobs:
       - run: bazel build //...
 
   test:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - install-bazel-linux-rbe
@@ -44,7 +46,8 @@ jobs:
       - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
 
   test-end-to-end:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - install-bazel-linux-rbe
@@ -53,14 +56,16 @@ jobs:
       - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
 
   test-markdown-link-health:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - checkout
       - run: find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
 
   deploy-pip-snapshot:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - install-bazel-linux-rbe
@@ -72,7 +77,8 @@ jobs:
           bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
 
   test-deployment-pip:
-      machine: true
+      machine:
+      image: ubuntu-1604:201903-01
       working_directory: ~/kglib
       steps:
         - checkout
@@ -89,7 +95,8 @@ jobs:
               cd tests/deployment/ && python -m unittest kgcn.diagnosis
 
   release-approval:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - install-bazel-linux-rbe
@@ -101,7 +108,8 @@ jobs:
           bazel run @graknlabs_build_tools//ci:release-approval
 
   release-validate:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - install-bazel-linux-rbe
       - checkout
@@ -111,7 +119,8 @@ jobs:
             graknlabs_grakn_core graknlabs_client_python
 
   deploy-github:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - checkout
@@ -125,7 +134,8 @@ jobs:
            \"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
 
   deploy-pip-release:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - install-bazel-linux-rbe
@@ -137,7 +147,8 @@ jobs:
           bazel run --define version=$(cat VERSION) //:deploy-pip -- release
 
   release-cleanup:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - run: git push --delete https://$REPO_GITHUB_TOKEN@github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH
