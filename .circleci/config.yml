@@ -77,22 +77,22 @@ jobs:
           bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
 
   test-deployment-pip:
-      machine:
+    machine:
       image: ubuntu-1604:201903-01
-      working_directory: ~/kglib
-      steps:
-        - checkout
-        - run-grakn-server
-        - run:
-            name: Run test-deployment-pip for kglib
-            command: |
-              echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
-              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
-              cat tests/deployment/requirements.txt
-              pip install -U pip setuptools
-              pip install -r tests/deployment/requirements.txt
-              ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
-              cd tests/deployment/ && python -m unittest kgcn.diagnosis
+    working_directory: ~/kglib
+    steps:
+      - checkout
+      - run-grakn-server
+      - run:
+          name: Run test-deployment-pip for kglib
+          command: |
+            echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
+            sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
+            cat tests/deployment/requirements.txt
+            pip install -U pip setuptools
+            pip install -r tests/deployment/requirements.txt
+            ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
+            cd tests/deployment/ && python -m unittest kgcn.diagnosis
 
   release-approval:
     machine:
