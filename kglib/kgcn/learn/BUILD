@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 py_test(
     name = "metrics_test",
@@ -33,41 +34,41 @@ py_library(
     ],
     deps = [
         # Networkx deps
-        requirement('networkx'),
-        requirement('decorator'),
+        graknlabs_kglib_requirement('networkx'),
+        graknlabs_kglib_requirement('decorator'),
 
         # Graph nets deps
-        requirement('absl-py'),
-        requirement('cloudpickle'),
-        requirement('contextlib2'),
-        # requirement('decorator'),
-        requirement('dm-sonnet'),
-        requirement('future'),
-        requirement('graph-nets'),
-        # requirement('networkx'),
-        requirement('numpy'),
-        requirement('semantic-version'),
-        requirement('six'),
-        requirement('tensorflow-probability'),
-        requirement('wrapt'),
+        graknlabs_kglib_requirement('absl-py'),
+        graknlabs_kglib_requirement('cloudpickle'),
+        graknlabs_kglib_requirement('contextlib2'),
+        # graknlabs_kglib_requirement('decorator'),
+        graknlabs_kglib_requirement('dm-sonnet'),
+        graknlabs_kglib_requirement('future'),
+        graknlabs_kglib_requirement('graph-nets'),
+        # graknlabs_kglib_requirement('networkx'),
+        graknlabs_kglib_requirement('numpy'),
+        graknlabs_kglib_requirement('semantic-version'),
+        graknlabs_kglib_requirement('six'),
+        graknlabs_kglib_requirement('tensorflow-probability'),
+        graknlabs_kglib_requirement('wrapt'),
 
         # Tensorflow deps
-        # requirement('absl-py'),
-        requirement('astor'),
-        requirement('gast'),
-        requirement('google-pasta'),
-        requirement('keras-applications'),
-        requirement('keras-preprocessing'),
-        # requirement('six'),
-        requirement('protobuf'),
-        requirement('tensorboard'),
-        requirement('tensorflow'),
-        requirement('tensorflow-estimator'),
-        requirement('termcolor'),
-        # requirement('wrapt'),
+        # graknlabs_kglib_requirement('absl-py'),
+        graknlabs_kglib_requirement('astor'),
+        graknlabs_kglib_requirement('gast'),
+        graknlabs_kglib_requirement('google-pasta'),
+        graknlabs_kglib_requirement('keras-applications'),
+        graknlabs_kglib_requirement('keras-preprocessing'),
+        # graknlabs_kglib_requirement('six'),
+        graknlabs_kglib_requirement('protobuf'),
+        graknlabs_kglib_requirement('tensorboard'),
+        graknlabs_kglib_requirement('tensorflow'),
+        graknlabs_kglib_requirement('tensorflow-estimator'),
+        graknlabs_kglib_requirement('termcolor'),
+        # graknlabs_kglib_requirement('wrapt'),
 
         # Scipy deps
-        requirement('scipy')
+        graknlabs_kglib_requirement('scipy')
 
     ],
     visibility=['//visibility:public']

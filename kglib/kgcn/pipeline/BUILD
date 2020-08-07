@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 py_test(
     name = "encode_test",
@@ -31,14 +32,14 @@ py_library(
         'utils.py',
     ],
     deps = [
-        requirement('graph_nets'),
-        requirement('numpy'),
-        requirement('dm-sonnet'),
-        requirement('tensorflow'),
-        requirement('tensorflow-probability'),
-        requirement('semantic-version'),
-        requirement('contextlib2'),
-        requirement('wrapt'),
+        graknlabs_kglib_requirement('graph_nets'),
+        graknlabs_kglib_requirement('numpy'),
+        graknlabs_kglib_requirement('dm-sonnet'),
+        graknlabs_kglib_requirement('tensorflow'),
+        graknlabs_kglib_requirement('tensorflow-probability'),
+        graknlabs_kglib_requirement('semantic-version'),
+        graknlabs_kglib_requirement('contextlib2'),
+        graknlabs_kglib_requirement('wrapt'),
         "//kglib/utils/graph",
     ],
     visibility=['//visibility:public']

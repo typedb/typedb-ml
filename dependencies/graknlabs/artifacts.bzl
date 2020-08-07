@@ -14,3 +14,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
+load("@graknlabs_dependencies//distribution/artifact:rules.bzl", "artifact_file")
+
+def graknlabs_grakn_core_artifact():
+    artifact_file(
+        name = "graknlabs_grakn_core_artifact",
+        group_name = "graknlabs_grakn_core",
+        artifact_name = "grakn-core-all-linux-{version}.tar.gz",
+        commit = "7cc0fcc8e44eb419f540b5ccedb4fcfe23c26e32",
+    )

@@ -1,10 +1,16 @@
-exports_files(["requirements.txt"])
+exports_files(["requirements.txt", "deployment.properties", "RELEASE_TEMPLATE.md"])
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
-load("@graknlabs_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
+
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 load("@graknlabs_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
+
+load("@graknlabs_bazel_distribution//github:rules.bzl", "deploy_github")
+load("@graknlabs_dependencies//distribution/artifact:rules.bzl", "artifact_extractor")
 
 assemble_pip(
     name = "assemble-pip",
@@ -76,5 +82,5 @@ assemble_pip(
 deploy_pip(
     name = "deploy-pip",
     target = ":assemble-pip",
-    deployment_properties = "@graknlabs_build_tools//:deployment.properties",
+    deployment_properties = "@graknlabs_dependencies//distribution:deployment.properties",
 )
