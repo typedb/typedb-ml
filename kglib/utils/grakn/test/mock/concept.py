@@ -58,6 +58,9 @@ class MockThing(MockConcept):
     def type(self):
         return self._type
 
+    def as_remote(self, tx):
+        return self
+
     @property
     def base_type(self):
         return self._type.base_type

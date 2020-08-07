@@ -10,7 +10,9 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 - KGLIB installed via pip: `pip install grakn-kglib`. 
 
-- The [latest release of Grakn Core](https://github.com/graknlabs/grakn/releases/latest) or [Grakn KGMS](https://dev.grakn.ai/docs/cloud-deployment/kgms) running.
+- [Grakn Core 1.6.1](https://github.com/graknlabs/grakn/releases) running in the background
+
+- client-python 1.6.1 ([PyPi](https://pypi.org/project/grakn-client/), [GitHub release](https://github.com/graknlabs/client-python/releases))
 
 See the [full example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py) for how to use a KGCN for [Relation](https://dev.grakn.ai/docs/schema/concepts#relation) prediction. You can use the example as a template to create a KGCN for your own Grakn data. If you need to customise the learning or model used, you'll need to make changes to your version of the [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py).
 

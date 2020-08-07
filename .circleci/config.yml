@@ -13,13 +13,16 @@ commands:
       - install-bazel-linux-rbe
       - install-python
       - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
-      - run: mkdir dist && tar -xvzf bazel-genfiles/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
+      - run: mkdir dist && tar -xvzf bazel-bin/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
 
   install-python:
     steps:
       - run: pyenv install 3.6.3
       - run: pyenv global 3.6.3
+      - run: sudo unlink /usr/bin/python3
+      - run: sudo ln -s $(which python3) /usr/bin/python3
+      - run: sudo sed -i -e 's|python3|python|g' $(which lsb_release)
 
 jobs:
   build:
@@ -38,7 +41,7 @@ jobs:
       - install-bazel-linux-rbe
       - checkout
       - install-python
-      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
 
   test-end-to-end:
     machine: true
@@ -47,14 +50,14 @@ jobs:
       - install-bazel-linux-rbe
       - checkout
       - install-python
-      - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --python_version PY3 --python_path $(which python)
+      - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
 
   test-markdown-link-health:
     machine: true
     working_directory: ~/kglib
     steps:
       - checkout
-      - run: find . -name \*.md | xargs -L1 npx markdown-link-check -v
+      - run: find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
 
   deploy-pip-snapshot:
     machine: true
@@ -80,6 +83,7 @@ jobs:
               echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
               sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
               cat tests/deployment/requirements.txt
+              pip install -U pip setuptools
               pip install -r tests/deployment/requirements.txt
               ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
               cd tests/deployment/ && python -m unittest kgcn.diagnosis
