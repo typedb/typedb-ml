@@ -28,6 +28,7 @@ commands:
       - run: sudo unlink /usr/bin/python3
       - run: sudo ln -s $(which python3) /usr/bin/python3
       - run: sudo sed -i -e 's|python3|python|g' $(which lsb_release)
+      - run: sudo sed -i -e '/from optparse import OptionParser/ i from __future__ import print_function' $(which lsb_release)
 
 jobs:
   build:

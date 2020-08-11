@@ -41,7 +41,7 @@ load("@graknlabs_dependencies//library/maven:rules.bzl", "maven")
 
 # Load Python
 load("@graknlabs_dependencies//builder/python:deps.bzl", python_deps = "deps")
-python_deps()
+python_deps(use_patched_version=True)
 load("@rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
 pip_repositories()
 
