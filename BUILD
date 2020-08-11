@@ -12,34 +12,6 @@ load("@graknlabs_kglib_pip//:requirements.bzl",
 load("@graknlabs_bazel_distribution//github:rules.bzl", "deploy_github")
 load("@graknlabs_dependencies//distribution/artifact:rules.bzl", "artifact_extractor")
 
-# Python toolchain
-load("@bazel_tools//tools/python:toolchain.bzl", "py_runtime_pair")
-
-py_runtime(
-    name = "my_py2_runtime",
-    interpreter_path = "/opt/circleci/.pyenv/shims/python",
-    python_version = "PY2",
-)
-
-py_runtime(
-    name = "my_py3_runtime",
-    interpreter_path = "/opt/circleci/.pyenv/shims/python3",
-    python_version = "PY3",
-)
-
-py_runtime_pair(
-    name = "my_py_runtime_pair",
-    py2_runtime = ":my_py2_runtime",
-    py3_runtime = ":my_py3_runtime",
-)
-
-toolchain(
-    name = "my_toolchain",
-    toolchain = ":my_py_runtime_pair",
-    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
-)
-# Python toolchain
-
 assemble_pip(
     name = "assemble-pip",
     target = "//kglib:kglib",
