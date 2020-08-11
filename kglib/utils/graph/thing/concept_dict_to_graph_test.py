@@ -43,7 +43,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph = nx.MultiDiGraph()
         variable_graph.add_node('x')
 
-        name = Thing('V123', 'name', 'attribute', data_type='string', value='Bob')
+        name = Thing('V123', 'name', 'attribute', value_type='string', value='Bob')
         concept_dict = {'x': name}
 
         grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
@@ -132,7 +132,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         variable_graph.add_node('y')
         variable_graph.add_edge('x', 'y', type='employee')
 
-        name = Thing('V123', 'name', 'attribute', data_type='string', value='Bob')
+        name = Thing('V123', 'name', 'attribute', value_type='string', value='Bob')
         employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': name, 'y': employment}
 
