@@ -48,7 +48,7 @@ class TestConceptDictToGraknGraph(GraphTestCase):
 
         grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
         expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(name, type='name', datatype='string', value='Bob')
+        expected_grakn_graph.add_node(name, type='name', value_type='string', value='Bob')
 
         self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
 

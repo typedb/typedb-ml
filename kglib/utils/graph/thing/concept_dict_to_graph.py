@@ -49,7 +49,7 @@ def concept_dict_to_graph(concept_dict, variable_graph):
         data = variable_graph.nodes[variable]
         data.update(type=thing.type_label)
         if thing.base_type_label == 'attribute':
-            data.update(datatype=thing.data_type, value=thing.value)
+            data.update(value_type=thing.data_type, value=thing.value)
 
         grakn_graph.add_node(thing, **data)
 
