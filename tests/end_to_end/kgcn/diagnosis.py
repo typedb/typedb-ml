@@ -17,6 +17,7 @@
 #  under the License.
 #
 
+import sys
 import unittest
 
 from kglib.kgcn.examples.diagnosis.diagnosis import diagnosis_example
@@ -30,7 +31,9 @@ class TestDiagnosisExample(unittest.TestCase):
     def setUp(self):
         self._gs = GraknServer()
         self._gs.start()
-        self._gs.load_graql_file(TEST_KEYSPACE, '/kglib/kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql')
+        schema_location = sys.argv.pop()
+        print("Schema location: " + str(schema_location))
+        self._gs.load_graql_file(TEST_KEYSPACE, schema_location)
 
     def tearDown(self):
         self._gs.stop()
