@@ -2,7 +2,7 @@ load("@rules_python//python:defs.bzl", "py_test")
 
 py_test(
     name = "diagnosis",
-    size = "large",
+    size = "enormous",
     srcs = [
         "kgcn/diagnosis.py"
     ],
