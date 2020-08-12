@@ -29,7 +29,7 @@ TEST_URI = "localhost:48555"
 
 class TestDiagnosisExample(unittest.TestCase):
     def setUp(self):
-        self._gs = GraknServer()
+        self._gs = GraknServer(sys.argv.pop())
         self._gs.start()
         schema_location = sys.argv.pop()
         print("Schema location: " + str(schema_location))
@@ -47,4 +47,6 @@ class TestDiagnosisExample(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    # This handles the fact that additional arguments that are supplied by our py_test definition
+    # https://stackoverflow.com/a/38012249
+    unittest.main(argv=['ignored-arg'], exit=False)

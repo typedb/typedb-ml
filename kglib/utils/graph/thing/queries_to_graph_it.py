@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+import sys
 import unittest
 
 import networkx as nx
@@ -211,5 +212,5 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
 if __name__ == "__main__":
 
-    with GraknServer() as gs:
+    with GraknServer(sys.argv.pop()) as gs:
         unittest.main()
