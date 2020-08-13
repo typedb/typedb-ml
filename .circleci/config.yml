@@ -184,7 +184,9 @@ workflows:
       - deploy-pip-snapshot:
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - development
           requires:
             - test
             - test-end-to-end
@@ -193,7 +195,9 @@ workflows:
       - test-deployment-pip:
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - development
           requires:
             - deploy-pip-snapshot
       - release-approval:
