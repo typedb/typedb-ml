@@ -1,19 +1,19 @@
 define
 
 example-id sub attribute,
-    datatype long;
+    value long;
 
 age sub attribute,
-    datatype long;
+    value long;
 
 name sub attribute,
-    datatype string;
+    value string;
 
 severity sub attribute,
-    datatype double;
+    value double;
 
 units-per-week sub attribute,
-    datatype long;
+    value long;
 
 person sub entity,
     key example-id,
@@ -56,13 +56,13 @@ candidate-diagnosis sub relation,
     relates candidate-diagnosed-disease;
 
 probability-exists sub attribute,
-    datatype double;
+    value double;
 
 probability-non-exists sub attribute,
-    datatype double;
+    value double;
 
 probability-preexists sub attribute,
-    datatype double;
+    value double;
 
 kgcn sub entity,
 	plays diagnoser;

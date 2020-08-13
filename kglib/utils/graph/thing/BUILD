@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 
 py_test(
@@ -25,9 +26,8 @@ py_test(
         "//kglib/utils/graph/test",
         "@graknlabs_client_python//:client_python",
     ],
-    data = [
-        "@graknlabs_grakn_core//:assemble-mac-zip",
-    ]
+    data = ["@graknlabs_grakn_core_artifact//file"],
+    args = ["$(location @graknlabs_grakn_core_artifact//file)"],
 )
 
 
@@ -48,8 +48,8 @@ py_library(
             'queries_to_graph.py'],
     deps = [
         "//kglib/utils/grakn/object",
-        requirement('networkx'),
-        requirement('decorator'),
+        graknlabs_kglib_requirement('networkx'),
+        graknlabs_kglib_requirement('decorator'),
     ],
     visibility=['//visibility:public']
 )

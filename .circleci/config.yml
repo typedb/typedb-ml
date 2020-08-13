@@ -1,19 +1,24 @@
 version: 2.1
 commands:
 
-  install-bazel-linux-rbe:
+  install-bazel:
     steps:
-      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-linux.sh
-      - run: bash ./install-bazel-linux.sh && rm ./install-bazel-linux.sh
-      - run: curl -OL https://raw.githubusercontent.com/graknlabs/build-tools/master/ci/install-bazel-rbe.sh
-      - run: bash ./install-bazel-rbe.sh && rm ./install-bazel-rbe.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/dependencies/master/tool/bazelinstall/linux.sh
+      - run: bash ./linux.sh && rm ./linux.sh
+      - run: curl -OL https://raw.githubusercontent.com/graknlabs/dependencies/master/tool/bazelinstall/rbe.sh
+      - run: bash ./rbe.sh && rm ./rbe.sh
 
-  run-grakn-server:
+  run-bazel:
+    parameters:
+      command:
+        type: string
     steps:
-      - install-bazel-linux-rbe
-      - install-python
-      - run: bazel build @graknlabs_grakn_core//:assemble-linux-targz
-      - run: mkdir dist && tar -xvzf bazel-bin/external/graknlabs_grakn_core/grakn-core-all-linux.tar.gz -C ./dist/
+      - run: bazel run @graknlabs_dependencies//tool/bazelrun:rbe -- << parameters.command >>
+
+  run-grakn:
+    steps:
+      - run-bazel:
+          command: bazel run //:grakn-extractor -- dist/grakn-core-all-linux
       - run: nohup ./dist/grakn-core-all-linux/grakn server start
 
   install-python:
@@ -23,47 +28,55 @@ commands:
       - run: sudo unlink /usr/bin/python3
       - run: sudo ln -s $(which python3) /usr/bin/python3
       - run: sudo sed -i -e 's|python3|python|g' $(which lsb_release)
+      - run: sudo sed -i -e '/from optparse import OptionParser/ i from __future__ import print_function' $(which lsb_release)
 
 jobs:
   build:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
+      - install-bazel
       - checkout
       - install-python
-      - run: bazel build //...
+      - run-bazel:
+          command: bazel build //...
 
   test:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
+      - install-bazel
       - checkout
       - install-python
-      - run: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
+      - run-bazel:
+          command: bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
 
   test-end-to-end:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
+      - install-bazel
       - checkout
       - install-python
       - run: bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
 
   test-markdown-link-health:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - checkout
       - run: find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
 
   deploy-pip-snapshot:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
+      - install-bazel
       - checkout
       - install-python
       - run: |
@@ -72,27 +85,29 @@ jobs:
           bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
 
   test-deployment-pip:
-      machine: true
-      working_directory: ~/kglib
-      steps:
-        - checkout
-        - run-grakn-server
-        - run:
-            name: Run test-deployment-pip for kglib
-            command: |
-              echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
-              sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
-              cat tests/deployment/requirements.txt
-              pip install -U pip setuptools
-              pip install -r tests/deployment/requirements.txt
-              ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
-              cd tests/deployment/ && python -m unittest kgcn.diagnosis
-
-  release-approval:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
+      - checkout
+      - run-grakn
+      - run:
+          name: Run test-deployment-pip for kglib
+          command: |
+            echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
+            sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
+            cat tests/deployment/requirements.txt
+            pip install -U pip setuptools
+            pip install -r tests/deployment/requirements.txt
+            ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
+            cd tests/deployment/ && python -m unittest kgcn.diagnosis
+
+  release-approval:
+    machine:
+      image: ubuntu-1604:201903-01
+    working_directory: ~/kglib
+    steps:
+      - install-bazel
       - checkout
       - install-python
       - run: |
@@ -101,9 +116,10 @@ jobs:
           bazel run @graknlabs_build_tools//ci:release-approval
 
   release-validate:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
-      - install-bazel-linux-rbe
+      - install-bazel
       - checkout
       - install-python
       - run: |
@@ -111,24 +127,26 @@ jobs:
             graknlabs_grakn_core graknlabs_client_python
 
   deploy-github:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
       - checkout
       - run: wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
       - run: tar xvf ghr_v0.12.0_linux_386.tar.gz
       - run:
-         name: "Publish Draft Release on GitHub"
-         command: |
-           VERSION_TAG=$(cat "VERSION")
-           curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",
-           \"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
+          name: "Publish Draft Release on GitHub"
+          command: |
+            VERSION_TAG=$(cat "VERSION")
+            curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",
+            \"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
 
   deploy-pip-release:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     working_directory: ~/kglib
     steps:
-      - install-bazel-linux-rbe
+      - install-bazel
       - checkout
       - install-python
       - run: |
@@ -137,7 +155,8 @@ jobs:
           bazel run --define version=$(cat VERSION) //:deploy-pip -- release
 
   release-cleanup:
-    machine: true
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
       - checkout
       - run: git push --delete https://$REPO_GITHUB_TOKEN@github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME $CIRCLE_BRANCH
@@ -165,7 +184,9 @@ workflows:
       - deploy-pip-snapshot:
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - development
           requires:
             - test
             - test-end-to-end
@@ -174,7 +195,9 @@ workflows:
       - test-deployment-pip:
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - development
           requires:
             - deploy-pip-snapshot
       - release-approval:

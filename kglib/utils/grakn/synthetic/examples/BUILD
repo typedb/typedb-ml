@@ -1,7 +1,14 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
-exports_files(["diagnosis/schema.gql"])
+filegroup(
+    name = "graql-schema",
+    srcs = [
+        "diagnosis/schema.gql",
+    ],
+    visibility = ["//visibility:public"],
+)
 
 py_library(
     name = "examples",
@@ -10,7 +17,7 @@ py_library(
     ],
     deps = [
         "@graknlabs_client_python//:client_python",
-        requirement('numpy'),
+        graknlabs_kglib_requirement('numpy'),
     ],
     visibility=['//visibility:public']
 )

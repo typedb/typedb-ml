@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 py_test(
     name = "diagnosis_test",
@@ -9,9 +10,9 @@ py_test(
     deps = [
         "diagnosis",
         "//kglib/utils/graph/test",
-        requirement('numpy'),
-        requirement('networkx'),
-        requirement('decorator'),
+        graknlabs_kglib_requirement('numpy'),
+        graknlabs_kglib_requirement('networkx'),
+        graknlabs_kglib_requirement('decorator'),
     ]
 )
 

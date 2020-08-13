@@ -16,6 +16,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+import sys
 import unittest
 
 import networkx as nx
@@ -88,10 +89,10 @@ class ITBuildGraphFromQueries(GraphTestCase):
 
         person_exp = Thing('V123', 'person', 'entity')
         parentship_exp = Thing('V567', 'parentship', 'relation')
-        name_exp = Thing('V987', 'name', 'attribute', data_type='string', value='Bob')
+        name_exp = Thing('V987', 'name', 'attribute', value_type='string', value='Bob')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name', datatype='string', value='Bob')
+        expected_combined_graph.add_node(name_exp, type='name', value_type='string', value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')
@@ -144,7 +145,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
     KEYSPACE = "it_build_graph_from_queries"
     SCHEMA = ("define "
               "person sub entity, has name, plays parent, plays child;"
-              "name sub attribute, datatype string;"
+              "name sub attribute, value string;"
               "parentship sub relation, relates parent, relates child;")
     DATA = ('insert '
             '$p isa person, has name "Bob";'
@@ -200,7 +201,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name', datatype='string', value='Bob')
+        expected_combined_graph.add_node(name_exp, type='name', value_type='string', value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')
@@ -211,5 +212,5 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
 if __name__ == "__main__":
 
-    with GraknServer() as gs:
+    with GraknServer(sys.argv.pop()) as gs:
         unittest.main()
