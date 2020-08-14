@@ -21,8 +21,7 @@ At present this repo contains one project: [*Knowledge Graph Convolutional Netwo
 
 - [Grakn Core 1.8.0](https://github.com/graknlabs/grakn/releases) running in the background
 
-- client-python 1.8.0 ([PyPi](https://pypi.org/project/grakn-client/), [GitHub release](https://github
-.com/graknlabs/client-python/releases))
+- client-python 1.8.0 ([PyPi](https://pypi.org/project/grakn-client/), [GitHub release](https://github.com/graknlabs/client-python/releases))
 
 **Run**
 Take a look at [*Knowledge Graph Convolutional Networks* (KGCNs)](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn) to see a walkthrough of how to use the library.
