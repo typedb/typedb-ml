@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@pypi_dependencies//:requirements.bzl", "requirement")
+load("@graknlabs_kglib_pip//:requirements.bzl",
+       graknlabs_kglib_requirement = "requirement")
 
 
 py_test(
@@ -18,8 +19,8 @@ py_library(
         'query_graph.py',
     ],
     deps = [
-        requirement('networkx'),
-        requirement('decorator'),
+        graknlabs_kglib_requirement('networkx'),
+        graknlabs_kglib_requirement('decorator'),
     ],
     visibility=['//visibility:public']
 )

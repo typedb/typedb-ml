@@ -2,7 +2,7 @@ load("@rules_python//python:defs.bzl", "py_test")
 
 py_test(
     name = "diagnosis",
-    size = "large",
+    size = "enormous",
     srcs = [
         "kgcn/diagnosis.py"
     ],
@@ -11,7 +11,11 @@ py_test(
         "//kglib/utils/grakn/test",
     ],
     data = [
-        "@graknlabs_grakn_core//:assemble-mac-zip",
-        "//kglib/utils/grakn/synthetic/examples:diagnosis/schema.gql"
-    ]
+        "//kglib/utils/grakn/synthetic/examples:graql-schema",
+        "@graknlabs_grakn_core_artifact//file"
+    ],
+    args = [
+        "$(locations //kglib/utils/grakn/synthetic/examples:graql-schema)",
+        "$(location @graknlabs_grakn_core_artifact//file)",
+    ],
 )

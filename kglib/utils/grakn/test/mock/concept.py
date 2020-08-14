@@ -34,19 +34,19 @@ class MockType(MockConcept):
         return self._label
 
 
-class DataType:
+class ValueType:
     def __init__(self, name):
         self.name = name
 
 
 class MockAttributeType(MockType):
-    def __init__(self, id, label, base_type, data_type):
+    def __init__(self, id, label, base_type, value_type):
         super().__init__(id, label, base_type)
-        assert data_type in {'STRING', 'LONG', 'DOUBLE', 'DATE', 'BOOLEAN'}
-        self._data_type = DataType(data_type)
+        assert value_type in {'STRING', 'LONG', 'DOUBLE', 'DATETIME', 'BOOLEAN'}
+        self._value_type = ValueType(value_type)
 
-    def data_type(self):
-        return self._data_type
+    def value_type(self):
+        return self._value_type
 
 
 class MockThing(MockConcept):

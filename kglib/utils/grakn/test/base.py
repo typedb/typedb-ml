@@ -17,9 +17,12 @@
 #  under the License.
 #
 
+from __future__ import print_function
+
 import os
 import shutil
 import subprocess as sp
+import tarfile
 import tempfile
 import zipfile
 
@@ -39,10 +42,10 @@ class ZipFile(zipfile.ZipFile):
 
 
 class GraknServer(object):
-    DISTRIBUTION_LOCATION = 'external/graknlabs_grakn_core/grakn-core-all-mac.zip'
-    DISTRIBUTION_ROOT_DIR = 'grakn-core-all-mac'
 
-    def __init__(self):
+    def __init__(self, distribution_location):
+        self.__distribution_location = distribution_location
+        self.__distribution_root_dir = None
         self.__unpacked_dir = None
 
     def __enter__(self):
@@ -56,27 +59,26 @@ class GraknServer(object):
             self._unpack()
         sp.check_call([
             'grakn', 'server', 'start'
-        ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
-        return self
+        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
 
     def stop(self):
         sp.check_call([
             'grakn', 'server', 'stop'
-        ], cwd=os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR))
+        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
         shutil.rmtree(self.__unpacked_dir)
-        return self
 
     def _unpack(self):
         self.__unpacked_dir = tempfile.mkdtemp(prefix='grakn')
-        with ZipFile(GraknServer.DISTRIBUTION_LOCATION) as zf:
-            zf.extractall(self.__unpacked_dir)
+        with tarfile.open(self.__distribution_location) as tf:
+            tf.extractall(self.__unpacked_dir)
+            self.__distribution_root_dir = os.path.commonpath(tf.getnames()[1:])
 
     def load_graql_file(self, keyspace, graql_file_path):
         sp.check_call([
             'grakn', 'console', '-k', keyspace, '-f',
-            os.getenv("TEST_SRCDIR") + graql_file_path
+            os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
         ], cwd=self.grakn_binary_location)
 
     @property
     def grakn_binary_location(self):
-        return os.path.join(self.__unpacked_dir, GraknServer.DISTRIBUTION_ROOT_DIR)
+        return os.path.join(self.__unpacked_dir, self.__distribution_root_dir)

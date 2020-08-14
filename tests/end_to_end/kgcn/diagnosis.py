@@ -17,6 +17,7 @@
 #  under the License.
 #
 
+import sys
 import unittest
 
 from kglib.kgcn.examples.diagnosis.diagnosis import diagnosis_example
@@ -28,9 +29,11 @@ TEST_URI = "localhost:48555"
 
 class TestDiagnosisExample(unittest.TestCase):
     def setUp(self):
-        self._gs = GraknServer()
+        self._gs = GraknServer(sys.argv.pop())
         self._gs.start()
-        self._gs.load_graql_file(TEST_KEYSPACE, '/kglib/kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql')
+        schema_location = sys.argv.pop()
+        print("Schema location: " + str(schema_location))
+        self._gs.load_graql_file(TEST_KEYSPACE, schema_location)
 
     def tearDown(self):
         self._gs.stop()
@@ -44,4 +47,6 @@ class TestDiagnosisExample(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    # This handles the fact that additional arguments that are supplied by our py_test definition
+    # https://stackoverflow.com/a/38012249
+    unittest.main(argv=['ignored-arg'], exit=False)
