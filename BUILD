@@ -84,3 +84,8 @@ deploy_pip(
     target = ":assemble-pip",
     deployment_properties = "@graknlabs_dependencies//distribution:deployment.properties",
 )
+
+artifact_extractor(
+    name = "grakn-extractor",
+    artifact = "@graknlabs_grakn_core_artifact//file",
+)
