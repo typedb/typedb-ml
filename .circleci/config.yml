@@ -91,6 +91,7 @@ jobs:
     steps:
       - install-bazel
       - checkout
+      - install-python
       - run-grakn
       - run:
           name: Run test-deployment-pip for kglib
