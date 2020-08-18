@@ -39,7 +39,7 @@ class TestDiagnosisExample(unittest.TestCase):
         self._gs.stop()
 
     def test_learning_is_done(self):
-        solveds_tr, solveds_ge = diagnosis_example(20)
+        solveds_tr, solveds_ge = diagnosis_example()
         self.assertGreaterEqual(solveds_tr[-1], 0.7)
         self.assertLessEqual(solveds_tr[-1], 0.99)
         self.assertGreaterEqual(solveds_ge[-1], 0.7)
