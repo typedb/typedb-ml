@@ -39,7 +39,7 @@ class TestDiagnosisExample(unittest.TestCase):
         self._gs.stop()
 
     def test_learning_is_done(self):
-        solveds_tr, solveds_ge = diagnosis_example()
+        solveds_tr, solveds_ge = diagnosis_example(20)
         self.assertGreaterEqual(solveds_tr[-1], 0.7)
         self.assertLessEqual(solveds_tr[-1], 0.99)
         self.assertGreaterEqual(solveds_ge[-1], 0.7)
@@ -49,4 +49,4 @@ class TestDiagnosisExample(unittest.TestCase):
 if __name__ == "__main__":
     # This handles the fact that additional arguments that are supplied by our py_test definition
     # https://stackoverflow.com/a/38012249
-    unittest.main(argv=['ignored-arg'], exit=False)
+    unittest.main(argv=['ignored-arg'])
