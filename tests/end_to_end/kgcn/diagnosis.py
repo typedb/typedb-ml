@@ -49,4 +49,4 @@ class TestDiagnosisExample(unittest.TestCase):
 if __name__ == "__main__":
     # This handles the fact that additional arguments that are supplied by our py_test definition
     # https://stackoverflow.com/a/38012249
-    unittest.main(argv=['ignored-arg'], exit=False)
+    unittest.main(argv=['ignored-arg'])
