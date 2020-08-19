@@ -89,3 +89,15 @@ artifact_extractor(
     name = "grakn-extractor",
     artifact = "@graknlabs_grakn_core_artifact//file",
 )
+
+load("@graknlabs_dependencies//tool/release:rules.bzl", "release_validate_deps")
+
+release_validate_deps(
+    name = "release-validate-deps",
+    refs = "@graknlabs_kglib_workspace_refs//:refs.json",
+    tagged_deps = [
+#        "graknlabs_grakn_core", # TODO We cannot currently use a released grakn for tests as 1.8.0 has an outdated build pipeline
+        "graknlabs_client_python",
+    ],
+    tags = ["manual"]
+)

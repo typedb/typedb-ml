@@ -39,6 +39,13 @@ load("@graknlabs_dependencies//builder/java:deps.bzl", java_deps = "deps")
 java_deps()
 load("@graknlabs_dependencies//library/maven:rules.bzl", "maven")
 
+# Load Kotlin
+load("@graknlabs_dependencies//builder/kotlin:deps.bzl", kotlin_deps = "deps")
+kotlin_deps()
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+kotlin_repositories()
+kt_register_toolchains()
+
 # Load Python
 load("@graknlabs_dependencies//builder/python:deps.bzl", python_deps = "deps")
 python_deps(use_patched_version=True)
@@ -54,12 +61,19 @@ load("@graknlabs_dependencies_ci_pip//:requirements.bzl",
 graknlabs_dependencies_ci_pip_install = "pip_install")
 graknlabs_dependencies_ci_pip_install()
 
+# Load distribution deps
+load("@graknlabs_dependencies//distribution:deps.bzl", distribution_deps = "deps")
+distribution_deps()
+
+# Load maven artifacts
+load("@graknlabs_dependencies//dependencies/maven:artifacts.bzl", graknlabs_dependencies_artifacts = "artifacts")
 
 #####################################################################
 # Load @graknlabs_bazel_distribution (from @graknlabs_dependencies) #
 #####################################################################
-load("@graknlabs_dependencies//distribution:deps.bzl", distribution_deps = "deps")
-distribution_deps()
+
+load("@graknlabs_dependencies//dependencies/graknlabs:repositories.bzl", "graknlabs_bazel_distribution")
+graknlabs_bazel_distribution()
 
 pip3_import(
     name = "graknlabs_bazel_distribution_pip",
@@ -121,3 +135,18 @@ pip3_import(
 load("@graknlabs_kglib_pip//:requirements.bzl",
 graknlabs_kglib_pip_install = "pip_install")
 graknlabs_kglib_pip_install()
+
+##############
+# Load @maven #
+##############
+maven(
+    graknlabs_dependencies_artifacts
+)
+
+############################################
+# Create @graknlabs_console_workspace_refs #
+############################################
+load("@graknlabs_bazel_distribution//common:rules.bzl", "workspace_refs")
+workspace_refs(
+    name = "graknlabs_kglib_workspace_refs"
+)
