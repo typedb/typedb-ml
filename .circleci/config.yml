@@ -125,8 +125,7 @@ jobs:
       - checkout
       - install-python
       - run: |
-          bazel run @graknlabs_dependencies//tool/release:validate-deps -- \
-            graknlabs_grakn_core graknlabs_client_python
+          bazel test //:release-validate-deps --test_output=streamed
 
   deploy-github:
     machine:
