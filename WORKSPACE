@@ -61,17 +61,12 @@ load("@graknlabs_dependencies_ci_pip//:requirements.bzl",
 graknlabs_dependencies_ci_pip_install = "pip_install")
 graknlabs_dependencies_ci_pip_install()
 
-# Load distribution deps
-load("@graknlabs_dependencies//distribution:deps.bzl", distribution_deps = "deps")
-distribution_deps()
-
 # Load maven artifacts
 load("@graknlabs_dependencies//dependencies/maven:artifacts.bzl", graknlabs_dependencies_artifacts = "artifacts")
 
 #####################################################################
 # Load @graknlabs_bazel_distribution (from @graknlabs_dependencies) #
 #####################################################################
-
 load("@graknlabs_dependencies//dependencies/graknlabs:repositories.bzl", "graknlabs_bazel_distribution")
 graknlabs_bazel_distribution()
 
@@ -99,18 +94,6 @@ skydoc_repositories()
 load("@graknlabs_bazel_distribution//common:dependencies.bzl", "bazelbuild_rules_pkg")
 bazelbuild_rules_pkg()
 
-############################
-# Load @graknlabs_protocol #
-############################
-load("//dependencies/graknlabs:repositories.bzl", "graknlabs_protocol")
-graknlabs_protocol()
-
-#######################################
-# Load @graknlabs_grakn_core_artifact #
-#######################################
-load("//dependencies/graknlabs:artifacts.bzl", "graknlabs_grakn_core_artifact")
-graknlabs_grakn_core_artifact()
-
 #################################
 # Load @graknlabs_client_python #
 #################################
@@ -124,6 +107,18 @@ pip3_import(
 load("@graknlabs_client_python_pip//:requirements.bzl",
 graknlabs_client_python_pip_install = "pip_install")
 graknlabs_client_python_pip_install()
+
+############################################################
+# Load @graknlabs_protocol (from @graknlabs_client_python) #
+############################################################
+load("@graknlabs_client_python//dependencies/graknlabs:repositories.bzl", "graknlabs_protocol")
+graknlabs_protocol()
+
+#######################################
+# Load @graknlabs_grakn_core_artifact #
+#######################################
+load("//dependencies/graknlabs:artifacts.bzl", "graknlabs_grakn_core_artifact")
+graknlabs_grakn_core_artifact()
 
 #########################
 # Load @graknlabs_kglib #
