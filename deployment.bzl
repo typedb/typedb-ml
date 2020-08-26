@@ -16,5 +16,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-repo.github.organisation=graknlabs
-repo.github.repository=kglib
+deployment = {
+    "github.organisation" : "graknlabs",
+    "github.repository" : "kglib"
+}

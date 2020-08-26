@@ -1,16 +1,19 @@
-exports_files(["requirements.txt", "deployment.properties", "RELEASE_TEMPLATE.md"])
+exports_files(["requirements.txt", "RELEASE_TEMPLATE.md"])
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 load("@graknlabs_kglib_pip//:requirements.bzl",
        graknlabs_kglib_requirement = "requirement")
 
+load("@graknlabs_bazel_distribution//github:rules.bzl", "deploy_github")
 load("@graknlabs_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
 load("@graknlabs_kglib_pip//:requirements.bzl",
        graknlabs_kglib_requirement = "requirement")
 
-load("@graknlabs_bazel_distribution//github:rules.bzl", "deploy_github")
-load("@graknlabs_dependencies//distribution/artifact:rules.bzl", "artifact_extractor")
+load("@graknlabs_dependencies//distribution:deployment.bzl", "deployment")
+load("//:deployment.bzl", github_deployment = "deployment")
+load("@graknlabs_dependencies//tool/release:rules.bzl", "release_validate_deps")
+
 
 assemble_pip(
     name = "assemble-pip",
@@ -82,22 +85,16 @@ assemble_pip(
 deploy_pip(
     name = "deploy-pip",
     target = ":assemble-pip",
-    deployment_properties = "@graknlabs_dependencies//distribution:deployment.properties",
+    snapshot = deployment["pypi.snapshot"],
+    release = deployment["pypi.release"],
 )
-
-artifact_extractor(
-    name = "grakn-extractor",
-    artifact = "@graknlabs_grakn_core_artifact//file",
-)
-
-load("@graknlabs_dependencies//tool/release:rules.bzl", "release_validate_deps")
 
 release_validate_deps(
     name = "release-validate-deps",
     refs = "@graknlabs_kglib_workspace_refs//:refs.json",
     tagged_deps = [
-#        "graknlabs_grakn_core", # TODO We cannot currently use a released grakn for tests as 1.8.0 has an outdated build pipeline
-        "graknlabs_client_python",
+        "@graknlabs_grakn_core",
+        "@graknlabs_client_python",
     ],
     tags = ["manual"]
 )
