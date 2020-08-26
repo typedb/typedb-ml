@@ -88,7 +88,6 @@ github_deps()
 
 load("//dependencies/graknlabs:repositories.bzl", "graknlabs_client_python")
 graknlabs_client_python()
-
 pip3_import(
     name = "graknlabs_client_python_pip",
     requirements = "@graknlabs_client_python//:requirements.txt",

@@ -98,3 +98,13 @@ release_validate_deps(
     ],
     tags = ["manual"]
 )
+
+# CI targets that are not declared in any BUILD file, but are called externally
+filegroup(
+    name = "ci",
+    data = [
+        "@graknlabs_dependencies//library/maven:update",
+        "@graknlabs_dependencies//tool/bazelrun:rbe",
+        "@graknlabs_dependencies//tool/release:approval"
+    ]
+)
