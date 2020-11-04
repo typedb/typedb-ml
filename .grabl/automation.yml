@@ -31,7 +31,7 @@ build:
         pyenv global 3.6.3
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
-        sudo apt install npm
+        sudo apt update && sudo apt install -y npm
         find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
     deploy-pip-snapshot:
       filter:
