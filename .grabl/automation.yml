@@ -19,6 +19,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
+        sudo apt install npm
         find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
     deploy-pip-snapshot:
       filter:
