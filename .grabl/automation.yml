@@ -7,6 +7,7 @@ build:
         pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
         bazel build //...
     test:
       machine: graknlabs-ubuntu-20.04
@@ -15,6 +16,7 @@ build:
         pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
         bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
     test-end-to-end:
       machine: graknlabs-ubuntu-20.04
@@ -23,6 +25,7 @@ build:
         pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
         bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
     test-markdown-link-health:
       machine: graknlabs-ubuntu-20.04
@@ -31,6 +34,7 @@ build:
         pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
         sudo apt update && sudo apt install -y npm
         find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
     deploy-pip-snapshot:
@@ -43,6 +47,7 @@ build:
         pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
         export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
         bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
@@ -57,6 +62,7 @@ build:
         pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
         bazel run //:grakn-extractor -- dist/grakn-core-all-linux
         nohup ./dist/grakn-core-all-linux/grakn server start
         echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
