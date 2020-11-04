@@ -43,7 +43,7 @@ build:
     deploy-pip-snapshot:
       filter:
         owner: graknlabs
-        branch: development
+        branch: master
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
@@ -57,7 +57,7 @@ build:
     test-deployment-pip:
       filter:
         owner: graknlabs
-        branch: development
+        branch: master
       dependencies: [deploy-pip-snapshot]
       machine: graknlabs-ubuntu-20.04
       type: foreground
