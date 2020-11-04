@@ -1,3 +1,6 @@
+config:
+  version-candidate: VERSION
+
 build:
   correctness:
     build:
@@ -80,3 +83,26 @@ build:
     - test-markdown-link-health
     - deploy-pip-snapshot
     - test-deployment-pip
+
+release:
+  filter:
+    owner: graknlabs
+    branch: master
+  validation:
+    validate-dependencies:
+      machine: graknlabs-ubuntu-20.04
+      script: bazel test //:release-validate-deps --test_output=streamed
+  deployment:
+    deploy-github:
+      machine: graknlabs-ubuntu-20.04
+      script: |
+       wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
+       tar xvf ghr_v0.12.0_linux_386.tar.gz
+       export VERSION_TAG=$(cat "VERSION")
+       curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
+    deploy-maven-release:
+      machine: graknlabs-ubuntu-20.04
+      script: |
+        export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
+        export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
+        bazel run --define version=$(cat VERSION) //:deploy-pip -- release
