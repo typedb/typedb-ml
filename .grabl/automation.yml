@@ -4,7 +4,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
-        pyenv global 3.6.3
+        pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         bazel build //...
@@ -12,7 +12,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
-        pyenv global 3.6.3
+        pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
@@ -20,7 +20,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
-        pyenv global 3.6.3
+        pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
@@ -28,7 +28,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
-        pyenv global 3.6.3
+        pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         sudo apt update && sudo apt install -y npm
@@ -40,7 +40,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
-        pyenv global 3.6.3
+        pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
@@ -54,7 +54,7 @@ build:
       machine: graknlabs-ubuntu-20.04
       type: foreground
       script: |
-        pyenv global 3.6.3
+        pyenv global 3.6.10
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         bazel run //:grakn-extractor -- dist/grakn-core-all-linux
