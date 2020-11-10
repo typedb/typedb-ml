@@ -1,0 +1,108 @@
+config:
+  version-candidate: VERSION
+
+build:
+  correctness:
+    build:
+      machine: graknlabs-ubuntu-20.04
+      type: foreground
+      script: |
+        pyenv global 3.6.10
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        bazel build //...
+    test:
+      machine: graknlabs-ubuntu-20.04
+      type: foreground
+      script: |
+        pyenv global 3.6.10
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
+    test-end-to-end:
+      machine: graknlabs-ubuntu-20.04
+      type: foreground
+      script: |
+        pyenv global 3.6.10
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
+    test-markdown-link-health:
+      machine: graknlabs-ubuntu-20.04
+      type: foreground
+      script: |
+        pyenv global 3.6.10
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        sudo snap install node --classic
+        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
+    deploy-pip-snapshot:
+      filter:
+        owner: graknlabs
+        branch: master
+      machine: graknlabs-ubuntu-20.04
+      type: foreground
+      script: |
+        pyenv global 3.6.10
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
+        export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
+        bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
+    test-deployment-pip:
+      filter:
+        owner: graknlabs
+        branch: master
+      dependencies: [deploy-pip-snapshot]
+      machine: graknlabs-ubuntu-20.04
+      type: foreground
+      script: |
+        pyenv global 3.6.10
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        bazel run //:grakn-extractor -- dist/grakn-core-all-linux
+        nohup ./dist/grakn-core-all-linux/grakn server start
+        echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
+        sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
+        cat tests/deployment/requirements.txt
+        pip install -U pip setuptools
+        pip install -r tests/deployment/requirements.txt
+        ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
+        cd tests/deployment/ && python -m unittest kgcn.diagnosis
+
+  execution:
+    - build
+    - test
+    - test-end-to-end
+    - test-markdown-link-health
+    - deploy-pip-snapshot
+    - test-deployment-pip
+
+release:
+  filter:
+    owner: graknlabs
+    branch: master
+  validation:
+    validate-dependencies:
+      machine: graknlabs-ubuntu-20.04
+      script: bazel test //:release-validate-deps --test_output=streamed
+  deployment:
+    deploy-github:
+      machine: graknlabs-ubuntu-20.04
+      script: |
+       wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
+       tar xvf ghr_v0.12.0_linux_386.tar.gz
+       export VERSION_TAG=$(cat "VERSION")
+       curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
+    deploy-pip-release:
+      machine: graknlabs-ubuntu-20.04
+      script: |
+        export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
+        export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
+        bazel run --define version=$(cat VERSION) //:deploy-pip -- release
