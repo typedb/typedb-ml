@@ -100,7 +100,7 @@ release:
        tar xvf ghr_v0.12.0_linux_386.tar.gz
        export VERSION_TAG=$(cat "VERSION")
        curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
-    deploy-maven-release:
+    deploy-pip-release:
       machine: graknlabs-ubuntu-20.04
       script: |
         export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
