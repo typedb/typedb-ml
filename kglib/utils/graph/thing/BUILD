@@ -26,8 +26,8 @@ py_test(
         "//kglib/utils/graph/test",
         "@graknlabs_client_python//:client_python",
     ],
-    data = ["@graknlabs_grakn_core_artifact//file"],
-    args = ["$(location @graknlabs_grakn_core_artifact//file)"],
+    data = ["@graknlabs_grakn_core_artifact_linux//file"],
+    args = ["$(location @graknlabs_grakn_core_artifact_linux//file)"],
 )
 
 
