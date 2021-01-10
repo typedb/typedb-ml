@@ -24,6 +24,7 @@ import networkx as nx
 from kglib.utils.grakn.object.thing import build_thing
 from kglib.utils.graph.thing.concept_dict_to_graph import concept_dict_to_graph
 
+from grakn.client import GraknOptions
 
 def concept_dict_from_concept_map(concept_map, tx):
     """
@@ -107,7 +108,9 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
     for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
 
-        concept_maps = sampler(grakn_transaction.query(query, infer=infer))
+        options = GraknOptions()
+        options.infer = infer
+        concept_maps = sampler(grakn_transaction.query().match(query, options))
 
         concept_dicts = [concept_dict_from_concept_map(concept_map, grakn_transaction) for concept_map in concept_maps]
 

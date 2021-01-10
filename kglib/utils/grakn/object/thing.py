@@ -16,10 +16,11 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+from grakn.concept.type.value_type import ValueType
 
 from kglib.utils.grakn.object.comparable import PropertyComparable
 
-VALUE_TYPE_NAMES = ('long', 'double', 'boolean', 'date', 'string')
+VALUE_TYPES = (ValueType.OBJECT, ValueType.BOOLEAN, ValueType.LONG, ValueType.DOUBLE, ValueType.STRING, ValueType.DATETIME)
 
 
 class Thing(PropertyComparable):
@@ -51,16 +52,21 @@ class Thing(PropertyComparable):
 
 def build_thing(grakn_thing, tx):
 
-    id = grakn_thing.id
-    type_label = grakn_thing.type().label()
-    base_type_label = grakn_thing.as_remote(tx).base_type.replace('_TYPE', '').lower()
-
-    assert(base_type_label in ['entity', 'relation', 'attribute'])
+    id = grakn_thing.get_iid()
+    type_label = grakn_thing.as_remote(tx).get_type().get_label()
+    if grakn_thing.is_entity():
+        base_type_label = "entity"
+    elif grakn_thing.is_relation():
+        base_type_label = "relation"
+    elif grakn_thing.is_attribute():
+        base_type_label = "attribute"
+    else:
+        raise RuntimeError("Unexpected Concept")
 
     if base_type_label == 'attribute':
-        value_type = grakn_thing.as_remote(tx).type().value_type().name.lower()
-        assert value_type in VALUE_TYPE_NAMES
-        value = grakn_thing.value()
+        value_type = grakn_thing.as_remote(tx).get_type().get_value_type()
+        assert value_type in VALUE_TYPES
+        value = grakn_thing.get_value()
 
         return Thing(id, type_label, base_type_label, value_type, value)
 

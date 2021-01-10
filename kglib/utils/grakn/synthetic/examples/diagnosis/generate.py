@@ -20,7 +20,7 @@
 import inspect
 
 import numpy as np
-from grakn.client import GraknClient
+from grakn.client import *
 
 from kglib.utils.grakn.synthetic.statistics.pmf import PMF
 
@@ -95,10 +95,10 @@ def get_example_queries(pmf, example_id):
     return queries
 
 
-def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:48555"):
+def generate_example_graphs(num_examples, database="diagnosis", address="localhost:1729"):
 
-    client = GraknClient(uri=uri)
-    session = client.session(keyspace=keyspace)
+    client = GraknClient(address=address)
+    session = client.session(database, SessionType.DATA)
 
     pmf_array = np.zeros([2, 2, 2, 2, 3, 2, 3], dtype=np.float)
     pmf_array[0, 1, 0, 1, 0, 0, 0] = 0.1
@@ -130,10 +130,10 @@ def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:4
     # print(pmf.to_dataframe()) # TODO Remove pandas if this is not needed now
 
     for example_id in range(0, num_examples):
-        tx = session.transaction().write()
+        tx = session.transaction(TransactionType.WRITE)
         for query in get_example_queries(pmf, example_id):
             print(query)
-            tx.query(query)
+            tx.query().insert(query)
         tx.commit()
 
     session.close()
@@ -141,4 +141,4 @@ def generate_example_graphs(num_examples, keyspace="diagnosis", uri="localhost:4
 
 
 if __name__ == '__main__':
-    generate_example_graphs(100, keyspace="diagnosis", uri="localhost:48555")
+    generate_example_graphs(100, database="diagnosis", address="localhost:1729")

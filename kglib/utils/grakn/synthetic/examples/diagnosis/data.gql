@@ -1,0 +1,14 @@
+# Add elements to the Knowledge Graph that are common to all examples
+insert
+    $ms isa disease, has name "Multiple Sclerosis";
+    $diabetes isa disease, has name "Diabetes Type II";
+    $fatigue isa symptom, has name "Fatigue";
+    $vision isa symptom, has name "Blurred vision";
+    $c(cause: $ms, effect: $fatigue) isa causality;
+    $c1(cause: $ms, effect: $vision) isa causality;
+    $c2(cause: $diabetes, effect: $fatigue) isa causality;
+    $c3(cause: $diabetes, effect: $vision) isa causality;
+
+insert $s isa substance, has name "Alcohol";
+insert $s isa substance, has name "Cigarettes";
+insert $kgcn isa kgcn;

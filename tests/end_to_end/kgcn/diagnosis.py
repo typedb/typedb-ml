@@ -24,7 +24,7 @@ from kglib.kgcn.examples.diagnosis.diagnosis import diagnosis_example
 from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "diagnosis"
-TEST_URI = "localhost:48555"
+TEST_URI = "localhost:1729"
 
 
 class TestDiagnosisExample(unittest.TestCase):
