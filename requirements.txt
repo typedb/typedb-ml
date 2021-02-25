@@ -11,10 +11,9 @@ dm-tree==0.1.5
 future==0.18.2
 gast==0.2.2
 google-pasta==0.2.0
-grakn-client==2.0.0a4
-graknprotocol==2.0.0a5
+grakn-client==2.0.0-alpha-8
 graph-nets==1.0.4
-grpcio==1.33.2
+grpcio==1.35.0
 h5py==3.1.0
 importlib-metadata==3.3.0
 Keras-Applications==1.0.8
@@ -27,7 +26,7 @@ numpy==1.19.5
 pandas==0.25.1
 parse==1.18.0
 parse-type==0.5.2
-protobuf==3.6.1
+protobuf==3.14.0
 PyHamcrest==2.0.2
 pyparsing==2.4.7
 python-dateutil==2.8.1

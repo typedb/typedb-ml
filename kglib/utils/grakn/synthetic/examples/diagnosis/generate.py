@@ -33,71 +33,78 @@ def get_example_queries(pmf, example_id):
                f'insert $doc isa person, has example-id {20000 + example_id};']
 
     if variable_values['Multiple Sclerosis'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $d isa disease, has name "Multiple Sclerosis";
-                       $p isa person, has example-id {example_id};
-                       $doc isa person, has example-id {20000 + example_id};
-                       insert
-                       (patient: $p, diagnosed-disease: $d, doctor: $doc) isa diagnosis;
-                       $p has age {int(variable_values['Multiple Sclerosis']['age']())};'''))
+        queries.append(inspect.cleandoc(f'''
+                match
+                $d isa disease, has name "Multiple Sclerosis";
+                $p isa person, has example-id {example_id};
+                $doc isa person, has example-id {20000 + example_id};
+                insert
+                $diagnosis (patient: $p, diagnosed-disease: $d, doctor: $doc) isa diagnosis;
+                $p has age {int(variable_values['Multiple Sclerosis']['age']())};'''))
 
     if variable_values['Diabetes Type II'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id {example_id};
-                       $d isa disease, has name "Diabetes Type II";
-                       $doc isa person, has example-id {20000 + example_id};
-                       insert
-                       (patient: $p, diagnosed-disease: $d, doctor: $doc) isa diagnosis;
-                       $p has age {int(variable_values['Diabetes Type II']['age']())};'''))
+        queries.append(inspect.cleandoc(f'''                 
+                match
+                $p isa person, has example-id {example_id};
+                $d isa disease, has name "Diabetes Type II";
+                $doc isa person, has example-id {20000 + example_id};
+                insert
+                $diagnosis (patient: $p, diagnosed-disease: $d, doctor: $doc) isa diagnosis;
+                $p has age {int(variable_values['Diabetes Type II']['age']())};'''))
 
     if variable_values['Fatigue'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id {example_id};
-                       $s isa symptom, has name "Fatigue";
-                       insert
-                       (presented-symptom: $s, symptomatic-patient: $p) isa 
-                       symptom-presentation, has severity {variable_values['Fatigue']['severity']()};'''))
+        queries.append(inspect.cleandoc(f'''
+                match
+                $p isa person, has example-id {example_id};
+                $s isa symptom, has name "Fatigue";
+                insert
+                $sp (presented-symptom: $s, symptomatic-patient: $p) isa 
+                symptom-presentation, has severity {variable_values['Fatigue']['severity']()};'''))
 
     if variable_values['Blurred vision'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id {example_id};
-                       $s isa symptom, has name "Blurred vision";
-                       insert
-                       (presented-symptom: $s, symptomatic-patient: $p) isa 
-                       symptom-presentation, has severity {variable_values['Blurred vision']['severity']()};'''))
+        queries.append(inspect.cleandoc(f'''
+                match
+                $p isa person, has example-id {example_id};
+                $s isa symptom, has name "Blurred vision";
+                insert
+                $sp (presented-symptom: $s, symptomatic-patient: $p) isa 
+                symptom-presentation, has severity {variable_values['Blurred vision']['severity']()};'''))
 
     if variable_values['Drinking'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id {example_id};
-                       $s isa substance, has name "Alcohol";
-                       insert
-                       $c(consumer: $p, consumed-substance: $s) isa consumption, 
-                       has units-per-week {int(variable_values['Drinking']['units-per-week']())};'''))
+        queries.append(inspect.cleandoc(f'''
+                match
+                $p isa person, has example-id {example_id};
+                $s isa substance, has name "Alcohol";
+                insert
+                $c (consumer: $p, consumed-substance: $s) isa consumption, 
+                has units-per-week {int(variable_values['Drinking']['units-per-week']())};'''))
 
     if variable_values['Parent has Diabetes Type II'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id {example_id};
-                       $d isa disease, has name "Diabetes Type II";
-                       insert
-                       (parent: $parent, child: $p) isa parentship;
-                       $parent isa person, has example-id {example_id + 10000};
-                       (patient: $parent, diagnosed-disease: $d) isa diagnosis;
-                       '''))
+        queries.append(inspect.cleandoc(f'''
+                match
+                $p isa person, has example-id {example_id};
+                $d isa disease, has name "Diabetes Type II";
+                insert
+                (parent: $parent, child: $p) isa parentship;
+                $parent isa person, has example-id {example_id + 10000};
+                $diagnosis (patient: $parent, diagnosed-disease: $d) isa diagnosis;
+                '''))
 
     if variable_values['Cigarettes'] is not False:
-        queries.append(inspect.cleandoc(f'''match
-                       $p isa person, has example-id {example_id};
-                       $s isa substance, has name "Cigarettes";
-                       insert
-                       $c(consumer: $p, consumed-substance: $s) isa consumption, 
-                       has units-per-week {int(variable_values['Cigarettes']['units-per-week']())};'''))
+        queries.append(inspect.cleandoc(f'''
+                match
+                $p isa person, has example-id {example_id};
+                $s isa substance, has name "Cigarettes";
+                insert
+                $c (consumer: $p, consumed-substance: $s) isa consumption, 
+                has units-per-week {int(variable_values['Cigarettes']['units-per-week']())};'''))
 
     return queries
 
 
 def generate_example_graphs(num_examples, database="diagnosis", address="localhost:1729"):
 
-    client = GraknClient(address=address)
+    client = GraknClient.core(address=address)
     session = client.session(database, SessionType.DATA)
 
     pmf_array = np.zeros([2, 2, 2, 2, 3, 2, 3], dtype=np.float)
@@ -132,7 +139,7 @@ def generate_example_graphs(num_examples, database="diagnosis", address="localho
     for example_id in range(0, num_examples):
         tx = session.transaction(TransactionType.WRITE)
         for query in get_example_queries(pmf, example_id):
-            print(query)
+            #print(query)
             tx.query().insert(query)
         tx.commit()
 

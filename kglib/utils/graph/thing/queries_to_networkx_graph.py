@@ -22,9 +22,7 @@ from functools import reduce
 import networkx as nx
 
 from kglib.utils.grakn.object.thing import build_thing
-from kglib.utils.graph.thing.concept_dict_to_graph import concept_dict_to_graph
-
-from grakn.client import GraknOptions
+from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
 
 def concept_dict_from_concept_map(concept_map, tx):
     """
@@ -87,7 +85,7 @@ def combine_n_graphs(graphs_list):
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
-                             concept_dict_converter=concept_dict_to_graph, infer=True):
+                             concept_dict_converter=concept_dict_to_graph):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
     queries (variable graphs)of those queries, over a Grakn transaction
@@ -108,10 +106,9 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
     for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
 
-        options = GraknOptions()
-        options.infer = infer
-        concept_maps = sampler(grakn_transaction.query().match(query, options))
+        concept_maps = sampler(grakn_transaction.query().match(query))
 
+        # TODO: concept_dict_from_concept_map is a KGLIB functionality (dependency for data loader
         concept_dicts = [concept_dict_from_concept_map(concept_map, grakn_transaction) for concept_map in concept_maps]
 
         answer_concept_graphs = []

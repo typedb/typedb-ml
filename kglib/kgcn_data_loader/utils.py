@@ -17,6 +17,12 @@
 #  under the License.
 #
 
+from grakn.rpc.session import Session
+from grakn.rpc.transaction import TransactionType
+
+from kglib.utils.grakn.type.type import get_thing_types, get_role_types
+from typing import List
+
 
 def duplicate_edges_in_reverse(graph):
     """
@@ -59,3 +65,39 @@ def apply_logits_to_graphs(graph, logits_graph):
         data['logits'] = list(logits_graph.edges[sender, receiver, keys]['features'])
 
     return graph
+
+
+def get_node_types_for_training(session: Session, types_to_ignore: List[str]) -> List[str]:
+    """
+    Takes in a list of node types to ignore and returns all node types in schema that are not to be ignored.
+
+    Args:
+        session: Grakn rpc session of type SessionType.DATA
+        types_to_ignore: list of strings of schema type labels
+
+    Returns:
+        list of strings of schema type labels to include in training
+    """
+    with session.transaction(TransactionType.READ) as tx:
+        node_types = get_thing_types(tx)
+        [node_types.remove(el) for el in types_to_ignore]
+    print(f"Found node types: {node_types}")
+    return node_types
+
+
+def get_edge_types_for_training(session: Session, roles_to_ignore: List[str]) -> List[str]:
+    """
+    Takes in a list of role types to ignore and returns all role types in schema that are not to be ignored.
+
+    Args:
+        session: Grakn rpc session of type SessionType.DATA
+        roles_to_ignore: list of strings of role type labels
+
+    Returns:
+        list of strings of role type labels to include in training
+    """
+    with session.transaction(TransactionType.READ) as tx:
+        edge_types = get_role_types(tx)
+        [edge_types.remove(el) for el in roles_to_ignore]
+    print(f"Found edge types: {edge_types}")
+    return edge_types

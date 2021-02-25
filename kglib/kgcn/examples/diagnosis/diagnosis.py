@@ -23,11 +23,15 @@ import time
 from grakn.client import *
 
 from kglib.kgcn.pipeline.pipeline import pipeline
+
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
+
 from kglib.utils.grakn.type.type import get_thing_types, get_role_types
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
-from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
+from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
+
+
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
@@ -57,10 +61,10 @@ TYPES_AND_ROLES_TO_OBFUSCATE = {'candidate-diagnosis': 'diagnosis',
                                 'candidate-diagnosed-disease': 'diagnosed-disease'}
 
 
-def diagnosis_example(num_graphs=200,
-                      num_processing_steps_tr=5,
-                      num_processing_steps_ge=5,
-                      num_training_iterations=1000,
+def diagnosis_example(num_graphs=100,
+                      num_processing_steps_tr=3,
+                      num_processing_steps_ge=3,
+                      num_training_iterations=50,
                       database=DATABASE, address=ADDRESS):
     """
     Run the diagnosis example from start to finish, including traceably ingesting predictions back into Grakn
@@ -79,12 +83,13 @@ def diagnosis_example(num_graphs=200,
 
     tr_ge_split = int(num_graphs*0.5)
 
-    generate_example_graphs(num_graphs, database=database, address=address)
+    #generate_example_graphs(num_graphs, database=database, address=address)
 
-    client = GraknClient(address=address)
+    client = GraknClient.core(address=address)
     session = client.session(database, SessionType.DATA)
 
-    graphs = create_concept_graphs(list(range(num_graphs)), session)
+    print("create concept graphs")
+    graphs = create_concept_graphs(list(range(num_graphs)), session, infer=True)
 
     with session.transaction(TransactionType.READ) as tx:
         # Change the terminology here onwards from thing -> node and role -> edge
@@ -116,7 +121,7 @@ def diagnosis_example(num_graphs=200,
     return solveds_tr, solveds_ge
 
 
-def create_concept_graphs(example_indices, grakn_session):
+def create_concept_graphs(example_indices, grakn_session, infer = True):
     """
     Builds an in-memory graph for each example, with an example_id as an anchor for each example subgraph.
     Args:
@@ -128,14 +133,17 @@ def create_concept_graphs(example_indices, grakn_session):
     """
 
     graphs = []
-    infer = True
+
+    options = GraknOptions.core()
+    options.infer = infer
 
     for example_id in example_indices:
         print(f'Creating graph for example {example_id}')
         graph_query_handles = get_query_handles(example_id)
-        with grakn_session.transaction(TransactionType.READ) as tx:
+
+        with grakn_session.transaction(TransactionType.READ, options) as tx:
             # Build a graph from the queries, samplers, and query graphs
-            graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
+            graph = build_graph_from_queries(graph_query_handles, tx)
 
         obfuscate_labels(graph, TYPES_AND_ROLES_TO_OBFUSCATE)
 
@@ -311,11 +319,11 @@ def write_predictions_to_grakn(graphs, tx):
                             disease = concept
 
                     p = data['probabilities']
-                    query = (f'match'
-                             f'$p iid 0x{person.id};'
-                             f'$d iid 0x{disease.id};'
+                    query = (f'match '
+                             f'$p iid {person.id};'
+                             f'$d iid {disease.id};'
                              f'$kgcn isa kgcn;'
-                             f'insert'
+                             f'insert '
                              f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
                              f'has probability-non-exists {p[1]:.3f},'  
