@@ -24,12 +24,12 @@ from graph_nets.utils_np import graphs_tuple_to_networkxs
 from kglib.kgcn.learn.learn import KGCNLearner
 from kglib.kgcn.models.core import softmax, KGCN
 from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
-from kglib.kgcn.pipeline.encode import encode_types, create_input_graph, create_target_graph, encode_values
-from kglib.kgcn.pipeline.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
+
+from kglib.kgcn_data_loader.encoding.standard_encode import encode_types, create_input_graph, create_target_graph, encode_values
+from kglib.kgcn_data_loader.utils import apply_logits_to_graphs, duplicate_edges_in_reverse
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_data_iterator, \
     multidigraph_edge_data_iterator
-
 
 def pipeline(graphs,
              tr_ge_split,

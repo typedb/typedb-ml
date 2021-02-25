@@ -20,17 +20,21 @@
 import inspect
 import time
 
-from grakn.client import GraknClient
+from grakn.client import *
 
 from kglib.kgcn.pipeline.pipeline import pipeline
+
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
+
 from kglib.utils.grakn.type.type import get_thing_types, get_role_types
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
-from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
+from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
-KEYSPACE = "diagnosis"
-URI = "localhost:48555"
+
+
+DATABASE = "diagnosis"
+ADDRESS = "localhost:1729"
 
 # Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
 PREEXISTS = 0
@@ -57,11 +61,11 @@ TYPES_AND_ROLES_TO_OBFUSCATE = {'candidate-diagnosis': 'diagnosis',
                                 'candidate-diagnosed-disease': 'diagnosed-disease'}
 
 
-def diagnosis_example(num_graphs=200,
-                      num_processing_steps_tr=5,
-                      num_processing_steps_ge=5,
-                      num_training_iterations=1000,
-                      keyspace=KEYSPACE, uri=URI):
+def diagnosis_example(num_graphs=100,
+                      num_processing_steps_tr=3,
+                      num_processing_steps_ge=3,
+                      num_training_iterations=50,
+                      database=DATABASE, address=ADDRESS):
     """
     Run the diagnosis example from start to finish, including traceably ingesting predictions back into Grakn
 
@@ -70,8 +74,8 @@ def diagnosis_example(num_graphs=200,
         num_processing_steps_tr: The number of message-passing steps for training
         num_processing_steps_ge: The number of message-passing steps for testing
         num_training_iterations: The number of training epochs
-        keyspace: The name of the keyspace to retrieve example subgraphs from
-        uri: The uri of the running Grakn instance
+        database: The name of the database to retrieve example subgraphs from
+        address: The address of the running Grakn instance
 
     Returns:
         Final accuracies for training and for testing
@@ -79,14 +83,15 @@ def diagnosis_example(num_graphs=200,
 
     tr_ge_split = int(num_graphs*0.5)
 
-    generate_example_graphs(num_graphs, keyspace=keyspace, uri=uri)
+    #generate_example_graphs(num_graphs, database=database, address=address)
 
-    client = GraknClient(uri=uri)
-    session = client.session(keyspace=keyspace)
+    client = GraknClient.core(address=address)
+    session = client.session(database, SessionType.DATA)
 
-    graphs = create_concept_graphs(list(range(num_graphs)), session)
+    print("create concept graphs")
+    graphs = create_concept_graphs(list(range(num_graphs)), session, infer=True)
 
-    with session.transaction().read() as tx:
+    with session.transaction(TransactionType.READ) as tx:
         # Change the terminology here onwards from thing -> node and role -> edge
         node_types = get_thing_types(tx)
         [node_types.remove(el) for el in TYPES_TO_IGNORE]
@@ -107,7 +112,7 @@ def diagnosis_example(num_graphs=200,
                                                  categorical_attributes=CATEGORICAL_ATTRIBUTES,
                                                  output_dir=f"./events/{time.time()}/")
 
-    with session.transaction().write() as tx:
+    with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_grakn(ge_graphs, tx)
 
     session.close()
@@ -116,7 +121,7 @@ def diagnosis_example(num_graphs=200,
     return solveds_tr, solveds_ge
 
 
-def create_concept_graphs(example_indices, grakn_session):
+def create_concept_graphs(example_indices, grakn_session, infer = True):
     """
     Builds an in-memory graph for each example, with an example_id as an anchor for each example subgraph.
     Args:
@@ -128,14 +133,17 @@ def create_concept_graphs(example_indices, grakn_session):
     """
 
     graphs = []
-    infer = True
+
+    options = GraknOptions.core()
+    options.infer = infer
 
     for example_id in example_indices:
         print(f'Creating graph for example {example_id}')
         graph_query_handles = get_query_handles(example_id)
-        with grakn_session.transaction().read() as tx:
+
+        with grakn_session.transaction(TransactionType.READ, options) as tx:
             # Build a graph from the queries, samplers, and query graphs
-            graph = build_graph_from_queries(graph_query_handles, tx, infer=infer)
+            graph = build_graph_from_queries(graph_query_handles, tx)
 
         obfuscate_labels(graph, TYPES_AND_ROLES_TO_OBFUSCATE)
 
@@ -174,7 +182,7 @@ def get_query_handles(example_id):
            $ps(child: $p, parent: $par) isa parentship;
            $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
            $d isa disease, has name $n;
-           get;''')
+          ''')
 
     vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
     hereditary_query_graph = (QueryGraph()
@@ -190,7 +198,7 @@ def get_query_handles(example_id):
            $p isa person, has example-id {example_id};
            $s isa substance, has name $n;
            $c(consumer: $p, consumed-substance: $s) isa consumption, 
-           has units-per-week $u; get;''')
+           has units-per-week $u;''')
 
     vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
     consumption_query_graph = (QueryGraph()
@@ -203,7 +211,7 @@ def get_query_handles(example_id):
     # === Age Feature ===
     person_age_query = inspect.cleandoc(f'''match 
             $p isa person, has example-id {example_id}, has age $a; 
-            get;''')
+           ''')
 
     vars = p, a = 'p', 'a'
     person_age_query_graph = (QueryGraph()
@@ -215,7 +223,7 @@ def get_query_handles(example_id):
             $d isa disease; 
             $p isa person, has example-id {example_id}; 
             $r(person-at-risk: $p, risked-disease: $d) isa risk-factor; 
-            get;''')
+           ''')
 
     vars = p, d, r = 'p', 'd', 'r'
     risk_factor_query_graph = (QueryGraph()
@@ -232,7 +240,7 @@ def get_query_handles(example_id):
            $d isa disease, has name $dn;
            $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
            $c(cause: $d, effect: $s) isa causality;
-           get;''')
+          ''')
 
     symptom_query_graph = (QueryGraph()
                            .add_vars(vars, PREEXISTS)
@@ -252,7 +260,7 @@ def get_query_handles(example_id):
            $p isa person, has example-id {example_id};
            $d isa disease, has name $dn;
            $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
-           get;''')
+          ''')
 
     diagnosis_query_graph = (QueryGraph()
                              .add_vars([diag], TO_INFER)
@@ -265,7 +273,7 @@ def get_query_handles(example_id):
            $p isa person, has example-id {example_id};
            $d isa disease, has name $dn;
            $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
-           get;''')
+          ''')
 
     candidate_diagnosis_query_graph = (QueryGraph()
                                        .add_vars([diag], CANDIDATE)
@@ -311,16 +319,16 @@ def write_predictions_to_grakn(graphs, tx):
                             disease = concept
 
                     p = data['probabilities']
-                    query = (f'match'
-                             f'$p id {person.id};'
-                             f'$d id {disease.id};'
+                    query = (f'match '
+                             f'$p iid {person.id};'
+                             f'$d iid {disease.id};'
                              f'$kgcn isa kgcn;'
-                             f'insert'
+                             f'insert '
                              f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
                              f'has probability-non-exists {p[1]:.3f},'  
                              f'has probability-preexists {p[0]:.3f};')
-                    tx.query(query)
+                    tx.query().insert(query)
     tx.commit()
 
 

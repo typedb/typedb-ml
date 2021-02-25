@@ -73,9 +73,9 @@ class GraknServer(object):
             tf.extractall(self.__unpacked_dir)
             self.__distribution_root_dir = os.path.commonpath(tf.getnames()[1:])
 
-    def load_graql_file(self, keyspace, graql_file_path):
+    def load_graql_file(self, database, graql_file_path):
         sp.check_call([
-            'grakn', 'console', '-k', keyspace, '-f',
+            'grakn', 'console', '-k', database, '-f',
             os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
         ], cwd=self.grakn_binary_location)
 

@@ -26,10 +26,10 @@ from kglib.utils.grakn.object.thing import Thing, build_thing
 from kglib.utils.grakn.test.base import GraknServer
 from kglib.utils.grakn.test.mock.answer import MockConceptMap
 from kglib.utils.grakn.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
-from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
+from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 from kglib.utils.graph.test.case import GraphTestCase
 
-TEST_URI = "localhost:48555"
+TEST_URI = "localhost:1729"
 
 
 def mock_sampler(input_iter):
@@ -39,15 +39,15 @@ def mock_sampler(input_iter):
 class MockTransaction:
     def query(self, query, infer=True):
 
-        if query == 'match $x id V123; get;':
+        if query == 'match $x id V123;':
             return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
-        elif query == 'match $x id V123, has name $n; get;':
+        elif query == 'match $x id V123, has name $n;':
             return [
                 MockConceptMap({
                     'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
                     'n': MockAttribute('V987', 'Bob', MockAttributeType('V555', 'name', 'ATTRIBUTE', 'STRING'))
                 })]
-        elif query == 'match $x id V123; $r(child: $x, parent: $y); get;':
+        elif query == 'match $x id V123; $r(child: $x, parent: $y);':
             return [
                 MockConceptMap({
                     'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
@@ -75,12 +75,12 @@ class ITBuildGraphFromQueries(GraphTestCase):
         g3.add_edge('r', 'x', type='child')
         g3.add_edge('r', 'y', type='parent')
 
-        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1),
-                                               ('match $x id V123, has name $n; get;', mock_sampler, g2),
-                                               ('match $x id V123; $r(child: $x, parent: $y); get;', mock_sampler, g3),
+        query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1),
+                                               ('match $x id V123, has name $n;', mock_sampler, g2),
+                                               ('match $x id V123; $r(child: $x, parent: $y);', mock_sampler, g3),
                                                # TODO Add functionality for loading schema at a later date
-                                               # ('match $x sub person; $x sub $type; get;', g4),
-                                               # ('match $x sub $y; get;', g5),
+                                               # ('match $x sub person; $x sub $type;', g4),
+                                               # ('match $x sub $y;', g5),
                                                ]
 
         mock_tx = MockTransaction()
@@ -105,14 +105,14 @@ class ITBuildGraphFromQueries(GraphTestCase):
         g1.add_node('x')
         g2 = nx.MultiDiGraph()
         g2.add_node('y')
-        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1),
-                                               ('match $y id V123; get;', mock_sampler, g2)]
+        query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1),
+                                               ('match $y id V123;', mock_sampler, g2)]
 
         class MockTransaction2:
             def query(self, query, infer=True):
-                if query == 'match $x id V123; get;':
+                if query == 'match $x id V123;':
                     return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
-                elif query == 'match $y id V123; get;':
+                elif query == 'match $y id V123;':
                     return []
 
         mock_tx = MockTransaction2()
@@ -120,12 +120,12 @@ class ITBuildGraphFromQueries(GraphTestCase):
         with self.assertWarns(UserWarning) as context:
             build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
 
-        self.assertEqual(f'There were no results for query: \n\"match $y id V123; get;\"\nand so nothing will be added to the graph for this query', str(context.warning))
+        self.assertEqual(f'There were no results for query: \n\"match $y id V123;\"\nand so nothing will be added to the graph for this query', str(context.warning))
 
     def test_exception_is_raised_when_there_are_no_results_for_any_query(self):
         g1 = nx.MultiDiGraph()
         g1.add_node('x')
-        query_sampler_variable_graph_tuples = [('match $x id V123; get;', mock_sampler, g1)]
+        query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1)]
 
         class MockTransactionEmpty:
             def query(self, query, infer=True):
@@ -142,7 +142,7 @@ class ITBuildGraphFromQueries(GraphTestCase):
 
 class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
-    KEYSPACE = "it_build_graph_from_queries"
+    DATABASE = "it_build_graph_from_queries"
     SCHEMA = ("define "
               "person sub entity, has name, plays parent, plays child;"
               "name sub attribute, value string;"
@@ -152,9 +152,9 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
             '$r(parent: $p, child: $p) isa parentship;')
 
     def setUp(self):
-        self._keyspace = type(self).__name__.lower()  # Use the name of this test class as the keyspace name
+        self._keyspace = type(self).__name__.lower()  # Use the name of this test class as the database name
         print(self._keyspace)
-        self._client = GraknClient(uri="localhost:48555")
+        self._client = GraknClient(address="localhost:1729")
 
     def tearDown(self):
         self._client.keyspaces().delete(self._keyspace)
@@ -177,27 +177,27 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
         g3.add_edge('r', 'x', type='child')
         g3.add_edge('r', 'y', type='parent')
 
-        query_sampler_variable_graph_tuples = [('match $x isa person; get;', mock_sampler, g1),
-                                               ('match $x isa person, has name $n; get;', mock_sampler, g2),
-                                               ('match $x isa person; $r(child: $x, parent: $y); get;', mock_sampler, g3),
+        query_sampler_variable_graph_tuples = [('match $x isa person;', mock_sampler, g1),
+                                               ('match $x isa person, has name $n;', mock_sampler, g2),
+                                               ('match $x isa person; $r(child: $x, parent: $y);', mock_sampler, g3),
                                                # TODO Add functionality for loading schema at a later date
-                                               # ('match $x sub person; $x sub $type; get;', g4),
-                                               # ('match $x sub $y; get;', g5),
+                                               # ('match $x sub person; $x sub $type;', g4),
+                                               # ('match $x sub $y;', g5),
                                                ]
 
-        with self._client.session(keyspace=self._keyspace) as session:
+        with self._client.session(database=self._keyspace) as session:
 
-            with session.transaction().write() as tx:
+            with session.transaction(TransactionType.WRITE) as tx:
                 tx.query(ITBuildGraphFromQueriesWithRealGrakn.SCHEMA)
                 tx.query(ITBuildGraphFromQueriesWithRealGrakn.DATA)
                 tx.commit()
 
-            with session.transaction().read() as tx:
+            with session.transaction(TransactionType.READ) as tx:
                 combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
 
-                person_exp = build_thing(next(tx.query('match $x isa person; get;')).get('x'), tx)
-                name_exp = build_thing(next(tx.query('match $x isa name; get;')).get('x'), tx)
-                parentship_exp = build_thing(next(tx.query('match $x isa parentship; get;')).get('x'), tx)
+                person_exp = build_thing(next(tx.query().match('match $x isa person;')).get('x'), tx)
+                name_exp = build_thing(next(tx.query().match('match $x isa name;')).get('x'), tx)
+                parentship_exp = build_thing(next(tx.query().match('match $x isa parentship;')).get('x'), tx)
 
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')

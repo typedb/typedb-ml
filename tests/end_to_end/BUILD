@@ -12,10 +12,10 @@ py_test(
     ],
     data = [
         "//kglib/utils/grakn/synthetic/examples:graql-schema",
-        "@graknlabs_grakn_core_artifact//file"
+        "@graknlabs_grakn_core_artifact_linux//file"
     ],
     args = [
         "$(locations //kglib/utils/grakn/synthetic/examples:graql-schema)",
-        "$(location @graknlabs_grakn_core_artifact//file)",
+        "$(location @graknlabs_grakn_core_artifact_linux//file)",
     ],
 )

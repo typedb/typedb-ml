@@ -22,9 +22,10 @@ import unittest
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn.pipeline.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
+
+from kglib.kgcn_data_loader.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
 
 
 class TestDuplicateEdgesInReverse(GraphTestCase):
