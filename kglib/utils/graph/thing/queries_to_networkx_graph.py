@@ -108,7 +108,6 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
         concept_maps = sampler(grakn_transaction.query().match(query))
 
-        # TODO: concept_dict_from_concept_map is a KGLIB functionality (dependency for data loader
         concept_dicts = [concept_dict_from_concept_map(concept_map, grakn_transaction) for concept_map in concept_maps]
 
         answer_concept_graphs = []

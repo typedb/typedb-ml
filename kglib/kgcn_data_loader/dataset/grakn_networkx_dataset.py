@@ -1,5 +1,5 @@
 from grakn.client import GraknClient
-from kglib.utils.graph.thing.queries_to_graph import build_graph_from_queries
+from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
 class GraknNetworkxDataSet:
