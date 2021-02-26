@@ -1,4 +1,7 @@
 from grakn.client import GraknClient
+from grakn.rpc.session import SessionType
+from grakn.rpc.transaction import TransactionType
+from grakn.options import GraknOptions
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
