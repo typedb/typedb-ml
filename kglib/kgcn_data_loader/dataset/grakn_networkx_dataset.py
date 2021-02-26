@@ -42,7 +42,7 @@ class GraknNetworkxDataSet:
             print("setting up session")
             print(self)
             client = GraknClient.core(address=self._uri)
-            self._grakn_session = client.session(database=self._keyspace, session_type=SessionType.DATA)
+            self._grakn_session = client.session(database=self._database, session_type=SessionType.DATA)
         return self._grakn_session
 
     def __len__(self):
