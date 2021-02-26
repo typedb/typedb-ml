@@ -83,7 +83,7 @@ class StandardKGCNNetworkxTransform:
 def create_feature_vector(node_or_edge_data_dict):
     """Make a feature 3-dimensional feature vector,
 
-    Factored out of kglib.kgcn.pipeline.encode.create_input_graph.
+    Factored out of kglib.kgcn_tensorflow.pipeline.encode.create_input_graph.
 
     Args:
         node_or_edge_dict: the dict coming describing a node or edge

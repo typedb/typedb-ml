@@ -21,9 +21,9 @@ import time
 
 import tensorflow as tf
 
-from kglib.kgcn.learn.feed import create_placeholders, create_feed_dict, make_all_runnable_in_session
-from kglib.kgcn.learn.loss import loss_ops_preexisting_no_penalty
-from kglib.kgcn.learn.metrics import existence_accuracy
+from kglib.kgcn_tensorflow.learn.feed import create_placeholders, create_feed_dict, make_all_runnable_in_session
+from kglib.kgcn_tensorflow.learn.loss import loss_ops_preexisting_no_penalty
+from kglib.kgcn_tensorflow.learn.metrics import existence_accuracy
 
 
 class KGCNLearner:

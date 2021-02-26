@@ -20,8 +20,8 @@
 import tensorflow as tf
 import sonnet as snt
 
-from kglib.kgcn.models.attribute import CategoricalAttribute, ContinuousAttribute, BlankAttribute
-from kglib.kgcn.models.typewise import TypewiseEncoder
+from kglib.kgcn_tensorflow.models.attribute import CategoricalAttribute, ContinuousAttribute, BlankAttribute
+from kglib.kgcn_tensorflow.models.typewise import TypewiseEncoder
 
 
 class ThingEmbedder(snt.AbstractModule):

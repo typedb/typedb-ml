@@ -21,10 +21,10 @@ import networkx as nx
 import numpy as np
 from graph_nets.utils_np import graphs_tuple_to_networkxs
 
-from kglib.kgcn.learn.learn import KGCNLearner
-from kglib.kgcn.models.core import softmax, KGCN
-from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
-from kglib.kgcn.plot.plotting import plot_across_training, plot_predictions
+from kglib.kgcn_tensorflow.learn.learn import KGCNLearner
+from kglib.kgcn_tensorflow.models.core import softmax, KGCN
+from kglib.kgcn_tensorflow.models.embedding import ThingEmbedder, RoleEmbedder
+from kglib.kgcn_tensorflow.plot.plotting import plot_across_training, plot_predictions
 
 from kglib.kgcn_data_loader.encoding.standard_encode import encode_types, create_input_graph, create_target_graph, encode_values
 from kglib.kgcn_data_loader.utils import apply_logits_to_graphs, duplicate_edges_in_reverse

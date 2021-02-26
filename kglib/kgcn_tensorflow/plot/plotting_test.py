@@ -25,7 +25,7 @@ import networkx as nx
 import numpy as np
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn.plot.plotting import plot_predictions
+from kglib.kgcn_tensorflow.plot.plotting import plot_predictions
 
 
 class TestPlotPredictions(unittest.TestCase):

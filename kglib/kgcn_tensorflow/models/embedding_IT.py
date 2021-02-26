@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.kgcn.models.embedding import construct_categorical_embedders, construct_continuous_embedders, \
+from kglib.kgcn_tensorflow.models.embedding import construct_categorical_embedders, construct_continuous_embedders, \
     construct_non_attribute_embedders
 
 

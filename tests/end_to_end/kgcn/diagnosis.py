@@ -20,7 +20,7 @@
 import sys
 import unittest
 
-from kglib.kgcn.examples.diagnosis.diagnosis import diagnosis_example
+from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
 from kglib.utils.grakn.test.base import GraknServer
 
 TEST_KEYSPACE = "diagnosis"

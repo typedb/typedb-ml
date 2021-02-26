@@ -23,8 +23,8 @@ import numpy as np
 import tensorflow as tf
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn.models.core import KGCN
-from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
+from kglib.kgcn_tensorflow.models.core import KGCN
+from kglib.kgcn_tensorflow.models.embedding import ThingEmbedder, RoleEmbedder
 
 
 class ITKGCN(unittest.TestCase):

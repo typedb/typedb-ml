@@ -24,7 +24,7 @@ import grakn.client
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn.examples.diagnosis.diagnosis import write_predictions_to_grakn, obfuscate_labels
+from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import write_predictions_to_grakn, obfuscate_labels
 from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
 

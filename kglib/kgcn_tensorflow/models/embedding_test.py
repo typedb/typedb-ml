@@ -23,7 +23,7 @@ import numpy as np
 import tensorflow as tf
 from unittest.mock import Mock
 from unittest.mock import patch
-from kglib.kgcn.models.embedding import embed_type, embed_attribute
+from kglib.kgcn_tensorflow.models.embedding import embed_type, embed_attribute
 from kglib.utils.test.utils import get_call_args
 
 
@@ -48,7 +48,7 @@ class TestAttributeEmbedding(unittest.TestCase):
 
         mock_instance = Mock(return_value=tf.convert_to_tensor(np.array([[1, 0.7], [1, 0.7], [0, 0.5]])))
         mock = Mock(return_value=mock_instance)
-        patcher = patch('kglib.kgcn.models.embedding.TypewiseEncoder', spec=True, new=mock)
+        patcher = patch('kglib.kgcn_tensorflow.models.embedding.TypewiseEncoder', spec=True, new=mock)
         mock_class = patcher.start()
 
         attr_encoders = Mock()

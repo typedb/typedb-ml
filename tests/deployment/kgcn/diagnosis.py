@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.kgcn.examples.diagnosis.diagnosis import diagnosis_example
+from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
 
 
 class TestDiagnosisExample(unittest.TestCase):

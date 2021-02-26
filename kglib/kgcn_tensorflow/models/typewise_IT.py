@@ -23,7 +23,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.framework.ops import EagerTensor
 
-from kglib.kgcn.models.typewise import TypewiseEncoder
+from kglib.kgcn_tensorflow.models.typewise import TypewiseEncoder
 
 
 class ITTypewiseEncoder(unittest.TestCase):

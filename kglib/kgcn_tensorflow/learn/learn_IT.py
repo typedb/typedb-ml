@@ -22,9 +22,9 @@ import unittest
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn.learn.learn import KGCNLearner
-from kglib.kgcn.models.core import KGCN
-from kglib.kgcn.models.embedding import ThingEmbedder, RoleEmbedder
+from kglib.kgcn_tensorflow.learn.learn import KGCNLearner
+from kglib.kgcn_tensorflow.models.core import KGCN
+from kglib.kgcn_tensorflow.models.embedding import ThingEmbedder, RoleEmbedder
 
 
 class ITKGCNLearner(unittest.TestCase):

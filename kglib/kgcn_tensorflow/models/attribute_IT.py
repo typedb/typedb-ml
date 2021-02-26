@@ -19,7 +19,7 @@
 
 import unittest
 
-from kglib.kgcn.models.attribute import CategoricalAttribute
+from kglib.kgcn_tensorflow.models.attribute import CategoricalAttribute
 import tensorflow as tf
 import numpy as np
 

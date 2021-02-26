@@ -22,7 +22,7 @@ import unittest
 import numpy as np
 from graph_nets.graphs import GraphsTuple
 
-from kglib.kgcn.learn.metrics import compute_accuracy, existence_accuracy
+from kglib.kgcn_tensorflow.learn.metrics import compute_accuracy, existence_accuracy
 
 
 class TestComputeAccuracy(unittest.TestCase):

@@ -22,7 +22,7 @@ import time
 
 from grakn.client import *
 
-from kglib.kgcn.pipeline.pipeline import pipeline
+from kglib.kgcn_tensorflow.pipeline.pipeline import pipeline
 
 from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
 
