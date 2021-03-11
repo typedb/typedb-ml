@@ -54,7 +54,7 @@ class GraknNetworkxDataSet:
         graph_query_handles = self.get_query_handles_for_id(example_id)
 
         options = GraknOptions.core()
-        options.infer = True;
+        options.infer = True
 
         with self.grakn_session.transaction(TransactionType.READ, options=options) as tx:
             # Build a graph from the queries, samplers, and query graphs

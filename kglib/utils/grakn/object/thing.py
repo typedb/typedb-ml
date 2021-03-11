@@ -50,10 +50,10 @@ class Thing(PropertyComparable):
         return self.__str__()
 
 
-def build_thing(grakn_thing, tx):
+def build_thing(grakn_thing):
 
     id = grakn_thing.get_iid()
-    type_label = grakn_thing.as_remote(tx).get_type().get_label()
+    type_label = grakn_thing.get_type().get_label()
     if grakn_thing.is_entity():
         base_type_label = "entity"
     elif grakn_thing.is_relation():
@@ -64,7 +64,7 @@ def build_thing(grakn_thing, tx):
         raise RuntimeError("Unexpected Concept")
 
     if base_type_label == 'attribute':
-        value_type = grakn_thing.as_remote(tx).get_type().get_value_type()
+        value_type = grakn_thing.get_type().get_value_type()
         assert value_type in VALUE_TYPES
         value = grakn_thing.get_value()
 

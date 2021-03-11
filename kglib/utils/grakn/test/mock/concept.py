@@ -30,7 +30,7 @@ class MockType(MockConcept):
         assert base_type in {'ENTITY', 'RELATION', 'ATTRIBUTE'}
         self.base_type = base_type
 
-    def label(self):
+    def get_label(self):
         return self._label
 
 
@@ -54,12 +54,22 @@ class MockThing(MockConcept):
         super().__init__(id)
         assert(isinstance(type, MockType))
         self._type = type
+        self._id = id
 
-    def type(self):
+    def get_type(self):
         return self._type
 
-    def as_remote(self, tx):
-        return self
+    def get_iid(self):
+        return self._id
+
+    def is_entity(self):
+        return 'ENTITY' in self._type.base_type
+
+    def is_attribute(self):
+        return 'ATTRIBUTE' in self._type.base_type
+
+    def is_relation(self):
+        return 'RELATION' in self._type.base_type
 
     @property
     def base_type(self):
