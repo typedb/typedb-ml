@@ -106,9 +106,12 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
 
     for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
 
+        print("working on query: " + query)
         concept_maps = sampler(grakn_transaction.query().match(query))
+        print("query completed")
 
         concept_dicts = [concept_dict_from_concept_map(concept_map, grakn_transaction) for concept_map in concept_maps]
+        print("constructed concept_dicts")
 
         answer_concept_graphs = []
         for concept_dict in concept_dicts:
@@ -117,9 +120,14 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
             except ValueError as e:
                 raise ValueError(str(e) + f'Encountered processing query:\n \"{query}\"')
 
+        print("finished building answer_concept_graphs list")
+
         if len(answer_concept_graphs) > 1:
+            print("longer than one element! starting combine_n_graphs")
             query_concept_graph = combine_n_graphs(answer_concept_graphs)
+            print("done - appending next")
             query_concept_graphs.append(query_concept_graph)
+            print("done appending")
         else:
             if len(answer_concept_graphs) > 0:
                 query_concept_graphs.append(answer_concept_graphs[0])
@@ -132,5 +140,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
         raise RuntimeError(f'The graph from queries: {[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in query_sampler_variable_graph_tuples]}\n'
                            f'could not be created, since none of these queries returned results')
 
+    print("starting on building final graph:")
     concept_graph = combine_n_graphs(query_concept_graphs)
+    print("final graph build and returned")
     return concept_graph

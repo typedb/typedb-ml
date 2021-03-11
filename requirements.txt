@@ -12,7 +12,7 @@ dm-tree==0.1.5
 future==0.18.2
 gast==0.2.2
 google-pasta==0.2.0
-grakn-client==2.0.0-alpha-8
+grakn-client==2.0.0-alpha-10
 graph-nets==1.0.4
 grpcio==1.35.0
 h5py==3.1.0
