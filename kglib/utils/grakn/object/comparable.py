@@ -39,4 +39,4 @@ class PropertyComparable:
 
     def __hash__(self):
         """Overrides the default implementation"""
-        return hash(tuple(sorted(self.__dict__.items())))
+        return hash(self.id)
