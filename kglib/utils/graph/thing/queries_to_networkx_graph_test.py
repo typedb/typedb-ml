@@ -31,7 +31,7 @@ from kglib.utils.graph.test.case import GraphTestCase
 class TestConceptDictsFromQuery(unittest.TestCase):
     def test_concept_dicts_are_built_as_expected(self):
         concept_map = MockConceptMap({'x': MockThing('V123', MockType('V456', 'person', 'ENTITY'))})
-        concept_dicts = concept_dict_from_concept_map(concept_map, None)
+        concept_dicts = concept_dict_from_concept_map(concept_map)
 
         expected_concept_dicts = {'x': Thing('V123', 'person', 'entity')}
 
@@ -43,7 +43,7 @@ class TestConceptDictsFromQuery(unittest.TestCase):
             'y': MockThing('V789', MockType('V765', 'employment', 'RELATION')),
         })
 
-        concept_dicts = concept_dict_from_concept_map(concept_map, None)
+        concept_dicts = concept_dict_from_concept_map(concept_map)
 
         expected_concept_dict = {
             'x': Thing('V123', 'person', 'entity'),

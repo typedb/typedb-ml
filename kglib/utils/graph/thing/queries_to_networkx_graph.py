@@ -24,7 +24,7 @@ import networkx as nx
 from kglib.utils.grakn.object.thing import build_thing
 from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
 
-def concept_dict_from_concept_map(concept_map, tx):
+def concept_dict_from_concept_map(concept_map):
     """
     Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
     information required about those concepts.
@@ -35,7 +35,7 @@ def concept_dict_from_concept_map(concept_map, tx):
     Returns:
         A dictionary of concepts keyed by query variables
     """
-    return {variable: build_thing(grakn_concept, tx) for variable, grakn_concept in concept_map.map().items()}
+    return {variable: build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
 
 
 def combine_2_graphs(graph1, graph2):
@@ -110,7 +110,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
         concept_maps = sampler(grakn_transaction.query().match(query))
         print("query completed")
 
-        concept_dicts = [concept_dict_from_concept_map(concept_map, grakn_transaction) for concept_map in concept_maps]
+        concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
         print("constructed concept_dicts")
 
         answer_concept_graphs = []
@@ -123,8 +123,9 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
         print("finished building answer_concept_graphs list")
 
         if len(answer_concept_graphs) > 1:
-            print("longer than one element! starting combine_n_graphs")
+            print("longer than one element! starting combine_n_graphs, # concept graphs: " + str(len(answer_concept_graphs)))
             query_concept_graph = combine_n_graphs(answer_concept_graphs)
+            print(query_concept_graph)
             print("done - appending next")
             query_concept_graphs.append(query_concept_graph)
             print("done appending")
