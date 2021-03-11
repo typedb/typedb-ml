@@ -15,3 +15,5 @@ __pycache__/
 
 # Data input/output directories
 kglib/kgcn_tensorflow/examples/diagnosis/events/
+
+*.egg-info/
