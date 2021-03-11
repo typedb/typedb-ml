@@ -17,9 +17,6 @@
 #  under the License.
 #
 import warnings
-from functools import reduce
-
-import networkx as nx
 
 from kglib.utils.grakn.object.thing import build_thing
 from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
