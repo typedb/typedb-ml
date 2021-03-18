@@ -94,7 +94,7 @@ def create_feature_vector(node_or_edge_data_dict):
         Numpy array (vector) of stacked features
 
     """
-    if node_or_edge_data_dict["solution"] == 0:
+    if node_or_edge_data_dict["solution"] == -1:
         preexists = 1
     else:
         preexists = 0
