@@ -24,7 +24,7 @@ import networkx as nx
 from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.grakn.test.mock.answer import MockConceptMap
 from kglib.utils.grakn.test.mock.concept import MockType, MockThing
-from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map, combine_2_graphs
+from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map
 from kglib.utils.graph.test.case import GraphTestCase
 
 
