@@ -24,7 +24,7 @@ import networkx as nx
 from kglib.utils.grakn.object.thing import Thing
 from kglib.utils.grakn.test.mock.answer import MockConceptMap
 from kglib.utils.grakn.test.mock.concept import MockType, MockThing
-from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map
+from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map, combine_graphs_single_pass
 from kglib.utils.graph.test.case import GraphTestCase
 
 
@@ -71,7 +71,7 @@ class TestCombineGraphs(GraphTestCase):
         grakn_graph_b.add_node(name)
         grakn_graph_b.add_edge(person_b, name, type='has')
 
-        combined_graph = combine_2_graphs(grakn_graph_a, grakn_graph_b)
+        combined_graph = combine_graphs_single_pass([grakn_graph_a, grakn_graph_b])
 
         person_ex = Thing('V123', 'person', 'entity')
         employment_ex = Thing('V567', 'employment', 'relation')
@@ -101,7 +101,7 @@ class TestCombineGraphs(GraphTestCase):
         grakn_graph_b.add_edge(person_b, name_b, type='has', input=0, solution=1)
 
         with self.assertRaises(ValueError) as context:
-            combine_2_graphs(grakn_graph_a, grakn_graph_b)
+            combine_graphs_single_pass([grakn_graph_a, grakn_graph_b])
 
         self.assertEqual(('Found non-matching node properties for node <name, V1234: Bob> '
                           'between graphs a and b:\n'
@@ -124,7 +124,7 @@ class TestCombineGraphs(GraphTestCase):
         grakn_graph_b.add_edge(person_b, name_b, type='has', input=1, solution=0)
 
         with self.assertRaises(ValueError) as context:
-            combine_2_graphs(grakn_graph_a, grakn_graph_b)
+            combine_graphs_single_pass([grakn_graph_a, grakn_graph_b])
 
         self.assertEqual(('Found non-matching edge properties for edge (<person, V123>, <name, V1234: Bob>, 0) '
                           'between graphs a and b:\n'

@@ -20,7 +20,7 @@ import sys
 import unittest
 
 import networkx as nx
-from grakn.client import GraknClient
+from grakn.client import *
 
 from kglib.utils.grakn.object.thing import Thing, build_thing
 from kglib.utils.grakn.test.base import GraknServer
@@ -152,12 +152,12 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
             '$r(parent: $p, child: $p) isa parentship;')
 
     def setUp(self):
-        self._keyspace = type(self).__name__.lower()  # Use the name of this test class as the database name
-        print(self._keyspace)
-        self._client = GraknClient(address="localhost:1729")
+        self._database = type(self).__name__.lower()  # Use the name of this test class as the database name
+        print(self._database)
+        self._client = Grakn.core_client(address="localhost:1729")
 
     def tearDown(self):
-        self._client.keyspaces().delete(self._keyspace)
+        self._client.databases().get(self._database).delete()
         self._client.close()
 
     def test_graph_is_built_from_grakn_as_expected(self):
@@ -185,7 +185,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
                                                # ('match $x sub $y;', g5),
                                                ]
 
-        with self._client.session(database=self._keyspace) as session:
+        with self._client.session(self._database, SessionType.DATA) as session:
 
             with session.transaction(TransactionType.WRITE) as tx:
                 tx.query(ITBuildGraphFromQueriesWithRealGrakn.SCHEMA)
@@ -195,9 +195,9 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
             with session.transaction(TransactionType.READ) as tx:
                 combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
 
-                person_exp = build_thing(next(tx.query().match('match $x isa person;')).get('x'), tx)
-                name_exp = build_thing(next(tx.query().match('match $x isa name;')).get('x'), tx)
-                parentship_exp = build_thing(next(tx.query().match('match $x isa parentship;')).get('x'), tx)
+                person_exp = build_thing(next(tx.query().match('match $x isa person;')).get('x'))
+                name_exp = build_thing(next(tx.query().match('match $x isa name;')).get('x'))
+                parentship_exp = build_thing(next(tx.query().match('match $x isa parentship;')).get('x'))
 
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')

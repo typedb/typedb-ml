@@ -1,7 +1,4 @@
-from grakn.client import GraknClient
-from grakn.rpc.session import SessionType
-from grakn.rpc.transaction import TransactionType
-from grakn.options import GraknOptions
+from grakn.client import *
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
@@ -16,7 +13,7 @@ class GraknNetworkxDataSet:
         example_indices,
         get_query_handles_for_id,
         database,
-        uri="localhost:1729",
+        uri="localhost:1730",
         infer=True,
         transform=None,
     ):
@@ -41,7 +38,7 @@ class GraknNetworkxDataSet:
         if not self._grakn_session:
             print("setting up session")
             print(self)
-            client = GraknClient.core(address=self._uri)
+            client = Grakn.core_client(self._uri)
             self._grakn_session = client.session(database=self._database, session_type=SessionType.DATA)
         return self._grakn_session
 

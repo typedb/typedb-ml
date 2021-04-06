@@ -17,9 +17,7 @@
 #  under the License.
 #
 
-from grakn.rpc.session import Session
-from grakn.rpc.transaction import TransactionType
-
+from grakn.client import *
 from kglib.utils.grakn.type.type import get_thing_types, get_role_types
 from typing import List
 
@@ -67,7 +65,7 @@ def apply_logits_to_graphs(graph, logits_graph):
     return graph
 
 
-def get_node_types_for_training(session: Session, types_to_ignore: List[str]) -> List[str]:
+def get_node_types_for_training(session: GraknSession, types_to_ignore: List[str]) -> List[str]:
     """
     Takes in a list of node types to ignore and returns all node types in schema that are not to be ignored.
 
@@ -85,7 +83,7 @@ def get_node_types_for_training(session: Session, types_to_ignore: List[str]) ->
     return node_types
 
 
-def get_edge_types_for_training(session: Session, roles_to_ignore: List[str]) -> List[str]:
+def get_edge_types_for_training(session: GraknSession, roles_to_ignore: List[str]) -> List[str]:
     """
     Takes in a list of role types to ignore and returns all role types in schema that are not to be ignored.
 

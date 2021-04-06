@@ -16,11 +16,11 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-from grakn.concept.type.value_type import ValueType
+from grakn.api.concept.type.attribute_type import AttributeType
 
 from kglib.utils.grakn.object.comparable import PropertyComparable
 
-VALUE_TYPES = (ValueType.OBJECT, ValueType.BOOLEAN, ValueType.LONG, ValueType.DOUBLE, ValueType.STRING, ValueType.DATETIME)
+VALUE_TYPES = (AttributeType.ValueType.OBJECT, AttributeType.ValueType.BOOLEAN, AttributeType.ValueType.LONG, AttributeType.ValueType.DOUBLE, AttributeType.ValueType.STRING, AttributeType.ValueType.DATETIME)
 
 
 class Thing(PropertyComparable):

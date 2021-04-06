@@ -20,7 +20,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-import grakn.client
+from grakn.client import *
 import networkx as nx
 import numpy as np
 
@@ -44,7 +44,7 @@ class TestWritePredictionsToGrakn(unittest.TestCase):
         graph.add_edge(2, 1)
 
         graphs = [graph]
-        tx = MagicMock(grakn.client.Transaction)
+        tx = MagicMock(GraknTransaction)
 
         tx.commit = MagicMock()
         tx.query = MagicMock()
@@ -79,7 +79,7 @@ class TestWritePredictionsToGrakn(unittest.TestCase):
         graph.add_edge(2, 1)
 
         graphs = [graph]
-        tx = MagicMock(grakn.client.Transaction)
+        tx = MagicMock(GraknTransaction)
 
         tx.commit = MagicMock()
         tx.query = MagicMock()
