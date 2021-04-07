@@ -53,7 +53,7 @@ class Thing(PropertyComparable):
 def build_thing(grakn_thing):
 
     id = grakn_thing.get_iid()
-    type_label = grakn_thing.get_type().get_label()
+    type_label = grakn_thing.get_type().get_label().name()
     if grakn_thing.is_entity():
         base_type_label = "entity"
     elif grakn_thing.is_relation():

@@ -28,7 +28,7 @@ def get_thing_types(tx):
         Grakn types
     """
     schema_concepts = tx.query().match("match $x sub thing;")
-    thing_types = [schema_concept.get('x').get_label() for schema_concept in schema_concepts]
+    thing_types = [schema_concept.get('x').get_label().name() for schema_concept in schema_concepts]
     [thing_types.remove(el) for el in ['thing', 'relation', 'entity', 'attribute']]
     return thing_types
 
@@ -43,6 +43,6 @@ def get_role_types(tx):
         Grakn roles
     """
     schema_concepts = tx.query().match("match $rel sub relation, relates $r;")
-    role_types = ['has'] + [role.get('r').get_label() for role in schema_concepts]
+    role_types = ['has'] + [role.get('r').get_label().name() for role in schema_concepts]
     role_types.remove('role')
     return role_types
