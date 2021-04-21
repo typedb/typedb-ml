@@ -1,4 +1,6 @@
-from grakn.client import Grakn, SessionType, GraknOptions, TransactionType
+from typing import Sequence, Callable, Optional
+import networkx as nx
+from grakn.client import Grakn, GraknSession, SessionType, GraknOptions, TransactionType
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
@@ -10,14 +12,15 @@ class GraknNetworkxDataSet:
 
     def __init__(
         self,
-        example_indices,
-        get_query_handles_for_id,
-        database,
-        uri="localhost:1730",
-        session=None,
-        infer=True,
-        transform=None,
+        example_indices: Sequence,
+        get_query_handles_for_id: Callable,
+        database: Optional[str] = None,
+        uri: Optional[str] = "localhost:1729",
+        session: Optional[GraknSession] = None,
+        infer: bool = True,
+        transform: Optional[Callable[[nx.Graph], nx.Graph]] = None,
     ):
+        assert (database and uri) or session
         self._example_indices = example_indices
         self.get_query_handles_for_id = get_query_handles_for_id
         self._infer = infer
@@ -46,6 +49,7 @@ class GraknNetworkxDataSet:
         return len(self._example_indices)
 
     def __getitem__(self, idx):
+        print(type(self._grakn_session))
         example_id = self._example_indices[idx]
         print(f"Fetching subgraph for example {example_id}")
         graph_query_handles = self.get_query_handles_for_id(example_id)
