@@ -1,4 +1,4 @@
-from grakn.client import *
+from grakn.client import Grakn, SessionType, GraknOptions, TransactionType
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
@@ -14,6 +14,7 @@ class GraknNetworkxDataSet:
         get_query_handles_for_id,
         database,
         uri="localhost:1730",
+        session=None,
         infer=True,
         transform=None,
     ):
@@ -23,8 +24,7 @@ class GraknNetworkxDataSet:
         self._transform = transform
         self._uri = uri
         self._database = database
-
-        self._grakn_session = None
+        self._grakn_session = session
 
     @property
     def grakn_session(self):
@@ -51,7 +51,7 @@ class GraknNetworkxDataSet:
         graph_query_handles = self.get_query_handles_for_id(example_id)
 
         options = GraknOptions.core()
-        options.infer = True
+        options.infer = self._infer
 
         with self.grakn_session.transaction(TransactionType.READ, options=options) as tx:
             # Build a graph from the queries, samplers, and query graphs
