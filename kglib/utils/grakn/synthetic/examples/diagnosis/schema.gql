@@ -16,27 +16,27 @@ units-per-week sub attribute,
     value long;
 
 person sub entity,
-    key example-id,
-    has age,
-    plays patient,
-    plays candidate-patient,
-    plays symptomatic-patient,
-    plays consumer,
-    plays person-at-risk,
-    plays parent,
-    plays child,
-    plays doctor;
+    owns example-id @key,
+    owns age,
+    plays diagnosis:patient,
+    plays diagnosis:doctor,
+    plays candidate-diagnosis:candidate-patient,
+    plays symptom-presentation:symptomatic-patient,
+    plays consumption:consumer,
+    plays risk-factor:person-at-risk,
+    plays parentship:parent,
+    plays parentship:child;
 
 disease sub entity,
-    key name,
-    plays cause,
-    plays diagnosed-disease,
-    plays candidate-diagnosed-disease,
-    plays risked-disease;
+    owns name @key,
+    plays causality:cause,
+    plays diagnosis:diagnosed-disease,
+    plays candidate-diagnosis:candidate-diagnosed-disease,
+    plays risk-factor:risked-disease;
 
 substance sub entity,
-    key name,
-    plays consumed-substance;
+    owns name @key,
+    plays consumption:consumed-substance;
 
 parentship sub relation,
     relates child,
@@ -47,9 +47,9 @@ diagnosis sub relation,
     relates diagnosed-disease,
     relates doctor,
     relates diagnoser,
-    has probability-exists,
-    has probability-non-exists,
-    has probability-preexists;
+    owns probability-exists,
+    owns probability-non-exists,
+    owns probability-preexists;
 
 candidate-diagnosis sub relation,
     relates candidate-patient,
@@ -65,14 +65,14 @@ probability-preexists sub attribute,
     value double;
 
 kgcn sub entity,
-	plays diagnoser;
+	plays diagnosis:diagnoser;
 
-where-no-diagnosis-add-candidate-diagnosis sub rule,
+rule where-no-diagnosis-add-candidate-diagnosis:
     when {
         $p isa person;
         $d isa disease;
         not{ (patient: $p, diagnosed-disease: $d) isa diagnosis; };
-    }, then {
+    } then {
         (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
     };
 
@@ -81,12 +81,12 @@ causality sub relation,
     relates effect;
 
 symptom sub entity,
-    key name,
-    plays presented-symptom,
-    plays effect;
+    owns name @key,
+    plays symptom-presentation:presented-symptom,
+    plays causality:effect;
 
 symptom-presentation sub relation,
-    has severity,
+    owns severity,
     relates presented-symptom,
     relates symptomatic-patient;
 
@@ -95,80 +95,65 @@ risk-factor sub relation,
     relates risked-disease;
 
 consumption sub relation,
-    has units-per-week,
+    owns units-per-week,
     relates consumer,
     relates consumed-substance;
 
-alcohol-risk-of-diabetes sub rule,
-when {
-    $p isa person;
-    $c(consumer: $p, consumed-substance: $s) isa consumption, has units-per-week $u;
-    $u >= 10;
-    $s isa substance, has name "Alcohol";
-    $d isa disease, has name "Diabetes Type II";
-}, then {
-	(person-at-risk: $p, risked-disease: $d) isa alcohol-risk-factor;
-};
-
-over-40-risk-of-diabetes sub rule,
-when {
-    $p isa person, has age $a;
-    $a >= 40;
-    $d isa disease, has name "Diabetes Type II";
-}, then {
-	(person-at-risk: $p, risked-disease: $d) isa age-risk-factor;
-};
-
-heriditary-risk-of-diabetes sub rule,
-when {
-    $p isa person;
-    $parent isa person;
-    $cause(parent: $parent, child: $p) isa parentship;
-    $dia(patient: $parent, diagnosed-disease: $d) isa diagnosis;
-    $d isa disease, has name "Diabetes Type II";
-}, then {
-	(person-at-risk: $p, risked-disease: $d) isa hereditary-risk-factor;
-};
-
-
-smoking-risk-of-multiple-sclerosis sub rule,
-when {
-    $p isa person;
-    $c(consumer: $p, consumed-substance: $s) isa consumption, has units-per-week $u;
-    $u >= 12;
-    $s isa substance, has name "Cigarettes";
-    $d isa disease, has name "Multiple Sclerosis";
-}, then {
-	(person-at-risk: $p, risked-disease: $d) isa smoking-risk-factor;
-};
-
-hereditary-risk-factor sub risk-factor,
-    relates person-at-risk,
-    relates risked-disease;
-
-age-risk-factor sub risk-factor,
-    relates person-at-risk,
-    relates risked-disease;
-
-alcohol-risk-factor sub risk-factor,
-    relates person-at-risk,
-    relates risked-disease;
-
-smoking-risk-factor sub risk-factor,
-    relates person-at-risk,
-    relates risked-disease;
-
-# Add elements to the Knowledge Graph that are common to all examples
-insert
-    $ms isa disease, has name "Multiple Sclerosis";
-    $diabetes isa disease, has name "Diabetes Type II";
-    $fatigue isa symptom, has name "Fatigue";
-    $vision isa symptom, has name "Blurred vision";
-    $c(cause: $ms, effect: $fatigue) isa causality;
-    $c1(cause: $ms, effect: $vision) isa causality;
-    $c2(cause: $diabetes, effect: $fatigue) isa causality;
-    $c3(cause: $diabetes, effect: $vision) isa causality;
-
-insert $s isa substance, has name "Alcohol";
-insert $s isa substance, has name "Cigarettes";
-insert $kgcn isa kgcn;
+#rule alcohol-risk-of-diabetes:
+#when {
+#    $p isa person;
+#    $c(consumer: $p, consumed-substance: $s) isa consumption, owns units-per-week $u;
+#    $u >= 10;
+#    $s isa substance, owns name "Alcohol";
+#    $d isa disease, owns name "Diabetes Type II";
+#} then {
+#	(person-at-risk: $p, risked-disease: $d) isa alcohol-risk-factor;
+#};
+#
+#rule over-40-risk-of-diabetes:
+#when {
+#    $p isa person, owns age $a;
+#    $a >= 40;
+#    $d isa disease, owns name "Diabetes Type II";
+#} then {
+#	(person-at-risk: $p, risked-disease: $d) isa age-risk-factor;
+#};
+#
+#rule heriditary-risk-of-diabetes:
+#when {
+#    $p isa person;
+#    $parent isa person;
+#    $cause(parent: $parent, child: $p) isa parentship;
+#    $dia(patient: $parent, diagnosed-disease: $d) isa diagnosis;
+#    $d isa disease, owns name "Diabetes Type II";
+#} then {
+#	(person-at-risk: $p, risked-disease: $d) isa hereditary-risk-factor;
+#};
+#
+#
+#rule smoking-risk-of-multiple-sclerosis:
+#when {
+#    $p isa person;
+#    $c(consumer: $p, consumed-substance: $s) isa consumption, owns units-per-week $u;
+#    $u >= 12;
+#    $s isa substance, owns name "Cigarettes";
+#    $d isa disease, owns name "Multiple Sclerosis";
+#} then {
+#	(person-at-risk: $p, risked-disease: $d) isa smoking-risk-factor;
+#};
+#
+#hereditary-risk-factor sub risk-factor,
+#    relates person-at-risk,
+#    relates risked-disease;
+#
+#age-risk-factor sub risk-factor,
+#    relates person-at-risk,
+#    relates risked-disease;
+#
+#alcohol-risk-factor sub risk-factor,
+#    relates person-at-risk,
+#    relates risked-disease;
+#
+#smoking-risk-factor sub risk-factor,
+#    relates person-at-risk,
+#    relates risked-disease;

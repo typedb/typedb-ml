@@ -28,13 +28,6 @@ graknlabs_dependencies()
 load("@graknlabs_dependencies//builder/bazel:deps.bzl", "bazel_toolchain")
 bazel_toolchain()
 
-# Load //builder/grpc
-load("@graknlabs_dependencies//builder/grpc:deps.bzl", grpc_deps = "deps")
-grpc_deps()
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl",
-com_github_grpc_grpc_deps = "grpc_deps")
-com_github_grpc_grpc_deps()
-
 # Load //builder/java
 load("@graknlabs_dependencies//builder/java:deps.bzl", java_deps = "deps")
 java_deps()
@@ -48,9 +41,16 @@ kt_register_toolchains()
 
 # Load //builder/python
 load("@graknlabs_dependencies//builder/python:deps.bzl", python_deps = "deps")
-python_deps(use_patched_version=True)
+python_deps()
 load("@rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
 pip_repositories()
+
+# Load //builder/grpc
+load("@graknlabs_dependencies//builder/grpc:deps.bzl", grpc_deps = "deps")
+grpc_deps()
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl",
+com_github_grpc_grpc_deps = "grpc_deps")
+com_github_grpc_grpc_deps()
 
 # Load //tool/common
 load("@graknlabs_dependencies//tool/common:deps.bzl", "graknlabs_dependencies_ci_pip",
@@ -58,6 +58,10 @@ load("@graknlabs_dependencies//tool/common:deps.bzl", "graknlabs_dependencies_ci
 graknlabs_dependencies_ci_pip()
 load("@graknlabs_dependencies_ci_pip//:requirements.bzl", graknlabs_dependencies_pip_install = "pip_install")
 graknlabs_dependencies_pip_install()
+
+# Load //tool/checkstyle
+load("@graknlabs_dependencies//tool/checkstyle:deps.bzl", checkstyle_deps = "deps")
+checkstyle_deps()
 
 ######################################
 # Load @graknlabs_bazel_distribution #
@@ -96,11 +100,11 @@ load("@graknlabs_client_python_pip//:requirements.bzl",
 graknlabs_client_python_pip_install = "pip_install")
 graknlabs_client_python_pip_install()
 
-load("@graknlabs_client_python//dependencies/graknlabs:repositories.bzl", "graknlabs_protocol")
-graknlabs_protocol()
+load("//dependencies/graknlabs:repositories.bzl", "graknlabs_common")
+graknlabs_common()
 
-load("//dependencies/graknlabs:artifacts.bzl", "graknlabs_grakn_core_artifact")
-graknlabs_grakn_core_artifact()
+load("//dependencies/graknlabs:artifacts.bzl", "graknlabs_grakn_core_artifacts")
+graknlabs_grakn_core_artifacts()
 
 pip3_import(
     name = "graknlabs_kglib_pip",
