@@ -20,7 +20,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from grakn.client import *
+from typedb.client import *
 import networkx as nx
 import numpy as np
 

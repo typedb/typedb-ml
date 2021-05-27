@@ -41,7 +41,7 @@ class GraknNetworkxDataSet:
         if not self._grakn_session:
             print("setting up session")
             print(self)
-            client = Grakn.core_client(self._uri)
+            client = TypeDB.core_client(self._uri)
             self._grakn_session = client.session(database=self._database, session_type=SessionType.DATA)
         return self._grakn_session
 

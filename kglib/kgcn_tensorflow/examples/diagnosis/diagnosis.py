@@ -20,7 +20,7 @@
 import inspect
 import time
 
-from grakn.client import *
+from typedb.client import *
 
 from kglib.kgcn_tensorflow.pipeline.pipeline import pipeline
 
@@ -85,7 +85,7 @@ def diagnosis_example(num_graphs=100,
 
     #generate_example_graphs(num_graphs, database=database, address=address)
 
-    client = Grakn.core_client(address)
+    client = TypeDB.core_client(address)
     session = client.session(database, SessionType.DATA)
 
     print("create concept graphs")

@@ -20,7 +20,7 @@ import sys
 import unittest
 
 import networkx as nx
-from grakn.client import *
+from typedb.client import *
 
 from kglib.utils.grakn.object.thing import Thing, build_thing
 from kglib.utils.grakn.test.base import GraknServer
@@ -154,7 +154,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
     def setUp(self):
         self._database = type(self).__name__.lower()  # Use the name of this test class as the database name
         print(self._database)
-        self._client = Grakn.core_client(address="localhost:1729")
+        self._client = TypeDB.core_client(address="localhost:1729")
 
     def tearDown(self):
         self._client.databases().get(self._database).delete()

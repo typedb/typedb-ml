@@ -17,7 +17,7 @@
 #  under the License.
 #
 
-from grakn.client import *
+from typedb.client import *
 from kglib.utils.grakn.type.type import get_thing_types, get_role_types
 from typing import List
 

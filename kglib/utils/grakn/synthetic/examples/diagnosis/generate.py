@@ -20,7 +20,7 @@
 import inspect
 
 import numpy as np
-from grakn.client import *
+from typedb.client import *
 
 from kglib.utils.grakn.synthetic.statistics.pmf import PMF
 
@@ -104,7 +104,7 @@ def get_example_queries(pmf, example_id):
 
 def generate_example_graphs(num_examples, database="diagnosis", address="localhost:1729"):
 
-    client = Grakn.core_client(address)
+    client = TypeDB.core_client(address)
     session = client.session(database, SessionType.DATA)
 
     pmf_array = np.zeros([2, 2, 2, 2, 3, 2, 3], dtype=np.float)
