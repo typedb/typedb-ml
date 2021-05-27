@@ -1,5 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
-load("@graknlabs_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
+load("@vaticle_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
 
 
 py_library(
@@ -8,7 +8,7 @@ py_library(
         '__init__.py',
     ],
     deps = [
-        '//kglib/kgcn',
+        '//kglib/kgcn_tensorflow:kgcn',
         '//kglib/utils',
     ],
     visibility=['//visibility:public']

@@ -1,6 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@graknlabs_kglib_pip//:requirements.bzl",
-       graknlabs_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
 py_test(
     name = "pmf_test",
@@ -18,11 +18,11 @@ py_library(
         'pmf.py',
     ],
     deps = [
-        graknlabs_kglib_requirement('numpy'),
-        graknlabs_kglib_requirement('pandas'),
-        graknlabs_kglib_requirement('pytz'),
-        graknlabs_kglib_requirement('python-dateutil'),
-        graknlabs_kglib_requirement('six')
+        vaticle_kglib_requirement('numpy'),
+        vaticle_kglib_requirement('pandas'),
+        vaticle_kglib_requirement('pytz'),
+        vaticle_kglib_requirement('python-dateutil'),
+        vaticle_kglib_requirement('six')
     ],
     visibility=['//visibility:public']
 )

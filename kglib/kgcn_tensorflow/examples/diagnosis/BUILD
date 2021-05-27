@@ -1,6 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@graknlabs_kglib_pip//:requirements.bzl",
-       graknlabs_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
 py_test(
     name = "diagnosis_test",
@@ -10,9 +10,9 @@ py_test(
     deps = [
         "diagnosis",
         "//kglib/utils/graph/test",
-        graknlabs_kglib_requirement('numpy'),
-        graknlabs_kglib_requirement('networkx'),
-        graknlabs_kglib_requirement('decorator'),
+        vaticle_kglib_requirement('numpy'),
+        vaticle_kglib_requirement('networkx'),
+        vaticle_kglib_requirement('decorator'),
     ]
 )
 
@@ -23,13 +23,13 @@ py_library(
         'diagnosis.py'
     ],
     deps = [
-        "//kglib/kgcn/pipeline",
-        "//kglib/kgcn/learn",
-        "//kglib/kgcn/plot",
-        "//kglib/kgcn/models",
+        "//kglib/kgcn_tensorflow/pipeline",
+        "//kglib/kgcn_tensorflow/learn",
+        "//kglib/kgcn_tensorflow/plot",
+        "//kglib/kgcn_tensorflow/models",
         "//kglib/utils/grakn/synthetic",
         "//kglib/utils/grakn/type",
-        "@graknlabs_client_python//:client_python",
+        "@vaticle_typedb_client_python//:client_python",
     ],
     visibility=['//visibility:public']
 )

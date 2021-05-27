@@ -7,15 +7,15 @@ py_test(
         "kgcn/diagnosis.py"
     ],
     deps = [
-        "//kglib/kgcn/examples/diagnosis",
+        "//kglib/kgcn_tensorflow/examples/diagnosis",
         "//kglib/utils/grakn/test",
     ],
     data = [
         "//kglib/utils/grakn/synthetic/examples:graql-schema",
-        "@graknlabs_grakn_core_artifact_linux//file"
+        "@vaticle_typedb_artifact_linux//file"
     ],
     args = [
         "$(locations //kglib/utils/grakn/synthetic/examples:graql-schema)",
-        "$(location @graknlabs_grakn_core_artifact_linux//file)",
+        "$(location @vaticle_typedb_artifact_linux//file)",
     ],
 )

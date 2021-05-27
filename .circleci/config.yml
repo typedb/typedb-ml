@@ -3,9 +3,9 @@ commands:
 
   install-bazel:
     steps:
-      - run: curl -OL https://raw.githubusercontent.com/graknlabs/dependencies/master/tool/bazelinstall/linux.sh
+      - run: curl -OL https://raw.githubusercontent.com/vaticle/dependencies/master/tool/bazelinstall/linux.sh
       - run: bash ./linux.sh && rm ./linux.sh
-      - run: curl -OL https://raw.githubusercontent.com/graknlabs/dependencies/master/tool/bazelinstall/rbe.sh
+      - run: curl -OL https://raw.githubusercontent.com/vaticle/dependencies/master/tool/bazelinstall/rbe.sh
       - run: bash ./rbe.sh && rm ./rbe.sh
 
   run-bazel:
@@ -13,7 +13,7 @@ commands:
       command:
         type: string
     steps:
-      - run: bazel run @graknlabs_dependencies//tool/bazelrun:rbe -- << parameters.command >>
+      - run: bazel run @vaticle_dependencies//tool/bazelrun:rbe -- << parameters.command >>
 
   run-grakn:
     steps:
@@ -115,7 +115,7 @@ jobs:
       - run: |
           export RELEASE_APPROVAL_USERNAME=$REPO_GITHUB_USERNAME
           export RELEASE_APPROVAL_TOKEN=$REPO_GITHUB_TOKEN
-          bazel run @graknlabs_dependencies//tool/release:approval
+          bazel run @vaticle_dependencies//tool/release:approval
 
   release-validate:
     machine:

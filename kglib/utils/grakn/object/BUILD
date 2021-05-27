@@ -1,6 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_library")
-load("@graknlabs_kglib_pip//:requirements.bzl",
-       graknlabs_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
 
 py_library(

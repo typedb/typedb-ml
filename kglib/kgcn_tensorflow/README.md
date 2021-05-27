@@ -10,11 +10,11 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 - KGLIB installed via pip: `pip install grakn-kglib`. 
 
-- [Grakn Core 1.8.0](https://github.com/graknlabs/grakn/releases) running in the background
+- [Grakn Core 1.8.0](https://github.com/vaticle/grakn/releases) running in the background
 
-- client-python 1.8.0 ([PyPi](https://pypi.org/project/grakn-client/), [GitHub release](https://github.com/graknlabs/client-python/releases))
+- client-python 1.8.0 ([PyPi](https://pypi.org/project/grakn-client/), [GitHub release](https://github.com/vaticle/typedb-client-python/releases))
 
-See the [full example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py) for how to use a KGCN for [Relation](https://dev.grakn.ai/docs/schema/concepts#relation) prediction. You can use the example as a template to create a KGCN for your own Grakn data. If you need to customise the learning or model used, you'll need to make changes to your version of the [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py).
+See the [full example](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py) for how to use a KGCN for [Relation](https://dev.grakn.ai/docs/schema/concepts#relation) prediction. You can use the example as a template to create a KGCN for your own Grakn data. If you need to customise the learning or model used, you'll need to make changes to your version of the [pipeline](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py).
 
 ## How Do We Use Machine Learning over a Knowledge Graph?
 
@@ -22,7 +22,7 @@ See the [full example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn
 
 This KGCN framework is designed to provide a versatile means to perform learning tasks over a Grakn knowledge graph.
 
-Included in the [latest release](https://github.com/graknlabs/kglib/releases/latest):
+Included in the [latest release](https://github.com/vaticle/kglib/releases/latest):
 
 - Predicting the existence of new [Relations](https://dev.grakn.ai/docs/schema/concepts#relation) between existing [Concepts](https://dev.grakn.ai/docs/concept-api/overview). These relations can be binary, **ternary** (3-way) or [**N-ary**]() (N-way), since Relations in Grakn are graph [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge).
 
@@ -118,7 +118,7 @@ Here we identify the core components used to build a working KGCN pipeline.
 
 ### Application
 
-e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/examples/diagnosis)
+e.g. [diagnosis example](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/examples/diagnosis)
 
 1. Fetch subgraphs, each subgraph is used as an *example*
    - This requires specifying queries that will retrieve Concepts from Grakn
@@ -129,7 +129,7 @@ e.g. [diagnosis example](https://github.com/graknlabs/kglib/tree/master/kglib/kg
 
 ### Pipeline
 
-Can be customised from [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py). A pipeline performs the following:
+Can be customised from [pipeline](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py). A pipeline performs the following:
 
 1. Take in graphs and the training/generalistaion split
 2. Encode graph values (including type information) into numerics
@@ -140,7 +140,7 @@ Can be customised from [pipeline](https://github.com/graknlabs/kglib/tree/master
 7. Record the predictions made, and return them in graphs
 
 ### KGCNLearner
-Found in [learn.py](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/learn/learn.py).
+Found in [learn.py](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/learn/learn.py).
 - Performs the training loop
 - Manages the loss function and optimiser
 - Manages the TensorFlow session
@@ -148,6 +148,6 @@ Found in [learn.py](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/le
 
 ### KGCN
 
-Found in [core.py](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/models/core.py).
+Found in [core.py](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/models/core.py).
 
 Defines the computation graph for a KGCN, including the initial embedding of values and the edge/node/graph feature update strategy during message-passing. This is the core that depends upon [Graph Nets](https://github.com/deepmind/graph_nets).

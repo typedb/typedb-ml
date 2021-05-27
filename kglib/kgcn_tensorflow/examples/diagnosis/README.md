@@ -137,12 +137,12 @@ We can visualise such a subgraph by running these queries one after the other in
 
 ![queried subgraph](.images/queried_subgraph.png)
 
-You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/graknlabs/workbase/releases/latest).
+You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/vaticle/workbase/releases/latest).
 
 Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a great understanding and debugging tool.
 
 ## Modifying the Example
 
-If you need to customise the learning or model used for your own use case, you'll need to make changes to the [pipeline](https://github.com/graknlabs/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py) used.
+If you need to customise the learning or model used for your own use case, you'll need to make changes to the [pipeline](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py) used.
 
 Consider tuning parameters and adjusting elements of the pipeline if you need to improve the accuracy that you see. Start by adjusting `num_processing_steps_tr`, `num_processing_steps_ge`, `num_training_iterations`.

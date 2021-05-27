@@ -1,6 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@graknlabs_kglib_pip//:requirements.bzl",
-       graknlabs_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
 filegroup(
     name = "graql-schema",
@@ -16,8 +16,8 @@ py_library(
         'diagnosis/generate.py',
     ],
     deps = [
-        "@graknlabs_client_python//:client_python",
-        graknlabs_kglib_requirement('numpy'),
+        "@vaticle_typedb_client_python//:client_python",
+        vaticle_kglib_requirement('numpy'),
     ],
     visibility=['//visibility:public']
 )
