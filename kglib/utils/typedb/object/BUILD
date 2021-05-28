@@ -30,6 +30,9 @@ py_library(
         'comparable.py',
         'thing.py',
     ],
+    deps = [
+        "@vaticle_typedb_client_python//:client_python",
+    ],
     visibility=['//visibility:public']
 )
 
