@@ -36,23 +36,23 @@ build:
       image: vaticle-ubuntu-20.04
       command: |
         bazel run @vaticle_dependencies//factory/analysis:dependency-analysis
-    test-markdown-link-health:
-      image: vaticle-ubuntu-20.04
-      command: |
-        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
   correctness:
     build:
       image: vaticle-ubuntu-20.04
       command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
         bazel build //...
         bazel run @vaticle_dependencies//tool/checkstyle:test-coverage
         bazel test $(bazel query 'kind(checkstyle_test, //...)') --test_output=streamed
     build-dependency:
       image: vaticle-ubuntu-20.04
       command: |
-        dependencies/maven/update.sh
-        git diff --exit-code dependencies/maven/artifacts.snapshot
         bazel run @vaticle_dependencies//tool/unuseddeps:unused-deps -- list
+    test-markdown-link-health:
+      image: vaticle-ubuntu-20.04
+      command: |
+        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
     test-typedb-server:
       image: vaticle-ubuntu-20.04
       type: background
