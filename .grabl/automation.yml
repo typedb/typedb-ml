@@ -29,13 +29,6 @@ config:
 
 build:
   quality:
-#    build-analysis:
-#      image: vaticle-ubuntu-20.04
-#      command: |
-#        SONARCLOUD_CODE_ANALYSIS_CREDENTIAL=$SONARCLOUD_CREDENTIAL \
-#          bazel run @vaticle_dependencies//tool/sonarcloud:code-analysis -- \
-#          --project-key=vaticle_kglib \
-#          --branch=$GRABL_BRANCH --commit-id=$GRABL_COMMIT
     dependency-analysis:
       image: vaticle-ubuntu-20.04
       command: |
@@ -99,7 +92,7 @@ build:
         bazel test //kglib/kgcn_tensorflow/tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, build-dependency, test, test-end-to-end]
+      dependencies: [build, test, test-end-to-end]
       command: |
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
