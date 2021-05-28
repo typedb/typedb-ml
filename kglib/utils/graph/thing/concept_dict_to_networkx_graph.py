@@ -34,7 +34,7 @@ def concept_dict_to_graph(concept_dict, variable_graph):
     Returns:
         A graph with Things as nodes. Edges connecting the nodes have only role/has type information in their data
     """
-    grakn_graph = nx.MultiDiGraph()
+    typedb_graph = nx.MultiDiGraph()
     node_to_var = {}
 
     if set(variable_graph.nodes()) != set(concept_dict.keys()):
@@ -53,7 +53,7 @@ def concept_dict_to_graph(concept_dict, variable_graph):
         if thing.base_type_label == 'attribute':
             data.update(value_type=thing.value_type, value=thing.value)
 
-        grakn_graph.add_node(thing, **data)
+        typedb_graph.add_node(thing, **data)
 
         # Record the mapping of nodes from one graph to the other
         assert variable not in node_to_var
@@ -68,8 +68,8 @@ def concept_dict_to_graph(concept_dict, variable_graph):
             raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
 
         if data['type'] == 'has':
-            grakn_graph.add_edge(sender, receiver, **data)
+            typedb_graph.add_edge(sender, receiver, **data)
         else:
-            grakn_graph.add_edge(sender, receiver, **data)
+            typedb_graph.add_edge(sender, receiver, **data)
 
-    return grakn_graph
+    return typedb_graph

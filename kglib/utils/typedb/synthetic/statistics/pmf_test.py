@@ -24,7 +24,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from kglib.utils.grakn.synthetic.statistics.pmf import PMF
+from kglib.utils.typedb.synthetic.statistics.pmf import PMF
 
 
 class TestPMF(unittest.TestCase):

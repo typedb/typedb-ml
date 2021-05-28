@@ -19,4 +19,4 @@
 # under the License.
 #
 
-https://repo.grakn.ai/repository/pypi-snapshot-group/packages/grakn-kglib/KGLIB_VERSION_MARKER/grakn-kglib-KGLIB_VERSION_MARKER.tar.gz
+https://repo.vaticle.com/repository/pypi-snapshot-group/packages/typedb-kglib/KGLIB_VERSION_MARKER/typedb-kglib-KGLIB_VERSION_MARKER.tar.gz

@@ -23,10 +23,10 @@ def get_thing_types(tx):
     """
     Get all schema types, excluding those for implicit attribute relations and base types
     Args:
-        tx: Grakn transaction
+        tx: TypeDB transaction
 
     Returns:
-        Grakn types
+        TypeDB types
     """
     schema_concepts = tx.query().match("match $x sub thing;")
     thing_types = [schema_concept.get('x').get_label().name() for schema_concept in schema_concepts]
@@ -38,10 +38,10 @@ def get_role_types(tx):
     """
     Get all schema roles, excluding those for implicit attribute relations, the base role type
     Args:
-        tx: Grakn transaction
+        tx: TypeDB transaction
 
     Returns:
-        Grakn roles
+        TypeDB roles
     """
     schema_concepts = tx.query().match("match $rel sub relation, relates $r;")
     role_types = ['has'] + [role.get('r').get_label().name() for role in schema_concepts]

@@ -21,7 +21,7 @@
 
 import warnings
 
-from kglib.utils.grakn.object.thing import build_thing
+from kglib.utils.typedb.object.thing import build_thing
 from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
 
 
@@ -31,12 +31,12 @@ def concept_dict_from_concept_map(concept_map):
     information required about those concepts.
 
     Args:
-        concept_map: A dict of Concepts provided by Grakn keyed by query variables
+        concept_map: A dict of Concepts provided by TypeDB keyed by query variables
 
     Returns:
         A dictionary of concepts keyed by query variables
     """
-    return {variable: build_thing(grakn_concept) for variable, grakn_concept in concept_map.map().items()}
+    return {variable: build_thing(typedb_concept) for variable, typedb_concept in concept_map.map().items()}
 
 
 def combine_graphs_single_pass(graphs_list):
@@ -62,18 +62,18 @@ def combine_graphs_single_pass(graphs_list):
     return combined_graph
 
 
-def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transaction,
+def build_graph_from_queries(query_sampler_variable_graph_tuples, typedb_transaction,
                              concept_dict_converter=concept_dict_to_graph):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
-    queries (variable graphs)of those queries, over a Grakn transaction
+    queries (variable graphs)of those queries, over a TypeDB transaction
 
     Args:
-        infer: whether to use Grakn's inference engine
+        infer: whether to use TypeDB's inference engine
         query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
             and a variable_graph
-        grakn_transaction: A Grakn transaction
-        concept_dict_converter: The function to use to convert from concept_dicts to a Grakn model. This could be
+        typedb_transaction: A TypeDB transaction
+        concept_dict_converter: The function to use to convert from concept_dicts to a TypeDB model. This could be
             a typical model or a mathematical model
 
     Returns:
@@ -85,7 +85,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, grakn_transact
     for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
 
         print("working on query: " + query)
-        concept_maps = sampler(grakn_transaction.query().match(query))
+        concept_maps = sampler(typedb_transaction.query().match(query))
         print("query completed")
 
         concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]

@@ -30,14 +30,14 @@ py_test(
     ],
     deps = [
         "//kglib/kgcn_tensorflow/examples/diagnosis",
-        "//kglib/utils/grakn/test",
+        "//kglib/utils/typedb/test",
     ],
     data = [
-        "//kglib/utils/grakn/synthetic/examples:graql-schema",
+        "//kglib/utils/typedb/synthetic/examples:graql-schema",
         "@vaticle_typedb_artifact_linux//file"
     ],
     args = [
-        "$(locations //kglib/utils/grakn/synthetic/examples:graql-schema)",
+        "$(locations //kglib/utils/typedb/synthetic/examples:graql-schema)",
         "$(location @vaticle_typedb_artifact_linux//file)",
     ],
 )

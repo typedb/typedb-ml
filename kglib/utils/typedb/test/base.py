@@ -43,7 +43,7 @@ class ZipFile(zipfile.ZipFile):
         return targetpath
 
 
-class GraknServer(object):
+class TypeDBServer(object):
 
     def __init__(self, distribution_location):
         self.__distribution_location = distribution_location
@@ -60,27 +60,27 @@ class GraknServer(object):
         if not self.__unpacked_dir:
             self._unpack()
         sp.check_call([
-            'grakn', 'server', 'start'
+            'typedb', 'server'
         ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
 
     def stop(self):
         sp.check_call([
-            'grakn', 'server', 'stop'
-        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
+            'typedb', 'server', 'stop'
+        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))  # TODO: Needs updating
         shutil.rmtree(self.__unpacked_dir)
 
     def _unpack(self):
-        self.__unpacked_dir = tempfile.mkdtemp(prefix='grakn')
+        self.__unpacked_dir = tempfile.mkdtemp(prefix='typedb')
         with tarfile.open(self.__distribution_location) as tf:
             tf.extractall(self.__unpacked_dir)
             self.__distribution_root_dir = os.path.commonpath(tf.getnames()[1:])
 
-    def load_graql_file(self, database, graql_file_path):
+    def load_typeql_file(self, database, graql_file_path):
         sp.check_call([
-            'grakn', 'console', '-k', database, '-f',
+            'typedb', 'console', '-k', database, '-f',  # TODO: Needs updating
             os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
-        ], cwd=self.grakn_binary_location)
+        ], cwd=self.typedb_binary_location)
 
     @property
-    def grakn_binary_location(self):
+    def typedb_binary_location(self):
         return os.path.join(self.__unpacked_dir, self.__distribution_root_dir)

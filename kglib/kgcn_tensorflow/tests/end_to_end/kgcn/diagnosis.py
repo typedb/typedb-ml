@@ -23,7 +23,7 @@ import sys
 import unittest
 
 from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
-from kglib.utils.grakn.test.base import GraknServer
+from kglib.utils.typedb.test.base import TypeDBServer
 
 TEST_KEYSPACE = "diagnosis"
 TEST_URI = "localhost:1729"
@@ -31,11 +31,11 @@ TEST_URI = "localhost:1729"
 
 class TestDiagnosisExample(unittest.TestCase):
     def setUp(self):
-        self._gs = GraknServer(sys.argv.pop())
+        self._gs = TypeDBServer(sys.argv.pop())
         self._gs.start()
         schema_location = sys.argv.pop()
         print("Schema location: " + str(schema_location))
-        self._gs.load_graql_file(TEST_KEYSPACE, schema_location)
+        self._gs.load_typeql_file(TEST_KEYSPACE, schema_location)
 
     def tearDown(self):
         self._gs.stop()

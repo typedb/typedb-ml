@@ -2,7 +2,7 @@
 
 This example is entirely fabricated as a demonstration for how to construct a KGCN pipeline. Since the data for this example is generated synthetically, it also functions as a test platform for the KGCN model.
 
-Studying the schema for this example (using Grakn Workbase's Schema Designer), we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. We also know information that contributes to risk-factors for certain diseases. These risk factors are determined by rules defined in the schema. Lastly, people can be diagnosed with a disease.
+Studying the schema for this example (using TypeDB Workbase's Schema Designer), we have people who present symptoms, with some severity. Separately, we may know that certain symptoms can be caused by a disease. We also know information that contributes to risk-factors for certain diseases. These risk factors are determined by rules defined in the schema. Lastly, people can be diagnosed with a disease.
 
 ![Diagnosis Schema](.images/diagnosis_schema.png)
 
@@ -10,9 +10,9 @@ Studying the schema for this example (using Grakn Workbase's Schema Designer), w
 
 Once you have [installed KGLIB via pip](../../#getting-started---running-the-machine-learning-pipeline) you can run the example as follows:
 
-1. Make sure a Grakn server is running
+1. Make sure a TypeDB server is running
 
-2. Load [the schema](../../../utils/grakn/synthetic/examples/diagnosis/schema.gql) for the example into Grakn. The template for the command is `./grakn console -k diagnosis -f path/to/schema.gql` for a locally running instance of Grakn. Add `-r <address>:<port>` to point to a remote/Grakn KGMS instance
+2. Load [the schema](../../../utils/typedb/synthetic/examples/diagnosis/schema.gql) for the example into TypeDB. The template for the command is `./typedb console -k diagnosis -f path/to/schema.gql` for a locally running instance of TypeDB. Add `-r <address>:<port>` to point to a remote/TypeDB Cluster instance
 
 3. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
 
@@ -25,11 +25,11 @@ Once you have [installed KGLIB via pip](../../#getting-started---running-the-mac
 The process conducted by the example is as follows:
 
 1. Generate synthetic graphs, each graph is used as an *example*
-   - This requires specifying queries that will retrieve Concepts from Grakn
+   - This requires specifying queries that will retrieve Concepts from TypeDB
    - The answers from these queries are used to create subgraphs, stored in-memory as networkx graphs
 2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
 3. Run the pipeline
-4. Write the predictions made to Grakn
+4. Write the predictions made to TypeDB
 
 ## Relation Prediction
 
@@ -43,7 +43,7 @@ Element does exist in the graph
 ]
 ```
 
-In this way we perform relation prediction by proposing negative candidate relations (Grakn's rules help us with this). Then we train the learner to classify these negative candidates as **does not exist** and the correct relations as **does exist**.
+In this way we perform relation prediction by proposing negative candidate relations (TypeDB's rules help us with this). Then we train the learner to classify these negative candidates as **does not exist** and the correct relations as **does exist**.
 
 ## Results Output
 
@@ -91,7 +91,7 @@ You will see plots of metrics for the training process (training iteration on th
 
 - The absolute loss across all of the elements in the dataset
 - The fraction of all graph elements predicted correctly across the dataset
-- The fraction of completely solved examples (subgraphs extracted from Grakn that are solved in full)
+- The fraction of completely solved examples (subgraphs extracted from TypeDB that are solved in full)
 
 ![learning metrics](.images/learning.png)
 
@@ -121,23 +121,23 @@ Therefore, for good predictions we want to see no blue elements, and for the red
 
 The methodology used for Relation prediction is as follows:
 
-In this example, we aim to predict `diagnosis` Relations. We have the correct `diagnosis` relations, and we write a Grakn rule to insert `candidate-diagnosis` relations as negative targets. They are added wherever a real `diagnosis` Relation could logically exist, but does not.
+In this example, we aim to predict `diagnosis` Relations. We have the correct `diagnosis` relations, and we write a TypeDB rule to insert `candidate-diagnosis` relations as negative targets. They are added wherever a real `diagnosis` Relation could logically exist, but does not.
 
 We then teach the KGCN to distinguish between the positive and negative targets.
 
 ## Querying for the Train/Test Datasets
 
-We do this by creating *examples*, where each example is a subgraph extracted from a Grakn knowledge Graph. These subgraphs contain positive and negative instances of the relation to be predicted.
+We do this by creating *examples*, where each example is a subgraph extracted from a TypeDB knowledge Graph. These subgraphs contain positive and negative instances of the relation to be predicted.
 
-A single subgraph is created by making multiple queries to Grakn. In this example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return information about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. For this example you can find the queries made in [diagnosis.py](diagnosis.py).
+A single subgraph is created by making multiple queries to TypeDB. In this example, each subgraph centres around a `person` who is uniquely identifiable. This is important, since we want the results for these queries to return information about the vacinity of an individual. That is, we want information about a subgraph rather than the whole graph. For this example you can find the queries made in [diagnosis.py](diagnosis.py).
 
-A single subgraph is extracted from Grakn by making these queries and combining the results into a graph. For your own domain you should find queries that will retrieve the most relevant information for the Relations you are trying to predict.
+A single subgraph is extracted from TypeDB by making these queries and combining the results into a graph. For your own domain you should find queries that will retrieve the most relevant information for the Relations you are trying to predict.
 
-We can visualise such a subgraph by running these queries one after the other in Grakn Workbase:
+We can visualise such a subgraph by running these queries one after the other in TypeDB Workbase:
 
 ![queried subgraph](.images/queried_subgraph.png)
 
-You can get the relevant version of Grakn Workbase from the Assets of the [latest Workbase release](https://github.com/vaticle/workbase/releases/latest).
+You can get the relevant version of TypeDB Workbase from the Assets of the [latest Workbase release](https://github.com/vaticle/workbase/releases/latest).
 
 Using Workbase like this is a great way to understand the subgraphs that are actually being delivered to the KGCN -- a great understanding and debugging tool.
 

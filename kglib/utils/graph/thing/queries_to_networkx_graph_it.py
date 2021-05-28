@@ -25,10 +25,10 @@ import unittest
 import networkx as nx
 from typedb.client import *
 
-from kglib.utils.grakn.object.thing import Thing, build_thing
-from kglib.utils.grakn.test.base import GraknServer
-from kglib.utils.grakn.test.mock.answer import MockConceptMap
-from kglib.utils.grakn.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
+from kglib.utils.typedb.object.thing import Thing, build_thing
+from kglib.utils.typedb.test.base import TypeDBServer
+from kglib.utils.typedb.test.mock.answer import MockConceptMap
+from kglib.utils.typedb.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 from kglib.utils.graph.test.case import GraphTestCase
 
@@ -143,7 +143,7 @@ class ITBuildGraphFromQueries(GraphTestCase):
                          f'could not be created, since none of these queries returned results', str(context.exception))
 
 
-class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
+class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
 
     DATABASE = "it_build_graph_from_queries"
     SCHEMA = ("define "
@@ -163,7 +163,7 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
         self._client.databases().get(self._database).delete()
         self._client.close()
 
-    def test_graph_is_built_from_grakn_as_expected(self):
+    def test_graph_is_built_from_typedb_as_expected(self):
 
         g1 = nx.MultiDiGraph()
         g1.add_node('x')
@@ -191,8 +191,8 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
         with self._client.session(self._database, SessionType.DATA) as session:
 
             with session.transaction(TransactionType.WRITE) as tx:
-                tx.query(ITBuildGraphFromQueriesWithRealGrakn.SCHEMA)
-                tx.query(ITBuildGraphFromQueriesWithRealGrakn.DATA)
+                tx.query(ITBuildGraphFromQueriesWithRealTypeDB.SCHEMA)
+                tx.query(ITBuildGraphFromQueriesWithRealTypeDB.DATA)
                 tx.commit()
 
             with session.transaction(TransactionType.READ) as tx:
@@ -215,5 +215,5 @@ class ITBuildGraphFromQueriesWithRealGrakn(GraphTestCase):
 
 if __name__ == "__main__":
 
-    with GraknServer(sys.argv.pop()) as gs:
+    with TypeDBServer(sys.argv.pop()) as gs:
         unittest.main()

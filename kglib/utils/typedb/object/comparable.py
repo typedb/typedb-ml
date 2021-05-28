@@ -22,7 +22,7 @@
 class PropertyComparable:
     """
     Methods to give to an object such that it can be compared with another object based on their
-    properties/attributes. Avoided using the name 'Attribute' since this is common Grakn terminology.
+    properties/attributes. Avoided using the name 'Attribute' since this is common TypeDB terminology.
     """
     def __eq__(self, other):
         """Overrides the default implementation"""

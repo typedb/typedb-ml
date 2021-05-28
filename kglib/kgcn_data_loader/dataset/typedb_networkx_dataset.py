@@ -20,14 +20,16 @@
 #
 
 from typing import Sequence, Callable, Optional
+
 import networkx as nx
-from grakn.client import Grakn, GraknSession, SessionType, GraknOptions, TransactionType
+from typedb.client import TypeDB, TypeDBSession, SessionType, TypeDBOptions, TransactionType
+
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
-class GraknNetworkxDataSet:
+class TypeDBNetworkxDataSet:
     """
-    Loading graphs based on queries from the Grakn database.
+    Loading graphs based on queries from TypeDB.
     Note: not dependent on PyTorch or Pytorch Geometric.
     """
 
@@ -37,7 +39,7 @@ class GraknNetworkxDataSet:
         get_query_handles_for_id: Callable,
         database: Optional[str] = None,
         uri: Optional[str] = "localhost:1729",
-        session: Optional[GraknSession] = None,
+        session: Optional[TypeDBSession] = None,
         infer: bool = True,
         transform: Optional[Callable[[nx.Graph], nx.Graph]] = None,
     ):
@@ -48,10 +50,10 @@ class GraknNetworkxDataSet:
         self._transform = transform
         self._uri = uri
         self._database = database
-        self._grakn_session = session
+        self._typedb_session = session
 
     @property
-    def grakn_session(self):
+    def typedb_session(self):
         """
         Did this like this in an attempt to make it
         also work when using with a DataLoader with
@@ -59,26 +61,26 @@ class GraknNetworkxDataSet:
 
         TODO: it does not, so look into this.
         """
-        if not self._grakn_session:
+        if not self._typedb_session:
             print("setting up session")
             print(self)
             client = TypeDB.core_client(self._uri)
-            self._grakn_session = client.session(database=self._database, session_type=SessionType.DATA)
-        return self._grakn_session
+            self._typedb_session = client.session(database=self._database, session_type=SessionType.DATA)
+        return self._typedb_session
 
     def __len__(self):
         return len(self._example_indices)
 
     def __getitem__(self, idx):
-        print(type(self._grakn_session))
+        print(type(self._typedb_session))
         example_id = self._example_indices[idx]
         print(f"Fetching subgraph for example {example_id}")
         graph_query_handles = self.get_query_handles_for_id(example_id)
 
-        options = GraknOptions.core()
+        options = TypeDBOptions.core()
         options.infer = self._infer
 
-        with self.grakn_session.transaction(TransactionType.READ, options=options) as tx:
+        with self.typedb_session.transaction(TransactionType.READ, options=options) as tx:
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx)
         graph.name = example_id

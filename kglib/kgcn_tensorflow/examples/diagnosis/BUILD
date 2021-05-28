@@ -48,8 +48,8 @@ py_library(
         "//kglib/kgcn_tensorflow/learn",
         "//kglib/kgcn_tensorflow/plot",
         "//kglib/kgcn_tensorflow/models",
-        "//kglib/utils/grakn/synthetic",
-        "//kglib/utils/grakn/type",
+        "//kglib/utils/typedb/synthetic",
+        "//kglib/utils/typedb/type",
         "@vaticle_typedb_client_python//:client_python",
     ],
     visibility=['//visibility:public']

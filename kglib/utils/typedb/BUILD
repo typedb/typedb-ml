@@ -25,12 +25,12 @@ load("@vaticle_kglib_pip//:requirements.bzl",
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
-    name = "grakn",
+    name = "typedb",
     deps = [
-        '//kglib/utils/grakn/test',
-        '//kglib/utils/grakn/object',
-        '//kglib/utils/grakn/synthetic',
-        '//kglib/utils/grakn/type',
+        '//kglib/utils/typedb/test',
+        '//kglib/utils/typedb/object',
+        '//kglib/utils/typedb/synthetic',
+        '//kglib/utils/typedb/type',
     ],
     visibility=['//visibility:public']
 )

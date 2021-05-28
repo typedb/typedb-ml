@@ -59,7 +59,7 @@ assemble_pip(
     author_email = "community@vaticle.com",
     license = "Apache-2.0",
     requirements_file = "//:requirements.txt",
-    keywords = ["machine learning", "logical reasoning", "knowledege graph", "grakn", "database", "graph",
+    keywords = ["machine learning", "logical reasoning", "knowledege graph", "typedb", "database", "graph",
                 "knowledgebase", "knowledge-engineering"],
 
     description = "A Machine Learning Library for TypeDB.",

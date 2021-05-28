@@ -20,7 +20,7 @@
 #
 
 from typedb.client import *
-from kglib.utils.grakn.type.type import get_thing_types, get_role_types
+from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 from typing import List
 
 
@@ -67,12 +67,12 @@ def apply_logits_to_graphs(graph, logits_graph):
     return graph
 
 
-def get_node_types_for_training(session: GraknSession, types_to_ignore: List[str]) -> List[str]:
+def get_node_types_for_training(session: TypeDBSession, types_to_ignore: List[str]) -> List[str]:
     """
     Takes in a list of node types to ignore and returns all node types in schema that are not to be ignored.
 
     Args:
-        session: Grakn rpc session of type SessionType.DATA
+        session: TypeDB rpc session of type SessionType.DATA
         types_to_ignore: list of strings of schema type labels
 
     Returns:
@@ -85,12 +85,12 @@ def get_node_types_for_training(session: GraknSession, types_to_ignore: List[str
     return node_types
 
 
-def get_edge_types_for_training(session: GraknSession, roles_to_ignore: List[str]) -> List[str]:
+def get_edge_types_for_training(session: TypeDBSession, roles_to_ignore: List[str]) -> List[str]:
     """
     Takes in a list of role types to ignore and returns all role types in schema that are not to be ignored.
 
     Args:
-        session: Grakn rpc session of type SessionType.DATA
+        session: TypeDB rpc session of type SessionType.DATA
         roles_to_ignore: list of strings of role type labels
 
     Returns:

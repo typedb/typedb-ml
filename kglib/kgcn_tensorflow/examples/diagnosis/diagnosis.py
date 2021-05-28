@@ -26,9 +26,9 @@ from typedb.client import *
 
 from kglib.kgcn_tensorflow.pipeline.pipeline import pipeline
 
-from kglib.utils.grakn.synthetic.examples.diagnosis.generate import generate_example_graphs
+from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_graphs
 
-from kglib.utils.grakn.type.type import get_thing_types, get_role_types
+from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
@@ -69,7 +69,7 @@ def diagnosis_example(num_graphs=100,
                       num_training_iterations=50,
                       database=DATABASE, address=ADDRESS):
     """
-    Run the diagnosis example from start to finish, including traceably ingesting predictions back into Grakn
+    Run the diagnosis example from start to finish, including traceably ingesting predictions back into TypeDB
 
     Args:
         num_graphs: Number of graphs to use for training and testing combined
@@ -77,7 +77,7 @@ def diagnosis_example(num_graphs=100,
         num_processing_steps_ge: The number of message-passing steps for testing
         num_training_iterations: The number of training epochs
         database: The name of the database to retrieve example subgraphs from
-        address: The address of the running Grakn instance
+        address: The address of the running TypeDB instance
 
     Returns:
         Final accuracies for training and for testing
@@ -115,7 +115,7 @@ def diagnosis_example(num_graphs=100,
                                                  output_dir=f"./events/{time.time()}/")
 
     with session.transaction(TransactionType.WRITE) as tx:
-        write_predictions_to_grakn(ge_graphs, tx)
+        write_predictions_to_typedb(ge_graphs, tx)
 
     session.close()
     client.close()
@@ -123,27 +123,27 @@ def diagnosis_example(num_graphs=100,
     return solveds_tr, solveds_ge
 
 
-def create_concept_graphs(example_indices, grakn_session, infer = True):
+def create_concept_graphs(example_indices, typedb_session, infer = True):
     """
     Builds an in-memory graph for each example, with an example_id as an anchor for each example subgraph.
     Args:
         example_indices: The values used to anchor the subgraph queries within the entire knowledge graph
-        grakn_session: Grakn Session
+        typedb_session: TypeDB Session
 
     Returns:
-        In-memory graphs of Grakn subgraphs
+        In-memory graphs of TypeDB subgraphs
     """
 
     graphs = []
 
-    options = GraknOptions.core()
+    options = TypeDBOptions.core()
     options.infer = infer
 
     for example_id in example_indices:
         print(f'Creating graph for example {example_id}')
         graph_query_handles = get_query_handles(example_id)
 
-        with grakn_session.transaction(TransactionType.READ, options) as tx:
+        with typedb_session.transaction(TransactionType.READ, options) as tx:
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx)
 
@@ -167,7 +167,7 @@ def obfuscate_labels(graph, types_and_roles_to_obfuscate):
 def get_query_handles(example_id):
     """
     Creates an iterable, each element containing a Graql query, a function to sample the answers, and a QueryGraph
-    object which must be the Grakn graph representation of the query. This tuple is termed a "query_handle"
+    object which must be the TypeDB graph representation of the query. This tuple is termed a "query_handle"
 
     Args:
         example_id: A uniquely identifiable attribute value used to anchor the results of the queries to a specific
@@ -294,13 +294,13 @@ def get_query_handles(example_id):
     ]
 
 
-def write_predictions_to_grakn(graphs, tx):
+def write_predictions_to_typedb(graphs, tx):
     """
     Take predictions from the ML model, and insert representations of those predictions back into the graph.
 
     Args:
         graphs: graphs containing the concepts, with their class predictions and class probabilities
-        tx: Grakn write transaction to use
+        tx: TypeDB write transaction to use
 
     Returns: None
 

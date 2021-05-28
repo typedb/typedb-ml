@@ -48,8 +48,8 @@ class KGCNLearner:
                  log_dir=None):
         """
         Args:
-            tr_graphs: In-memory graphs of Grakn concepts for training
-            ge_graphs: In-memory graphs of Grakn concepts for generalisation
+            tr_graphs: In-memory graphs of TypeDB concepts for training
+            ge_graphs: In-memory graphs of TypeDB concepts for generalisation
             num_processing_steps_tr: Number of processing (message-passing) steps for training.
             num_processing_steps_ge: Number of processing (message-passing) steps for generalization.
             num_training_iterations: Number of training iterations

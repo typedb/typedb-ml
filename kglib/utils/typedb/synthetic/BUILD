@@ -28,8 +28,8 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 py_library(
     name = "synthetic",
     deps = [
-        '//kglib/utils/grakn/synthetic/statistics',
-        '//kglib/utils/grakn/synthetic/examples',
+        '//kglib/utils/typedb/synthetic/statistics',
+        '//kglib/utils/typedb/synthetic/examples',
     ],
     visibility=['//visibility:public']
 )

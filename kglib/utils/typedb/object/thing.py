@@ -18,12 +18,16 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+from typedb.concept.type.attribute_type import AttributeType, RemoteAttributeType, BooleanAttributeType, \
+    RemoteBooleanAttributeType, LongAttributeType, RemoteLongAttributeType, DoubleAttributeType, \
+    RemoteDoubleAttributeType, StringAttributeType, RemoteStringAttributeType, DateTimeAttributeType, \
+    RemoteDateTimeAttributeType
 
-from grakn.api.concept.type.attribute_type import AttributeType
+from kglib.utils.typedb.object.comparable import PropertyComparable
 
-from kglib.utils.grakn.object.comparable import PropertyComparable
-
-VALUE_TYPES = (AttributeType.ValueType.OBJECT, AttributeType.ValueType.BOOLEAN, AttributeType.ValueType.LONG, AttributeType.ValueType.DOUBLE, AttributeType.ValueType.STRING, AttributeType.ValueType.DATETIME)
+VALUE_TYPES = (AttributeType, RemoteAttributeType, BooleanAttributeType, RemoteBooleanAttributeType, LongAttributeType,
+               RemoteLongAttributeType, DoubleAttributeType, RemoteDoubleAttributeType, StringAttributeType,
+               RemoteStringAttributeType, DateTimeAttributeType, RemoteDateTimeAttributeType)
 
 
 class Thing(PropertyComparable):
@@ -53,23 +57,23 @@ class Thing(PropertyComparable):
         return self.__str__()
 
 
-def build_thing(grakn_thing):
+def build_thing(typedb_thing):
 
-    id = grakn_thing.get_iid()
-    type_label = grakn_thing.get_type().get_label().name()
-    if grakn_thing.is_entity():
+    id = typedb_thing.get_iid()
+    type_label = typedb_thing.get_type().get_label().name()
+    if typedb_thing.is_entity():
         base_type_label = "entity"
-    elif grakn_thing.is_relation():
+    elif typedb_thing.is_relation():
         base_type_label = "relation"
-    elif grakn_thing.is_attribute():
+    elif typedb_thing.is_attribute():
         base_type_label = "attribute"
     else:
         raise RuntimeError("Unexpected Concept")
 
     if base_type_label == 'attribute':
-        value_type = grakn_thing.get_type().get_value_type()
+        value_type = typedb_thing.get_type().get_value_type()
         assert value_type in VALUE_TYPES
-        value = grakn_thing.get_value()
+        value = typedb_thing.get_value()
 
         return Thing(id, type_label, base_type_label, value_type, value)
 

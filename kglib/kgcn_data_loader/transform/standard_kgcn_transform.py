@@ -31,7 +31,7 @@ from kglib.kgcn_data_loader.utils import duplicate_edges_in_reverse
 
 
 class StandardKGCNNetworkxTransform:
-    """Transform of the networkx graph as it comes out of Grakn
+    """Transform of the networkx graph as it comes out of TypeDB
     to a networkx graph that pytorch geometric likes to ingest.
     Now this is very much geared to pytorch geometric especially
     because I set the attribute names to things like "x" and

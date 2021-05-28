@@ -22,12 +22,12 @@
 import unittest
 import networkx as nx
 
-from kglib.utils.grakn.object.thing import Thing
+from kglib.utils.typedb.object.thing import Thing
 from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
 from kglib.utils.graph.test.case import GraphTestCase
 
 
-class TestConceptDictToGraknGraph(GraphTestCase):
+class TestConceptDictToTypeDBGraph(GraphTestCase):
     def test_single_entity_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
         variable_graph.add_node('x')
@@ -35,11 +35,11 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         person = Thing('V123', 'person', 'entity')
         concept_dict = {'x': person}
 
-        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
-        expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person, type='person')
+        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        expected_typedb_graph = nx.MultiDiGraph()
+        expected_typedb_graph.add_node(person, type='person')
 
-        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+        self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 
     def test_single_attribute_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
@@ -48,11 +48,11 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         name = Thing('V123', 'name', 'attribute', value_type='string', value='Bob')
         concept_dict = {'x': name}
 
-        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
-        expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(name, type='name', value_type='string', value='Bob')
+        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        expected_typedb_graph = nx.MultiDiGraph()
+        expected_typedb_graph.add_node(name, type='name', value_type='string', value='Bob')
 
-        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+        self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 
     def test_single_entity_single_relation_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
@@ -64,13 +64,13 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
-        expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person, type='person')
-        expected_grakn_graph.add_node(employment, type='employment')
-        expected_grakn_graph.add_edge(employment, person, type='employee')
+        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        expected_typedb_graph = nx.MultiDiGraph()
+        expected_typedb_graph.add_node(person, type='person')
+        expected_typedb_graph.add_node(employment, type='employment')
+        expected_typedb_graph.add_edge(employment, person, type='employee')
 
-        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+        self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 
     def test_two_entity_single_relation_graph_is_as_expected(self):
         variable_graph = nx.MultiDiGraph()
@@ -85,16 +85,16 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         employment = Thing('V12345', 'employment', 'relation')
         concept_dict = {'x': person, 'y': company, 'r': employment}
 
-        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
 
-        expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person, type='person')
-        expected_grakn_graph.add_node(company, type='company')
-        expected_grakn_graph.add_node(employment, type='employment')
-        expected_grakn_graph.add_edge(employment, person, type='employee')
-        expected_grakn_graph.add_edge(employment, company, type='employer')
+        expected_typedb_graph = nx.MultiDiGraph()
+        expected_typedb_graph.add_node(person, type='person')
+        expected_typedb_graph.add_node(company, type='company')
+        expected_typedb_graph.add_node(employment, type='employment')
+        expected_typedb_graph.add_edge(employment, person, type='employee')
+        expected_typedb_graph.add_edge(employment, company, type='employer')
 
-        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+        self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 
     def test_same_thing_occurs_in_two_different_variables(self):
         variable_graph = nx.MultiDiGraph()
@@ -106,11 +106,11 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         concept_dict = {'x': person,
                         'y': person2}
 
-        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
-        expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person, type='person')
+        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        expected_typedb_graph = nx.MultiDiGraph()
+        expected_typedb_graph.add_node(person, type='person')
 
-        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+        self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 
     def test_edge_starting_from_entity_throws_exception(self):
         variable_graph = nx.MultiDiGraph()
@@ -174,13 +174,13 @@ class TestConceptDictToGraknGraph(GraphTestCase):
         employment = Thing('V123', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        grakn_graph = concept_dict_to_graph(concept_dict, variable_graph)
-        expected_grakn_graph = nx.MultiDiGraph()
-        expected_grakn_graph.add_node(person, type='person', input=1, solution=1)
-        expected_grakn_graph.add_node(employment, type='employment', input=1, solution=1)
-        expected_grakn_graph.add_edge(employment, person, type='employee', input=0, solution=1)
+        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        expected_typedb_graph = nx.MultiDiGraph()
+        expected_typedb_graph.add_node(person, type='person', input=1, solution=1)
+        expected_typedb_graph.add_node(employment, type='employment', input=1, solution=1)
+        expected_typedb_graph.add_edge(employment, person, type='employee', input=0, solution=1)
 
-        self.assertGraphsEqual(expected_grakn_graph, grakn_graph)
+        self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 
 
 if __name__ == "__main__":

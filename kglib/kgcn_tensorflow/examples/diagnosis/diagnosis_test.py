@@ -26,12 +26,12 @@ from typedb.client import *
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import write_predictions_to_grakn, obfuscate_labels
-from kglib.utils.grakn.object.thing import Thing
+from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import write_predictions_to_typedb, obfuscate_labels
+from kglib.utils.typedb.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
 
 
-class TestWritePredictionsToGrakn(unittest.TestCase):
+class TestWritePredictionsToTypeDB(unittest.TestCase):
     def test_query_made_as_expected(self):
         graph = nx.MultiDiGraph()
 
@@ -46,12 +46,12 @@ class TestWritePredictionsToGrakn(unittest.TestCase):
         graph.add_edge(2, 1)
 
         graphs = [graph]
-        tx = MagicMock(GraknTransaction)
+        tx = MagicMock(TypeDBTransaction)
 
         tx.commit = MagicMock()
         tx.query = MagicMock()
 
-        write_predictions_to_grakn(graphs, tx)
+        write_predictions_to_typedb(graphs, tx)
 
         expected_query = (f'match'
                           f'$p id V123;'
@@ -81,12 +81,12 @@ class TestWritePredictionsToGrakn(unittest.TestCase):
         graph.add_edge(2, 1)
 
         graphs = [graph]
-        tx = MagicMock(GraknTransaction)
+        tx = MagicMock(TypeDBTransaction)
 
         tx.commit = MagicMock()
         tx.query = MagicMock()
 
-        write_predictions_to_grakn(graphs, tx)
+        write_predictions_to_typedb(graphs, tx)
 
         tx.query.assert_not_called()
 

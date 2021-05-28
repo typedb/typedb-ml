@@ -25,7 +25,7 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 py_library(
     name = "utils",
     deps = [
-        '//kglib/utils/grakn',
+        '//kglib/utils/typedb',
         '//kglib/utils/graph',
         '//kglib/utils/test'
     ],

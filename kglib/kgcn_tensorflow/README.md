@@ -8,23 +8,23 @@ This project introduces a novel model: the *Knowledge Graph Convolutional Networ
 
 - Python >= 3.6
 
-- KGLIB installed via pip: `pip install grakn-kglib`. 
+- KGLIB installed via pip: `pip install typedb-kglib`. 
 
-- [Grakn Core 1.8.0](https://github.com/vaticle/grakn/releases) running in the background
+- [TypeDB 2.1.1](https://github.com/vaticle/typedb/releases) running in the background
 
-- client-python 1.8.0 ([PyPi](https://pypi.org/project/grakn-client/), [GitHub release](https://github.com/vaticle/typedb-client-python/releases))
+- the Python TypeDB client 2.1.0 ([PyPi](https://pypi.org/project/typedb-client/), [GitHub release](https://github.com/vaticle/typedb-client-python/releases))
 
-See the [full example](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py) for how to use a KGCN for [Relation](https://dev.grakn.ai/docs/schema/concepts#relation) prediction. You can use the example as a template to create a KGCN for your own Grakn data. If you need to customise the learning or model used, you'll need to make changes to your version of the [pipeline](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py).
+See the [full example](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/examples/diagnosis/diagnosis.py) for how to use a KGCN for [Relation](https://docs.vaticle.com/docs/schema/concepts#relation) prediction. You can use the example as a template to create a KGCN for your own TypeDB data. If you need to customise the learning or model used, you'll need to make changes to your version of the [pipeline](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/pipeline/pipeline.py).
 
 ## How Do We Use Machine Learning over a Knowledge Graph?
 
 ### Relation Prediction
 
-This KGCN framework is designed to provide a versatile means to perform learning tasks over a Grakn knowledge graph.
+This KGCN framework is designed to provide a versatile means to perform learning tasks over a knowledge graph in TypeDB.
 
 Included in the [latest release](https://github.com/vaticle/kglib/releases/latest):
 
-- Predicting the existence of new [Relations](https://dev.grakn.ai/docs/schema/concepts#relation) between existing [Concepts](https://dev.grakn.ai/docs/concept-api/overview). These relations can be binary, **ternary** (3-way) or [**N-ary**]() (N-way), since Relations in Grakn are graph [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge).
+- Predicting the existence of new [Relations](https://docs.vaticle.com/docs/schema/concepts#relation) between existing [Concepts](https://docs.vaticle.com/docs/concept-api/overview). These relations can be binary, **ternary** (3-way) or [**N-ary**]() (N-way), since Relations in TypeDB are graph [Hyperedges](https://en.wikipedia.org/wiki/Glossary_of_graph_theory_terms#hyperedge).
 
 Understand the full capabilities of KGCNs by examining the methodology outlined below.
 
@@ -32,7 +32,7 @@ Understand the full capabilities of KGCNs by examining the methodology outlined 
 
 We approach learning over a Knowledge Graph just as we do classical supervised learning. We learn from a ground truth set of training examples, but in this case each example is a subgraph.
 
-We extract these subgraphs from a Grakn Knowledge Graph. Extracting subgraphs is performed by making Graql queries to Grakn (multiple queries per example).
+We extract these subgraphs from a TypeDB Knowledge Graph. Extracting subgraphs is performed by making Graql queries to TypeDB (multiple queries per example).
 
 ![Knowledge Graph Machine Learning](.images/knowledge_graph_machine_learning.png)
 
@@ -44,7 +44,7 @@ Using this method we can frame Relation prediction as a node existence classific
 
 We can directly ingest a graph into TensorFlow and learn over that graph. This leverages DeepMind's [Graph Nets](https://github.com/deepmind/graph_nets) framework, detailed in [their paper](https://arxiv.org/abs/1806.01261) (built in TensorFlow). This work is a generalisation of graph learning techniques, which offers plenty of ways to structure learning tailored to various knowledge graph problems.
 
-We extend this work for Grakn knowledge graphs, with a graph data flow as follows:
+We extend this work for knowledge graphs in TypeDB, with a graph data flow as follows:
 
 ![Pipeline](.images/learning_pipeline.png)
 
@@ -88,7 +88,7 @@ In a typical use case, we have a specific Relation Type, `T`, that we want to pr
 
 ### Creating Ground Truth Examples
 
-Our approach is to extract subgraphs from a Grakn knowledge graph to use as ground truth examples. 
+Our approach is to extract subgraphs from a TypeDB knowledge graph to use as ground truth examples. 
 
 Clearly, `T` Relations that are present are treated as fact, and given positive target labels. However, we must also consider *negative* examples of these `T` Relations.
 
@@ -106,11 +106,11 @@ To achieve this, wherever in the subgraph a `T` Relation *could* exist, but does
 
 The learner's job is then to classify those candidates to indicate their likelihood of true existence.
 
-Due to Grakn's enforced schema, `T` Relations can logically only occur between certain Roleplayers. This means that the candidates to be added should be sparse - we don't see the combinatorial explosion of candidates that we would see in a homogenous subgraph.
+Due to TypeDB's enforced schema, `T` Relations can logically only occur between certain Roleplayers. This means that the candidates to be added should be sparse - we don't see the combinatorial explosion of candidates that we would see in a homogenous subgraph.
 
 ### Adding Negative Relations Dynamically
 
-Naturally, we don't wish to pollute our Knowledge Graph by inserting these `T` Relation candidates. Instead, we can make use of Grakn's reasoning engine here by defining a logical [Rule](http://dev.grakn.ai/docs/schema/rules) to dynamically create these candidates (see the rule in the [example schema](../utils/grakn/synthetic/examples/diagnosis/schema.gql)). After training our learner we can simply `undefine` the rule to return to an unpolluted state.
+Naturally, we don't wish to pollute our Knowledge Graph by inserting these `T` Relation candidates. Instead, we can make use of TypeDB's reasoning engine here by defining a logical [Rule](http://docs.vaticle.com/docs/schema/rules) to dynamically create these candidates (see the rule in the [example schema](../utils/typedb/synthetic/examples/diagnosis/schema.gql)). After training our learner we can simply `undefine` the rule to return to an unpolluted state.
 
 ## Architectural Components
 
@@ -121,11 +121,11 @@ Here we identify the core components used to build a working KGCN pipeline.
 e.g. [diagnosis example](https://github.com/vaticle/kglib/tree/master/kglib/kgcn/examples/diagnosis)
 
 1. Fetch subgraphs, each subgraph is used as an *example*
-   - This requires specifying queries that will retrieve Concepts from Grakn
+   - This requires specifying queries that will retrieve Concepts from TypeDB
    - The answers from these queries are used to create subgraphs, stored in-memory as networkx graphs
 2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
 3. Run the pipeline
-4. Write the predictions made to Grakn
+4. Write the predictions made to TypeDB
 
 ### Pipeline
 
