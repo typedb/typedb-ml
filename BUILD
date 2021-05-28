@@ -14,6 +14,7 @@ load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
 load("//:deployment.bzl", github_deployment = "deployment")
 load("@vaticle_dependencies//tool/release:rules.bzl", "release_validate_deps")
 
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 assemble_pip(
     name = "assemble-pip",
@@ -59,4 +60,13 @@ release_validate_deps(
         "@vaticle_typedb_client_python",
     ],
     tags = ["manual"]
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    include = glob([
+        "*",
+        ".grabl/*",
+    ]),
+    license_type = "apache",
 )

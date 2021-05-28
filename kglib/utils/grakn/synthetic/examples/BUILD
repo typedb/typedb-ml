@@ -25,6 +25,9 @@ py_library(
 
 checkstyle_test(
     name = "checkstyle",
-    include = glob(["*"]),
+    include = glob([
+        "*",
+        "diagnosis/*"
+    ]),
     license_type = "apache",
 )
