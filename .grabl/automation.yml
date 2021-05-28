@@ -1,0 +1,163 @@
+#
+# Copyright (C) 2021 Vaticle
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+config:
+  version-candidate: VERSION
+  dependencies:
+    dependencies: [build]
+    typedb-client-python: [build, release]
+    typedb-common: [build, release]
+    typedb: [build, release]
+
+build:
+  quality:
+#    build-analysis:
+#      image: vaticle-ubuntu-20.04
+#      command: |
+#        SONARCLOUD_CODE_ANALYSIS_CREDENTIAL=$SONARCLOUD_CREDENTIAL \
+#          bazel run @vaticle_dependencies//tool/sonarcloud:code-analysis -- \
+#          --project-key=vaticle_kglib \
+#          --branch=$GRABL_BRANCH --commit-id=$GRABL_COMMIT
+    dependency-analysis:
+      image: vaticle-ubuntu-20.04
+      command: |
+        bazel run @vaticle_dependencies//factory/analysis:dependency-analysis
+    test-markdown-link-health:
+      image: vaticle-ubuntu-20.04
+      command: |
+        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
+  correctness:
+    build:
+      image: vaticle-ubuntu-20.04
+      command: |
+        bazel build //...
+        bazel run @vaticle_dependencies//tool/checkstyle:test-coverage
+        bazel test $(bazel query 'kind(checkstyle_test, //...)') --test_output=streamed
+    build-dependency:
+      image: vaticle-ubuntu-20.04
+      command: |
+        dependencies/maven/update.sh
+        git diff --exit-code dependencies/maven/artifacts.snapshot
+        bazel run @vaticle_dependencies//tool/unuseddeps:unused-deps -- list
+    test-typedb-server:
+      image: vaticle-ubuntu-20.04
+      type: background
+      timeout: "10m"
+      command: |
+        bazel run @vaticle_dependencies//tool/util:create-systemd-service -- typedb "\/home\/grabl\/$GRABL_REPO\/dist\/typedb-all-linux\/typedb server"
+        bazel run //test:typedb-extractor-linux -- dist/typedb-all-linux
+        cd ./dist/typedb-all-linux/
+        sudo systemctl daemon-reload
+        sudo systemctl start typedb
+        export GRABL_EXPORT_TEST_COMPARISON_TYPEDB_URI="${HOSTNAME}:1729"
+      monitor: |
+        sleep 10s
+        tail -f -n +1 /home/grabl/$GRABL_REPO/dist/typedb-all-linux/server/logs/typedb.log
+    test:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      dependencies: [test-typedb-server]
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
+    test-end-to-end-typedb-server:
+      image: vaticle-ubuntu-20.04
+      type: background
+      timeout: "30m"
+      command: |
+        bazel run @vaticle_dependencies//tool/util:create-systemd-service -- typedb "\/home\/grabl\/$GRABL_REPO\/dist\/typedb-all-linux\/typedb server"
+        bazel run //test:typedb-extractor-linux -- dist/typedb-all-linux
+        cd ./dist/typedb-all-linux/
+        sudo systemctl daemon-reload
+        sudo systemctl start typedb
+        export GRABL_EXPORT_TEST_COMPARISON_TYPEDB_URI="${HOSTNAME}:1729"
+      monitor: |
+        sleep 10s
+        tail -f -n +1 /home/grabl/$GRABL_REPO/dist/typedb-all-linux/server/logs/typedb.log
+    test-end-to-end:
+      image: vaticle-ubuntu-20.04
+      timeout: "30m"
+      dependencies: [test-end-to-end-typedb-server]
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/kgcn_tensorflow/tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
+    deploy-pip-snapshot:
+      image: vaticle-ubuntu-20.04
+      dependencies: [build, build-dependency, test, test-end-to-end]
+      command: |
+        export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
+        export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
+        bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
+    test-deployment-pip:
+      image: vaticle-ubuntu-20.04
+      dependencies: [deploy-pip-snapshot]
+      filter:
+        owner: vaticle
+        branch: master
+      type: foreground
+      command: |
+        pyenv global 3.6.10
+        pip3 install -U pip
+        sudo unlink /usr/bin/python3
+        sudo ln -s $(which python3) /usr/bin/python3
+        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+        bazel run //tests:typedb-extractor -- typedb-all-linux
+        ./typedb-all-linux/typedb server &
+        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
+        ./dist/typedb-all-linux/typedb console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
+        cd kglib/kgcn_tensorflow/tests/deployment/ && python -m unittest kgcn.diagnosis && export TEST_SUCCESS=0 ||
+        export TEST_SUCCESS=1
+        kill $(jps | awk '/TypeDBServer/ {print $1}')
+        exit $TEST_SUCCESS
+release:
+  filter:
+    owner: vaticle
+    branch: master
+  validation:
+    validate-dependencies:
+      image: vaticle-ubuntu-20.04
+      command: bazel test //:release-validate-deps --test_output=streamed
+  deployment:
+    deploy-github:
+      image: vaticle-ubuntu-20.04
+      command: |
+        pyenv install -s 3.6.10
+        pyenv global 3.6.10 system
+        pip3 install -U pip
+        pip install certifi
+        export ARTIFACT_USERNAME=$REPO_VATICLE_USERNAME
+        export ARTIFACT_PASSWORD=$REPO_VATICLE_PASSWORD
+        bazel run @vaticle_dependencies//distribution/artifact:create-netrc
+        export RELEASE_NOTES_TOKEN=$REPO_GITHUB_TOKEN
+        bazel run @vaticle_dependencies//tool/release:create-notes -- kglib $(cat VERSION) ./RELEASE_TEMPLATE.md
+        export DEPLOY_GITHUB_TOKEN=$REPO_GITHUB_TOKEN
+        bazel run --define version=$(cat VERSION) //:deploy-github -- $GRABL_COMMIT
+    deploy-pip-release:
+      image: vaticle-ubuntu-20.04
+      command: |
+        pyenv install -s 3.6.10
+        pyenv global 3.6.10 system
+        pip3 install -U pip
+        export ARTIFACT_USERNAME=$REPO_VATICLE_USERNAME
+        export ARTIFACT_PASSWORD=$REPO_VATICLE_PASSWORD
+        bazel run @vaticle_dependencies//distribution/artifact:create-netrc
+        export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
+        export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
+        bazel run --define version=$(cat VERSION) //:deploy-pip -- release
+      dependencies: [deploy-github]
