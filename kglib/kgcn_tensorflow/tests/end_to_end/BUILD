@@ -1,4 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_test")
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_test(
     name = "diagnosis",
@@ -18,4 +19,10 @@ py_test(
         "$(locations //kglib/utils/grakn/synthetic/examples:graql-schema)",
         "$(location @vaticle_typedb_artifact_linux//file)",
     ],
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    include = glob(["*"]),
+    license_type = "apache",
 )

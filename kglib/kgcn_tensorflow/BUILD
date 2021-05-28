@@ -1,5 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_library")
-
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
     name = "kgcn",
@@ -11,4 +11,10 @@ py_library(
         '//kglib/kgcn_tensorflow/plot',
     ],
     visibility=['//visibility:public']
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    include = glob(["*"]),
+    license_type = "apache",
 )
