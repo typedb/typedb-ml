@@ -39,6 +39,7 @@ py_library(
         vaticle_kglib_requirement('contextlib2'),
         vaticle_kglib_requirement('wrapt'),
         "//kglib/utils/graph",
+        "//kglib/kgcn_data_loader",
     ],
     visibility=['//visibility:public']
 )
