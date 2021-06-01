@@ -22,9 +22,11 @@
 import unittest
 from unittest.mock import MagicMock
 
+from typedb.api.query.query_manager import QueryManager
 from typedb.client import *
 import networkx as nx
 import numpy as np
+from typedb.query.query_manager import _QueryManager
 
 from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import write_predictions_to_typedb, obfuscate_labels
 from kglib.utils.typedb.object.thing import Thing
@@ -49,21 +51,21 @@ class TestWritePredictionsToTypeDB(unittest.TestCase):
         tx = MagicMock(TypeDBTransaction)
 
         tx.commit = MagicMock()
-        tx.query = MagicMock()
+        tx.query.return_value = query = MagicMock(_QueryManager)
 
         write_predictions_to_typedb(graphs, tx)
 
-        expected_query = (f'match'
-                          f'$p id V123;'
-                          f'$d id V1235;'
+        expected_query = (f'match '
+                          f'$p iid V123;'
+                          f'$d iid V1235;'
                           f'$kgcn isa kgcn;'
-                          f'insert'
+                          f'insert '
                           f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
                           f'has probability-exists 0.993,'
                           f'has probability-non-exists 0.007,'
                           f'has probability-preexists 0.000;')
 
-        tx.query.assert_called_with(expected_query)
+        query.insert.assert_called_with(expected_query)
 
         tx.commit.assert_called()
 
@@ -84,7 +86,8 @@ class TestWritePredictionsToTypeDB(unittest.TestCase):
         tx = MagicMock(TypeDBTransaction)
 
         tx.commit = MagicMock()
-        tx.query = MagicMock()
+        tx.query = MagicMock(QueryManager)
+        # tx.query.insert = MagicMock()
 
         write_predictions_to_typedb(graphs, tx)
 
@@ -119,7 +122,6 @@ class TestObfuscateLabels(GraphTestCase):
         expected_graph.add_edge(2, 1, type='diagnosed-disease')
 
         self.assertGraphsEqual(graph, expected_graph)
-
 
 
 if __name__ == "__main__":
