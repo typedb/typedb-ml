@@ -67,7 +67,7 @@ build:
       command: |
         pyenv install -s 3.6.3
         pyenv global 3.6.3 system
-        bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
+        bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-end-to-end-typedb-server:
       image: vaticle-ubuntu-20.04
       type: background
@@ -89,7 +89,7 @@ build:
       command: |
         pyenv install -s 3.6.3
         pyenv global 3.6.3 system
-        bazel test //kglib/kgcn_tensorflow/tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
+        bazel test //kglib/kgcn_tensorflow/tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
       dependencies: [build, test, test-end-to-end]
