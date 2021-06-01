@@ -23,6 +23,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import subprocess
 import subprocess as sp
 import tarfile
 import tempfile
@@ -59,13 +60,15 @@ class TypeDBServer(object):
     def start(self):
         if not self.__unpacked_dir:
             self._unpack()
-        sp.check_call([
-            'typedb', 'server'
-        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
+        subprocess.Popen(["typedb", "server"],
+                         cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
+        # sp.check_call([
+        #     'typedb', 'server', '&'
+        # ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
 
     def stop(self):
         sp.check_call([
-            'typedb', 'server', 'stop'
+            "kill", "$(jps | awk '/GraknServer/ {print $1}')"
         ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))  # TODO: Needs updating
         shutil.rmtree(self.__unpacked_dir)
 

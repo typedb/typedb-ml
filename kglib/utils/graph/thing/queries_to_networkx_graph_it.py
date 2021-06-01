@@ -40,7 +40,13 @@ def mock_sampler(input_iter):
 
 
 class MockTransaction:
-    def query(self, query, infer=True):
+
+    def query(self):
+        return MockQueryManager()
+
+
+class MockQueryManager:
+    def match(self, query):
 
         if query == 'match $x id V123;':
             return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
@@ -130,9 +136,13 @@ class ITBuildGraphFromQueries(GraphTestCase):
         g1.add_node('x')
         query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1)]
 
-        class MockTransactionEmpty:
-            def query(self, query, infer=True):
+        class QueryManagerEmpty:
+            def match(self, query):
                 return []
+
+        class MockTransactionEmpty:
+            def query(self):
+                return QueryManagerEmpty()
 
         mock_tx = MockTransactionEmpty()
 

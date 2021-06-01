@@ -27,12 +27,20 @@ class MockConcept:
 class MockType(MockConcept):
     def __init__(self, id, label, base_type):
         super().__init__(id)
-        self._label = label
+        self._label = Label(label)
         assert base_type in {'ENTITY', 'RELATION', 'ATTRIBUTE'}
         self.base_type = base_type
 
     def get_label(self):
         return self._label
+
+
+class Label:
+    def __init__(self, name):
+        self._name = name
+
+    def name(self):
+        return self._name
 
 
 class ValueType:
@@ -46,7 +54,7 @@ class MockAttributeType(MockType):
         assert value_type in {'STRING', 'LONG', 'DOUBLE', 'DATETIME', 'BOOLEAN'}
         self._value_type = ValueType(value_type)
 
-    def value_type(self):
+    def get_value_type(self):
         return self._value_type
 
 

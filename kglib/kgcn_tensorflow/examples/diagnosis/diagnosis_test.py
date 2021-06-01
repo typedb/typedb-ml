@@ -87,7 +87,6 @@ class TestWritePredictionsToTypeDB(unittest.TestCase):
 
         tx.commit = MagicMock()
         tx.query = MagicMock(QueryManager)
-        # tx.query.insert = MagicMock()
 
         write_predictions_to_typedb(graphs, tx)
 
