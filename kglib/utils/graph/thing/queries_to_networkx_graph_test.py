@@ -24,12 +24,10 @@ import unittest
 import networkx as nx
 from typedb.api.concept.type.attribute_type import AttributeType
 
-from kglib.utils.typedb.object.thing import Thing
-from kglib.utils.typedb.test.mock.answer import MockConceptMap
-from kglib.utils.typedb.test.mock.concept import MockType, MockThing
-from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map, combine_graphs_single_pass, \
-    build_graph_from_queries
 from kglib.utils.graph.test.case import GraphTestCase
+from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map, \
+    combine_graphs_single_pass, build_graph_from_queries
+from kglib.utils.typedb.object.thing import Thing
 from kglib.utils.typedb.test.mock.answer import MockConceptMap
 from kglib.utils.typedb.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 

@@ -108,6 +108,10 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
         self.assertGraphsEqual(expected_combined_graph, combined_graph)
 
 
+def mock_sampler(input_iter):
+    return input_iter
+
+
 if __name__ == "__main__":
 
     with TypeDBServer(sys.argv.pop()) as gs:
