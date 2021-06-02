@@ -19,9 +19,6 @@
 # under the License.
 #
 
-#load("@rules_python//python:defs.bzl", "py_test", "py_library")
-#load("@vaticle_kglib_pip//:requirements.bzl",
-#       vaticle_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
@@ -33,27 +30,28 @@ py_library(
     visibility=['//visibility:public']
 )
 
-#
-#py_test(
-#    name = "encode_test",
-#    srcs = [
-#        "encode_test.py"
-#    ],
-#    deps = [
-#        "pipeline"
-#    ]
-#)
-#
-#py_test(
-#    name = "utils_test",
-#    srcs = [
-#        "utils_test.py"
-#    ],
-#    deps = [
-#        "pipeline",
-#        "//kglib/utils/graph/test"
-#    ]
-#)
+py_test(
+    name = "standard_encode_test",
+    srcs = [
+        "encoding/standard_encode_test.py"
+    ],
+    deps = [
+        "kgcn_data_loader",
+        "//kglib/utils"
+    ]
+)
+
+py_test(
+    name = "utils_test",
+    srcs = [
+        "utils_test.py"
+    ],
+    deps = [
+        "kgcn_data_loader",
+        "//kglib/utils/graph/test",
+        "//kglib/utils/typedb"
+    ]
+)
 
 checkstyle_test(
     name = "checkstyle",
