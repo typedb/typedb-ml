@@ -19,20 +19,24 @@
 #  under the License.
 #
 
-from typedb.api.concept.type.attribute_type import AttributeType, RemoteAttributeType, BooleanAttributeType, \
-    RemoteBooleanAttributeType, LongAttributeType, RemoteLongAttributeType, DoubleAttributeType, \
-    RemoteDoubleAttributeType, StringAttributeType, RemoteStringAttributeType, DateTimeAttributeType, \
-    RemoteDateTimeAttributeType
+from typedb.api.concept.type.attribute_type import AttributeType
 
 from kglib.utils.typedb.object.comparable import PropertyComparable
 
-VALUE_TYPES = (AttributeType, RemoteAttributeType, BooleanAttributeType, RemoteBooleanAttributeType, LongAttributeType,
-               RemoteLongAttributeType, DoubleAttributeType, RemoteDoubleAttributeType, StringAttributeType,
-               RemoteStringAttributeType, DateTimeAttributeType, RemoteDateTimeAttributeType)
-
 
 class Thing(PropertyComparable):
+
+    VALUE_TYPES = (
+        AttributeType.ValueType.OBJECT,
+        AttributeType.ValueType.STRING,
+        AttributeType.ValueType.LONG,
+        AttributeType.ValueType.DOUBLE,
+        AttributeType.ValueType.DATETIME,
+        AttributeType.ValueType.BOOLEAN
+    )
+
     def __init__(self, id, type_label, base_type_label, value_type=None, value=None):
+        super().__init__()
         self.id = id
         self.type_label = type_label
         self.base_type_label = base_type_label  # TODO rename to base_type in line with Client Python
@@ -73,7 +77,7 @@ def build_thing(typedb_thing):
 
     if base_type_label == 'attribute':
         value_type = typedb_thing.get_type().get_value_type()
-        assert value_type in VALUE_TYPES
+        assert value_type in Thing.VALUE_TYPES
         value = typedb_thing.get_value()
 
         return Thing(id, type_label, base_type_label, value_type, value)

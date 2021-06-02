@@ -18,6 +18,8 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+from typedb.api.concept.type.attribute_type import AttributeType
+
 
 class MockConcept:
     def __init__(self, id):
@@ -51,8 +53,13 @@ class ValueType:
 class MockAttributeType(MockType):
     def __init__(self, id, label, base_type, value_type):
         super().__init__(id, label, base_type)
-        assert value_type in {'STRING', 'LONG', 'DOUBLE', 'DATETIME', 'BOOLEAN'}
-        self._value_type = ValueType(value_type)
+        assert value_type in {AttributeType.ValueType.OBJECT,
+                              AttributeType.ValueType.STRING,
+                              AttributeType.ValueType.LONG,
+                              AttributeType.ValueType.DOUBLE,
+                              AttributeType.ValueType.DATETIME,
+                              AttributeType.ValueType.BOOLEAN}
+        self._value_type = value_type
 
     def get_value_type(self):
         return self._value_type
@@ -91,5 +98,5 @@ class MockAttribute(MockThing):
         self._value = value
         assert isinstance(type, MockAttributeType)
 
-    def value(self):
+    def get_value(self):
         return self._value

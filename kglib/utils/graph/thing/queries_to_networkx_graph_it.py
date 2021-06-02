@@ -23,48 +23,21 @@ import sys
 import unittest
 
 import networkx as nx
+from typedb.api.concept.type.attribute_type import AttributeType
 from typedb.client import *
 
+from kglib.utils.graph.test.case import GraphTestCase
+from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 from kglib.utils.typedb.object.thing import Thing, build_thing
 from kglib.utils.typedb.test.base import TypeDBServer
 from kglib.utils.typedb.test.mock.answer import MockConceptMap
 from kglib.utils.typedb.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
-from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
-from kglib.utils.graph.test.case import GraphTestCase
 
 TEST_URI = "localhost:1729"
 
 
 def mock_sampler(input_iter):
     return input_iter
-
-
-class MockTransaction:
-
-    def query(self):
-        return MockQueryManager()
-
-
-class MockQueryManager:
-    def match(self, query):
-
-        if query == 'match $x id V123;':
-            return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
-        elif query == 'match $x id V123, has name $n;':
-            return [
-                MockConceptMap({
-                    'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
-                    'n': MockAttribute('V987', 'Bob', MockAttributeType('V555', 'name', 'ATTRIBUTE', 'STRING'))
-                })]
-        elif query == 'match $x id V123; $r(child: $x, parent: $y);':
-            return [
-                MockConceptMap({
-                    'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
-                    'y': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
-                    'r': MockThing('V567', MockType('V9876', 'parentship', 'RELATION'))
-                })]
-        else:
-            raise NotImplementedError
 
 
 class ITBuildGraphFromQueries(GraphTestCase):
@@ -92,16 +65,43 @@ class ITBuildGraphFromQueries(GraphTestCase):
                                                # ('match $x sub $y;', g5),
                                                ]
 
+        class MockTransaction:
+
+            def query(self):
+                return MockQueryManager()
+
+        class MockQueryManager:
+            def match(self, query):
+
+                if query == 'match $x id V123;':
+                    return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
+                elif query == 'match $x id V123, has name $n;':
+                    return [
+                        MockConceptMap({
+                            'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
+                            'n': MockAttribute('V987', 'Bob', MockAttributeType('V555', 'name', 'ATTRIBUTE',
+                                                                                AttributeType.ValueType.STRING))
+                        })]
+                elif query == 'match $x id V123; $r(child: $x, parent: $y);':
+                    return [
+                        MockConceptMap({
+                            'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
+                            'y': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
+                            'r': MockThing('V567', MockType('V9876', 'parentship', 'RELATION'))
+                        })]
+                else:
+                    raise NotImplementedError
+
         mock_tx = MockTransaction()
 
         combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
 
         person_exp = Thing('V123', 'person', 'entity')
         parentship_exp = Thing('V567', 'parentship', 'relation')
-        name_exp = Thing('V987', 'name', 'attribute', value_type='string', value='Bob')
+        name_exp = Thing('V987', 'name', 'attribute', value_type=AttributeType.ValueType.STRING, value='Bob')
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name', value_type='string', value='Bob')
+        expected_combined_graph.add_node(name_exp, type='name', value_type=AttributeType.ValueType.STRING, value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')
@@ -117,14 +117,18 @@ class ITBuildGraphFromQueries(GraphTestCase):
         query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1),
                                                ('match $y id V123;', mock_sampler, g2)]
 
-        class MockTransaction2:
-            def query(self, query, infer=True):
+        class MockTransaction:
+            def query(self):
+                return MockQueryManager()
+
+        class MockQueryManager:
+            def match(self, query):
                 if query == 'match $x id V123;':
                     return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
                 elif query == 'match $y id V123;':
                     return []
 
-        mock_tx = MockTransaction2()
+        mock_tx = MockTransaction()
 
         with self.assertWarns(UserWarning) as context:
             build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
