@@ -28,6 +28,7 @@ import subprocess as sp
 import tarfile
 import tempfile
 import zipfile
+from time import sleep
 
 
 class ZipFile(zipfile.ZipFile):
@@ -50,6 +51,7 @@ class TypeDBServer(object):
         self.__distribution_location = distribution_location
         self.__distribution_root_dir = None
         self.__unpacked_dir = None
+        self.__pid = None
 
     def __enter__(self):
         return self.start()
@@ -60,17 +62,17 @@ class TypeDBServer(object):
     def start(self):
         if not self.__unpacked_dir:
             self._unpack()
-        subprocess.Popen(["typedb", "server"],
-                         cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
-        # sp.check_call([
-        #     'typedb', 'server', '&'
-        # ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
+        popen = subprocess.Popen(["typedb", "server"],
+                                 cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
+        sleep(5)
+        self.__pid = popen.pid
 
     def stop(self):
         sp.check_call([
-            "kill", "$(jps | awk '/GraknServer/ {print $1}')"
-        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))  # TODO: Needs updating
+            "kill", f"{self.__pid}"
+        ], cwd=os.path.join(self.__unpacked_dir, self.__distribution_root_dir))
         shutil.rmtree(self.__unpacked_dir)
+        self.__pid = None
 
     def _unpack(self):
         self.__unpacked_dir = tempfile.mkdtemp(prefix='typedb')
@@ -84,7 +86,7 @@ class TypeDBServer(object):
                  f'source {graql_file_path}' \
                  f'commit'
         sp.check_call([
-            'typedb', 'console', f'--script={script}',  # TODO: Needs updating
+            'typedb', 'console', f'--script={script}',
             os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
         ], cwd=self.typedb_binary_location)
 

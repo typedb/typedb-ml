@@ -57,9 +57,9 @@ class ITBuildGraphFromQueries(GraphTestCase):
         g3.add_edge('r', 'x', type='child')
         g3.add_edge('r', 'y', type='parent')
 
-        query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1),
-                                               ('match $x id V123, has name $n;', mock_sampler, g2),
-                                               ('match $x id V123; $r(child: $x, parent: $y);', mock_sampler, g3),
+        query_sampler_variable_graph_tuples = [('match $x iid V123;', mock_sampler, g1),
+                                               ('match $x iid V123, has name $n;', mock_sampler, g2),
+                                               ('match $x iid V123; $r(child: $x, parent: $y);', mock_sampler, g3),
                                                # TODO Add functionality for loading schema at a later date
                                                # ('match $x sub person; $x sub $type;', g4),
                                                # ('match $x sub $y;', g5),
@@ -73,16 +73,16 @@ class ITBuildGraphFromQueries(GraphTestCase):
         class MockQueryManager:
             def match(self, query):
 
-                if query == 'match $x id V123;':
+                if query == 'match $x iid V123;':
                     return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
-                elif query == 'match $x id V123, has name $n;':
+                elif query == 'match $x iid V123, has name $n;':
                     return [
                         MockConceptMap({
                             'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
                             'n': MockAttribute('V987', 'Bob', MockAttributeType('V555', 'name', 'ATTRIBUTE',
                                                                                 AttributeType.ValueType.STRING))
                         })]
-                elif query == 'match $x id V123; $r(child: $x, parent: $y);':
+                elif query == 'match $x iid V123; $r(child: $x, parent: $y);':
                     return [
                         MockConceptMap({
                             'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY')),
@@ -114,8 +114,8 @@ class ITBuildGraphFromQueries(GraphTestCase):
         g1.add_node('x')
         g2 = nx.MultiDiGraph()
         g2.add_node('y')
-        query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1),
-                                               ('match $y id V123;', mock_sampler, g2)]
+        query_sampler_variable_graph_tuples = [('match $x iid V123;', mock_sampler, g1),
+                                               ('match $y iid V123;', mock_sampler, g2)]
 
         class MockTransaction:
             def query(self):
@@ -123,9 +123,9 @@ class ITBuildGraphFromQueries(GraphTestCase):
 
         class MockQueryManager:
             def match(self, query):
-                if query == 'match $x id V123;':
+                if query == 'match $x iid V123;':
                     return [MockConceptMap({'x': MockThing('V123', MockType('V4123', 'person', 'ENTITY'))})]
-                elif query == 'match $y id V123;':
+                elif query == 'match $y iid V123;':
                     return []
 
         mock_tx = MockTransaction()
@@ -133,12 +133,12 @@ class ITBuildGraphFromQueries(GraphTestCase):
         with self.assertWarns(UserWarning) as context:
             build_graph_from_queries(query_sampler_variable_graph_tuples, mock_tx)
 
-        self.assertEqual(f'There were no results for query: \n\"match $y id V123;\"\nand so nothing will be added to the graph for this query', str(context.warning))
+        self.assertEqual(f'There were no results for query: \n\"match $y iid V123;\"\nand so nothing will be added to the graph for this query', str(context.warning))
 
     def test_exception_is_raised_when_there_are_no_results_for_any_query(self):
         g1 = nx.MultiDiGraph()
         g1.add_node('x')
-        query_sampler_variable_graph_tuples = [('match $x id V123;', mock_sampler, g1)]
+        query_sampler_variable_graph_tuples = [('match $x iid V123;', mock_sampler, g1)]
 
         class QueryManagerEmpty:
             def match(self, query):
