@@ -21,6 +21,11 @@
 
 import sys
 import unittest
+import os
+
+from typedb.api.session import SessionType
+from typedb.api.transaction import TransactionType
+from typedb.client import TypeDB
 
 from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
 from kglib.utils.typedb.test.base import TypeDBServer
@@ -35,7 +40,7 @@ class TestDiagnosisExample(unittest.TestCase):
         self._gs.start()
         schema_location = sys.argv.pop()
         print("Schema location: " + str(schema_location))
-        self._gs.load_typeql_file(TEST_KEYSPACE, schema_location)
+        load_typeql_file(TEST_KEYSPACE, schema_location)
 
     def tearDown(self):
         self._gs.stop()
@@ -46,6 +51,22 @@ class TestDiagnosisExample(unittest.TestCase):
         self.assertLessEqual(solveds_tr[-1], 0.99)
         self.assertGreaterEqual(solveds_ge[-1], 0.7)
         self.assertLessEqual(solveds_ge[-1], 0.99)
+
+
+def load_typeql_file(database, graql_file_path):
+
+    with TypeDB.core_client("localhost:1729") as client:
+
+        if not client.databases().contains(database):
+            client.databases().create(database)
+
+        with client.session(database, SessionType.SCHEMA) as session:
+            with session.transaction(TransactionType.WRITE) as tx:
+                schema_path = os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
+                with open(schema_path, "r") as schema_file:
+                    schema = schema_file.read()
+                    tx.query().define(schema)
+                tx.commit()
 
 
 if __name__ == "__main__":
