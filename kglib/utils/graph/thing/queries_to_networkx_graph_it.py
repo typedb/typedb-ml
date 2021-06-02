@@ -161,7 +161,7 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
 
     DATABASE = "it_build_graph_from_queries"
     SCHEMA = ("define "
-              "person sub entity, has name, plays parent, plays child;"
+              "person sub entity, owns name, plays parentship:parent, plays parentship:child;"
               "name sub attribute, value string;"
               "parentship sub relation, relates parent, relates child;")
     DATA = ('insert '
@@ -172,6 +172,8 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
         self._database = type(self).__name__.lower()  # Use the name of this test class as the database name
         print(self._database)
         self._client = TypeDB.core_client(address="localhost:1729")
+        if not self._client.databases().contains(self._database):
+            self._client.databases().create(self._database)
 
     def tearDown(self):
         self._client.databases().get(self._database).delete()
@@ -202,13 +204,17 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
                                                # ('match $x sub $y;', g5),
                                                ]
 
+        with self._client.session(self._database, SessionType.SCHEMA) as session:
+
+            with session.transaction(TransactionType.WRITE) as tx:
+                tx.query().define(ITBuildGraphFromQueriesWithRealTypeDB.SCHEMA)
+                tx.commit()
+
         with self._client.session(self._database, SessionType.DATA) as session:
 
             with session.transaction(TransactionType.WRITE) as tx:
-                tx.query(ITBuildGraphFromQueriesWithRealTypeDB.SCHEMA)
-                tx.query(ITBuildGraphFromQueriesWithRealTypeDB.DATA)
+                tx.query().insert(ITBuildGraphFromQueriesWithRealTypeDB.DATA)
                 tx.commit()
-
             with session.transaction(TransactionType.READ) as tx:
                 combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
 
@@ -218,7 +224,7 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
 
         expected_combined_graph = nx.MultiDiGraph()
         expected_combined_graph.add_node(person_exp, type='person')
-        expected_combined_graph.add_node(name_exp, type='name', value_type='string', value='Bob')
+        expected_combined_graph.add_node(name_exp, type='name', value_type=AttributeType.ValueType.STRING, value='Bob')
         expected_combined_graph.add_node(parentship_exp, type='parentship')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='child')
         expected_combined_graph.add_edge(parentship_exp, person_exp, type='parent')

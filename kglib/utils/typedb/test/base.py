@@ -79,10 +79,15 @@ class TypeDBServer(object):
             self.__distribution_root_dir = os.path.commonpath(tf.getnames()[1:])
 
     def load_typeql_file(self, database, graql_file_path):
+        script = f'database create {database}\n' \
+                 f'transaction {database} schema write' \
+                 f'source {graql_file_path}' \
+                 f'commit'
         sp.check_call([
-            'typedb', 'console', '-k', database, '-f',  # TODO: Needs updating
+            'typedb', 'console', f'--script={script}',  # TODO: Needs updating
             os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
         ], cwd=self.typedb_binary_location)
+
 
     @property
     def typedb_binary_location(self):
