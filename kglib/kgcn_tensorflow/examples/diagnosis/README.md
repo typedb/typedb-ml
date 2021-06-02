@@ -12,13 +12,11 @@ Once you have [installed KGLIB via pip](../../#getting-started---running-the-mac
 
 1. Make sure a TypeDB server is running
 
-2. Load [the schema](../../../utils/typedb/synthetic/examples/diagnosis/schema.gql) for the example into TypeDB. The template for the command is `./typedb console -k diagnosis -f path/to/schema.gql` for a locally running instance of TypeDB. Add `-r <address>:<port>` to point to a remote/TypeDB Cluster instance
+2. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
 
-3. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
+   The database, schema and seed data will be created automatically. Data is generated synthetically. The whole example should complete in under 10 minutes
 
-   The whole example should complete in under 10 minutes
-
-4. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and examples of the predictions made.
+3. You should observe console output to indicate that the pipeline is running and that the model is learning. Afterwards two plots should be created to visualise the training process and examples of the predictions made.
 
 ## Diagnosis Pipeline
 

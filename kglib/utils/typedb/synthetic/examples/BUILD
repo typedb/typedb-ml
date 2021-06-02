@@ -27,7 +27,8 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 filegroup(
     name = "graql-schema",
     srcs = [
-        "diagnosis/schema.gql",
+        "diagnosis/schema.tql",
+        "diagnosis/seed_data.tql",
     ],
     visibility = ["//visibility:public"],
 )

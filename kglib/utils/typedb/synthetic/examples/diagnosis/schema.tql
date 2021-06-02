@@ -94,14 +94,14 @@ probability-preexists sub attribute,
 kgcn sub entity,
     plays diagnosis:diagnoser;
 
-#rule where-no-diagnosis-add-candidate-diagnosis:
-#    when {
-#        $p isa person;
-#        $d isa disease;
-#        not{ (patient: $p, diagnosed-disease: $d) isa diagnosis; };
-#    } then {
-#        (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
-#    };
+rule where-no-diagnosis-add-candidate-diagnosis:
+    when {
+        $p isa person;
+        $d isa disease;
+        not{ (patient: $p, diagnosed-disease: $d) isa diagnosis; };
+    } then {
+        (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
+    };
 
 causality sub relation,
     relates cause,

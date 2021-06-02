@@ -19,9 +19,36 @@
 #  under the License.
 #
 
-from typedb.client import *
-from kglib.utils.typedb.type.type import get_thing_types, get_role_types
+import os
 from typing import List
+
+from typedb.client import *
+
+from kglib.utils.typedb.type.type import get_thing_types, get_role_types
+
+
+def load_typeql_schema_file(client, database, graql_file_path):
+    """Load a schema from a file"""
+    _load_typeql_file(client, database, graql_file_path, SessionType.SCHEMA)
+
+
+def load_typeql_data_file(client, database, graql_file_path):
+    """Load data from a file"""
+    _load_typeql_file(client, database, graql_file_path, SessionType.DATA)
+
+
+def _load_typeql_file(client, database, graql_file_path, session_type):
+
+    if not client.databases().contains(database):
+        client.databases().create(database)
+
+    with client.session(database, session_type) as session:
+        with session.transaction(TransactionType.WRITE) as tx:
+            schema_path = os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE") + "/" + graql_file_path
+            with open(schema_path, "r") as schema_file:
+                schema = schema_file.read()
+                tx.query().define(schema)
+            tx.commit()
 
 
 def duplicate_edges_in_reverse(graph):

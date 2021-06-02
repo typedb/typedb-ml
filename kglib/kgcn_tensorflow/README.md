@@ -110,7 +110,7 @@ Due to TypeDB's enforced schema, `T` Relations can logically only occur between 
 
 ### Adding Negative Relations Dynamically
 
-Naturally, we don't wish to pollute our Knowledge Graph by inserting these `T` Relation candidates. Instead, we can make use of TypeDB's reasoning engine here by defining a logical [Rule](http://docs.vaticle.com/docs/schema/rules) to dynamically create these candidates (see the rule in the [example schema](../utils/typedb/synthetic/examples/diagnosis/schema.gql)). After training our learner we can simply `undefine` the rule to return to an unpolluted state.
+Naturally, we don't wish to pollute our Knowledge Graph by inserting these `T` Relation candidates. Instead, we can make use of TypeDB's reasoning engine here by defining a logical [Rule](http://docs.vaticle.com/docs/schema/rules) to dynamically create these candidates (see the rule in the [example schema](../utils/typedb/synthetic/examples/diagnosis/schema.tql)). After training our learner we can simply `undefine` the rule to return to an unpolluted state.
 
 ## Architectural Components
 

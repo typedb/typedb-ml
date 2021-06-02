@@ -24,6 +24,7 @@ import time
 
 from typedb.client import *
 
+from kglib.kgcn_data_loader.utils import load_typeql_schema_file
 from kglib.kgcn_tensorflow.pipeline.pipeline import pipeline
 
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_graphs
@@ -67,7 +68,10 @@ def diagnosis_example(num_graphs=100,
                       num_processing_steps_tr=3,
                       num_processing_steps_ge=3,
                       num_training_iterations=50,
-                      database=DATABASE, address=ADDRESS):
+                      database=DATABASE,
+                      address=ADDRESS,
+                      schema_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
+                      seed_data_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql"):
     """
     Run the diagnosis example from start to finish, including traceably ingesting predictions back into TypeDB
 
@@ -78,6 +82,8 @@ def diagnosis_example(num_graphs=100,
         num_training_iterations: The number of training epochs
         database: The name of the database to retrieve example subgraphs from
         address: The address of the running TypeDB instance
+        schema_file_path: Path to the diagnosis schema file
+        seed_data_file_path: Path to the file containing seed data, that doesn't grow as synthetic data is added
 
     Returns:
         Final accuracies for training and for testing
@@ -85,9 +91,19 @@ def diagnosis_example(num_graphs=100,
 
     tr_ge_split = int(num_graphs*0.5)
 
-    #generate_example_graphs(num_graphs, database=database, address=address)
+    generate_example_graphs(num_graphs, database=database, address=address)
 
     client = TypeDB.core_client(address)
+
+    if client.databases().contains(database):
+        raise ValueError(
+            f"There is already a database present with the name {database}. The Diagnosis example expects a clean DB. "
+            f"Please delete the {database} database, or use another database name")
+
+    client.databases().create(database)
+
+    load_typeql_schema_file(client, database, )
+
     session = client.session(database, SessionType.DATA)
 
     print("create concept graphs")
