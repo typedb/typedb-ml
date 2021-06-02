@@ -98,7 +98,7 @@ def build_thing(typedb_thing):
 
     if base_type == 'attribute':
         value_type = typedb_thing.get_type().get_value_type()
-        assert value_type.name in Thing.VALUE_TYPES
+        assert value_type in Thing.VALUE_TYPES
         value = typedb_thing.get_value()
 
         return Thing(iid, type_label, base_type, value_type, value)
