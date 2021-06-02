@@ -50,7 +50,7 @@ def concept_dict_to_graph(concept_dict, variable_graph):
     for variable, thing in concept_dict.items():
         data = variable_graph.nodes[variable]
         data.update(type=thing.type_label)
-        if thing.base_type_label == 'attribute':
+        if thing.base_type == 'attribute':
             data.update(value_type=thing.value_type, value=thing.value)
 
         typedb_graph.add_node(thing, **data)
@@ -63,8 +63,8 @@ def concept_dict_to_graph(concept_dict, variable_graph):
         sender = node_to_var[sending_var]
         receiver = node_to_var[receiving_var]
 
-        if sender.base_type_label != 'relation' and not (
-                receiver.base_type_label == 'attribute' and data['type'] == 'has'):
+        if sender.base_type != 'relation' and not (
+                receiver.base_type == 'attribute' and data['type'] == 'has'):
             raise ValueError('An edge in the variable_graph originates from a non-relation, check the variable_graph!')
 
         if data['type'] == 'has':

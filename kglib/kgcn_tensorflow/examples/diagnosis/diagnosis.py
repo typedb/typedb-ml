@@ -322,8 +322,8 @@ def write_predictions_to_typedb(graphs, tx):
 
                     p = data['probabilities']
                     query = (f'match '
-                             f'$p iid {person.id};'
-                             f'$d iid {disease.id};'
+                             f'$p iid {person.iid};'
+                             f'$d iid {disease.iid};'
                              f'$kgcn isa kgcn;'
                              f'insert '
                              f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'

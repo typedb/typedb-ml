@@ -61,7 +61,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         variable_graph.add_edge('y', 'x', type='employee')
 
         person = Thing('V123', 'person', 'entity')
-        employment = Thing('V123', 'employment', 'relation')
+        employment = Thing('V456', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
         typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
@@ -119,7 +119,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         variable_graph.add_edge('x', 'y', type='employee')
 
         person = Thing('V123', 'person', 'entity')
-        employment = Thing('V123', 'employment', 'relation')
+        employment = Thing('V456', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
@@ -135,7 +135,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         variable_graph.add_edge('x', 'y', type='employee')
 
         name = Thing('V123', 'name', 'attribute', value_type='string', value='Bob')
-        employment = Thing('V123', 'employment', 'relation')
+        employment = Thing('V456', 'employment', 'relation')
         concept_dict = {'x': name, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
@@ -171,7 +171,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         variable_graph.add_edge('y', 'x', type='employee', input=0, solution=1)
 
         person = Thing('V123', 'person', 'entity')
-        employment = Thing('V123', 'employment', 'relation')
+        employment = Thing('V456', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
         typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)

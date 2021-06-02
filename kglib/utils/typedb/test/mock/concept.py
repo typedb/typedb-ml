@@ -22,13 +22,13 @@ from typedb.api.concept.type.attribute_type import AttributeType
 
 
 class MockConcept:
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, iid):
+        self.iid = iid
 
 
 class MockType(MockConcept):
-    def __init__(self, id, label, base_type):
-        super().__init__(id)
+    def __init__(self, iid, label, base_type):
+        super().__init__(iid)
         self._label = Label(label)
         assert base_type in {'ENTITY', 'RELATION', 'ATTRIBUTE'}
         self.base_type = base_type
@@ -51,8 +51,8 @@ class ValueType:
 
 
 class MockAttributeType(MockType):
-    def __init__(self, id, label, base_type, value_type):
-        super().__init__(id, label, base_type)
+    def __init__(self, iid, label, base_type, value_type):
+        super().__init__(iid, label, base_type)
         assert value_type in {AttributeType.ValueType.OBJECT,
                               AttributeType.ValueType.STRING,
                               AttributeType.ValueType.LONG,
@@ -66,17 +66,16 @@ class MockAttributeType(MockType):
 
 
 class MockThing(MockConcept):
-    def __init__(self, id, type):
-        super().__init__(id)
+    def __init__(self, iid, type):
+        super().__init__(iid)
         assert(isinstance(type, MockType))
         self._type = type
-        self._id = id
 
     def get_type(self):
         return self._type
 
     def get_iid(self):
-        return self._id
+        return self.iid
 
     def is_entity(self):
         return 'ENTITY' in self._type.base_type
@@ -93,8 +92,8 @@ class MockThing(MockConcept):
 
 
 class MockAttribute(MockThing):
-    def __init__(self, id, value, type):
-        super().__init__(id, type)
+    def __init__(self, iid, value, type):
+        super().__init__(iid, type)
         self._value = value
         assert isinstance(type, MockAttributeType)
 

@@ -27,7 +27,6 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 py_library(
     name = "object",
     srcs = [
-        'comparable.py',
         'thing.py',
     ],
     deps = [
