@@ -18,7 +18,8 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-from typedb.concept.type.attribute_type import AttributeType, RemoteAttributeType, BooleanAttributeType, \
+
+from typedb.api.concept.type.attribute_type import AttributeType, RemoteAttributeType, BooleanAttributeType, \
     RemoteBooleanAttributeType, LongAttributeType, RemoteLongAttributeType, DoubleAttributeType, \
     RemoteDoubleAttributeType, StringAttributeType, RemoteStringAttributeType, DateTimeAttributeType, \
     RemoteDateTimeAttributeType
