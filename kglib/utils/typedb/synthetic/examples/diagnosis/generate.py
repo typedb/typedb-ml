@@ -104,9 +104,8 @@ def get_example_queries(pmf, example_id):
     return queries
 
 
-def generate_example_graphs(num_examples, database="diagnosis", address="localhost:1729"):
+def generate_example_data(client, num_examples, database="diagnosis"):
 
-    client = TypeDB.core_client(address)
     session = client.session(database, SessionType.DATA)
 
     pmf_array = np.zeros([2, 2, 2, 2, 3, 2, 3], dtype=np.float)
@@ -150,4 +149,6 @@ def generate_example_graphs(num_examples, database="diagnosis", address="localho
 
 
 if __name__ == '__main__':
-    generate_example_graphs(100, database="diagnosis", address="localhost:1729")
+    with TypeDB.core_client("localhost:1729") as client:
+        client.databases().create("diagnosis")
+        generate_example_data(client, 100, database="diagnosis")

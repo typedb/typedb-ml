@@ -24,17 +24,13 @@ import time
 
 from typedb.client import *
 
-from kglib.kgcn_data_loader.utils import load_typeql_schema_file
+from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
 from kglib.kgcn_tensorflow.pipeline.pipeline import pipeline
-
-from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_graphs
-
-from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
-
-
+from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
+from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
@@ -91,22 +87,20 @@ def diagnosis_example(num_graphs=100,
 
     tr_ge_split = int(num_graphs*0.5)
 
-    generate_example_graphs(num_graphs, database=database, address=address)
-
     client = TypeDB.core_client(address)
-
     if client.databases().contains(database):
         raise ValueError(
             f"There is already a database present with the name {database}. The Diagnosis example expects a clean DB. "
             f"Please delete the {database} database, or use another database name")
-
     client.databases().create(database)
 
-    load_typeql_schema_file(client, database, )
+    load_typeql_schema_file(client, database, schema_file_path)
+    load_typeql_data_file(client, database, seed_data_file_path)
+    generate_example_data(client, num_graphs, database=database)
 
     session = client.session(database, SessionType.DATA)
 
-    print("create concept graphs")
+    print("Create concept graphs")
     graphs = create_concept_graphs(list(range(num_graphs)), session, infer=True)
 
     with session.transaction(TransactionType.READ) as tx:
