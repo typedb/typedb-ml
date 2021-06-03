@@ -7,9 +7,11 @@
 
 # TypeDB KGLIB (Knowledge Graph Library)
 
-**KGLIB provides tools for machine learning with [TypeDB](https://github.com/vaticle/typedb). **
+**KGLIB provides tools to enable machine learning with [TypeDB](https://github.com/vaticle/typedb).**
 
-## Pipeline
+## Machine Learning Pipeline
+
+![Flow Diagram](kglib/kgcn_tensorflow/.images/knowledge_graph_machine_learning.png)
 
 The pipeline provided helps by allowing us to extract subgraphs from TypeDB. Each subgraph is a training example, which are sent to the learner in batches. Algorithms using this approach are scalable since they do not need to hold the whole graph in memory for training.
 
@@ -26,9 +28,10 @@ This repo contains one algorithmic implementation: [*Knowledge Graph Convolution
 You are encouraged to use the tools available in KGLIB to interface TypeDB to your own algorithmic implementations, or to use/leverage prebuilt implementations available from popular libraries such as [PyTorch Geometric](https://github.com/rusty1s/pytorch_geometric) or [Graph Nets](https://github.com/deepmind/graph_nets) (TensorFlow/Sonnet). 
 
 ## Quickstart
-**Requirements**
 
-- Python >= 3.6, <= 3.7.x (TensorFlow 1.14.0 doesn't support later Python versions) .
+### Requirements
+
+- Python >= 3.6, <= 3.7.x (TensorFlow 1.14.0 doesn't support later Python versions).
 
 - KGLIB installed via pip: `pip install typedb-kglib`. 
 
@@ -36,12 +39,13 @@ You are encouraged to use the tools available in KGLIB to interface TypeDB to yo
 
 - `typedb-client-python` 2.1.0 ([PyPi](https://pypi.org/project/typedb-client/), [GitHub release](https://github.com/vaticle/typedb-client-python/releases)). This should be installed automatically when you `pip install typedb-kglib`.
 
-**Run**
+### Run the Example
+
 Take a look at [*Knowledge Graph Convolutional Networks* (KGCNs)](kglib/kgcn_tensorflow) to see a walkthrough of how to use the library.
 
-**Building from source**
+### Building from source
 
-It's expected that you will use `pip` to install, but should you need to make your own changes to the library, and import it into your project, you can build from source as follows.
+It's expected that you will use Pip to install, but should you need to make your own changes to the library, and import it into your project, you can build from source as follows.
 
 Clone KGLIB:
 
@@ -49,7 +53,7 @@ Clone KGLIB:
 git clone git@github.com:vaticle/kglib.git
 ```
 
-`cd` in to the project:
+Go into the project directory:
 
 ```
 cd kglib

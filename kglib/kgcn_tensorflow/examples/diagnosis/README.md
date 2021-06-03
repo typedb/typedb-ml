@@ -12,7 +12,7 @@ Once you have [installed KGLIB via pip](../../#getting-started---running-the-mac
 
 1. Make sure a TypeDB server is running
 
-2. Run the example: `python -m kglib.kgcn.examples.diagnosis.diagnosis`
+2. Run the example: `python -m kglib.kgcn_tensorflow.examples.diagnosis.diagnosis`
 
    The database, schema and seed data will be created automatically. Data is generated synthetically. The whole example should complete in under 10 minutes
 
