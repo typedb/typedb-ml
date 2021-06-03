@@ -46,28 +46,6 @@ build:
       image: vaticle-ubuntu-20.04
       command: |
         find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
-    test-kgcn-tensorflow-typedb-server:
-      image: vaticle-ubuntu-20.04
-      type: background
-      timeout: "10m"
-      command: |
-        bazel run @vaticle_dependencies//tool/util:create-systemd-service -- typedb "\/home\/grabl\/$GRABL_REPO\/dist\/typedb-all-linux\/typedb server"
-        bazel run //test:typedb-extractor-linux -- dist/typedb-all-linux
-        cd ./dist/typedb-all-linux/
-        sudo systemctl daemon-reload
-        sudo systemctl start typedb
-        export GRABL_EXPORT_TEST_COMPARISON_TYPEDB_URI="${HOSTNAME}:1729"
-      monitor: |
-        sleep 10s
-        tail -f -n +1 /home/grabl/$GRABL_REPO/dist/typedb-all-linux/server/logs/typedb.log
-    test-kgcn-tensorflow:
-      image: vaticle-ubuntu-20.04
-      timeout: "10m"
-      dependencies: [test-typedb-server]
-      command: |
-        pyenv install -s 3.6.3
-        pyenv global 3.6.3 system
-        bazel test //kglib/kgcn_tensorflow/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-kgcn-data-loader-typedb-server:
       image: vaticle-ubuntu-20.04
       type: background
@@ -85,11 +63,33 @@ build:
     test-kgcn-data-loader:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
-      dependencies: [test-typedb-server]
+      dependencies: [test-kgcn-data-loader-typedb-server]
       command: |
         pyenv install -s 3.6.3
         pyenv global 3.6.3 system
         bazel test //kglib/kgcn_data_loader/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-kgcn-tensorflow-typedb-server:
+      image: vaticle-ubuntu-20.04
+      type: background
+      timeout: "10m"
+      command: |
+        bazel run @vaticle_dependencies//tool/util:create-systemd-service -- typedb "\/home\/grabl\/$GRABL_REPO\/dist\/typedb-all-linux\/typedb server"
+        bazel run //test:typedb-extractor-linux -- dist/typedb-all-linux
+        cd ./dist/typedb-all-linux/
+        sudo systemctl daemon-reload
+        sudo systemctl start typedb
+        export GRABL_EXPORT_TEST_COMPARISON_TYPEDB_URI="${HOSTNAME}:1729"
+      monitor: |
+        sleep 10s
+        tail -f -n +1 /home/grabl/$GRABL_REPO/dist/typedb-all-linux/server/logs/typedb.log
+    test-kgcn-tensorflow:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      dependencies: [test-kgcn-tensorflow-typedb-server]
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/kgcn_tensorflow/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-end-to-end-typedb-server:
       image: vaticle-ubuntu-20.04
       type: background
@@ -114,7 +114,7 @@ build:
         bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test, test-end-to-end]
+      dependencies: [build, test-kgcn-data-loader, test-kgcn-tensorflow, test-end-to-end]
       command: |
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
@@ -135,8 +135,7 @@ build:
         bazel run //tests:typedb-extractor -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
-        ./dist/typedb-all-linux/typedb console -k diagnosis -f kglib/utils/typedb/synthetic/examples/diagnosis/schema
-        .gql
+        ./dist/typedb-all-linux/typedb console -k diagnosis -f kglib/utils/typedb/synthetic/examples/diagnosis/schema.gql
         cd kglib/tests/deployment/ && python -m unittest kgcn.diagnosis && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')
