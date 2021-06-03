@@ -20,6 +20,8 @@
 #
 
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
 py_library(
     name = "kgcn_data_loader",
@@ -49,7 +51,9 @@ py_test(
     deps = [
         "kgcn_data_loader",
         "//kglib/utils/graph/test",
-        "//kglib/utils/typedb"
+        "//kglib/utils/typedb",
+        vaticle_kglib_requirement('networkx'),
+        vaticle_kglib_requirement('numpy'),
     ]
 )
 
