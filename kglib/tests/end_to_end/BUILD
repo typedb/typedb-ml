@@ -48,6 +48,7 @@ py_test(
     srcs = [
         "kgcn/diagnosis_debug.py"
     ],
+    main = "kgcn/diagnosis_debug.py",
     deps = [
         "//kglib/kgcn_tensorflow/examples/diagnosis",
     ],

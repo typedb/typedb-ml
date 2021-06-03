@@ -26,7 +26,6 @@ from typedb.api.query.query_manager import QueryManager
 from typedb.client import *
 import networkx as nx
 import numpy as np
-from typedb.query.query_manager import _QueryManager
 
 from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import write_predictions_to_typedb, obfuscate_labels
 from kglib.utils.typedb.object.thing import Thing
@@ -51,7 +50,7 @@ class TestWritePredictionsToTypeDB(unittest.TestCase):
         tx = MagicMock(TypeDBTransaction)
 
         tx.commit = MagicMock()
-        tx.query.return_value = query = MagicMock(_QueryManager)
+        tx.query.return_value = query = MagicMock(QueryManager)
 
         write_predictions_to_typedb(graphs, tx)
 
