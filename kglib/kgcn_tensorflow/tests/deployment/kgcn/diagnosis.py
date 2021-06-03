@@ -27,7 +27,8 @@ from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
 class TestDiagnosisExample(unittest.TestCase):
 
     def test_example_runs_without_exception(self):
-        diagnosis_example(num_graphs=6,
+        diagnosis_example("./typedb-all-linux",
+                          num_graphs=6,
                           num_processing_steps_tr=2,
                           num_processing_steps_ge=2,
                           num_training_iterations=20)

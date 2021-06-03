@@ -145,7 +145,6 @@ def generate_example_data(client, num_examples, database="diagnosis"):
         tx.commit()
 
     session.close()
-    client.close()
 
 
 if __name__ == '__main__':

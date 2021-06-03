@@ -60,18 +60,20 @@ TYPES_AND_ROLES_TO_OBFUSCATE = {'candidate-diagnosis': 'diagnosis',
                                 'candidate-diagnosed-disease': 'diagnosed-disease'}
 
 
-def diagnosis_example(num_graphs=100,
+def diagnosis_example(typedb_binary_directory,
+                      num_graphs=100,
                       num_processing_steps_tr=3,
                       num_processing_steps_ge=3,
                       num_training_iterations=50,
                       database=DATABASE,
                       address=ADDRESS,
                       schema_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
-                      seed_data_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql"):
+                      seed_data_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
     """
     Run the diagnosis example from start to finish, including traceably ingesting predictions back into TypeDB
 
     Args:
+        typedb_binary_directory: Location of the typedb binary for the purpose of loading initial schema and data
         num_graphs: Number of graphs to use for training and testing combined
         num_processing_steps_tr: The number of message-passing steps for training
         num_processing_steps_ge: The number of message-passing steps for testing
@@ -94,8 +96,8 @@ def diagnosis_example(num_graphs=100,
             f"Please delete the {database} database, or use another database name")
     client.databases().create(database)
 
-    load_typeql_schema_file(client, database, schema_file_path)
-    load_typeql_data_file(client, database, seed_data_file_path)
+    load_typeql_schema_file(database, typedb_binary_directory, schema_file_path)
+    load_typeql_data_file(database, typedb_binary_directory, seed_data_file_path)
     generate_example_data(client, num_graphs, database=database)
 
     session = client.session(database, SessionType.DATA)
@@ -342,7 +344,3 @@ def write_predictions_to_typedb(graphs, tx):
                              f'has probability-preexists {p[0]:.3f};')
                     tx.query().insert(query)
     tx.commit()
-
-
-if __name__ == "__main__":
-    diagnosis_example()

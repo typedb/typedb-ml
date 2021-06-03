@@ -33,11 +33,11 @@ py_test(
         "//kglib/utils/typedb/test",
     ],
     data = [
-        "//kglib/utils/typedb/synthetic/examples:graql-schema",
+        "//kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files",
         "@vaticle_typedb_artifact_linux//file"
     ],
     args = [
-        "$(locations //kglib/utils/typedb/synthetic/examples:graql-schema)",
+        "$(locations //kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files)",
         "$(location @vaticle_typedb_artifact_linux//file)",
     ],
 )

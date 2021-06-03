@@ -25,24 +25,24 @@ import unittest
 from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
 from kglib.utils.typedb.test.base import TypeDBServer
 
-TEST_KEYSPACE = "diagnosis"
+TEST_DATABASE = "diagnosis"
 TEST_URI = "localhost:1729"
 
 
 class TestDiagnosisExample(unittest.TestCase):
     def setUp(self):
-        self._gs = TypeDBServer(sys.argv.pop())
-        self._gs.start()
-        self._schema_file_location = sys.argv.pop()
+        self._tdb = TypeDBServer(sys.argv.pop())
+        self._tdb.start()
         self._data_file_location = sys.argv.pop()
+        self._schema_file_location = sys.argv.pop()
 
     def tearDown(self):
-        self._gs.stop()
+        self._tdb.stop()
 
     def test_learning_is_done(self):
-        solveds_tr, solveds_ge = diagnosis_example(
-            schema_file_path=self._schema_file_location,
-            seed_data_file_path=self._data_file_location)
+        solveds_tr, solveds_ge = diagnosis_example(self._tdb.typedb_binary_location,
+                                                   schema_file_path=self._schema_file_location,
+                                                   seed_data_file_path=self._data_file_location)
         self.assertGreaterEqual(solveds_tr[-1], 0.7)
         self.assertLessEqual(solveds_tr[-1], 0.99)
         self.assertGreaterEqual(solveds_ge[-1], 0.7)

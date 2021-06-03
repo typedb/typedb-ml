@@ -25,7 +25,7 @@ load("@vaticle_kglib_pip//:requirements.bzl",
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 filegroup(
-    name = "graql-schema",
+    name = "diagnosis-example-typeql-files",
     srcs = [
         "diagnosis/schema.tql",
         "diagnosis/seed_data.tql",
