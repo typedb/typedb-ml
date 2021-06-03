@@ -27,6 +27,11 @@ This repo contains one algorithmic implementation: [*Knowledge Graph Convolution
 
 You are encouraged to use the tools available in KGLIB to interface TypeDB to your own algorithmic implementations, or to use/leverage prebuilt implementations available from popular libraries such as [PyTorch Geometric](https://github.com/rusty1s/pytorch_geometric) or [Graph Nets](https://github.com/deepmind/graph_nets) (TensorFlow/Sonnet). 
 
+## Resources
+You may find the following resources useful: 
+- [Strongly Typed Data for Machine Learning](https://www.youtube.com/watch?v=qhUyurWMiSQ) (YouTube)
+- [How Can We Complete a Knowledge Graph?](https://www.youtube.com/watch?v=nYDi1_UaFtU) (YouTube)
+
 ## Quickstart
 
 ### Requirements
