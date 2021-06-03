@@ -42,6 +42,23 @@ py_test(
     ],
 )
 
+py_test(
+    name = "diagnosis-debug",
+    size = "enormous",
+    srcs = [
+        "kgcn/diagnosis_debug.py"
+    ],
+    deps = [
+        "//kglib/kgcn_tensorflow/examples/diagnosis",
+    ],
+    data = [
+        "//kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files",
+    ],
+    args = [
+        "$(locations //kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files)",
+    ],
+)
+
 checkstyle_test(
     name = "checkstyle",
     include = glob([

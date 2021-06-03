@@ -18,23 +18,25 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+import os
 import sys
 import unittest
 
 from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
-from kglib.utils.typedb.test.base import TypeDBServer
 
 
-class TestDiagnosisExample(unittest.TestCase):
+class TestDiagnosisExampleDebug(unittest.TestCase):
+    """
+    A copy of the end-to-end test for local debugging. Requires a TypeDB server to be started in the background
+    manually. Run with:
+    bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH --test_arg=--<path/to/your/typedb/directory>
+    """
+
     def setUp(self):
-        self._tdb = TypeDBServer(sys.argv.pop())
-        self._tdb.start()
-        self._typedb_binary_location = self._tdb.typedb_binary_location
-        self._data_file_location = sys.argv.pop()
-        self._schema_file_location = sys.argv.pop()
-
-    def tearDown(self):
-        self._tdb.stop()
+        self._typedb_binary_location = sys.argv.pop()
+        base_dir = os.getenv("TEST_SRCDIR") + "/" + os.getenv("TEST_WORKSPACE")
+        self._data_file_location = base_dir + sys.argv.pop()
+        self._schema_file_location = base_dir + sys.argv.pop()
 
     def test_learning_is_done(self):
         solveds_tr, solveds_ge = diagnosis_example(self._typedb_binary_location,
