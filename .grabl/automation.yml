@@ -76,7 +76,7 @@ build:
         bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test-kgcn-data-loader, test-kgcn-tensorflow, test-end-to-end]
+      dependencies: [build, test-kgcn-data-loader, test-utils, test-kgcn-tensorflow, test-end-to-end]
       command: |
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
@@ -94,10 +94,9 @@ build:
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
-        bazel run //tests:typedb-extractor -- typedb-all-linux
+        bazel run //test:typedb-extractor -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
-        ./dist/typedb-all-linux/typedb console -k diagnosis -f kglib/utils/typedb/synthetic/examples/diagnosis/schema.gql
         cd kglib/tests/deployment/ && python -m unittest kgcn.diagnosis && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')
