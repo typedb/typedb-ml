@@ -26,8 +26,8 @@ def vaticle_typedb_artifacts():
     native_artifact_files(
         name = "vaticle_typedb_artifact",
         group_name = "vaticle_typedb",
-        artifact_name = "typedb-server-{platform}-{version}.{ext}",
+        artifact_name = "typedb-all-{platform}-{version}.{ext}",
         tag_source = deployment["artifact.release"],
         commit_source = deployment["artifact.snapshot"],
-        commit = "447615e8a612c2a071dee1f2f9061776598892f2",
+        commit = "ae550993a62510577e856714515dbe9d5721b8da",
     )
