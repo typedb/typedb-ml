@@ -41,7 +41,6 @@ def _load_typeql_file(database, typeql_file_path, typedb_binary_location, schema
     sp.check_call([
         'typedb',
         'console',
-        '--server=localhost:1729',
         f'--command=transaction {database} {schema_or_data} write',
         f'--command=source {typeql_file_path}',
         f'--command=commit'
