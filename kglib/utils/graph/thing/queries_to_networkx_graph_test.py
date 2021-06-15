@@ -26,7 +26,7 @@ from typedb.api.concept.type.attribute_type import AttributeType
 
 from kglib.utils.graph.test.case import GraphTestCase
 from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map, \
-    combine_graphs_single_pass, build_graph_from_queries
+    combine_n_graphs, build_graph_from_queries
 from kglib.utils.typedb.object.thing import Thing
 from kglib.utils.typedb.test.mock.answer import MockConceptMap
 from kglib.utils.typedb.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
@@ -196,7 +196,7 @@ class TestCombineGraphs(GraphTestCase):
         typedb_graph_b.add_node(name)
         typedb_graph_b.add_edge(person_b, name, type='has')
 
-        combined_graph = combine_graphs_single_pass([typedb_graph_a, typedb_graph_b])
+        combined_graph = combine_n_graphs([typedb_graph_a, typedb_graph_b])
 
         person_ex = Thing('V123', 'person', 'entity')
         employment_ex = Thing('V567', 'employment', 'relation')
@@ -226,7 +226,7 @@ class TestCombineGraphs(GraphTestCase):
         typedb_graph_b.add_edge(person_b, name_b, type='has', input=0, solution=1)
 
         with self.assertRaises(ValueError) as context:
-            combine_graphs_single_pass([typedb_graph_a, typedb_graph_b])
+            combine_n_graphs([typedb_graph_a, typedb_graph_b])
 
         self.assertEqual(('Found non-matching node properties for node <name, V1234: Bob> '
                           'between graphs a and b:\n'
@@ -249,7 +249,7 @@ class TestCombineGraphs(GraphTestCase):
         typedb_graph_b.add_edge(person_b, name_b, type='has', input=1, solution=0)
 
         with self.assertRaises(ValueError) as context:
-            combine_graphs_single_pass([typedb_graph_a, typedb_graph_b])
+            combine_n_graphs([typedb_graph_a, typedb_graph_b])
 
         self.assertEqual(('Found non-matching edge properties for edge (<person, V123>, <name, V1234: Bob>, 0) '
                           'between graphs a and b:\n'
