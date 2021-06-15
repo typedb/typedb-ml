@@ -21,6 +21,9 @@
 
 import warnings
 
+from functools import reduce
+import networkx as nx
+
 from kglib.utils.typedb.object.thing import build_thing
 from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
 
@@ -39,27 +42,47 @@ def concept_dict_from_concept_map(concept_map):
     return {variable: build_thing(typedb_concept) for variable, typedb_concept in concept_map.map().items()}
 
 
-def combine_graphs_single_pass(graphs_list):
+def combine_2_graphs(graph1, graph2):
     """
-        Combine N graphs into one. Do this by recognising common nodes between the two.
+    Combine two graphs into one. Do this by recognising common nodes between the two.
+    Args:
+        graph1: Graph to compare
+        graph2: Graph to compare
+    Returns:
+        Combined graph
+    """
 
-        Args:
-            graphs_list: List of graphs to combine
+    for node, data in graph1.nodes(data=True):
+        if graph2.has_node(node):
+            data2 = graph2.nodes[node]
+            if data2 != data:
+                raise ValueError((f'Found non-matching node properties for node {node} '
+                                  f'between graphs {graph1} and {graph2}:\n'
+                                  f'In graph {graph1}: {data}\n'
+                                  f'In graph {graph2}: {data2}'))
 
-        Returns:
-            Combined graph
-        """
-    combined_graph = graphs_list[0].__class__()
-    for graph in graphs_list:
-        combined_graph.graph.update(graph.graph)
-        combined_graph.add_nodes_from(graph.nodes(data=True))
+    for sender, receiver, keys, data in graph1.edges(data=True, keys=True):
+        if graph2.has_edge(sender, receiver, keys):
+            data2 = graph2.edges[sender, receiver, keys]
+            if data2 != data:
+                raise ValueError((f'Found non-matching edge properties for edge {sender, receiver, keys} '
+                                  f'between graphs {graph1} and {graph2}:\n'
+                                  f'In graph {graph1}: {data}\n'
+                                  f'In graph {graph2}: {data2}'))
 
-        if graph.is_multigraph():
-            combined_graph.add_edges_from(graph.edges(keys=True, data=True))
-        else:
-            combined_graph.add_edges_from(graph.edges(data=True))
+    return nx.compose(graph1, graph2)
 
-    return combined_graph
+
+def combine_n_graphs(graphs_list):
+    """
+    Combine N graphs into one. Do this by recognising common nodes between the two.
+    Args:
+        graphs_list: List of graphs to combine
+    Returns:
+        Combined graph
+    """
+    return reduce(lambda x, y: combine_2_graphs(x, y), graphs_list)
+
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, typedb_transaction,
@@ -99,7 +122,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, typedb_transac
                 raise ValueError(str(e) + f'Encountered processing query:\n \"{query}\"')
 
         if len(answer_concept_graphs) > 1:
-            query_concept_graph = combine_graphs_single_pass(answer_concept_graphs)
+            query_concept_graph = combine_n_graphs(answer_concept_graphs)
             query_concept_graphs.append(query_concept_graph)
         else:
             if len(answer_concept_graphs) > 0:
@@ -113,5 +136,5 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, typedb_transac
         raise RuntimeError(f'The graph from queries: {[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in query_sampler_variable_graph_tuples]}\n'
                            f'could not be created, since none of these queries returned results')
 
-    concept_graph = combine_graphs_single_pass(query_concept_graphs)
+    concept_graph = combine_n_graphs(query_concept_graphs)
     return concept_graph
