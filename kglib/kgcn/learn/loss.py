@@ -51,11 +51,12 @@ def loss_ops_preexisting_no_penalty(target_op, output_ops):
 
     """
     loss_ops = []
+    node_mask_op = tf.math.reduce_any(
+        tf.math.not_equal(target_op.nodes, tf.constant(np.array([1., 0., 0.]), dtype=tf.float32)), axis=1)
+    target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
+    output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
+
     for output_op in output_ops:
-        node_mask_op = tf.math.reduce_any(
-            tf.math.not_equal(target_op.nodes, tf.constant(np.array([1., 0., 0.]), dtype=tf.float32)), axis=1)
-        target_nodes = tf.boolean_mask(target_op.nodes, node_mask_op)
-        output_nodes = tf.boolean_mask(output_op.nodes, node_mask_op)
 
         loss_op = tf.losses.softmax_cross_entropy(target_nodes, output_nodes)
 

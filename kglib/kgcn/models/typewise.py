@@ -58,13 +58,14 @@ class TypewiseEncoder(snt.AbstractModule):
 
         encoded_features = tf.zeros(shape, dtype=tf.float32)
 
-        for encoder, types in self._encoders_for_types.items():
+        feat_types = tf.cast(features[:, 0], tf.int32)  # The types for each feature, as integers
 
-            feat_types = tf.cast(features[:, 0], tf.int32)  # The types for each feature, as integers
+        exp_feat_types = tf.expand_dims(feat_types, axis=1)
+
+        for encoder, types in self._encoders_for_types.items():
 
             # Expand dimensions ready for element-wise equality comparison
             exp_types = tf.expand_dims(types, axis=0)
-            exp_feat_types = tf.expand_dims(feat_types, axis=1)
 
             elementwise_equality = tf.equal(exp_feat_types, exp_types)
 
