@@ -8,6 +8,8 @@
 
 **KGLIB provides tools to enable machine learning with [TypeDB](https://github.com/vaticle/typedb).**
 
+This library is under development and will henceforth be transformed into primarily infrastructure tools and integrations between TypeDB and machine learning libraries.
+
 ## Machine Learning Pipeline
 
 ![Flow Diagram](kglib/kgcn_tensorflow/.images/knowledge_graph_machine_learning.png)
