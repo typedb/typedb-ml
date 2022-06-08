@@ -1,21 +1,46 @@
-exports_files(["requirements.txt", "deployment.properties", "RELEASE_TEMPLATE.md"])
+#
+# Copyright (C) 2021 Vaticle
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+exports_files(["requirements.txt", "RELEASE_TEMPLATE.md"])
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-load("@graknlabs_kglib_pip//:requirements.bzl",
-       graknlabs_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
-load("@graknlabs_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
-load("@graknlabs_kglib_pip//:requirements.bzl",
-       graknlabs_kglib_requirement = "requirement")
+load("@vaticle_bazel_distribution//github:rules.bzl", "deploy_github")
+load("@vaticle_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
+load("@vaticle_kglib_pip//:requirements.bzl",
+       vaticle_kglib_requirement = "requirement")
 
-load("@graknlabs_bazel_distribution//github:rules.bzl", "deploy_github")
-load("@graknlabs_dependencies//distribution/artifact:rules.bzl", "artifact_extractor")
+load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
+load("//:deployment.bzl", github_deployment = "deployment")
+load("@vaticle_dependencies//tool/release:rules.bzl", "release_validate_deps")
+
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 assemble_pip(
     name = "assemble-pip",
     target = "//kglib:kglib",
-    package_name = "grakn-kglib",
+    package_name = "vaticle-kglib",
     classifiers = [
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
@@ -29,75 +54,40 @@ assemble_pip(
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
-    url = "https://github.com/graknlabs/kglib",
-    author = "Grakn Labs",
-    author_email = "community@grakn.ai",
+    url = "https://github.com/vaticle/kglib",
+    author = "Vaticle",
+    author_email = "community@vaticle.com",
     license = "Apache-2.0",
-    install_requires=[
-        'enum-compat==0.0.2',
-        'grakn-client==1.8.0',
-        'absl-py==0.8.0',
-        'astor==0.8.0',
-        'cloudpickle==1.2.2',
-        'contextlib2==0.5.5',
-        'cycler==0.10.0',
-        'decorator==4.4.0',
-        'dm-sonnet==1.35',
-        'future==0.17.1',
-        'gast==0.3.1',
-        'google-pasta==0.1.7',
-        'graph-nets==1.0.4',
-        'grpcio==1.24.1,<2',
-        'h5py==2.10.0',
-        'Keras-Applications==1.0.8',
-        'Keras-Preprocessing==1.1.0',
-        'kiwisolver==1.1.0',
-        'Markdown==3.1.1',
-        'matplotlib==3.1.1',
-        'networkx==2.3',
-        'numpy==1.17.2',
-        'pandas==0.25.1',
-        'protobuf==3.6.1',
-        'pyparsing==2.4.2',
-        'python-dateutil==2.8.0',
-        'pytz==2019.2',
-        'scipy==1.3.1',
-        'semantic-version==2.8.2',
-        'six>=1.11.0',
-        'tensorboard==1.14.0',
-        'tensorflow==1.14.0',
-        'tensorflow-estimator==1.14.0',
-        'tensorflow-probability==0.7.0',
-        'termcolor==1.1.0',
-        'Werkzeug==0.15.6',
-        'wrapt==1.11.2',
-    ],
-    keywords = ["machine learning", "logical reasoning", "knowledege graph", "grakn", "database", "graph",
+    requirements_file = "//:requirements.txt",
+    keywords = ["machine learning", "logical reasoning", "knowledege graph", "typedb", "database", "graph",
                 "knowledgebase", "knowledge-engineering"],
 
-    description = "A Machine Learning Library for the Grakn knowledge graph.",
+    description = "A Machine Learning Library for TypeDB.",
     long_description_file = "//:README.md",
 )
 
 deploy_pip(
     name = "deploy-pip",
     target = ":assemble-pip",
-    deployment_properties = "@graknlabs_dependencies//distribution:deployment.properties",
+    snapshot = deployment["pypi.snapshot"],
+    release = deployment["pypi.release"],
 )
-
-artifact_extractor(
-    name = "grakn-extractor",
-    artifact = "@graknlabs_grakn_core_artifact//file",
-)
-
-load("@graknlabs_dependencies//tool/release:rules.bzl", "release_validate_deps")
 
 release_validate_deps(
     name = "release-validate-deps",
-    refs = "@graknlabs_kglib_workspace_refs//:refs.json",
+    refs = "@vaticle_kglib_workspace_refs//:refs.json",
     tagged_deps = [
-#        "graknlabs_grakn_core", # TODO We cannot currently use a released grakn for tests as 1.8.0 has an outdated build pipeline
-        "graknlabs_client_python",
+        "@vaticle_typedb",
+        "@vaticle_typedb_client_python",
     ],
     tags = ["manual"]
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    include = glob([
+        "*",
+        ".grabl/*",
+    ]),
+    license_type = "apache",
 )

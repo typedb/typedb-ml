@@ -1,108 +1,139 @@
+#
+# Copyright (C) 2021 Vaticle
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
 config:
   version-candidate: VERSION
+  dependencies:
+    dependencies: [build]
+    typedb-client-python: [build, release]
+    typedb-common: [build, release]
+    typedb: [build, release]
 
 build:
+  quality:
+    dependency-analysis:
+      image: vaticle-ubuntu-20.04
+      command: |
+        bazel run @vaticle_dependencies//factory/analysis:dependency-analysis
   correctness:
     build:
-      machine: graknlabs-ubuntu-20.04
-      type: foreground
-      script: |
-        pyenv global 3.6.10
-        sudo unlink /usr/bin/python3
-        sudo ln -s $(which python3) /usr/bin/python3
-        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
+      image: vaticle-ubuntu-20.04
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
         bazel build //...
-    test:
-      machine: graknlabs-ubuntu-20.04
-      type: foreground
-      script: |
-        pyenv global 3.6.10
-        sudo unlink /usr/bin/python3
-        sudo ln -s $(which python3) /usr/bin/python3
-        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
-        bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone
-    test-end-to-end:
-      machine: graknlabs-ubuntu-20.04
-      type: foreground
-      script: |
-        pyenv global 3.6.10
-        sudo unlink /usr/bin/python3
-        sudo ln -s $(which python3) /usr/bin/python3
-        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
-        bazel test //tests/end_to_end/... --test_output=streamed --spawn_strategy=standalone
+        bazel run @vaticle_dependencies//tool/checkstyle:test-coverage
+        bazel test $(bazel query 'kind(checkstyle_test, //...)') --test_output=streamed
     test-markdown-link-health:
-      machine: graknlabs-ubuntu-20.04
-      type: foreground
-      script: |
-        pyenv global 3.6.10
-        sudo unlink /usr/bin/python3
-        sudo ln -s $(which python3) /usr/bin/python3
-        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
-        sudo snap install node --classic
+      image: vaticle-ubuntu-20.04
+      command: |
         find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
+    test-kgcn-data-loader:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/utils/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-utils:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/kgcn_data_loader/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-kgcn-tensorflow:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/kgcn_tensorflow/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-end-to-end:
+      image: vaticle-ubuntu-20.04
+      timeout: "30m"
+      command: |
+        pyenv install -s 3.6.3
+        pyenv global 3.6.3 system
+        bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
-      filter:
-        owner: graknlabs
-        branch: master
-      machine: graknlabs-ubuntu-20.04
-      type: foreground
-      script: |
-        pyenv global 3.6.10
-        sudo unlink /usr/bin/python3
-        sudo ln -s $(which python3) /usr/bin/python3
-        sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
-        export DEPLOY_PIP_USERNAME=$REPO_GRAKN_USERNAME
-        export DEPLOY_PIP_PASSWORD=$REPO_GRAKN_PASSWORD
+      image: vaticle-ubuntu-20.04
+      dependencies: [build, test-kgcn-data-loader, test-utils, test-kgcn-tensorflow, test-end-to-end]
+      command: |
+        export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
+        export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
         bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
     test-deployment-pip:
-      filter:
-        owner: graknlabs
-        branch: master
+      image: vaticle-ubuntu-20.04
       dependencies: [deploy-pip-snapshot]
-      machine: graknlabs-ubuntu-20.04
+      filter:
+        owner: vaticle
+        branch: master
       type: foreground
-      script: |
+      command: |
         pyenv global 3.6.10
+        pip3 install -U pip
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.6.10/lib/python3.6/site-packages/lsb_release.py
-        bazel run //:grakn-extractor -- dist/grakn-core-all-linux
-        nohup ./dist/grakn-core-all-linux/grakn server start
-        echo -n "0.0.0-$CIRCLE_SHA1" > VERSION
-        sed -i -e "s/KGLIB_VERSION_MARKER/$(cat VERSION)/g" tests/deployment/requirements.txt
-        cat tests/deployment/requirements.txt
-        pip install -U pip setuptools
-        pip install -r tests/deployment/requirements.txt
-        ./dist/grakn-core-all-linux/grakn console -k diagnosis -f kglib/utils/grakn/synthetic/examples/diagnosis/schema.gql
-        cd tests/deployment/ && python -m unittest kgcn.diagnosis
-
-  execution:
-    - build
-    - test
-    - test-end-to-end
-    - test-markdown-link-health
-    - deploy-pip-snapshot
-    - test-deployment-pip
-
+        bazel run //test:typedb-extractor -- typedb-all-linux
+        ./typedb-all-linux/typedb server &
+        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
+        cd kglib/tests/deployment/ && python -m unittest kgcn.diagnosis && export TEST_SUCCESS=0 ||
+        export TEST_SUCCESS=1
+        kill $(jps | awk '/TypeDBServer/ {print $1}')
+        exit $TEST_SUCCESS
 release:
   filter:
-    owner: graknlabs
+    owner: vaticle
     branch: master
   validation:
     validate-dependencies:
-      machine: graknlabs-ubuntu-20.04
-      script: bazel test //:release-validate-deps --test_output=streamed
+      image: vaticle-ubuntu-20.04
+      command: bazel test //:release-validate-deps --test_output=streamed
   deployment:
     deploy-github:
-      machine: graknlabs-ubuntu-20.04
-      script: |
-       wget https://github.com/tcnksm/ghr/releases/download/v0.12.0/ghr_v0.12.0_linux_386.tar.gz
-       tar xvf ghr_v0.12.0_linux_386.tar.gz
-       export VERSION_TAG=$(cat "VERSION")
-       curl -X POST --fail --data "{\"tag_name\": \"${VERSION_TAG}\",\"target_commitish\": \"${CIRCLE_SHA1}\",\"name\": \"KGLIB ${VERSION_TAG}\",\"body\": \"\",\"draft\": true,\"prerelease\": false}" https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases?access_token=${GITHUB_DEPLOYMENT_TOKEN}
+      image: vaticle-ubuntu-20.04
+      command: |
+        pyenv install -s 3.6.10
+        pyenv global 3.6.10 system
+        pip3 install -U pip
+        pip install certifi
+        export ARTIFACT_USERNAME=$REPO_VATICLE_USERNAME
+        export ARTIFACT_PASSWORD=$REPO_VATICLE_PASSWORD
+        bazel run @vaticle_dependencies//distribution/artifact:create-netrc
+        export RELEASE_NOTES_TOKEN=$REPO_GITHUB_TOKEN
+        bazel run @vaticle_dependencies//tool/release:create-notes -- kglib $(cat VERSION) ./RELEASE_TEMPLATE.md
+        export DEPLOY_GITHUB_TOKEN=$REPO_GITHUB_TOKEN
+        bazel run --define version=$(cat VERSION) //:deploy-github -- $GRABL_COMMIT
     deploy-pip-release:
-      machine: graknlabs-ubuntu-20.04
-      script: |
+      image: vaticle-ubuntu-20.04
+      command: |
+        pyenv install -s 3.6.10
+        pyenv global 3.6.10 system
+        pip3 install -U pip
+        export ARTIFACT_USERNAME=$REPO_VATICLE_USERNAME
+        export ARTIFACT_PASSWORD=$REPO_VATICLE_PASSWORD
+        bazel run @vaticle_dependencies//distribution/artifact:create-netrc
         export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
         bazel run --define version=$(cat VERSION) //:deploy-pip -- release
+      dependencies: [deploy-github]

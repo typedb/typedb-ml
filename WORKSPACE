@@ -1,152 +1,125 @@
 #
-# Copyright (C) 2020 Grakn Labs
+# Copyright (C) 2021 Vaticle
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as
-# published by the Free Software Foundation, either version 3 of the
-# License, or (at your option) any later version.
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
+#   http://www.apache.org/licenses/LICENSE-2.0
 #
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 #
 
-workspace(name = "graknlabs_kglib")
+workspace(name = "vaticle_kglib")
 
 ################################
-# Load @graknlabs_dependencies #
+# Load @vaticle_dependencies #
 ################################
-load("//dependencies/graknlabs:repositories.bzl", "graknlabs_dependencies")
-graknlabs_dependencies()
 
-# Load Bazel
-load("@graknlabs_dependencies//builder/bazel:deps.bzl", "bazel_toolchain")
+load("//dependencies/vaticle:repositories.bzl", "vaticle_dependencies")
+vaticle_dependencies()
+
+# Load //builder/bazel for RBE
+load("@vaticle_dependencies//builder/bazel:deps.bzl", "bazel_toolchain")
 bazel_toolchain()
 
-# Load gRPC
-load("@graknlabs_dependencies//builder/grpc:deps.bzl", grpc_deps = "deps")
-grpc_deps()
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl",
-com_github_grpc_grpc_deps = "grpc_deps")
-com_github_grpc_grpc_deps()
-
-# Load Java
-load("@graknlabs_dependencies//builder/java:deps.bzl", java_deps = "deps")
+# Load //builder/java
+load("@vaticle_dependencies//builder/java:deps.bzl", java_deps = "deps")
 java_deps()
-load("@graknlabs_dependencies//library/maven:rules.bzl", "maven")
 
-# Load Kotlin
-load("@graknlabs_dependencies//builder/kotlin:deps.bzl", kotlin_deps = "deps")
+# Load //builder/kotlin
+load("@vaticle_dependencies//builder/kotlin:deps.bzl", kotlin_deps = "deps")
 kotlin_deps()
 load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
 kotlin_repositories()
 kt_register_toolchains()
 
-# Load Python
-load("@graknlabs_dependencies//builder/python:deps.bzl", python_deps = "deps")
-python_deps(use_patched_version=True)
-load("@rules_python//python:pip.bzl", "pip_repositories", "pip3_import")
-pip_repositories()
+# Load //builder/python
+load("@vaticle_dependencies//builder/python:deps.bzl", python_deps = "deps")
+python_deps()
+load("@rules_python//python:pip.bzl", "pip_install")
 
-# Load graknlabs_dependencies_ci_pip (for @graknlabs_dependencies//tool/sync:dependencies)
-pip3_import(
-    name = "graknlabs_dependencies_ci_pip",
-    requirements = "@graknlabs_dependencies//tool:requirements.txt",
+# Load //builder/grpc
+load("@vaticle_dependencies//builder/grpc:deps.bzl", grpc_deps = "deps")
+grpc_deps()
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl",
+com_github_grpc_grpc_deps = "grpc_deps")
+com_github_grpc_grpc_deps()
+
+# Load //tool/common
+load("@vaticle_dependencies//tool/common:deps.bzl", "vaticle_dependencies_ci_pip",
+    vaticle_dependencies_tool_maven_artifacts = "maven_artifacts")
+vaticle_dependencies_ci_pip()
+
+# Load //tool/checkstyle
+load("@vaticle_dependencies//tool/checkstyle:deps.bzl", checkstyle_deps = "deps")
+checkstyle_deps()
+
+######################################
+# Load @vaticle_bazel_distribution #
+######################################
+
+load("@vaticle_dependencies//distribution:deps.bzl", "vaticle_bazel_distribution")
+vaticle_bazel_distribution()
+
+# Load //common
+load("@vaticle_bazel_distribution//common:deps.bzl", "rules_pkg")
+rules_pkg()
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+rules_pkg_dependencies()
+
+# Load //pip
+load("@vaticle_bazel_distribution//pip:deps.bzl", pip_deps = "deps")
+pip_deps()
+
+# Load //github
+load("@vaticle_bazel_distribution//github:deps.bzl", github_deps = "deps")
+github_deps()
+
+################################
+# Load @vaticle dependencies #
+################################
+
+load("//dependencies/vaticle:repositories.bzl", "vaticle_typedb_client_python")
+vaticle_typedb_client_python()
+
+pip_install(
+    name = "vaticle_typedb_client_python_pip",
+    requirements = "@vaticle_typedb_client_python//:requirements.txt",
 )
-load("@graknlabs_dependencies_ci_pip//:requirements.bzl",
-graknlabs_dependencies_ci_pip_install = "pip_install")
-graknlabs_dependencies_ci_pip_install()
 
-# Load distribution deps
-load("@graknlabs_dependencies//distribution:deps.bzl", distribution_deps = "deps")
-distribution_deps()
+load("//dependencies/vaticle:repositories.bzl", "vaticle_common")
+vaticle_common()
 
-# Load maven artifacts
-load("@graknlabs_dependencies//dependencies/maven:artifacts.bzl", graknlabs_dependencies_artifacts = "artifacts")
+load("//dependencies/vaticle:artifacts.bzl", "vaticle_typedb_artifacts")
+vaticle_typedb_artifacts()
 
-#####################################################################
-# Load @graknlabs_bazel_distribution (from @graknlabs_dependencies) #
-#####################################################################
-
-load("@graknlabs_dependencies//dependencies/graknlabs:repositories.bzl", "graknlabs_bazel_distribution")
-graknlabs_bazel_distribution()
-
-pip3_import(
-    name = "graknlabs_bazel_distribution_pip",
-    requirements = "@graknlabs_bazel_distribution//pip:requirements.txt",
+pip_install(
+    name = "vaticle_kglib_pip",
+    requirements = "//:requirements-dev.txt",
 )
-load("@graknlabs_bazel_distribution_pip//:requirements.bzl",
-graknlabs_bazel_distribution_pip_install = "pip_install")
-graknlabs_bazel_distribution_pip_install()
-
-load("@graknlabs_bazel_distribution//github:dependencies.bzl", "tcnksm_ghr")
-tcnksm_ghr()
-
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-git_repository(
-    name = "io_bazel_skydoc",
-    remote = "https://github.com/graknlabs/skydoc.git",
-    branch = "experimental-skydoc-allow-dep-on-bazel-tools",
-)
-
-load("@io_bazel_skydoc//:setup.bzl", "skydoc_repositories")
-skydoc_repositories()
-
-load("@graknlabs_bazel_distribution//common:dependencies.bzl", "bazelbuild_rules_pkg")
-bazelbuild_rules_pkg()
 
 ############################
-# Load @graknlabs_protocol #
+# Load @maven dependencies #
 ############################
-load("//dependencies/graknlabs:repositories.bzl", "graknlabs_protocol")
-graknlabs_protocol()
 
-#######################################
-# Load @graknlabs_grakn_core_artifact #
-#######################################
-load("//dependencies/graknlabs:artifacts.bzl", "graknlabs_grakn_core_artifact")
-graknlabs_grakn_core_artifact()
-
-#################################
-# Load @graknlabs_client_python #
-#################################
-load("//dependencies/graknlabs:repositories.bzl", "graknlabs_client_python")
-graknlabs_client_python()
-
-pip3_import(
-    name = "graknlabs_client_python_pip",
-    requirements = "@graknlabs_client_python//:requirements.txt",
-)
-load("@graknlabs_client_python_pip//:requirements.bzl",
-graknlabs_client_python_pip_install = "pip_install")
-graknlabs_client_python_pip_install()
-
-#########################
-# Load @graknlabs_kglib #
-#########################
-pip3_import(
-    name = "graknlabs_kglib_pip",
-    requirements = "//:requirements.txt",
-)
-load("@graknlabs_kglib_pip//:requirements.bzl",
-graknlabs_kglib_pip_install = "pip_install")
-graknlabs_kglib_pip_install()
-
-##############
-# Load @maven #
-##############
-maven(
-    graknlabs_dependencies_artifacts
-)
+load("@vaticle_dependencies//library/maven:rules.bzl", "maven")
+maven(vaticle_dependencies_tool_maven_artifacts)
 
 ############################################
-# Create @graknlabs_console_workspace_refs #
+# Create @vaticle_console_workspace_refs #
 ############################################
-load("@graknlabs_bazel_distribution//common:rules.bzl", "workspace_refs")
+
+load("@vaticle_bazel_distribution//common:rules.bzl", "workspace_refs")
 workspace_refs(
-    name = "graknlabs_kglib_workspace_refs"
+    name = "vaticle_kglib_workspace_refs"
 )
