@@ -1,4 +1,3 @@
-[![Grabl](https://grabl.io/api/status/vaticle/kglib/badge.svg)](https://grabl.io/vaticle/kglib)
 [![GitHub release](https://img.shields.io/github/release/vaticle/kglib.svg)](https://github.com/vaticle/typedb/releases/latest)
 [![Discord](https://img.shields.io/discord/665254494820368395?color=7389D8&label=chat&logo=discord&logoColor=ffffff)](https://vaticle.com/discord)
 [![Discussion Forum](https://img.shields.io/discourse/https/forum.vaticle.com/topics.svg)](https://forum.vaticle.com)
