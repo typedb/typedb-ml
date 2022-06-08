@@ -46,13 +46,13 @@ kt_register_toolchains()
 # Load //builder/python
 load("@vaticle_dependencies//builder/python:deps.bzl", python_deps = "deps")
 python_deps()
-load("@rules_python//python:pip.bzl", "pip_install")
+load("@rules_python//python:pip.bzl", "pip_repositories")
+pip_repositories()
 
 # Load //builder/grpc
 load("@vaticle_dependencies//builder/grpc:deps.bzl", grpc_deps = "deps")
 grpc_deps()
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl",
-com_github_grpc_grpc_deps = "grpc_deps")
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", com_github_grpc_grpc_deps = "grpc_deps")
 com_github_grpc_grpc_deps()
 
 # Load //tool/common
@@ -89,23 +89,24 @@ github_deps()
 # Load @vaticle dependencies #
 ################################
 
+load("//dependencies/vaticle:repositories.bzl", "vaticle_typedb_common")
+vaticle_typedb_common()
+
+load("//dependencies/vaticle:artifacts.bzl", "vaticle_typedb_artifacts")
+vaticle_typedb_artifacts()
+
 load("//dependencies/vaticle:repositories.bzl", "vaticle_typedb_client_python")
 vaticle_typedb_client_python()
 
+load("@rules_python//python:pip.bzl", "pip_install")
 pip_install(
     name = "vaticle_typedb_client_python_pip",
     requirements = "@vaticle_typedb_client_python//:requirements.txt",
 )
 
-load("//dependencies/vaticle:repositories.bzl", "vaticle_common")
-vaticle_common()
-
-load("//dependencies/vaticle:artifacts.bzl", "vaticle_typedb_artifacts")
-vaticle_typedb_artifacts()
-
 pip_install(
     name = "vaticle_kglib_pip",
-    requirements = "//:requirements-dev.txt",
+    requirements = "//:requirements_dev.txt",
 )
 
 ############################
