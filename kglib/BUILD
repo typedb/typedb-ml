@@ -29,7 +29,6 @@ py_library(
         '__init__.py',
     ],
     deps = [
-        '//kglib/kgcn_tensorflow:kgcn',
         '//kglib/utils',
     ],
     visibility=['//visibility:public']
