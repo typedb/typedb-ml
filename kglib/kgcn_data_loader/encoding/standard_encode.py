@@ -46,13 +46,14 @@ def encode_values(graph, categorical_attributes, continuous_attributes):
     return graph
 
 
-def encode_types(graph, iterator_func, types):
+def encode_types(graph, iterator_func, all_types):
     """
     Encodes the type found in graph data as an integer according to the index it is found in `all_types`
     Args:
         graph: The graph to encode
-        iterator_func: An function to create an iterator of data in the graph (node data, edge data or combined node and edge data)
-        types: The full list of types to be encoded in this order
+        iterator_func: An function to create an iterator of data in the graph (node data, edge data or combined node
+        and edge data)
+        all_types: The full list of types to be encoded in this order
         
     Returns:
         The graph, which is also is updated in-place
@@ -61,7 +62,7 @@ def encode_types(graph, iterator_func, types):
     iterator = iterator_func(graph)
 
     for data in iterator:
-        data['categorical_type'] = types.index(data['type'])
+        data['categorical_type'] = all_types.index(data['type'])
 
     return graph
 

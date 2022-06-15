@@ -27,7 +27,7 @@ from typedb.client import *
 import networkx as nx
 import numpy as np
 
-from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import write_predictions_to_typedb, obfuscate_labels
+from kglib.examples.diagnosis.diagnosis import write_predictions_to_typedb, obfuscate_labels
 from kglib.utils.typedb.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
 

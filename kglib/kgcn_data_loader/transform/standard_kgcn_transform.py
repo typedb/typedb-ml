@@ -75,11 +75,9 @@ class StandardKGCNNetworkxTransform:
             obfuscate_labels(graph, self.obfuscate)
         # Encode attribute values as number
         graph = encode_values(graph, self.categorical, self.continuous)
-        graph = nx.convert_node_labels_to_integers(
-            graph, label_attribute=self.label_attribute
-        )
+        graph = nx.convert_node_labels_to_integers(graph, label_attribute=self.label_attribute)
         if self.duplicate:
-            graph = duplicate_edges_in_reverse(graph)
+            graph = duplicate_edges_in_reverse(graph)  # TODO: This can use the equivalent function from PyTorch
         # Node or Edge Type as int
         graph = encode_types(graph, multidigraph_node_data_iterator, self.node_types)
         graph = encode_types(graph, multidigraph_edge_data_iterator, self.edge_types)

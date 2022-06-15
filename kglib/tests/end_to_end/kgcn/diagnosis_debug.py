@@ -22,7 +22,7 @@ import os
 import sys
 import unittest
 
-from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
+from kglib.examples.diagnosis.diagnosis import diagnosis_example
 
 
 class TestDiagnosisExampleDebug(unittest.TestCase):

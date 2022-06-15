@@ -84,7 +84,6 @@ def combine_n_graphs(graphs_list):
     return reduce(lambda x, y: combine_2_graphs(x, y), graphs_list)
 
 
-
 def build_graph_from_queries(query_sampler_variable_graph_tuples, typedb_transaction,
                              concept_dict_converter=concept_dict_to_graph):
     """

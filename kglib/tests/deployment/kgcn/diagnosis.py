@@ -21,13 +21,13 @@
 
 import unittest
 
-from kglib.kgcn_tensorflow.examples.diagnosis.diagnosis import diagnosis_example
+from kglib.examples.diagnosis.diagnosis import diagnosis_example
 
 
 class TestDiagnosisExample(unittest.TestCase):
 
     def test_example_runs_without_exception(self):
-        diagnosis_example("./typedb-all-linux",
+        diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0",
                           num_graphs=6,
                           num_processing_steps_tr=2,
                           num_processing_steps_ge=2,

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2022 Vaticle
+# Copyright (C) 2021 Vaticle
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -19,22 +19,14 @@
 # under the License.
 #
 
-# Bazel files
-bazel-*
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
-# IntelliJ Bazel project
-.ijwb/
-
-# Temporary source files
-tmp/
-
-# Pycharm config
-.idea/
-
-# Python cache files
-__pycache__/
-
-# Data input/output directories
-kglib/examples/diagnosis/events/
-
-*.egg-info/
+checkstyle_test(
+    name = "checkstyle",
+    include = glob(["*"]),
+    exclude = glob([
+        "*.png",
+        "*.svg"
+    ]),
+    license_type = "apache",
+)

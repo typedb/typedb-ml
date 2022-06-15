@@ -21,12 +21,13 @@
 
 import inspect
 import time
-
+import subprocess as sp
 from typedb.client import *
 
+from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetworkxDataSet
+from kglib.kgcn_data_loader.transform.standard_kgcn_transform import StandardKGCNNetworkxTransform
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
-from kglib.kgcn_tensorflow.pipeline.pipeline import pipeline
-from kglib.utils.graph.iterate import multidigraph_data_iterator
+from kglib.utils.graph.iterate import multidigraph_data_iterator, multidigraph_node_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
@@ -67,8 +68,8 @@ def diagnosis_example(typedb_binary_directory,
                       num_training_iterations=50,
                       database=DATABASE,
                       address=ADDRESS,
-                      schema_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
-                      seed_data_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
+                      schema_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
+                      seed_data_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
     """
     Run the diagnosis example from start to finish, including traceably ingesting predictions back into TypeDB
 
@@ -86,6 +87,13 @@ def diagnosis_example(typedb_binary_directory,
     Returns:
         Final accuracies for training and for testing
     """
+
+    # Delete the database each time
+    sp.check_call([
+        './typedb',
+        'console',
+        f'--command=database delete {database}',
+    ], cwd=typedb_binary_directory)
 
     tr_ge_split = int(num_graphs*0.5)
 
@@ -115,19 +123,47 @@ def diagnosis_example(typedb_binary_directory,
         print(f'Found node types: {node_types}')
         print(f'Found edge types: {edge_types}')
 
-    ge_graphs, solveds_tr, solveds_ge = pipeline(graphs,
-                                                 tr_ge_split,
-                                                 node_types,
-                                                 edge_types,
-                                                 num_processing_steps_tr=num_processing_steps_tr,
-                                                 num_processing_steps_ge=num_processing_steps_ge,
-                                                 num_training_iterations=num_training_iterations,
-                                                 continuous_attributes=CONTINUOUS_ATTRIBUTES,
-                                                 categorical_attributes=CATEGORICAL_ATTRIBUTES,
-                                                 output_dir=f"./events/{time.time()}/")
+    # for data in multidigraph_node_data_iterator(graphs[0]):
+    #     features = create_feature_vector(data)
+    #     target = data[self.target_name]
+    #     data.clear()
+    #     data["x"] = features
+    #     data["y"] = target
 
-    with session.transaction(TransactionType.WRITE) as tx:
-        write_predictions_to_typedb(ge_graphs, tx)
+    transform = StandardKGCNNetworkxTransform(
+        node_types,
+        edge_types,
+        target_name='solution',
+        obfuscate=None,
+        categorical=None,
+        continuous=None,
+        duplicate_in_reverse=True,
+        label_attribute="concept",
+    )
+
+    dataset = TypeDBNetworkxDataSet(
+        list(range(num_graphs)),
+        get_query_handles,
+        DATABASE,
+        ADDRESS,
+        session,
+        True,
+        transform
+    )
+
+    # ge_graphs, solveds_tr, solveds_ge = pipeline(graphs,
+    #                                              tr_ge_split,
+    #                                              node_types,
+    #                                              edge_types,
+    #                                              num_processing_steps_tr=num_processing_steps_tr,
+    #                                              num_processing_steps_ge=num_processing_steps_ge,
+    #                                              num_training_iterations=num_training_iterations,
+    #                                              continuous_attributes=CONTINUOUS_ATTRIBUTES,
+    #                                              categorical_attributes=CATEGORICAL_ATTRIBUTES,
+    #                                              output_dir=f"./events/{time.time()}/")
+    #
+    # with session.transaction(TransactionType.WRITE) as tx:
+    #     write_predictions_to_typedb(ge_graphs, tx)
 
     session.close()
     client.close()
