@@ -22,6 +22,7 @@
 from typing import Sequence, Callable, Optional
 
 import networkx as nx
+from torch_geometric.utils import from_networkx
 from typedb.client import TypeDB, TypeDBSession, SessionType, TypeDBOptions, TransactionType
 
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
@@ -35,7 +36,7 @@ class TypeDBNetworkxDataSet:
 
     def __init__(
         self,
-        example_indices: Sequence,
+        indices: Sequence,
         get_query_handles_for_id: Callable,
         database: Optional[str] = None,
         uri: Optional[str] = "localhost:1729",
@@ -44,7 +45,7 @@ class TypeDBNetworkxDataSet:
         transform: Optional[Callable[[nx.Graph], nx.Graph]] = None,
     ):
         assert (database and uri) or session
-        self._example_indices = example_indices
+        self._indices = indices
         self.get_query_handles_for_id = get_query_handles_for_id
         self._infer = infer
         self._transform = transform
@@ -69,13 +70,13 @@ class TypeDBNetworkxDataSet:
         return self._typedb_session
 
     def __len__(self):
-        return len(self._example_indices)
+        return len(self._indices)
 
     def __getitem__(self, idx):
         print(type(self._typedb_session))
-        example_id = self._example_indices[idx]
-        print(f"Fetching subgraph for example {example_id}")
-        graph_query_handles = self.get_query_handles_for_id(example_id)
+        id = self._indices[idx]
+        print(f"Fetching graph for id: {id}")
+        graph_query_handles = self.get_query_handles_for_id(id)
 
         options = TypeDBOptions.core()
         options.infer = self._infer
@@ -83,7 +84,7 @@ class TypeDBNetworkxDataSet:
         with self.typedb_session.transaction(TransactionType.READ, options=options) as tx:
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx)
-        graph.name = example_id
+        graph.name = id
         if self._transform:
             graph = self._transform(graph)
-        return graph
+        return from_networkx(graph).to_heterogeneous(node_type, edge_type, node_type_names, edge_type_names)

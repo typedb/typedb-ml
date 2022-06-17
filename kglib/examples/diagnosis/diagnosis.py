@@ -19,8 +19,11 @@
 #  under the License.
 #
 
+import torch
+from torch_geometric.nn import GCNConv
+import torch.nn.functional as F
+import torch_geometric.transforms as T
 import inspect
-import time
 import subprocess as sp
 from typedb.client import *
 
@@ -51,14 +54,33 @@ CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Bl
 # Continuous Attribute types and their min and max values
 CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
 
-TYPES_TO_IGNORE = ['candidate-diagnosis', 'example-id', 'probability-exists', 'probability-non-exists', 'probability-preexists']
-ROLES_TO_IGNORE = ['candidate-patient', 'candidate-diagnosed-disease']
+TYPES_TO_IGNORE = []
+ROLES_TO_IGNORE = []
+
+RELATION_TYPE_TO_PREDICT = 'diagnosis'
+RELATION_TYPE_TO_PREDICT_ROLES = ['patient', 'diagnosis']
 
 # The learner should see candidate relations the same as the ground truth relations, so adjust these candidates to
 # look like their ground truth counterparts
-TYPES_AND_ROLES_TO_OBFUSCATE = {'candidate-diagnosis': 'diagnosis',
-                                'candidate-patient': 'patient',
-                                'candidate-diagnosed-disease': 'diagnosed-disease'}
+TYPES_AND_ROLES_TO_OBFUSCATE = {}
+
+
+def binary_relations_to_edges(graph):
+    pass
+
+
+def get_types(session, types_to_ignore, roles_to_ignore):
+    with session.transaction(TransactionType.READ) as tx:
+        # The terminology changes from here onwards from thing -> node and role -> edge
+        node_types = get_thing_types(tx)
+        edge_types = get_role_types(tx)
+        # Ignore any types or roles that exist in the TypeDB instance but which aren't being used for learning to
+        # reduce the number of categories to embed
+        [node_types.remove(el) for el in types_to_ignore]
+        [edge_types.remove(el) for el in roles_to_ignore]
+        print(f'Found node types: {node_types}')
+        print(f'Found edge types: {edge_types}')
+        return node_types, edge_types
 
 
 def diagnosis_example(typedb_binary_directory,
@@ -110,30 +132,15 @@ def diagnosis_example(typedb_binary_directory,
 
     session = client.session(database, SessionType.DATA)
 
-    print("Create concept graphs")
-    graphs = create_concept_graphs(list(range(num_graphs)), session, infer=True)
+    node_types, edge_types = get_types(session, TYPES_TO_IGNORE, ROLES_TO_IGNORE)
 
-    with session.transaction(TransactionType.READ) as tx:
-        # Change the terminology here onwards from thing -> node and role -> edge
-        node_types = get_thing_types(tx)
-        [node_types.remove(el) for el in TYPES_TO_IGNORE]
+    binary_relations_to_edges(graph)  # TODO: Should be a transform. Do we do this before or after generating features?
 
-        edge_types = get_role_types(tx)
-        [edge_types.remove(el) for el in ROLES_TO_IGNORE]
-        print(f'Found node types: {node_types}')
-        print(f'Found edge types: {edge_types}')
-
-    # for data in multidigraph_node_data_iterator(graphs[0]):
-    #     features = create_feature_vector(data)
-    #     target = data[self.target_name]
-    #     data.clear()
-    #     data["x"] = features
-    #     data["y"] = target
-
+    # This transform adds the features and labels to the graph
     transform = StandardKGCNNetworkxTransform(
         node_types,
         edge_types,
-        target_name='solution',
+        target_name='solution',  # TODO: We're planning to do away with already having the graphs labelled at this point, so somehow we need to add negative samples and label accordingly
         obfuscate=None,
         categorical=None,
         continuous=None,
@@ -141,6 +148,7 @@ def diagnosis_example(typedb_binary_directory,
         label_attribute="concept",
     )
 
+    # Create a Dataset that will load graphs from TypeDB on-demand, based on an ID
     dataset = TypeDBNetworkxDataSet(
         list(range(num_graphs)),
         get_query_handles,
@@ -151,19 +159,71 @@ def diagnosis_example(typedb_binary_directory,
         transform
     )
 
-    # ge_graphs, solveds_tr, solveds_ge = pipeline(graphs,
-    #                                              tr_ge_split,
-    #                                              node_types,
-    #                                              edge_types,
-    #                                              num_processing_steps_tr=num_processing_steps_tr,
-    #                                              num_processing_steps_ge=num_processing_steps_ge,
-    #                                              num_training_iterations=num_training_iterations,
-    #                                              continuous_attributes=CONTINUOUS_ATTRIBUTES,
-    #                                              categorical_attributes=CATEGORICAL_ATTRIBUTES,
-    #                                              output_dir=f"./events/{time.time()}/")
-    #
-    # with session.transaction(TransactionType.WRITE) as tx:
-    #     write_predictions_to_typedb(ge_graphs, tx)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    data = dataset[0].to(device)  # Get the first graph object.
+
+    data = T.ToUndirected()(data)
+    del data['movie', 'rev_rates', 'user'].edge_label  # Remove "reverse" label.
+
+    class GCN(torch.nn.Module):
+        def __init__(self, hidden_channels):
+            super().__init__()
+            torch.manual_seed(1234567)
+            # self.conv1 = GCNConv(dataset.num_features, hidden_channels)
+            # self.conv2 = GCNConv(hidden_channels, dataset.num_classes)
+            self.conv1 = GCNConv(3, hidden_channels)
+            self.conv2 = GCNConv(hidden_channels, 3)
+
+        def forward(self, x, edge_index):
+            x = self.conv1(x, edge_index)
+            x = x.relu()
+            x = F.dropout(x, p=0.5, training=self.training)
+            x = self.conv2(x, edge_index)
+            return x
+
+    model = GCN(hidden_channels=16)
+    print(model)
+
+    model = GCN(hidden_channels=16)
+    model.eval()
+
+    # out = model(data.x, data.edge_index)
+    # visualize(out, color=data.y)
+
+    model = GCN(hidden_channels=16)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+    criterion = torch.nn.CrossEntropyLoss()
+
+    def train():
+        model.train()
+        optimizer.zero_grad()  # Clear gradients.
+        out = model(data.x, data.edge_index)  # Perform a single forward pass.
+        # loss = criterion(out[data.train_mask], data.y[data.train_mask])  # Compute the loss solely based on the training nodes.
+        loss = criterion(out, data.y)  # Compute the loss solely based on the training nodes.
+        loss.backward()  # Derive gradients.
+        optimizer.step()  # Update parameters based on gradients.
+        return loss
+
+    def test():
+        model.eval()
+        out = model(data.x, data.edge_index)
+        pred = out.argmax(dim=1)  # Use the class with highest probability.
+        # test_correct = pred[data.test_mask] == data.y[data.test_mask]  # Check against ground-truth labels.
+        test_correct = pred == data.y  # Check against ground-truth labels.
+        # test_acc = int(test_correct.sum()) / int(data.test_mask.sum())  # Derive ratio of correct predictions.
+        test_acc = int(test_correct.sum()) / int(data.sum())  # Derive ratio of correct predictions.
+        return test_acc
+
+    # for epoch in range(1, 101):
+    #     loss = train()
+    #     print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}')
+
+    test_acc = test()
+    print(f'Test Accuracy: {test_acc:.4f}')
+
+    with session.transaction(TransactionType.WRITE) as tx:
+        write_predictions_to_typedb(ge_graphs, tx)
 
     session.close()
     client.close()
@@ -214,7 +274,7 @@ def obfuscate_labels(graph, types_and_roles_to_obfuscate):
 
 def get_query_handles(example_id):
     """
-    Creates an iterable, each element containing a Graql query, a function to sample the answers, and a QueryGraph
+    Creates an iterable, each element containing a TypeQL query, a function to sample the answers, and a QueryGraph
     object which must be the TypeDB graph representation of the query. This tuple is termed a "query_handle"
 
     Args:
@@ -224,10 +284,11 @@ def get_query_handles(example_id):
     Returns:
         query handles
     """
+    assert example_id == 0
 
     # === Hereditary Feature ===
     hereditary_query = inspect.cleandoc(f'''match
-           $p isa person, has example-id {example_id};
+           $p isa person;
            $par isa person;
            $ps(child: $p, parent: $par) isa parentship;
            $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
@@ -245,7 +306,7 @@ def get_query_handles(example_id):
 
     # === Consumption Feature ===
     consumption_query = inspect.cleandoc(f'''match
-           $p isa person, has example-id {example_id};
+           $p isa person;
            $s isa substance, has name $n;
            $c(consumer: $p, consumed-substance: $s) isa consumption, 
            has units-per-week $u;''')
@@ -260,7 +321,7 @@ def get_query_handles(example_id):
 
     # === Age Feature ===
     person_age_query = inspect.cleandoc(f'''match 
-            $p isa person, has example-id {example_id}, has age $a; 
+            $p isa person, has age $a; 
            ''')
 
     vars = p, a = 'p', 'a'
@@ -271,7 +332,7 @@ def get_query_handles(example_id):
     # === Risk Factors Feature ===
     risk_factor_query = inspect.cleandoc(f'''match 
             $d isa disease; 
-            $p isa person, has example-id {example_id}; 
+            $p isa person; 
             $r(person-at-risk: $p, risked-disease: $d) isa risk-factor; 
            ''')
 
@@ -285,7 +346,7 @@ def get_query_handles(example_id):
     vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
 
     symptom_query = inspect.cleandoc(f'''match
-           $p isa person, has example-id {example_id};
+           $p isa person;
            $s isa symptom, has name $sn;
            $d isa disease, has name $dn;
            $sp(presented-symptom: $s, symptomatic-patient: $p) isa symptom-presentation, has severity $sev;
@@ -307,7 +368,7 @@ def get_query_handles(example_id):
     diag, d, p, dn = 'diag', 'd', 'p', 'dn'
 
     diagnosis_query = inspect.cleandoc(f'''match
-           $p isa person, has example-id {example_id};
+           $p isa person;
            $d isa disease, has name $dn;
            $diag(patient: $p, diagnosed-disease: $d) isa diagnosis;
           ''')
@@ -320,7 +381,7 @@ def get_query_handles(example_id):
 
     # === Candidate Diagnosis ===
     candidate_diagnosis_query = inspect.cleandoc(f'''match
-           $p isa person, has example-id {example_id};
+           $p isa person;
            $d isa disease, has name $dn;
            $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
           ''')
