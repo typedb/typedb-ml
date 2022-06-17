@@ -21,10 +21,11 @@
 
 import torch
 from torch_geometric.nn import GCNConv
-import torch.nn.functional as F
-import torch_geometric.transforms as T
+import torch.nn.functional as functional
+import torch_geometric.transforms as transforms
 import inspect
 import subprocess as sp
+import networkx as nx
 from typedb.client import *
 
 from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetworkxDataSet
@@ -39,34 +40,85 @@ from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
 
-# Existing elements in the graph are those that pre-exist in the graph, and should be predicted to continue to exist
 PREEXISTS = 0
 
-# Candidates are neither present in the input nor in the solution, they are negative samples
-CANDIDATE = 1
-
-# Elements to infer are the graph elements whose existence we want to predict to be true, they are positive samples
-TO_INFER = 2
-
 # Categorical Attribute types and the values of their categories
-CATEGORICAL_ATTRIBUTES = {'name': ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes',
-                                   'Alcohol']}
+CATEGORICAL_ATTRIBUTES = {
+    'name': [
+        'Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol'
+    ]
+}
 # Continuous Attribute types and their min and max values
 CONTINUOUS_ATTRIBUTES = {'severity': (0, 1), 'age': (7, 80), 'units-per-week': (3, 29)}
 
 TYPES_TO_IGNORE = []
 ROLES_TO_IGNORE = []
 
-RELATION_TYPE_TO_PREDICT = 'diagnosis'
-RELATION_TYPE_TO_PREDICT_ROLES = ['patient', 'diagnosis']
+# Note that this determines the edge direction when converting from a TypeDB relation
+RELATION_TYPE_TO_PREDICT = ('patient', 'diagnosis', 'diagnosed-disease')
 
 # The learner should see candidate relations the same as the ground truth relations, so adjust these candidates to
 # look like their ground truth counterparts
 TYPES_AND_ROLES_TO_OBFUSCATE = {}
 
 
-def binary_relations_to_edges(graph):
-    pass
+def binary_relations_to_edges(graph: nx.MultiDiGraph, binary_relation_type):
+    """
+    A function to convert a TypeDB relation (a hyperedge) to a directed binary edge.
+
+    The replaced relations may not be:
+    - a roleplayer in any other relations
+    - own any attributes
+    - have more than two roles
+    and must:
+    - have exactly two outgoing role edges (which can be of the same role)
+
+    This is useful because edges are often stored as an adjacency matrix. In PyTorch Geometric, for example,
+    this adjacency matrix expects binary edges. To be compatible we convert to binary edges so that when creating
+    negative samples we can simply change the values of the adjacency matrix. In the case of a hyperedge we cannot
+    simply do this to add negative edges.
+
+    Args:
+        graph: The graph to modify in-place
+        binary_relation_type: A triple of the `(role1, relation, role2)` types to convert to a single edge labelled with `relation`
+
+    Returns:
+        Dict of edges to the node each replaces
+    """
+    replacement_edges = {}
+    for node, node_data in graph.nodes(data=True):
+        if node_data["type"] == binary_relation_type[1]:
+            if len(list(graph.in_edges(node))) > 0:
+                raise ValueError(
+                    "The given binary relation can't be transformed into an edge because it plays a role in another "
+                    "relation."
+                )
+            roles = list(graph.edges(node, data=True))  # equivalent to out_edges()
+            assert len(roles) == 2
+            new_edge_start = None
+            new_edge_end = None
+            for from_roleplayer, to_roleplayer, data in roles:
+                if data["type"] == binary_relation_type[0]:
+                    if new_edge_start is None:
+                        new_edge_start = to_roleplayer
+                    else:
+                        # In this case the given relation type is symmetric. Therefore direction is arbitrary (but
+                        # expect to add a reverse edge elsewhere).
+                        assert binary_relation_type[0] == binary_relation_type[2]
+                        new_edge_end = to_roleplayer
+                elif data["type"] == binary_relation_type[2]:
+                    new_edge_end = to_roleplayer
+                else:
+                    raise ValueError(
+                        f"Unexpected role in relation {binary_relation_type[1]}. Expected \""
+                        f"{binary_relation_type[0]}\" or \"{binary_relation_type[2]}\" but got \"{data['type']}\"."
+                    )
+                graph.remove_edge(from_roleplayer, to_roleplayer)
+            graph.add_edge(new_edge_start, new_edge_end, type=binary_relation_type[1])
+            replacement_edges[(new_edge_start, new_edge_end)] = node
+    for node in replacement_edges.values():
+        graph.remove_node(node)
+    return replacement_edges
 
 
 def get_types(session, types_to_ignore, roles_to_ignore):
@@ -134,9 +186,18 @@ def diagnosis_example(typedb_binary_directory,
 
     node_types, edge_types = get_types(session, TYPES_TO_IGNORE, ROLES_TO_IGNORE)
 
-    binary_relations_to_edges(graph)  # TODO: Should be a transform. Do we do this before or after generating features?
+    # TODO: Here temporarily, should be graph-by-graph
+    graph_query_handles = get_query_handles(0)
+    options = TypeDBOptions.core()
+    options.infer = True
+    with session.transaction(TransactionType.READ, options) as tx:
+        # Build a graph from the queries, samplers, and query graphs
+        graph = build_graph_from_queries(graph_query_handles, tx)
+
+    binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT)  # TODO: Should be a transform. Do we do this before or after generating features?
 
     # This transform adds the features and labels to the graph
+    # TODO: We should make the feature encoders more explicit
     transform = StandardKGCNNetworkxTransform(
         node_types,
         edge_types,
@@ -160,11 +221,21 @@ def diagnosis_example(typedb_binary_directory,
     )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     data = dataset[0].to(device)  # Get the first graph object.
 
-    data = T.ToUndirected()(data)
+    data = transforms.ToUndirected()(data)
     del data['movie', 'rev_rates', 'user'].edge_label  # Remove "reverse" label.
+
+    # TODO: How can the negative sampling know what types to add to the generated edges? It surely can't, so we have to
+    #  deal with this
+    train_data, val_data, test_data = transforms.RandomLinkSplit(
+        num_val=0.1,
+        num_test=0.1,
+        add_negative_train_samples=True,
+        neg_sampling_ratio=1.0,
+        edge_types=[('user', 'rates', 'movie')],  # Edge user -rates-> movie
+        rev_edge_types=[('movie', 'rev_rates', 'user')],  # Edge user <-rev_rates- movie
+    )(data)
 
     class GCN(torch.nn.Module):
         def __init__(self, hidden_channels):
@@ -178,18 +249,9 @@ def diagnosis_example(typedb_binary_directory,
         def forward(self, x, edge_index):
             x = self.conv1(x, edge_index)
             x = x.relu()
-            x = F.dropout(x, p=0.5, training=self.training)
+            x = functional.dropout(x, p=0.5, training=self.training)
             x = self.conv2(x, edge_index)
             return x
-
-    model = GCN(hidden_channels=16)
-    print(model)
-
-    model = GCN(hidden_channels=16)
-    model.eval()
-
-    # out = model(data.x, data.edge_index)
-    # visualize(out, color=data.y)
 
     model = GCN(hidden_channels=16)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
@@ -374,10 +436,10 @@ def get_query_handles(example_id):
           ''')
 
     diagnosis_query_graph = (QueryGraph()
-                             .add_vars([diag], TO_INFER)
+                             .add_vars([diag], PREEXISTS)
                              .add_vars([d, p, dn], PREEXISTS)
-                             .add_role_edge(diag, d, 'diagnosed-disease', TO_INFER)
-                             .add_role_edge(diag, p, 'patient', TO_INFER))
+                             .add_role_edge(diag, d, 'diagnosed-disease', PREEXISTS)
+                             .add_role_edge(diag, p, 'patient', PREEXISTS))
 
     # === Candidate Diagnosis ===
     candidate_diagnosis_query = inspect.cleandoc(f'''match
@@ -387,10 +449,10 @@ def get_query_handles(example_id):
           ''')
 
     candidate_diagnosis_query_graph = (QueryGraph()
-                                       .add_vars([diag], CANDIDATE)
+                                       .add_vars([diag], PREEXISTS)
                                        .add_vars([d, p, dn], PREEXISTS)
-                                       .add_role_edge(diag, d, 'candidate-diagnosed-disease', CANDIDATE)
-                                       .add_role_edge(diag, p, 'candidate-patient', CANDIDATE))
+                                       .add_role_edge(diag, d, 'candidate-diagnosed-disease', PREEXISTS)
+                                       .add_role_edge(diag, p, 'candidate-patient', PREEXISTS))
 
     return [
         (symptom_query, lambda x: x, symptom_query_graph),

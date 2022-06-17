@@ -105,7 +105,7 @@ def create_feature_vector(node_or_edge_data_dict):
     Factored out of kglib.kgcn_tensorflow.pipeline.encode.create_input_graph.
 
     Args:
-        node_or_edge_dict: the dict coming describing a node or edge
+        node_or_edge_data_dict: the dict coming describing a node or edge
         obtained from an element of graph.nodes(data=True) or graph.edges(data=True)
         of a networkx graph.
 
