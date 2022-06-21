@@ -28,10 +28,7 @@ class TestDiagnosisExample(unittest.TestCase):
 
     def test_example_runs_without_exception(self):
         diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0",
-                          num_graphs=6,
-                          num_processing_steps_tr=2,
-                          num_processing_steps_ge=2,
-                          num_training_iterations=20)
+                          num_graphs=6)
 
 
 if __name__ == "__main__":

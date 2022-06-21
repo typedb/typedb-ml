@@ -36,7 +36,7 @@ def get_thing_types(tx):
 
 def get_role_types(tx):
     """
-    Get all schema roles, excluding those for implicit attribute relations, the base role type
+    Get all schema roles, excluding the base role type
     Args:
         tx: TypeDB transaction
 
@@ -47,3 +47,41 @@ def get_role_types(tx):
     role_types = ['has'] + [role.get('r').get_label().name() for role in schema_concepts]
     role_types.remove('role')
     return role_types
+
+
+def get_role_triples(tx):
+    """
+    Get triples of all schema roles and the relation and roleplayer they connect
+    Args:
+        tx: TypeDB transaction
+
+    Returns:
+        TypeDB role triples
+    """
+    role_triples = []
+    schema_concepts = tx.query().match("match $rel sub relation; $rel relates $r; $rp plays $r;")
+    for answer in schema_concepts:
+        relation = answer.get('rel').get_label().name()
+        role = answer.get('r').get_label().name()
+        player = answer.get("rp").get_label().name()
+        role_triples.append((relation, role, player))
+    return role_triples
+
+
+def get_has_triples(tx):
+    """
+    Get triples of all ownerships: the owner type and owned attribute
+    Args:
+        tx: TypeDB transaction
+
+    Returns:
+        TypeDB ownership triples
+    """
+    has_triples = []
+    schema_concepts = tx.query().match("match $owner sub relation owns $owned;")
+    for answer in schema_concepts:
+        owner = answer.get('owner').get_label().name()
+        owned = answer.get('owned').get_label().name()
+        has_triples.append((owner, "has", owned))
+    return has_triples
+

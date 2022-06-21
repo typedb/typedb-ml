@@ -35,7 +35,7 @@ from kglib.utils.graph.iterate import multidigraph_data_iterator, multidigraph_n
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
-from kglib.utils.typedb.type.type import get_thing_types, get_role_types
+from kglib.utils.typedb.type.type import get_thing_types, get_role_types, get_role_triples, get_has_triples
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
@@ -135,11 +135,22 @@ def get_types(session, types_to_ignore, roles_to_ignore):
         return node_types, edge_types
 
 
+def get_edge_types(session):
+    # TODO: Naming is too close to get_types where the result is very different
+    with session.transaction(TransactionType.READ) as tx:
+        edge_types = get_role_triples(tx) + get_has_triples(tx)
+    return edge_types
+
+
+def reverse_edge_types(edge_types):
+    reversed = []
+    for edge_from, edge, edge_to in edge_types:
+        reversed.append((edge_to, f"rev_{edge}", edge_from))
+        return reversed
+
+
 def diagnosis_example(typedb_binary_directory,
                       num_graphs=100,
-                      num_processing_steps_tr=3,
-                      num_processing_steps_ge=3,
-                      num_training_iterations=50,
                       database=DATABASE,
                       address=ADDRESS,
                       schema_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
@@ -150,9 +161,6 @@ def diagnosis_example(typedb_binary_directory,
     Args:
         typedb_binary_directory: Location of the typedb binary for the purpose of loading initial schema and data
         num_graphs: Number of graphs to use for training and testing combined
-        num_processing_steps_tr: The number of message-passing steps for training
-        num_processing_steps_ge: The number of message-passing steps for testing
-        num_training_iterations: The number of training epochs
         database: The name of the database to retrieve example subgraphs from
         address: The address of the running TypeDB instance
         schema_file_path: Path to the diagnosis schema file
@@ -172,11 +180,7 @@ def diagnosis_example(typedb_binary_directory,
     tr_ge_split = int(num_graphs*0.5)
 
     client = TypeDB.core_client(address)
-    if client.databases().contains(database):
-        raise ValueError(
-            f"There is already a database present with the name {database}. The Diagnosis example expects a clean DB. "
-            f"Please delete the {database} database, or use another database name")
-    client.databases().create(database)
+    create_database(client, database)
 
     load_typeql_schema_file(database, typedb_binary_directory, schema_file_path)
     load_typeql_data_file(database, typedb_binary_directory, seed_data_file_path)
@@ -201,7 +205,8 @@ def diagnosis_example(typedb_binary_directory,
     transform = StandardKGCNNetworkxTransform(
         node_types,
         edge_types,
-        target_name='solution',  # TODO: We're planning to do away with already having the graphs labelled at this point, so somehow we need to add negative samples and label accordingly
+        target_name='solution',  # TODO: We're planning to do away with already having the graphs labelled at this
+        # point, so somehow we need to add negative samples and label accordingly
         obfuscate=None,
         categorical=None,
         continuous=None,
@@ -223,8 +228,12 @@ def diagnosis_example(typedb_binary_directory,
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data = dataset[0].to(device)  # Get the first graph object.
 
-    data = transforms.ToUndirected()(data)
-    del data['movie', 'rev_rates', 'user'].edge_label  # Remove "reverse" label.
+    edge_types = get_edge_types(session)
+    edge_types_reversed = reverse_edge_types(edge_types)
+
+    data = transforms.ToUndirected()(data)  # TODO: Consider whether we want to add reverse edges for the edge type being predicted
+    for edge_from, edge, edge_to in edge_types_reversed:
+        del data[edge_from, edge, edge_to].edge_label  # Remove "reverse" label.
 
     # TODO: How can the negative sampling know what types to add to the generated edges? It surely can't, so we have to
     #  deal with this
@@ -233,10 +242,11 @@ def diagnosis_example(typedb_binary_directory,
         num_test=0.1,
         add_negative_train_samples=True,
         neg_sampling_ratio=1.0,
-        edge_types=[('user', 'rates', 'movie')],  # Edge user -rates-> movie
-        rev_edge_types=[('movie', 'rev_rates', 'user')],  # Edge user <-rev_rates- movie
+        edge_types=edge_types,
+        rev_edge_types=edge_types_reversed,
     )(data)
 
+    # TODO: Replace this model with that from hetero_link_pred
     class GCN(torch.nn.Module):
         def __init__(self, hidden_channels):
             super().__init__()
@@ -291,6 +301,14 @@ def diagnosis_example(typedb_binary_directory,
     client.close()
 
     return solveds_tr, solveds_ge
+
+
+def create_database(client, database):
+    if client.databases().contains(database):
+        raise ValueError(
+            f"There is already a database present with the name {database}. The Diagnosis example expects a clean DB. "
+            f"Please delete the {database} database, or use another database name")
+    client.databases().create(database)
 
 
 def create_concept_graphs(example_indices, typedb_session, infer = True):
