@@ -68,7 +68,7 @@ def get_has_triplets(tx):
         TypeDB ownership triples
     """
     has_triples = []
-    schema_concepts = tx.query().match("match $owner sub relation, owns $owned;")
+    schema_concepts = tx.query().match("match $owner sub thing, owns $owned;")
     for answer in schema_concepts:
         owner = answer.get('owner').get_label().name()
         owned = answer.get('owned').get_label().name()

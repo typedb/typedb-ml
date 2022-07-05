@@ -31,6 +31,7 @@ class LinkPredictionLabeller:
 
     def __call__(self, graph):
         self.label_edges(graph)
+        return graph
 
     # def label_nodes(self, graph):
     #     for data in multidigraph_node_data_iterator(graph):

@@ -37,6 +37,8 @@ class TypeDBNetworkxDataSet:
     def __init__(
         self,
         indices: Sequence,
+        node_types,
+        edge_type_triplets,
         get_query_handles_for_id: Callable,
         database: Optional[str] = None,
         uri: Optional[str] = "localhost:1729",
@@ -46,6 +48,8 @@ class TypeDBNetworkxDataSet:
     ):
         assert (database and uri) or session
         self._indices = indices
+        self._node_types = node_types
+        self._edge_type_triplets = edge_type_triplets
         self.get_query_handles_for_id = get_query_handles_for_id
         self._infer = infer
         self._transform = transform
@@ -87,4 +91,17 @@ class TypeDBNetworkxDataSet:
         graph.name = id
         if self._transform:
             graph = self._transform(graph)
-        return from_networkx(graph).to_heterogeneous(node_type, edge_type, node_type_names, edge_type_names)
+        return from_networkx(graph), self.node_type_indices(graph), self.edge_type_indices(graph)
+
+    def node_type_indices(self, graph):
+        indices = []
+        for _, data in graph.nodes(data=True):
+            indices.append(self._node_types.index(data['type']))
+        return indices
+
+    def edge_type_indices(self, graph):
+        indices = []
+        for src, dst, data in graph.edges(data=True):
+            # indices.append(self._edge_type_triplets.index(data['type']))
+            indices.append(self._edge_type_triplets.index((graph.nodes[src]["type"], data["type"], graph.nodes[dst]["type"])))
+        return indices

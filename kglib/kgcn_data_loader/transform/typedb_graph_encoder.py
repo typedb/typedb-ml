@@ -67,17 +67,18 @@ class GraphFeatureEncoder:
                 encoded_value = self.attribute_encoders[typ](node_data['value'])
             else:
                 # encoded_value = [0] * self.attribute_encoding_size
-                encoded_value = []
+                encoded_value = [0]
 
             one_hot_encoded_type = self.node_types.index(node_data['type'])
-            node_data["x"] = np.hstack(
+            node_data['x'] = np.hstack(
                 [np.array(one_hot_encoded_type, dtype=np.float32), np.array(encoded_value, dtype=np.float32)]
             )
 
     def encode_edge_features(self, graph):
         for edge_data in multidigraph_edge_data_iterator(graph):
             one_hot_encoded_type = self.edge_types.index(edge_data['type'])
-            edge_data["edge_attr"] = np.array(one_hot_encoded_type, dtype=np.float32)
+            # TODO: Unnecessary empty array added to have common features size between nodes and edges
+            edge_data['edge_attr'] = np.hstack([np.array(one_hot_encoded_type, dtype=np.float32), np.array([0], dtype=np.float32)])
 
 
 class CategoricalEncoder:
@@ -86,7 +87,7 @@ class CategoricalEncoder:
         self.categories = categories
 
     def __call__(self, value):
-        return self.categories.index(value)
+        return [self.categories.index(value)]
 
 
 class ContinuousEncoder:
@@ -95,7 +96,7 @@ class ContinuousEncoder:
         self.min_val = min_val
 
     def __call__(self, value):
-        return (value - self.min_val) / (self.max_val - self.min_val)
+        return [(value - self.min_val) / (self.max_val - self.min_val)]
 
 
 # class SequenceEncoder(object):

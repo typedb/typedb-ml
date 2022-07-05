@@ -24,6 +24,7 @@ import subprocess as sp
 
 import networkx as nx
 import torch
+from torch import as_tensor
 import torch.nn.functional as functional
 import torch_geometric.transforms as transforms
 from torch.nn import Linear
@@ -36,6 +37,7 @@ from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredicti
 from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
+from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
 
@@ -60,6 +62,7 @@ def diagnosis_example(typedb_binary_directory,
                       num_graphs=100,
                       database=DATABASE,
                       address=ADDRESS,
+                      # TODO: remove hard-coding
                       schema_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
                       seed_data_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
     """
@@ -118,19 +121,44 @@ def diagnosis_example(typedb_binary_directory,
         replaced_edges = binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT[1:4]),
         return nx.convert_node_labels_to_integers(graph, label_attribute="concept")
 
+    def clear_unneeded_fields(graph):
+        for node_data in multidigraph_node_data_iterator(graph):
+            x = node_data["x"]
+            # y = node_data["y"]
+            t = node_data["type"]
+            node_data.clear()
+            node_data["x"] = x
+            # node_data["y"] = y
+            node_data["type"] = t
+
+        for edge_data in multidigraph_edge_data_iterator(graph):
+            x = edge_data["edge_attr"]
+            y = edge_data["y_edge"]
+            t = edge_data["type"]
+            edge_data.clear()
+            edge_data["edge_attr"] = x
+            edge_data["y_edge"] = y
+            edge_data["type"] = t
+        return graph
+
     edge_types = list({triplet[1] for triplet in edge_type_triplets})
     transform = transforms.Compose([
         prepare_graph,
         GraphFeatureEncoder(node_types, edge_types, attribute_encoders, attribute_encoding_size),
-        LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2])
+        LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2]),
+        clear_unneeded_fields
     ])
-    # TODO: Consider clearing unneeded node and edge data
 
     # Create a Dataset that will load graphs from TypeDB on-demand, based on an ID
-    dataset = TypeDBNetworkxDataSet([0], get_query_handles, DATABASE, ADDRESS, session, True, transform)
+    dataset = TypeDBNetworkxDataSet(
+        [0], node_types, edge_type_triplets, get_query_handles, DATABASE, ADDRESS, session, True, transform
+    )
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    data = dataset[0].to(device)  # Get the first graph object.
+    data, node_type_indices, edge_type_indices = dataset[0]
+    data = data.to_heterogeneous(
+        as_tensor(node_type_indices), as_tensor(edge_type_indices), node_types, edge_type_triplets
+    ).to(device)  # Get the first graph object.
 
     # TODO: Consider whether we want to add reverse edges for the edge type being predicted and whether to do the
     #  before or after other transforms
