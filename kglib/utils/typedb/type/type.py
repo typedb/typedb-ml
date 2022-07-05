@@ -37,21 +37,6 @@ def get_thing_types(session):
     return thing_types
 
 
-def get_role_types(tx):
-    """
-    Get all schema roles, excluding the base role type
-    Args:
-        tx: TypeDB transaction
-
-    Returns:
-        TypeDB roles
-    """
-    schema_concepts = tx.query().match("match $rel sub relation, relates $r;")
-    role_types = ['has'] + [role.get('r').get_label().name() for role in schema_concepts]
-    role_types.remove('role')
-    return role_types
-
-
 def get_role_triplets(tx):
     """
     Get triples of all schema roles and the relation and roleplayer they connect
@@ -65,9 +50,11 @@ def get_role_triplets(tx):
     schema_concepts = tx.query().match("match $rel sub relation; $rel relates $r; $rp plays $r;")
     for answer in schema_concepts:
         relation = answer.get('rel').get_label().name()
-        role = answer.get('r').get_label().name()
+        roles = [r.get_label().name() for r in answer.get('r').as_remote(tx).get_supertypes()]
+        roles.remove('role')
         player = answer.get("rp").get_label().name()
-        role_triples.append((relation, role, player))
+        for role in roles:
+            role_triples.append((relation, role, player))
     return role_triples
 
 

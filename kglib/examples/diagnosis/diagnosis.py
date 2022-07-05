@@ -38,7 +38,6 @@ from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEn
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
-from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
@@ -47,7 +46,7 @@ PREEXISTS = 0
 
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
-TYPES_TO_IGNORE = {'person-at-risk'}
+TYPES_TO_IGNORE = {}
 
 # Note that this determines the edge direction when converting from a TypeDB relation
 RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
@@ -55,20 +54,6 @@ RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease
 # The learner should see candidate relations the same as the ground truth relations, so adjust these candidates to
 # look like their ground truth counterparts
 TYPES_AND_ROLES_TO_OBFUSCATE = {}
-
-
-def get_types(session, types_to_ignore, roles_to_ignore):
-    with session.transaction(TransactionType.READ) as tx:
-        # The terminology changes from here onwards from thing -> node and role -> edge
-        node_types = get_thing_types(tx)
-        edge_types = get_role_types(tx)
-        # Ignore any types or roles that exist in the TypeDB instance but which aren't being used for learning to
-        # reduce the number of categories to embed
-        [node_types.remove(el) for el in types_to_ignore]
-        [edge_types.remove(el) for el in roles_to_ignore]
-        print(f'Found node types: {node_types}')
-        print(f'Found edge types: {edge_types}')
-        return node_types, edge_types
 
 
 def diagnosis_example(typedb_binary_directory,
