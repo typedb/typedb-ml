@@ -31,28 +31,26 @@ from torch_geometric.nn import SAGEConv, to_hetero
 from typedb.client import *
 
 from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetworkxDataSet
-from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges
+from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges, \
+    prepare_edge_triplets, prepare_node_types
 from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
-from kglib.utils.graph.iterate import multidigraph_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
-from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
-from kglib.utils.typedb.type.type import get_thing_types, get_role_types, get_edge_type_triplets, reverse_edge_type_triplets
+from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
 
 PREEXISTS = 0
 
-# Ignore any types or roles that exist in the TypeDB instance but which aren't being used for learning to reduce the
+# Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
-TYPES_TO_IGNORE = []
-ROLES_TO_IGNORE = []
+TYPES_TO_IGNORE = {'person-at-risk'}
 
 # Note that this determines the edge direction when converting from a TypeDB relation
-RELATION_TYPE_TO_PREDICT = ('patient', 'diagnosis', 'diagnosed-disease')
+RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
 
 # The learner should see candidate relations the same as the ground truth relations, so adjust these candidates to
 # look like their ground truth counterparts
@@ -94,7 +92,7 @@ def diagnosis_example(typedb_binary_directory,
         Final accuracies for training and for testing
     """
 
-    # Delete the database each time
+    # Delete the database each time  # TODO: Remove
     sp.check_call([
         './typedb',
         'console',
@@ -110,20 +108,10 @@ def diagnosis_example(typedb_binary_directory,
 
     session = client.session(database, SessionType.DATA)
 
-    # TODO: This considers the node_type_and edge_type lists, but not the edge type triples that PyG takes in
-    # TODO: This means that the triples also need to be manipulated based on the conversion from a relation to a binary edge
-    node_types, edge_types = get_types(session, TYPES_TO_IGNORE, ROLES_TO_IGNORE)
     # During the transforms below we convert the *relations to predict* to simple edges, which means the relation
     # changes from a node to an edge. We therefore need to update the node_types and edge_types accordingly
-    node_types.remove(RELATION_TYPE_TO_PREDICT[1])
-    edge_types.add(RELATION_TYPE_TO_PREDICT[1])
-    # Remove the relation's roles from the edge_types list
-    edge_types.remove(RELATION_TYPE_TO_PREDICT[0])
-    if RELATION_TYPE_TO_PREDICT[0] != RELATION_TYPE_TO_PREDICT[2]:
-        edge_types.remove(RELATION_TYPE_TO_PREDICT[2])
-
-    edge_type_triplets = get_edge_type_triplets(session)
-    edge_type_triplets_reversed = reverse_edge_type_triplets(edge_type_triplets)
+    node_types = prepare_node_types(session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE)
+    edge_type_triplets, edge_type_triplets_reversed = prepare_edge_triplets(session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE)
 
     # Attribute encoders encode the value of each attribute into a fixed-length feature vector. The encoders are
     # defined on a per-type basis. Easily define your own encoders for specific attribute data in your TypeDB database
@@ -131,7 +119,9 @@ def diagnosis_example(typedb_binary_directory,
     attribute_encoders = {
         # Categorical Attribute types and the values of their categories
         # TODO: Use a sentence encoder for this instead to demonstrate how to use one
-        'name': CategoricalEncoder(['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol']),
+        'name': CategoricalEncoder(
+            ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol']
+        ),
         # Continuous Attribute types and their min and max values
         'severity': ContinuousEncoder(0, 1),
         'age': ContinuousEncoder(7, 80),
@@ -140,13 +130,14 @@ def diagnosis_example(typedb_binary_directory,
 
     def prepare_graph(graph):
         # TODO: We likely need to know the relations that were replaced with binary edges later on
-        replaced_edges = binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT),
+        replaced_edges = binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT[1:4]),
         return nx.convert_node_labels_to_integers(graph, label_attribute="concept")
 
+    edge_types = list({triplet[1] for triplet in edge_type_triplets})
     transform = transforms.Compose([
         prepare_graph,
         GraphFeatureEncoder(node_types, edge_types, attribute_encoders, attribute_encoding_size),
-        LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[1])
+        LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2])
     ])
     # TODO: Consider clearing unneeded node and edge data
 
@@ -441,3 +432,8 @@ def write_predictions_to_typedb(graphs, tx):
                              f'has probability-preexists {p[0]:.3f};')
                     tx.query().insert(query)
     tx.commit()
+
+
+if __name__ == '__main__':
+    # TODO: Remove
+    diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", num_graphs=6)

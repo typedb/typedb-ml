@@ -65,7 +65,6 @@ class GraphFeatureEncoder:
             if typ in self.attribute_encoders.keys():
                 # Add the integer value of the category for each categorical attribute instance
                 encoded_value = self.attribute_encoders[typ](node_data['value'])
-                assert len(encoded_value) == self.attribute_encoding_size
             else:
                 # encoded_value = [0] * self.attribute_encoding_size
                 encoded_value = []

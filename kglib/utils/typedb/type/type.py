@@ -21,17 +21,18 @@
 from typedb.api.connection.transaction import TransactionType
 
 
-def get_thing_types(tx):
+def get_thing_types(session):
     """
     Get all schema types, excluding those for implicit attribute relations and base types
     Args:
-        tx: TypeDB transaction
+        session: TypeDB session
 
     Returns:
         TypeDB types
     """
-    schema_concepts = tx.query().match("match $x sub thing;")
-    thing_types = [schema_concept.get('x').get_label().name() for schema_concept in schema_concepts]
+    with session.transaction(TransactionType.READ) as tx:
+        schema_concepts = tx.query().match("match $x sub thing;")
+        thing_types = [schema_concept.get('x').get_label().name() for schema_concept in schema_concepts]
     [thing_types.remove(el) for el in ['thing', 'relation', 'entity', 'attribute']]
     return thing_types
 
@@ -80,7 +81,7 @@ def get_has_triplets(tx):
         TypeDB ownership triples
     """
     has_triples = []
-    schema_concepts = tx.query().match("match $owner sub relation owns $owned;")
+    schema_concepts = tx.query().match("match $owner sub relation, owns $owned;")
     for answer in schema_concepts:
         owner = answer.get('owner').get_label().name()
         owned = answer.get('owned').get_label().name()

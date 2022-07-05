@@ -21,6 +21,7 @@
 import networkx as nx
 
 from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
+from kglib.utils.typedb.type.type import get_edge_type_triplets, reverse_edge_type_triplets, get_thing_types
 
 
 class LinkPredictionLabeller:
@@ -100,3 +101,30 @@ def binary_relations_to_edges(graph: nx.MultiDiGraph, binary_relation_type):
     for node in replacement_edges.values():
         graph.remove_node(node)
     return replacement_edges
+
+
+def prepare_edge_triplets(session, relation_type_to_predict, types_to_ignore):
+    edge_type_triplets = get_edge_type_triplets(session)
+    edge_type_triplets = [e for e in edge_type_triplets if not (set(e).intersection(types_to_ignore))]
+    replace_relation_with_binary_edge(edge_type_triplets, relation_type_to_predict)
+    edge_type_triplets_reversed = reverse_edge_type_triplets(edge_type_triplets)
+    return edge_type_triplets, edge_type_triplets_reversed
+
+
+def replace_relation_with_binary_edge(edge_type_triplets, relation_type_to_predict):
+    # Remove the two roles of the relation_to_predict and replace them with a binary edge that uses the name of the
+    # binary relation it represents
+    edge_type_triplets.remove(relation_type_to_predict[2:])
+    if relation_type_to_predict[1] != relation_type_to_predict[3]:
+        edge_type_triplets.remove(tuple(reversed(relation_type_to_predict[:3])))
+    edge_type_triplets.append((relation_type_to_predict[0], relation_type_to_predict[2], relation_type_to_predict[4]))
+
+
+def prepare_node_types(session, relation_type_to_predict, types_to_ignore):
+    node_types = get_thing_types(session)
+    for el in types_to_ignore:
+        if el in node_types:
+            node_types.remove(el)
+    # Remove the relation_to_predict as a node, since we will be using it as a binary edge instead
+    node_types.remove(relation_type_to_predict[2])
+    return node_types
