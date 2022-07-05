@@ -23,7 +23,7 @@ import unittest
 
 import numpy as np
 
-from kglib.kgcn_data_loader.encoding.standard_encode import stack_features
+from kglib.kgcn_data_loader.encoding.encoding import stack_features
 
 
 class TestAugmentDataFields(unittest.TestCase):

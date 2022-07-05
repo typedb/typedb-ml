@@ -20,11 +20,6 @@
 #
 
 import subprocess as sp
-from typing import List
-
-from typedb.client import *
-
-from kglib.utils.typedb.type.type import get_thing_types, get_role_types
 
 
 def load_typeql_schema_file(database, typedb_binary_location, typeql_file_path):
@@ -45,22 +40,6 @@ def _load_typeql_file(database, typeql_file_path, typedb_binary_location, schema
         f'--command=source {typeql_file_path}',
         f'--command=commit'
     ], cwd=typedb_binary_location)
-
-
-def duplicate_edges_in_reverse(graph):
-    """
-    Takes in a directed multi graph, and creates duplicates of all edges, the duplicates having reversed direction to
-    the originals. This is useful since directed edges constrain the direction of messages passed. We want to permit
-    omni-directional message passing.
-    Args:
-        graph: The graph
-
-    Returns:
-        The graph with duplicated edges, reversed, with all original edge properties attached to the duplicates
-    """
-    for sender, receiver, keys, data in graph.edges(data=True, keys=True):
-        graph.add_edge(receiver, sender, keys, **data)
-    return graph
 
 
 def apply_logits_to_graphs(graph, logits_graph):
@@ -88,39 +67,3 @@ def apply_logits_to_graphs(graph, logits_graph):
         data['logits'] = list(logits_graph.edges[sender, receiver, keys]['features'])
 
     return graph
-
-
-def get_node_types_for_training(session: TypeDBSession, types_to_ignore: List[str]) -> List[str]:
-    """
-    Takes in a list of node types to ignore and returns all node types in schema that are not to be ignored.
-
-    Args:
-        session: TypeDB rpc session of type SessionType.DATA
-        types_to_ignore: list of strings of schema type labels
-
-    Returns:
-        list of strings of schema type labels to include in training
-    """
-    with session.transaction(TransactionType.READ) as tx:
-        node_types = get_thing_types(tx)
-        [node_types.remove(el) for el in types_to_ignore]
-    print(f"Found node types: {node_types}")
-    return node_types
-
-
-def get_edge_types_for_training(session: TypeDBSession, roles_to_ignore: List[str]) -> List[str]:
-    """
-    Takes in a list of role types to ignore and returns all role types in schema that are not to be ignored.
-
-    Args:
-        session: TypeDB rpc session of type SessionType.DATA
-        roles_to_ignore: list of strings of role type labels
-
-    Returns:
-        list of strings of role type labels to include in training
-    """
-    with session.transaction(TransactionType.READ) as tx:
-        edge_types = get_role_types(tx)
-        [edge_types.remove(el) for el in roles_to_ignore]
-    print(f"Found edge types: {edge_types}")
-    return edge_types

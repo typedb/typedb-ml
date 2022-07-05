@@ -18,6 +18,8 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
+from typedb.api.connection.transaction import TransactionType
+
 
 def get_thing_types(tx):
     """
@@ -49,7 +51,7 @@ def get_role_types(tx):
     return role_types
 
 
-def get_role_triples(tx):
+def get_role_triplets(tx):
     """
     Get triples of all schema roles and the relation and roleplayer they connect
     Args:
@@ -68,7 +70,7 @@ def get_role_triples(tx):
     return role_triples
 
 
-def get_has_triples(tx):
+def get_has_triplets(tx):
     """
     Get triples of all ownerships: the owner type and owned attribute
     Args:
@@ -85,3 +87,16 @@ def get_has_triples(tx):
         has_triples.append((owner, "has", owned))
     return has_triples
 
+
+def get_edge_type_triplets(session):
+    # TODO: Naming is too close to get_types where the result is very different
+    with session.transaction(TransactionType.READ) as tx:
+        edge_types = get_role_triplets(tx) + get_has_triplets(tx)
+    return edge_types
+
+
+def reverse_edge_type_triplets(edge_types):
+    reversed_edge_triples = []
+    for edge_from, edge, edge_to in edge_types:
+        reversed_edge_triples.append((edge_to, f"rev_{edge}", edge_from))
+    return reversed_edge_triples

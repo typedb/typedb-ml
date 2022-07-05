@@ -24,47 +24,9 @@ import unittest
 import networkx as nx
 import numpy as np
 
-from kglib.utils.typedb.object.thing import Thing
 from kglib.utils.graph.test.case import GraphTestCase
 
-from kglib.kgcn_data_loader.utils import duplicate_edges_in_reverse, apply_logits_to_graphs
-
-
-class TestDuplicateEdgesInReverse(GraphTestCase):
-
-    def test_edges_are_duplicated_as_expected(self):
-        graph = nx.MultiDiGraph(name=0)
-
-        p0 = Thing('V123', 'person', 'entity')
-        p1 = Thing('V456', 'person', 'entity')
-        par0 = Thing('V789', 'parentship', 'relation')
-
-        # people
-        graph.add_node(p0, type='person', solution=1)
-        graph.add_node(p1, type='person', solution=1)
-
-        # parentships
-        graph.add_node(par0, type='parentship', solution=1)
-        graph.add_edge(par0, p0, type='parent', solution=1)
-        graph.add_edge(par0, p1, type='child', solution=1)
-
-        duplicate_edges_in_reverse(graph)
-
-        expected_graph = nx.MultiDiGraph(name=0)
-
-        # people
-        expected_graph.add_node(p0, type='person', solution=1)
-        expected_graph.add_node(p1, type='person', solution=1)
-
-        # parentships
-        expected_graph.add_node(par0, type='parentship', solution=1)
-        expected_graph.add_edge(par0, p0, type='parent', solution=1)
-        expected_graph.add_edge(par0, p1, type='child', solution=1)
-
-        # Duplicates
-        expected_graph.add_edge(p0, par0, type='parent', solution=1)
-        expected_graph.add_edge(p1, par0, type='child', solution=1)
-        self.assertGraphsEqual(expected_graph, graph)
+from kglib.kgcn_data_loader.utils import apply_logits_to_graphs
 
 
 class TestApplyLogitsToGraphs(GraphTestCase):

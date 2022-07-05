@@ -21,29 +21,20 @@
 
 import numpy as np
 
-from kglib.utils.graph.iterate import multidigraph_data_iterator, multidigraph_node_data_iterator, \
-    multidigraph_edge_data_iterator
+from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 
 
-def encode_values(graph, categorical_attributes, continuous_attributes):
+def encode_values(graph, attribute_encoders, attribute_encoding_size):
     for node_data in multidigraph_node_data_iterator(graph):
         typ = node_data['type']
-
-        if categorical_attributes is not None and typ in categorical_attributes.keys():
+        if typ in attribute_encoders.keys():
             # Add the integer value of the category for each categorical attribute instance
-            category_values = categorical_attributes[typ]
-            node_data['encoded_value'] = category_values.index(node_data['value'])
-
-        elif continuous_attributes is not None and typ in continuous_attributes.keys():
-            min_val, max_val = continuous_attributes[typ]
-            node_data['encoded_value'] = (node_data['value'] - min_val) / (max_val - min_val)
-
+            node_data['encoded_value'] = attribute_encoders[typ].encode(node_data['value'])
         else:
-            node_data['encoded_value'] = 0
-    for edge_data in multidigraph_edge_data_iterator(graph):
-        edge_data['encoded_value'] = 0
+            node_data['encoded_value'] = [0] * attribute_encoding_size
 
-    return graph
+    for edge_data in multidigraph_edge_data_iterator(graph):
+        edge_data['encoded_value'] = [0] * attribute_encoding_size
 
 
 def encode_types(graph, iterator_func, all_types):
@@ -54,47 +45,15 @@ def encode_types(graph, iterator_func, all_types):
         iterator_func: An function to create an iterator of data in the graph (node data, edge data or combined node
         and edge data)
         all_types: The full list of types to be encoded in this order
-        
+
     Returns:
-        The graph, which is also is updated in-place
+        Nothing, the graph is updated in-place
 
     """
     iterator = iterator_func(graph)
 
     for data in iterator:
         data['categorical_type'] = all_types.index(data['type'])
-
-    return graph
-
-
-def create_input_graph(graph):
-    input_graph = graph.copy()
-
-    for data in multidigraph_data_iterator(input_graph):
-        if data["solution"] == 0:
-            preexists = 1
-        else:
-            preexists = 0
-
-        features = stack_features([preexists, data["categorical_type"], data["encoded_value"]])
-        data.clear()
-        data["features"] = features
-
-    input_graph.graph["features"] = np.array([0.0] * 5, dtype=np.float32)
-    return input_graph
-
-
-def create_target_graph(graph):
-    target_graph = graph.copy()
-    solution_one_hot_encoding = np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]], dtype=np.float32)
-
-    for data in multidigraph_data_iterator(target_graph):
-        features = solution_one_hot_encoding[data["solution"]]
-        data.clear()
-        data["features"] = features
-
-    target_graph.graph["features"] = np.array([0.0] * 5, dtype=np.float32)
-    return target_graph
 
 
 def stack_features(features):
