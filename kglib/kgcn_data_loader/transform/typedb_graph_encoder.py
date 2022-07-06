@@ -69,6 +69,8 @@ class GraphFeatureEncoder:
                 # encoded_value = [0] * self.attribute_encoding_size
                 encoded_value = [0]
 
+            # TODO: We can skip encoding type information as we are using the hetero models from PyTorch to take care
+            #  of that for us
             one_hot_encoded_type = self.node_types.index(node_data['type'])
             node_data['x'] = np.hstack(
                 [np.array(one_hot_encoded_type, dtype=np.float32), np.array(encoded_value, dtype=np.float32)]

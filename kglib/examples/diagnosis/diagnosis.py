@@ -48,8 +48,8 @@ PREEXISTS = 0
 
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
-TYPES_TO_IGNORE = {}
-
+TYPES_TO_IGNORE = {'substance', 'probability-exists', 'units-per-week', 'probability-preexists', 'smoking-risk-factor',
+                   'example-id', 'consumption', 'risk-factor', 'probability-non-exists', 'alcohol-risk-factor'}
 # Note that this determines the edge direction when converting from a TypeDB relation
 RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
 
@@ -172,10 +172,9 @@ def diagnosis_example(typedb_binary_directory,
     train_data, val_data, test_data = transforms.RandomLinkSplit(
         num_val=0.1,
         num_test=0.1,
-        add_negative_train_samples=True,
-        neg_sampling_ratio=1.0,
-        edge_types=('person', 'diagnosis', 'disease'),
-        rev_edge_types=('disease', 'rev_diagnosis', 'person'),
+        neg_sampling_ratio=0.0,
+        edge_types=RELATION_TYPE_TO_PREDICT[::2],  # Evaluates to: ('person', 'diagnosis', 'disease'),
+        rev_edge_types=edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
     )(data)
 
     class GNNEncoder(torch.nn.Module):
@@ -197,7 +196,7 @@ def diagnosis_example(typedb_binary_directory,
 
         def forward(self, z_dict, edge_label_index):
             row, col = edge_label_index
-            z = torch.cat([z_dict['user'][row], z_dict['movie'][col]], dim=-1)
+            z = torch.cat([z_dict['person'][row], z_dict['disease'][col]], dim=-1)
 
             z = self.lin1(z).relu()
             z = self.lin2(z)
@@ -219,7 +218,25 @@ def diagnosis_example(typedb_binary_directory,
     # Due to lazy initialization, we need to run one model step so the number
     # of parameters can be inferred:
     with torch.no_grad():
-        model.encoder(train_data.x_dict, train_data.edge_index_dict)
+        try:
+            model.encoder(train_data.x_dict, train_data.edge_index_dict)
+        except AttributeError as e:
+            if str(e) == "'NoneType' object has no attribute 'dim'":
+                # Node types with no instances need to be ignored
+                to_ignore = set()
+                for key, value in train_data.x_dict.items():
+                    if len(value) == 0:
+                        to_ignore.add(key)
+                for key, value in train_data.edge_index_dict.items():
+                    if len(value) == 0 and to_ignore.intersection(set(key)):
+                        to_ignore.add(key[1])
+                print(to_ignore)
+                raise ValueError(
+                    f'This pipeline requires all un-ignored types to have instances. Some types don\'t have instances. '
+                    f'Try adding/retrieving data for the following types or add them to the ignored types:\n{to_ignore}'
+                )
+            else:
+                raise e
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
@@ -231,8 +248,8 @@ def diagnosis_example(typedb_binary_directory,
         model.train()
         optimizer.zero_grad()
         pred = model(train_data.x_dict, train_data.edge_index_dict,
-                     train_data['user', 'movie'].edge_label_index)
-        target = train_data['user', 'movie'].edge_label
+                     train_data['person', 'disease'].edge_label_index)
+        target = train_data['person', 'disease'].edge_label
         loss = weighted_mse_loss(pred, target, None)  # TODO: Consider using weighting to balance the positive/negative example sets
         loss.backward()
         optimizer.step()
@@ -242,9 +259,9 @@ def diagnosis_example(typedb_binary_directory,
     def test(data):
         model.eval()
         pred = model(data.x_dict, data.edge_index_dict,
-                     data['user', 'movie'].edge_label_index)
+                     data['person', 'disease'].edge_label_index)
         pred = pred.clamp(min=0, max=5)
-        target = data['user', 'movie'].edge_label.float()
+        target = data['person', 'disease'].edge_label.float()
         rmse = functional.mse_loss(pred, target).sqrt()
         return float(rmse)
 
