@@ -41,7 +41,7 @@ def get_example_queries(pmf, example_id):
                 $p isa person, has example-id {example_id};
                 $doc isa person, has example-id {20000 + example_id};
                 insert
-                $diagnosis (patient: $p, diagnosed-disease: $d, doctor: $doc) isa diagnosis;
+                $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;
                 $p has age {int(variable_values['Multiple Sclerosis']['age']())};'''))
 
     if variable_values['Diabetes Type II'] is not False:
@@ -51,7 +51,7 @@ def get_example_queries(pmf, example_id):
                 $d isa disease, has name "Diabetes Type II";
                 $doc isa person, has example-id {20000 + example_id};
                 insert
-                $diagnosis (patient: $p, diagnosed-disease: $d, doctor: $doc) isa diagnosis;
+                $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;
                 $p has age {int(variable_values['Diabetes Type II']['age']())};'''))
 
     if variable_values['Fatigue'] is not False:

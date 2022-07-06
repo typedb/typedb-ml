@@ -383,23 +383,9 @@ def get_query_handles(example_id):
                              .add_role_edge(diag, d, 'diagnosed-disease', PREEXISTS)
                              .add_role_edge(diag, p, 'patient', PREEXISTS))
 
-    # === Candidate Diagnosis ===
-    candidate_diagnosis_query = inspect.cleandoc(f'''match
-           $p isa person;
-           $d isa disease, has name $dn;
-           $diag(candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis; 
-          ''')
-
-    candidate_diagnosis_query_graph = (QueryGraph()
-                                       .add_vars([diag], PREEXISTS)
-                                       .add_vars([d, p, dn], PREEXISTS)
-                                       .add_role_edge(diag, d, 'candidate-diagnosed-disease', PREEXISTS)
-                                       .add_role_edge(diag, p, 'candidate-patient', PREEXISTS))
-
     return [
         (symptom_query, lambda x: x, symptom_query_graph),
         (diagnosis_query, lambda x: x, diagnosis_query_graph),
-        (candidate_diagnosis_query, lambda x: x, candidate_diagnosis_query_graph),
         (risk_factor_query, lambda x: x, risk_factor_query_graph),
         (person_age_query, lambda x: x, person_age_query_graph),
         (consumption_query, lambda x: x, consumption_query_graph),

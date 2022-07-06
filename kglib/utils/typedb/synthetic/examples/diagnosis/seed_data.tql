@@ -47,4 +47,3 @@ insert $c3(cause: $diabetes, effect: $vision) isa causality;
 
 insert $s isa substance, has name "Alcohol";
 insert $s isa substance, has name "Cigarettes";
-insert $kgcn isa kgcn;

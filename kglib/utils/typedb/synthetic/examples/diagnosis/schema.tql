@@ -40,8 +40,6 @@ person sub entity,
     owns example-id @key,
     owns age,
     plays diagnosis:patient,
-    plays diagnosis:doctor,
-    plays candidate-diagnosis:candidate-patient,
     plays symptom-presentation:symptomatic-patient,
     plays consumption:consumer,
     plays age-risk-factor:person-at-age-risk,
@@ -55,7 +53,6 @@ disease sub entity,
     owns name @key,
     plays causality:cause,
     plays diagnosis:diagnosed-disease,
-    plays candidate-diagnosis:candidate-diagnosed-disease,
     plays age-risk-factor:age-risked-disease,
     plays hereditary-risk-factor:hereditary-risked-disease,
     plays smoking-risk-factor:smoking-risked-disease,
@@ -72,15 +69,9 @@ parentship sub relation,
 diagnosis sub relation,
     relates patient,
     relates diagnosed-disease,
-    relates doctor,
-    relates diagnoser,
     owns probability-exists,
     owns probability-non-exists,
     owns probability-preexists;
-
-candidate-diagnosis sub relation,
-    relates candidate-patient,
-    relates candidate-diagnosed-disease;
 
 probability-exists sub attribute,
     value double;
@@ -90,18 +81,6 @@ probability-non-exists sub attribute,
 
 probability-preexists sub attribute,
     value double;
-
-kgcn sub entity,
-    plays diagnosis:diagnoser;
-
-rule where-no-diagnosis-add-candidate-diagnosis:
-    when {
-        $p isa person;
-        $d isa disease;
-        not{ (patient: $p, diagnosed-disease: $d) isa diagnosis; };
-    } then {
-        (candidate-patient: $p, candidate-diagnosed-disease: $d) isa candidate-diagnosis;
-    };
 
 causality sub relation,
     relates cause,
