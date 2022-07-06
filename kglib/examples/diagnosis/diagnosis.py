@@ -174,8 +174,8 @@ def diagnosis_example(typedb_binary_directory,
         num_test=0.1,
         add_negative_train_samples=True,
         neg_sampling_ratio=1.0,
-        edge_types=edge_type_triplets,
-        rev_edge_types=edge_type_triplets_reversed,
+        edge_types=('person', 'diagnosis', 'disease'),
+        rev_edge_types=('disease', 'rev_diagnosis', 'person'),
     )(data)
 
     class GNNEncoder(torch.nn.Module):
