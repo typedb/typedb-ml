@@ -48,8 +48,7 @@ PREEXISTS = 0
 
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
-TYPES_TO_IGNORE = {'substance', 'probability-exists', 'units-per-week', 'probability-preexists', 'smoking-risk-factor',
-                   'example-id', 'consumption', 'risk-factor', 'probability-non-exists', 'alcohol-risk-factor'}
+TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'probability-preexists', 'probability-exists', 'probability-non-exists'}
 # Note that this determines the edge direction when converting from a TypeDB relation
 RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
 
@@ -59,7 +58,7 @@ TYPES_AND_ROLES_TO_OBFUSCATE = {}
 
 
 def diagnosis_example(typedb_binary_directory,
-                      num_graphs=100,
+                      num_graphs,
                       database=DATABASE,
                       address=ADDRESS,
                       # TODO: remove hard-coding
@@ -452,4 +451,4 @@ def write_predictions_to_typedb(graphs, tx):
 
 if __name__ == '__main__':
     # TODO: Remove
-    diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", num_graphs=6)
+    diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", 50)

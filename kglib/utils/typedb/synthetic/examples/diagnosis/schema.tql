@@ -21,7 +21,7 @@
 
 define
 
-example-id sub attribute,
+person-id sub attribute,
     value long;
 
 age sub attribute,
@@ -37,7 +37,7 @@ units-per-week sub attribute,
     value long;
 
 person sub entity,
-    owns example-id @key,
+    owns person-id @key,
     owns age,
     plays diagnosis:patient,
     plays symptom-presentation:symptomatic-patient,

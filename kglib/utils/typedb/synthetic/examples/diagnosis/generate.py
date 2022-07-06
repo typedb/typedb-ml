@@ -31,15 +31,13 @@ def get_example_queries(pmf, example_id):
 
     variable_values = pmf.select()
 
-    queries = [f'insert $p isa person, has example-id {example_id};',
-               f'insert $doc isa person, has example-id {20000 + example_id};']
+    queries = [f'insert $p isa person, has person-id {example_id};']
 
     if variable_values['Multiple Sclerosis'] is not False:
         queries.append(inspect.cleandoc(f'''
                 match
                 $d isa disease, has name "Multiple Sclerosis";
-                $p isa person, has example-id {example_id};
-                $doc isa person, has example-id {20000 + example_id};
+                $p isa person, has person-id {example_id};
                 insert
                 $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;
                 $p has age {int(variable_values['Multiple Sclerosis']['age']())};'''))
@@ -47,9 +45,8 @@ def get_example_queries(pmf, example_id):
     if variable_values['Diabetes Type II'] is not False:
         queries.append(inspect.cleandoc(f'''                 
                 match
-                $p isa person, has example-id {example_id};
+                $p isa person, has person-id {example_id};
                 $d isa disease, has name "Diabetes Type II";
-                $doc isa person, has example-id {20000 + example_id};
                 insert
                 $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;
                 $p has age {int(variable_values['Diabetes Type II']['age']())};'''))
@@ -57,7 +54,7 @@ def get_example_queries(pmf, example_id):
     if variable_values['Fatigue'] is not False:
         queries.append(inspect.cleandoc(f'''
                 match
-                $p isa person, has example-id {example_id};
+                $p isa person, has person-id {example_id};
                 $s isa symptom, has name "Fatigue";
                 insert
                 $sp (presented-symptom: $s, symptomatic-patient: $p) isa 
@@ -66,7 +63,7 @@ def get_example_queries(pmf, example_id):
     if variable_values['Blurred vision'] is not False:
         queries.append(inspect.cleandoc(f'''
                 match
-                $p isa person, has example-id {example_id};
+                $p isa person, has person-id {example_id};
                 $s isa symptom, has name "Blurred vision";
                 insert
                 $sp (presented-symptom: $s, symptomatic-patient: $p) isa 
@@ -75,7 +72,7 @@ def get_example_queries(pmf, example_id):
     if variable_values['Drinking'] is not False:
         queries.append(inspect.cleandoc(f'''
                 match
-                $p isa person, has example-id {example_id};
+                $p isa person, has person-id {example_id};
                 $s isa substance, has name "Alcohol";
                 insert
                 $c (consumer: $p, consumed-substance: $s) isa consumption, 
@@ -84,18 +81,18 @@ def get_example_queries(pmf, example_id):
     if variable_values['Parent has Diabetes Type II'] is not False:
         queries.append(inspect.cleandoc(f'''
                 match
-                $p isa person, has example-id {example_id};
+                $p isa person, has person-id {example_id};
                 $d isa disease, has name "Diabetes Type II";
                 insert
                 (parent: $parent, child: $p) isa parentship;
-                $parent isa person, has example-id {example_id + 10000};
+                $parent isa person, has person-id {example_id + 10000};
                 $diagnosis (patient: $parent, diagnosed-disease: $d) isa diagnosis;
                 '''))
 
     if variable_values['Cigarettes'] is not False:
         queries.append(inspect.cleandoc(f'''
                 match
-                $p isa person, has example-id {example_id};
+                $p isa person, has person-id {example_id};
                 $s isa substance, has name "Cigarettes";
                 insert
                 $c (consumer: $p, consumed-substance: $s) isa consumption, 
@@ -135,12 +132,9 @@ def generate_example_data(client, num_examples, database="diagnosis"):
         'Cigarettes':                   [False, {'units-per-week': normal_dist(5, 1)}, {'units-per-week': normal_dist(20, 3)}],
     }, pmf_array, seed=0)
 
-    # print(pmf.to_dataframe()) # TODO Remove pandas if this is not needed now
-
     for example_id in range(0, num_examples):
         tx = session.transaction(TransactionType.WRITE)
         for query in get_example_queries(pmf, example_id):
-            #print(query)
             tx.query().insert(query)
         tx.commit()
 
