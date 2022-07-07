@@ -48,7 +48,10 @@ PREEXISTS = 0
 
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
-TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'probability-preexists', 'probability-exists', 'probability-non-exists'}
+TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'probability-preexists', 'probability-exists', 'probability-non-exists',
+                   'alcohol-risked-disease', 'person-at-alcohol-risk', 'person-at-hereditary-risk',
+                   'hereditary-risked-disease', 'smoking-risked-disease', 'person-at-smoking-risk',
+                   'person-at-age-risk', 'age-risked-disease'}
 # Note that this determines the edge direction when converting from a TypeDB relation
 RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
 
@@ -219,17 +222,21 @@ def diagnosis_example(typedb_binary_directory,
     with torch.no_grad():
         try:
             model.encoder(train_data.x_dict, train_data.edge_index_dict)
-        except AttributeError as e:
-            if str(e) == "'NoneType' object has no attribute 'dim'":
-                # Node types with no instances need to be ignored
-                to_ignore = set()
-                for key, value in train_data.x_dict.items():
-                    if len(value) == 0:
-                        to_ignore.add(key)
-                for key, value in train_data.edge_index_dict.items():
-                    if len(value) == 0 and to_ignore.intersection(set(key)):
+        except Exception as e:
+            # if str(e) == "'NoneType' object has no attribute 'dim'":
+            # Node types with no instances need to be ignored
+            to_ignore = set()
+            for key, value in train_data.x_dict.items():
+                if torch.numel(value) == 0:
+                    to_ignore.add(key)
+            for key, value in train_data.edge_index_dict.items():
+                if torch.numel(value) == 0:
+                    if not to_ignore.intersection(set(key)):
+                        to_ignore.add(key[0])
                         to_ignore.add(key[1])
-                print(to_ignore)
+                        to_ignore.add(key[2])
+            to_ignore = {i for i in to_ignore if not i[:4] == "rev_"}
+            if to_ignore:
                 raise ValueError(
                     f'This pipeline requires all un-ignored types to have instances. Some types don\'t have instances. '
                     f'Try adding/retrieving data for the following types or add them to the ignored types:\n{to_ignore}'
@@ -439,9 +446,8 @@ def write_predictions_to_typedb(graphs, tx):
                     query = (f'match '
                              f'$p iid {person.iid};'
                              f'$d iid {disease.iid};'
-                             f'$kgcn isa kgcn;'
                              f'insert '
-                             f'$pd(patient: $p, diagnosed-disease: $d, diagnoser: $kgcn) isa diagnosis,'
+                             f'$pd(patient: $p, diagnosed-disease: $d) isa diagnosis,'
                              f'has probability-exists {p[2]:.3f},'
                              f'has probability-non-exists {p[1]:.3f},'  
                              f'has probability-preexists {p[0]:.3f};')
