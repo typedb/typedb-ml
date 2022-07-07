@@ -28,7 +28,7 @@ from torch import as_tensor
 import torch.nn.functional as functional
 import torch_geometric.transforms as transforms
 from torch.nn import Linear
-from torch_geometric.nn import SAGEConv, to_hetero
+from torch_geometric.nn import HANConv
 from typedb.client import *
 
 from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetworkxDataSet
@@ -174,110 +174,83 @@ def diagnosis_example(typedb_binary_directory,
     train_data, val_data, test_data = transforms.RandomLinkSplit(
         num_val=0.1,
         num_test=0.1,
-        neg_sampling_ratio=0.0,
+        neg_sampling_ratio=1.0,
+        # edge_types=edge_type_triplets,  # Evaluates to: ('person', 'diagnosis', 'disease'),
+        # rev_edge_types=edge_type_triplets_reversed,  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
         edge_types=RELATION_TYPE_TO_PREDICT[::2],  # Evaluates to: ('person', 'diagnosis', 'disease'),
         rev_edge_types=edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
     )(data)
 
-    class GNNEncoder(torch.nn.Module):
-        def __init__(self, hidden_channels, out_channels):
+    class HAN(torch.nn.Module):
+        def __init__(self, in_channels: Union[int, Dict[str, int]],
+                     out_channels: int, hidden_channels=128, heads=8):
             super().__init__()
-            self.conv1 = SAGEConv((-1, -1), hidden_channels)
-            self.conv2 = SAGEConv((-1, -1), out_channels)
-
-        def forward(self, x, edge_index):
-            x = self.conv1(x, edge_index).relu()
-            x = self.conv2(x, edge_index)
-            return x
-
-    class EdgeDecoder(torch.nn.Module):
-        def __init__(self, hidden_channels):
-            super().__init__()
+            self.han_conv = HANConv(in_channels, hidden_channels, heads=heads,
+                                    dropout=0.6, metadata=train_data.metadata())
             self.lin1 = Linear(2 * hidden_channels, hidden_channels)
-            self.lin2 = Linear(hidden_channels, 1)
+            self.lin2 = Linear(hidden_channels, out_channels)
 
-        def forward(self, z_dict, edge_label_index):
-            row, col = edge_label_index
-            z = torch.cat([z_dict['person'][row], z_dict['disease'][col]], dim=-1)
-
+        def forward(self, x_dict, edge_index_dict):
+            out = self.han_conv(x_dict, edge_index_dict)
+            # out = self.lin(out['person', 'disease'])
+            row, col = edge_index_dict[('person', 'diagnosis', 'disease')]
+            z = torch.cat([out['person'][row], out['disease'][col]], dim=-1)
             z = self.lin1(z).relu()
             z = self.lin2(z)
-            return z.view(-1)
+            # return z.view(-1)
+            return z
 
-    class Model(torch.nn.Module):
-        def __init__(self, hidden_channels):
-            super().__init__()
-            self.encoder = GNNEncoder(hidden_channels, hidden_channels)
-            self.encoder = to_hetero(self.encoder, data.metadata(), aggr='sum')
-            self.decoder = EdgeDecoder(hidden_channels)
+    model = HAN(in_channels=-1, out_channels=2)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    data, model = data.to(device), model.to(device)
 
-        def forward(self, x_dict, edge_index_dict, edge_label_index):
-            z_dict = self.encoder(x_dict, edge_index_dict)
-            return self.decoder(z_dict, edge_label_index)
+    with torch.no_grad():  # Initialize lazy modules.
+        out = model(train_data.x_dict, train_data.edge_index_dict)
 
-    model = Model(hidden_channels=32).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
-    # Due to lazy initialization, we need to run one model step so the number
-    # of parameters can be inferred:
-    with torch.no_grad():
-        try:
-            model.encoder(train_data.x_dict, train_data.edge_index_dict)
-        except Exception as e:
-            # if str(e) == "'NoneType' object has no attribute 'dim'":
-            # Node types with no instances need to be ignored
-            to_ignore = set()
-            for key, value in train_data.x_dict.items():
-                if torch.numel(value) == 0:
-                    to_ignore.add(key)
-            for key, value in train_data.edge_index_dict.items():
-                if torch.numel(value) == 0:
-                    if not to_ignore.intersection(set(key)):
-                        to_ignore.add(key[0])
-                        to_ignore.add(key[1])
-                        to_ignore.add(key[2])
-            to_ignore = {i for i in to_ignore if not i[:4] == "rev_"}
-            if to_ignore:
-                raise ValueError(
-                    f'This pipeline requires all un-ignored types to have instances. Some types don\'t have instances. '
-                    f'Try adding/retrieving data for the following types or add them to the ignored types:\n{to_ignore}'
-                )
-            else:
-                raise e
-
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-
-    def weighted_mse_loss(pred, target, weight=None):
-        weight = 1. if weight is None else weight[target].to(pred.dtype)
-        return (weight * (pred - target.to(pred.dtype)).pow(2)).mean()
-
-    def train():
+    def train() -> float:
         model.train()
         optimizer.zero_grad()
-        pred = model(train_data.x_dict, train_data.edge_index_dict,
-                     train_data['person', 'disease'].edge_label_index)
-        target = train_data['person', 'disease'].edge_label
-        loss = weighted_mse_loss(pred, target, None)  # TODO: Consider using weighting to balance the positive/negative example sets
+        # TODO: Does the model automatically use `edge_label_index_dict` and `edge_label` for training to include the negative samples? It seems like it can't be
+        #  in which case we want to use the below, but it fails because `edge_label_index_dict` contains only one edge's information
+        # pred = model(train_data.x_dict, train_data.edge_label_index_dict)
+        # loss = functional.cross_entropy(pred, train_data[('person', 'diagnosis', 'disease')].edge_label)
+        pred = model(train_data.x_dict, train_data.edge_index_dict)
+        loss = functional.cross_entropy(pred, train_data[('person', 'diagnosis', 'disease')].y_edge)
         loss.backward()
         optimizer.step()
         return float(loss)
 
     @torch.no_grad()
-    def test(data):
+    def test() -> List[float]:
         model.eval()
-        pred = model(data.x_dict, data.edge_index_dict,
-                     data['person', 'disease'].edge_label_index)
-        pred = pred.clamp(min=0, max=5)
-        target = data['person', 'disease'].edge_label.float()
-        rmse = functional.mse_loss(pred, target).sqrt()
-        return float(rmse)
+        accs = []
+        for split in train_data, val_data, test_data:
+            # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
+            pred = model(split.x_dict, split.edge_index_dict).argmax(dim=-1)
+            acc = (pred == split['person', 'disease'].y_edge).sum() / split['person', 'disease'].y_edge.numel()
+            accs.append(float(acc))
+        return accs
 
-    for epoch in range(1, 301):
+    best_val_acc = 0
+    start_patience = patience = 100
+    for epoch in range(1, 200):
         loss = train()
-        train_rmse = test(train_data)
-        val_rmse = test(val_data)
-        test_rmse = test(test_data)
-        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_rmse:.4f}, '
-              f'Val: {val_rmse:.4f}, Test: {test_rmse:.4f}')
+        train_acc, val_acc, test_acc = test()
+        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
+              f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
+
+        if best_val_acc <= val_acc:
+            patience = start_patience
+            best_val_acc = val_acc
+        else:
+            patience -= 1
+
+        if patience <= 0:
+            print('Stopping training as validation accuracy did not improve '
+                  f'for {start_patience} epochs')
+            break
 
     test_acc = test()
     print(f'Test Accuracy: {test_acc:.4f}')
