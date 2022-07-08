@@ -175,8 +175,8 @@ def diagnosis_example(typedb_binary_directory,
         num_val=0.1,
         num_test=0.1,
         neg_sampling_ratio=1.0,
-        # edge_types=edge_type_triplets,  # Evaluates to: ('person', 'diagnosis', 'disease'),
-        # rev_edge_types=edge_type_triplets_reversed,  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
+        # edge_types=edge_type_triplets,
+        # rev_edge_types=edge_type_triplets_reversed,
         edge_types=RELATION_TYPE_TO_PREDICT[::2],  # Evaluates to: ('person', 'diagnosis', 'disease'),
         rev_edge_types=edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
     )(data)
@@ -190,11 +190,12 @@ def diagnosis_example(typedb_binary_directory,
             self.lin1 = Linear(2 * hidden_channels, hidden_channels)
             self.lin2 = Linear(hidden_channels, out_channels)
 
-        def forward(self, x_dict, edge_index_dict):
-            out = self.han_conv(x_dict, edge_index_dict)
-            # out = self.lin(out['person', 'disease'])
-            row, col = edge_index_dict[('person', 'diagnosis', 'disease')]
-            z = torch.cat([out['person'][row], out['disease'][col]], dim=-1)
+        def encode(self, x_dict, edge_index_dict):
+            return self.han_conv(x_dict, edge_index_dict)
+
+        def decode(self, z, edge_label_index_dict):
+            row, col = edge_label_index_dict[('person', 'diagnosis', 'disease')]
+            z = torch.cat([z['person'][row], z['disease'][col]], dim=-1)
             z = self.lin1(z).relu()
             z = self.lin2(z)
             # return z.view(-1)
@@ -205,7 +206,7 @@ def diagnosis_example(typedb_binary_directory,
     data, model = data.to(device), model.to(device)
 
     with torch.no_grad():  # Initialize lazy modules.
-        out = model(train_data.x_dict, train_data.edge_index_dict)
+        z = model.encode(train_data.x_dict, train_data.edge_index_dict)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
@@ -216,8 +217,9 @@ def diagnosis_example(typedb_binary_directory,
         #  in which case we want to use the below, but it fails because `edge_label_index_dict` contains only one edge's information
         # pred = model(train_data.x_dict, train_data.edge_label_index_dict)
         # loss = functional.cross_entropy(pred, train_data[('person', 'diagnosis', 'disease')].edge_label)
-        pred = model(train_data.x_dict, train_data.edge_index_dict)
-        loss = functional.cross_entropy(pred, train_data[('person', 'diagnosis', 'disease')].y_edge)
+        z = model.encode(train_data.x_dict, train_data.edge_index_dict)
+        pred = model.decode(z, train_data.edge_label_index_dict)
+        loss = functional.cross_entropy(pred, torch.tensor(train_data[('person', 'diagnosis', 'disease')].edge_label, dtype=torch.long))
         loss.backward()
         optimizer.step()
         return float(loss)
@@ -228,8 +230,9 @@ def diagnosis_example(typedb_binary_directory,
         accs = []
         for split in train_data, val_data, test_data:
             # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
-            pred = model(split.x_dict, split.edge_index_dict).argmax(dim=-1)
-            acc = (pred == split['person', 'disease'].y_edge).sum() / split['person', 'disease'].y_edge.numel()
+            z = model.encode(split.x_dict, split.edge_index_dict)
+            pred = model.decode(z, split.edge_label_index_dict).argmax(dim=-1)
+            acc = (pred == split['person', 'disease'].edge_label).sum() / split['person', 'disease'].edge_label.numel()
             accs.append(float(acc))
         return accs
 
@@ -251,9 +254,6 @@ def diagnosis_example(typedb_binary_directory,
             print('Stopping training as validation accuracy did not improve '
                   f'for {start_patience} epochs')
             break
-
-    test_acc = test()
-    print(f'Test Accuracy: {test_acc:.4f}')
 
     with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_typedb(ge_graphs, tx)
