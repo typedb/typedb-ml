@@ -101,6 +101,7 @@ def diagnosis_example(typedb_binary_directory,
     # changes from a node to an edge. We therefore need to update the node_types and edge_types accordingly
     node_types = prepare_node_types(session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE)
     edge_type_triplets, edge_type_triplets_reversed = prepare_edge_triplets(session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE)
+    type_encoding_size = 16
 
     # Attribute encoders encode the value of each attribute into a fixed-length feature vector. The encoders are
     # defined on a per-type basis. Easily define your own encoders for specific attribute data in your TypeDB database
@@ -109,12 +110,13 @@ def diagnosis_example(typedb_binary_directory,
         # Categorical Attribute types and the values of their categories
         # TODO: Use a sentence encoder for this instead to demonstrate how to use one
         'name': CategoricalEncoder(
-            ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol']
+            ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol'],
+            attribute_encoding_size
         ),
         # Continuous Attribute types and their min and max values
-        'severity': ContinuousEncoder(0, 1),
-        'age': ContinuousEncoder(7, 80),
-        'units-per-week': ContinuousEncoder(3, 29)
+        'severity': ContinuousEncoder(0, 1, attribute_encoding_size),
+        'age': ContinuousEncoder(7, 80, attribute_encoding_size),
+        'units-per-week': ContinuousEncoder(3, 29, attribute_encoding_size)
     }
 
     def prepare_graph(graph):
@@ -145,7 +147,7 @@ def diagnosis_example(typedb_binary_directory,
     edge_types = list({triplet[1] for triplet in edge_type_triplets})
     transform = transforms.Compose([
         prepare_graph,
-        GraphFeatureEncoder(node_types, edge_types, attribute_encoders, attribute_encoding_size),
+        GraphFeatureEncoder(node_types, edge_types, type_encoding_size, attribute_encoders, attribute_encoding_size),
         LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2]),
         clear_unneeded_fields
     ])
@@ -227,7 +229,7 @@ def diagnosis_example(typedb_binary_directory,
 
     best_val_acc = 0
     start_patience = patience = 100
-    for epoch in range(1, 20):
+    for epoch in range(1, 200):
         loss = train()
         train_acc, val_acc, test_acc = test()
         print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
