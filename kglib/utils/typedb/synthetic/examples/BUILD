@@ -51,5 +51,5 @@ checkstyle_test(
         "*",
         "diagnosis/*"
     ]),
-    license_type = "apache",
+    license_type = "apache-header",
 )

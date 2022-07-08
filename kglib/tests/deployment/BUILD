@@ -27,5 +27,5 @@ checkstyle_test(
         "*",
         "**/*"
     ]),
-    license_type = "apache",
+    license_type = "apache-header",
 )
