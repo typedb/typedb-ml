@@ -27,7 +27,6 @@ import torch
 from torch import as_tensor
 import torch.nn.functional as functional
 import torch_geometric.transforms as transforms
-from torch.nn import Linear
 from torch_geometric.nn import HANConv
 from typedb.client import *
 
@@ -162,46 +161,39 @@ def diagnosis_example(typedb_binary_directory,
         as_tensor(node_type_indices), as_tensor(edge_type_indices), node_types, edge_type_triplets
     ).to(device)  # Get the first graph object.
 
-    # TODO: Consider whether we want to add reverse edges for the edge type being predicted and whether to do the
-    #  before or after other transforms
     data = transforms.ToUndirected()(data)
     for edge_from, edge, edge_to in edge_type_triplets_reversed:
-        # TODO: It's unclear in the PyG examples why this is necessary
+        # This seems to be necessary so that the reverse edges are present for message-passing but the labels aren't
+        # considered for node and edge representations
         del data[edge_from, edge, edge_to].edge_label  # Remove "reverse" label.
 
-    # TODO: How can the negative sampling know what types to add to the generated edges? It surely can't, so we have to
-    #  deal with this
     train_data, val_data, test_data = transforms.RandomLinkSplit(
         num_val=0.1,
         num_test=0.1,
         neg_sampling_ratio=1.0,
-        # edge_types=edge_type_triplets,
-        # rev_edge_types=edge_type_triplets_reversed,
         edge_types=RELATION_TYPE_TO_PREDICT[::2],  # Evaluates to: ('person', 'diagnosis', 'disease'),
         rev_edge_types=edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
     )(data)
 
     class HAN(torch.nn.Module):
-        def __init__(self, in_channels: Union[int, Dict[str, int]],
-                     out_channels: int, hidden_channels=128, heads=8):
+        def __init__(self, in_channels: Union[int, Dict[str, int]], hidden_channels=128, heads=8):
             super().__init__()
             self.han_conv = HANConv(in_channels, hidden_channels, heads=heads,
                                     dropout=0.6, metadata=train_data.metadata())
-            self.lin1 = Linear(2 * hidden_channels, hidden_channels)
-            self.lin2 = Linear(hidden_channels, out_channels)
 
         def encode(self, x_dict, edge_index_dict):
             return self.han_conv(x_dict, edge_index_dict)
 
         def decode(self, z, edge_label_index_dict):
             row, col = edge_label_index_dict[('person', 'diagnosis', 'disease')]
-            z = torch.cat([z['person'][row], z['disease'][col]], dim=-1)
-            z = self.lin1(z).relu()
-            z = self.lin2(z)
-            # return z.view(-1)
-            return z
+            logits = (z['person'][row] * z['disease'][col]).sum(dim=-1)
+            return logits
 
-    model = HAN(in_channels=-1, out_channels=2)
+        def decode_all(self, z):
+            prob_adj = z['person'] @ z['disease'].t()
+            return (prob_adj > 0).nonzero(as_tuple=False).t()
+
+    model = HAN(in_channels=-1)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data, model = data.to(device), model.to(device)
 
@@ -213,13 +205,9 @@ def diagnosis_example(typedb_binary_directory,
     def train() -> float:
         model.train()
         optimizer.zero_grad()
-        # TODO: Does the model automatically use `edge_label_index_dict` and `edge_label` for training to include the negative samples? It seems like it can't be
-        #  in which case we want to use the below, but it fails because `edge_label_index_dict` contains only one edge's information
-        # pred = model(train_data.x_dict, train_data.edge_label_index_dict)
-        # loss = functional.cross_entropy(pred, train_data[('person', 'diagnosis', 'disease')].edge_label)
         z = model.encode(train_data.x_dict, train_data.edge_index_dict)
-        pred = model.decode(z, train_data.edge_label_index_dict)
-        loss = functional.cross_entropy(pred, torch.tensor(train_data[('person', 'diagnosis', 'disease')].edge_label, dtype=torch.long))
+        logits = model.decode(z, train_data.edge_label_index_dict)
+        loss = functional.binary_cross_entropy_with_logits(logits, train_data[('person', 'diagnosis', 'disease')].edge_label)
         loss.backward()
         optimizer.step()
         return float(loss)
@@ -231,14 +219,15 @@ def diagnosis_example(typedb_binary_directory,
         for split in train_data, val_data, test_data:
             # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
             z = model.encode(split.x_dict, split.edge_index_dict)
-            pred = model.decode(z, split.edge_label_index_dict).argmax(dim=-1)
-            acc = (pred == split['person', 'disease'].edge_label).sum() / split['person', 'disease'].edge_label.numel()
+            link_logits = model.decode(z, split.edge_label_index_dict)
+            link_probs = link_logits.sigmoid()
+            acc = ((link_probs > 0.5) == (split['person', 'disease'].edge_label == 1)).sum() / split['person', 'disease'].edge_label.numel()
             accs.append(float(acc))
         return accs
 
     best_val_acc = 0
     start_patience = patience = 100
-    for epoch in range(1, 200):
+    for epoch in range(1, 20):
         loss = train()
         train_acc, val_acc, test_acc = test()
         print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
@@ -254,6 +243,10 @@ def diagnosis_example(typedb_binary_directory,
             print('Stopping training as validation accuracy did not improve '
                   f'for {start_patience} epochs')
             break
+
+    z = model.encode(data.x_dict, data.edge_index_dict)
+    final_edge_index = model.decode_all(z)
+    print(final_edge_index)
 
     with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_typedb(ge_graphs, tx)
