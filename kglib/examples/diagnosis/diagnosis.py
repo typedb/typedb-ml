@@ -28,7 +28,7 @@ import torch.nn.functional as functional
 import torch_geometric.transforms as transforms
 from torch import as_tensor
 from torch.utils.tensorboard import SummaryWriter
-from torch_geometric.nn import HANConv
+from torch_geometric.nn import HGTConv
 from typedb.client import *
 
 from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetworkxDataSet
@@ -178,14 +178,13 @@ def diagnosis_example(typedb_binary_directory,
         rev_edge_types=edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
     )(data)
 
-    class HAN(torch.nn.Module):
+    class LinkPredictionModel(torch.nn.Module):
         def __init__(self, in_channels: Union[int, Dict[str, int]], hidden_channels=128, heads=8):
             super().__init__()
-            self.han_conv = HANConv(in_channels, hidden_channels, heads=heads,
-                                    dropout=0.6, metadata=train_data.metadata())
+            self.conv = HGTConv(in_channels, hidden_channels, heads=heads, metadata=train_data.metadata())
 
         def encode(self, x_dict, edge_index_dict):
-            return self.han_conv(x_dict, edge_index_dict)
+            return self.conv(x_dict, edge_index_dict)
 
         def decode(self, z, edge_label_index_dict):
             row, col = edge_label_index_dict[('person', 'diagnosis', 'disease')]
@@ -196,7 +195,7 @@ def diagnosis_example(typedb_binary_directory,
             prob_adj = z['person'] @ z['disease'].t()
             return (prob_adj > 0).nonzero(as_tuple=False).t()
 
-    model = HAN(in_channels=-1)
+    model = LinkPredictionModel(in_channels=-1)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data, model = data.to(device), model.to(device)
 
