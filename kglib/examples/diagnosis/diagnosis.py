@@ -170,13 +170,28 @@ def diagnosis_example(typedb_binary_directory,
         # considered for node and edge representations
         del data[edge_from, edge, edge_to].edge_label  # Remove "reverse" label.
 
+    binary_edge_to_predict = RELATION_TYPE_TO_PREDICT[::2]  # Evaluates to: ('person', 'diagnosis', 'disease')
+    binary_rev_edge_to_predict = edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person')
+
     train_data, val_data, test_data = transforms.RandomLinkSplit(
         num_val=0.1,
         num_test=0.1,
         neg_sampling_ratio=1.0,
-        edge_types=RELATION_TYPE_TO_PREDICT[::2],  # Evaluates to: ('person', 'diagnosis', 'disease'),
-        rev_edge_types=edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person'),
+        edge_types=binary_edge_to_predict,
+        rev_edge_types=binary_rev_edge_to_predict
     )(data)
+
+    # Add a new `links` attribute to store the edges for prediction so that they aren't used for training
+    train_data.links = train_data.edge_label_index_dict[binary_edge_to_predict]
+    val_data.links = val_data.edge_label_index_dict[binary_edge_to_predict]
+    test_data.links = test_data.edge_label_index_dict[binary_edge_to_predict]
+
+    del train_data['person', 'diagnosis', 'disease']
+    del train_data['disease', 'rev_diagnosis', 'person']
+    del val_data['person', 'diagnosis', 'disease']
+    del val_data['disease', 'rev_diagnosis', 'person']
+    del test_data['person', 'diagnosis', 'disease']
+    del test_data['disease', 'rev_diagnosis', 'person']
 
     class LinkPredictionModel(torch.nn.Module):
         def __init__(self, in_channels: Union[int, Dict[str, int]], hidden_channels=128, heads=8):
@@ -184,10 +199,11 @@ def diagnosis_example(typedb_binary_directory,
             self.conv = HGTConv(in_channels, hidden_channels, heads=heads, metadata=train_data.metadata())
 
         def encode(self, x_dict, edge_index_dict):
+            # TODO: Ideally we would mask the edge being predicted so that it isn't used for message passing
             return self.conv(x_dict, edge_index_dict)
 
         def decode(self, z, edge_label_index_dict):
-            row, col = edge_label_index_dict[('person', 'diagnosis', 'disease')]
+            row, col = edge_label_index_dict
             logits = (z['person'][row] * z['disease'][col]).sum(dim=-1)
             return logits
 
@@ -208,8 +224,8 @@ def diagnosis_example(typedb_binary_directory,
         model.train()
         optimizer.zero_grad()
         z = model.encode(train_data.x_dict, train_data.edge_index_dict)
-        logits = model.decode(z, train_data.edge_label_index_dict)
-        loss = functional.binary_cross_entropy_with_logits(logits, train_data[('person', 'diagnosis', 'disease')].edge_label)
+        logits = model.decode(z, train_data.links)
+        loss = functional.binary_cross_entropy_with_logits(logits, train_data[binary_edge_to_predict].edge_label)
         loss.backward()
         optimizer.step()
         return float(loss)
@@ -221,7 +237,7 @@ def diagnosis_example(typedb_binary_directory,
         for split in train_data, val_data, test_data:
             # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
             z = model.encode(split.x_dict, split.edge_index_dict)
-            link_logits = model.decode(z, split.edge_label_index_dict)
+            link_logits = model.decode(z, split.links)
             link_probs = link_logits.sigmoid()
             acc = ((link_probs > 0.5) == (split['person', 'disease'].edge_label == 1)).sum() / split['person', 'disease'].edge_label.numel()
             accs.append(float(acc))
