@@ -24,9 +24,10 @@ import subprocess as sp
 
 import networkx as nx
 import torch
-from torch import as_tensor
 import torch.nn.functional as functional
 import torch_geometric.transforms as transforms
+from torch import as_tensor
+from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.nn import HANConv
 from typedb.client import *
 
@@ -227,11 +228,23 @@ def diagnosis_example(typedb_binary_directory,
             accs.append(float(acc))
         return accs
 
+    writer = SummaryWriter()
+    for edge_type, edge_store in zip(data.edge_types, data.edge_stores):
+        writer.add_histogram('('+', '.join(edge_type) + ')/edge_attr', edge_store["edge_attr"])
+        writer.add_histogram('('+', '.join(edge_type) + ')/y_edge', edge_store["y_edge"])
+
+    for node_type, node_store in zip(data.node_types, data.node_stores):
+        writer.add_histogram(node_type + '/x', node_store["x"])
+
     best_val_acc = 0
     start_patience = patience = 100
     for epoch in range(1, 200):
         loss = train()
+        writer.add_scalar('Loss/train', loss, epoch)
         train_acc, val_acc, test_acc = test()
+        writer.add_scalar('Accuracy/train', train_acc, epoch)
+        writer.add_scalar('Accuracy/val', val_acc, epoch)
+        writer.add_scalar('Accuracy/test', test_acc, epoch)
         print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
               f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
 
