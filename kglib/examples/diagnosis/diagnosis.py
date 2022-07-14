@@ -128,11 +128,9 @@ def diagnosis_example(typedb_binary_directory,
     def clear_unneeded_fields(graph):
         for node_data in multidigraph_node_data_iterator(graph):
             x = node_data["x"]
-            # y = node_data["y"]
             t = node_data["type"]
             node_data.clear()
             node_data["x"] = x
-            # node_data["y"] = y
             node_data["type"] = t
 
         for edge_data in multidigraph_edge_data_iterator(graph):
@@ -176,16 +174,23 @@ def diagnosis_example(typedb_binary_directory,
     train_data, val_data, test_data = transforms.RandomLinkSplit(
         num_val=0.1,
         num_test=0.1,
-        neg_sampling_ratio=1.0,
+        neg_sampling_ratio=0.8,  # The generated dataset limits the number of possible negative edges to less than 1.0. Putting it greater than that makes the train, val, test splits have different proportions of negative examples
         edge_types=binary_edge_to_predict,
         rev_edge_types=binary_rev_edge_to_predict
     )(data)
 
     # Add a new `links` attribute to store the edges for prediction so that they aren't used for training
-    train_data.links = train_data.edge_label_index_dict[binary_edge_to_predict]
-    val_data.links = val_data.edge_label_index_dict[binary_edge_to_predict]
-    test_data.links = test_data.edge_label_index_dict[binary_edge_to_predict]
+    train_data.link_index = train_data.edge_label_index_dict[binary_edge_to_predict]
+    train_data.link_labels = train_data.edge_label_dict[binary_edge_to_predict]
+    val_data.link_index = val_data.edge_label_index_dict[binary_edge_to_predict]
+    val_data.link_labels = val_data.edge_label_dict[binary_edge_to_predict]
+    test_data.link_index = test_data.edge_label_index_dict[binary_edge_to_predict]
+    test_data.link_labels = test_data.edge_label_dict[binary_edge_to_predict]
 
+    data.links = data['person', 'diagnosis', 'disease']
+    data.rev_links = data['disease', 'rev_diagnosis', 'person']
+    del data['person', 'diagnosis', 'disease']
+    del data['disease', 'rev_diagnosis', 'person']
     del train_data['person', 'diagnosis', 'disease']
     del train_data['disease', 'rev_diagnosis', 'person']
     del val_data['person', 'diagnosis', 'disease']
@@ -209,7 +214,8 @@ def diagnosis_example(typedb_binary_directory,
 
         def decode_all(self, z):
             prob_adj = z['person'] @ z['disease'].t()
-            return (prob_adj > 0).nonzero(as_tuple=False).t()
+            # return (prob_adj.sigmoid() > 0.5).nonzero(as_tuple=False).t()
+            return prob_adj.sigmoid() > 0.5
 
     model = LinkPredictionModel(in_channels=-1)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -224,8 +230,8 @@ def diagnosis_example(typedb_binary_directory,
         model.train()
         optimizer.zero_grad()
         z = model.encode(train_data.x_dict, train_data.edge_index_dict)
-        logits = model.decode(z, train_data.links)
-        loss = functional.binary_cross_entropy_with_logits(logits, train_data[binary_edge_to_predict].edge_label)
+        logits = model.decode(z, train_data.link_index)
+        loss = functional.binary_cross_entropy_with_logits(logits, train_data.link_labels)
         loss.backward()
         optimizer.step()
         return float(loss)
@@ -237,9 +243,9 @@ def diagnosis_example(typedb_binary_directory,
         for split in train_data, val_data, test_data:
             # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
             z = model.encode(split.x_dict, split.edge_index_dict)
-            link_logits = model.decode(z, split.links)
+            link_logits = model.decode(z, split.link_index)
             link_probs = link_logits.sigmoid()
-            acc = ((link_probs > 0.5) == (split['person', 'disease'].edge_label == 1)).sum() / split['person', 'disease'].edge_label.numel()
+            acc = ((link_probs > 0.5) == (split.link_labels == 1)).sum() / split.link_labels.numel()
             accs.append(float(acc))
         return accs
 
@@ -253,7 +259,7 @@ def diagnosis_example(typedb_binary_directory,
 
     best_val_acc = 0
     start_patience = patience = 100
-    for epoch in range(1, 200):
+    for epoch in range(1, 100):
         loss = train()
         writer.add_scalar('Loss/train', loss, epoch)
         train_acc, val_acc, test_acc = test()
@@ -274,9 +280,15 @@ def diagnosis_example(typedb_binary_directory,
                   f'for {start_patience} epochs')
             break
 
+    # Put back the diagnosis edges
+    data['person', 'diagnosis', 'disease'] = data.links
+    data['disease', 'rev_diagnosis', 'person'] = data.rev_links
+
     z = model.encode(data.x_dict, data.edge_index_dict)
     final_edge_index = model.decode_all(z)
     print(final_edge_index)
+    print(final_edge_index.nonzero(as_tuple=False).t())
+    # TODO: Cross-reference all predictions with actual (but this will include training edges)
 
     with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_typedb(ge_graphs, tx)
