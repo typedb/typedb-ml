@@ -213,9 +213,9 @@ def diagnosis_example(typedb_binary_directory,
             return logits
 
         def decode_all(self, z):
-            prob_adj = z['person'] @ z['disease'].t()
-            # return (prob_adj.sigmoid() > 0.5).nonzero(as_tuple=False).t()
-            return prob_adj.sigmoid() > 0.5
+            logits = z['person'] @ z['disease'].t()
+            # return (logits.sigmoid() > 0.5).nonzero(as_tuple=False).t()
+            return logits
 
     model = LinkPredictionModel(in_channels=-1)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -285,7 +285,7 @@ def diagnosis_example(typedb_binary_directory,
     data['disease', 'rev_diagnosis', 'person'] = data.rev_links
 
     z = model.encode(data.x_dict, data.edge_index_dict)
-    final_edge_index = model.decode_all(z)
+    final_edge_index = model.decode_all(z).sigmoid() > 0.5
     print(final_edge_index)
     print(final_edge_index.nonzero(as_tuple=False).t())
     # TODO: Cross-reference all predictions with actual (but this will include training edges)
@@ -326,7 +326,7 @@ def get_query_handles(example_id):
            $p isa person;
            $par isa person;
            $ps(child: $p, parent: $par) isa parentship;
-           $diag(patient:$par, diagnosed-disease: $d) isa diagnosis;
+           $diag(patient:$par, diagnosed-disease: $d) isa familial-diagnosis;
            $d isa disease, has name $n;
           ''')
 

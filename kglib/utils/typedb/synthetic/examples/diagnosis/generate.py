@@ -84,7 +84,7 @@ def get_example_queries(pmf, example_id):
                 insert
                 (parent: $parent, child: $p) isa parentship;
                 $parent isa person, has person-id {example_id + 10000};
-                $diagnosis (patient: $parent, diagnosed-disease: $d) isa diagnosis;
+                $diagnosis (patient: $parent, diagnosed-disease: $d) isa familial-diagnosis;
                 '''))
 
     if variable_values['Cigarettes'] is not False:
