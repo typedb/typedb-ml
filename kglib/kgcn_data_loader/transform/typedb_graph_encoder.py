@@ -23,8 +23,6 @@ from typing import List
 import torch
 from torch.nn import Embedding
 
-import numpy as np
-
 from kglib.utils.graph.iterate import (
     multidigraph_node_data_iterator,
     multidigraph_edge_data_iterator,
@@ -103,26 +101,3 @@ class ContinuousEncoder:
 
     def __call__(self, value):
         return [(value - self.min_val) / (self.max_val - self.min_val)] * self.attribute_encoding_size
-
-
-# class SequenceEncoder(object):
-#     # The 'SequenceEncoder' encodes raw column strings into embeddings.
-#     def __init__(self, model_name='all-MiniLM-L6-v2', device=None):
-#         self.device = device
-#         self.model = SentenceTransformer(model_name, device=device)
-#
-#     @torch.no_grad()
-#     def __call__(self, df):
-#         x = self.model.encode(df.values, show_progress_bar=True,
-#                               convert_to_tensor=True, device=self.device)
-#         return x.cpu()
-#
-#
-# class IdentityEncoder(object):
-#     # The 'IdentityEncoder' takes the raw column values and converts them to
-#     # PyTorch tensors.
-#     def __init__(self, dtype=None):
-#         self.dtype = dtype
-#
-#     def __call__(self, df):
-#         return torch.from_numpy(df.values).view(-1, 1).to(self.dtype)
