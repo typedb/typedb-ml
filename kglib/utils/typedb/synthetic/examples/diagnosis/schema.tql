@@ -40,14 +40,13 @@ person sub entity,
     owns person-id @key,
     owns age,
     plays diagnosis:patient,
-    plays familial-diagnosis:patient,
+    plays predicted-diagnosis:patient,
     plays symptom-presentation:symptomatic-patient,
     plays consumption:consumer,
     plays age-risk-factor:person-at-age-risk,
     plays hereditary-risk-factor:person-at-hereditary-risk,
     plays smoking-risk-factor:person-at-smoking-risk,
     plays alcohol-risk-factor:person-at-alcohol-risk,
-    plays parentship:parent,
     plays parentship:child;
 
 disease sub entity,
@@ -55,10 +54,15 @@ disease sub entity,
     plays causality:cause,
     plays diagnosis:diagnosed-disease,
     plays familial-diagnosis:diagnosed-disease,
+    plays predicted-diagnosis:diagnosed-disease,
     plays age-risk-factor:age-risked-disease,
     plays hereditary-risk-factor:hereditary-risked-disease,
     plays smoking-risk-factor:smoking-risked-disease,
     plays alcohol-risk-factor:alcohol-risked-disease;
+
+parent sub entity,
+    plays parentship:parent,
+    plays familial-diagnosis:patient;
 
 substance sub entity,
     owns name @key,
@@ -70,23 +74,15 @@ parentship sub relation,
 
 diagnosis sub relation,
     relates patient,
-    relates diagnosed-disease,
-    owns probability-exists,
-    owns probability-non-exists,
-    owns probability-preexists;
+    relates diagnosed-disease;
 
 familial-diagnosis sub relation,
     relates patient,
     relates diagnosed-disease;
 
-probability-exists sub attribute,
-    value double;
-
-probability-non-exists sub attribute,
-    value double;
-
-probability-preexists sub attribute,
-    value double;
+predicted-diagnosis sub relation,
+    relates patient,
+    relates diagnosed-disease;
 
 causality sub relation,
     relates cause,
@@ -135,7 +131,7 @@ when {
 rule heriditary-risk-of-diabetes:
 when {
     $p isa person;
-    $parent isa person;
+    $parent isa parent;
     $cause(parent: $parent, child: $p) isa parentship;
     $dia(patient: $parent, diagnosed-disease: $d) isa familial-diagnosis;
     $d isa disease, has name "Diabetes Type II";

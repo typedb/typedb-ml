@@ -91,7 +91,9 @@ class TypeDBNetworkxDataSet:
         graph.name = id
         if self._transform:
             graph = self._transform(graph)
-        return from_networkx(graph), self.node_type_indices(graph), self.edge_type_indices(graph)
+        data = from_networkx(graph)
+        data.concepts_by_type = graph.concepts_by_type
+        return data, self.node_type_indices(graph), self.edge_type_indices(graph)
 
     def node_type_indices(self, graph):
         indices = []

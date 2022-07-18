@@ -31,7 +31,7 @@ def get_example_queries(pmf, example_id):
 
     variable_values = pmf.select()
 
-    queries = [f'insert $p isa person, has person-id {example_id}, has age {int(normal_dist(60, 10)())};']
+    queries = [f'insert $p isa person, has person-id {example_id};']
 
     if variable_values['Multiple Sclerosis'] is not False:
         queries.append(inspect.cleandoc(f'''
@@ -39,7 +39,8 @@ def get_example_queries(pmf, example_id):
                 $d isa disease, has name "Multiple Sclerosis";
                 $p isa person, has person-id {example_id};
                 insert
-                $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;'''))
+                $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;
+                $p has age {int(variable_values['Multiple Sclerosis']['age']())};'''))
 
     if variable_values['Diabetes Type II'] is not False:
         queries.append(inspect.cleandoc(f'''                 
@@ -47,7 +48,8 @@ def get_example_queries(pmf, example_id):
                 $p isa person, has person-id {example_id};
                 $d isa disease, has name "Diabetes Type II";
                 insert
-                $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;'''))
+                $diagnosis (patient: $p, diagnosed-disease: $d) isa diagnosis;
+                $p has age {int(variable_values['Diabetes Type II']['age']())};'''))
 
     if variable_values['Fatigue'] is not False:
         queries.append(inspect.cleandoc(f'''
@@ -83,7 +85,7 @@ def get_example_queries(pmf, example_id):
                 $d isa disease, has name "Diabetes Type II";
                 insert
                 (parent: $parent, child: $p) isa parentship;
-                $parent isa person, has person-id {example_id + 10000};
+                $parent isa parent;
                 $diagnosis (patient: $parent, diagnosed-disease: $d) isa familial-diagnosis;
                 '''))
 
@@ -107,7 +109,7 @@ def generate_example_data(client, num_examples, database="diagnosis"):
     # Diabetes Type II
     pmf_array[1, 0, 1, 0, 0, 0, 0] = 0.05
     pmf_array[1, 0, 1, 0, 2, 0, 0] = 0.1
-    pmf_array[1, 0, 0, 1, 0, 0, 0] = 0.19
+    pmf_array[1, 0, 0, 1, 0, 0, 0] = 0.2
     pmf_array[1, 0, 0, 1, 0, 1, 0] = 0.15
     pmf_array[1, 0, 1, 1, 0, 0, 0] = 0.05
     pmf_array[1, 0, 1, 1, 2, 1, 2] = 0.1
@@ -117,12 +119,10 @@ def generate_example_data(client, num_examples, database="diagnosis"):
     pmf_array[0, 1, 1, 1, 0, 0, 0] = 0.05
     pmf_array[0, 1, 1, 1, 0, 0, 1] = 0.05
     pmf_array[0, 1, 1, 1, 0, 0, 2] = 0.1
-    # Both
-    pmf_array[1, 1, 1, 1, 0, 0, 0] = 0.01
 
     pmf = PMF({
-        'Diabetes Type II':             [False, True],
-        'Multiple Sclerosis':           [False, True],
+        'Diabetes Type II':             [False, {'age': normal_dist(45, 10)}],
+        'Multiple Sclerosis':           [False, {'age': normal_dist(30, 10)}],
         'Fatigue':                      [False, {'severity': normal_dist(0.3, 0.1)}],
         'Blurred vision':               [False, {'severity': normal_dist(0.5, 0.2)}],
         'Drinking':                     [False, {'units-per-week': normal_dist(5, 1)}, {'units-per-week': normal_dist(20, 3)}],

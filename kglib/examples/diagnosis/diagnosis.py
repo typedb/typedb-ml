@@ -35,7 +35,7 @@ from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetwork
 from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges, \
     prepare_edge_triplets, prepare_node_types
 from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
-    ContinuousEncoder
+    ContinuousEncoder, store_concepts_by_type
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
 from kglib.utils.graph.iterate import multidigraph_edge_data_iterator, multidigraph_node_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
@@ -48,10 +48,9 @@ PREEXISTS = 0
 
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
-TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'probability-preexists', 'probability-exists', 'probability-non-exists',
-                   'alcohol-risked-disease', 'person-at-alcohol-risk', 'person-at-hereditary-risk',
-                   'hereditary-risked-disease', 'smoking-risked-disease', 'person-at-smoking-risk',
-                   'person-at-age-risk', 'age-risked-disease'}
+TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'alcohol-risked-disease', 'person-at-alcohol-risk',
+                   'person-at-hereditary-risk', 'hereditary-risked-disease', 'smoking-risked-disease',
+                   'person-at-smoking-risk', 'person-at-age-risk', 'age-risked-disease', 'predicted-diagnosis'}
 # Note that this determines the edge direction when converting from a TypeDB relation
 RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
 
@@ -148,6 +147,7 @@ def diagnosis_example(typedb_binary_directory,
         prepare_graph,
         GraphFeatureEncoder(node_types, edge_types, type_encoding_size, attribute_encoders, attribute_encoding_size),
         LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2]),
+        store_concepts_by_type,  # store the concepts we have in type-wise lists so that we can interpret the concepts for our predictions later
         clear_unneeded_fields
     ])
 
@@ -172,9 +172,9 @@ def diagnosis_example(typedb_binary_directory,
     binary_rev_edge_to_predict = edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person')
 
     train_data, val_data, test_data = transforms.RandomLinkSplit(
-        num_val=0.1,
-        num_test=0.1,
-        neg_sampling_ratio=0.8,  # The generated dataset limits the number of possible negative edges to less than 1.0. Putting it greater than that makes the train, val, test splits have different proportions of negative examples
+        num_val=0.2,
+        num_test=0.2,
+        neg_sampling_ratio=1.0,  # Putting this ration greater than that makes the train, val, test splits have different proportions of negative examples due to a limited number of places to add negative edges in this example generated data.
         edge_types=binary_edge_to_predict,
         rev_edge_types=binary_rev_edge_to_predict
     )(data)
@@ -236,17 +236,27 @@ def diagnosis_example(typedb_binary_directory,
         return float(loss)
 
     @torch.no_grad()
-    def test() -> List[float]:
+    def test() -> Tuple[List[float], List[float], List[float]]:
         model.eval()
-        accs = []
+        accuracies = []
+        precisions = []
+        recalls = []
         for split in train_data, val_data, test_data:
             # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
             z = model.encode(split.x_dict, split.edge_index_dict)
             link_logits = model.decode(z, split.link_index)
             link_probs = link_logits.sigmoid()
-            acc = ((link_probs > 0.5) == (split.link_labels == 1)).sum() / split.link_labels.numel()
-            accs.append(float(acc))
-        return accs
+            tp = ((link_probs > 0.5) * (split.link_labels == 1)).sum()
+            tn = ((link_probs < 0.5) * (split.link_labels == 0)).sum()
+            pos = (split.link_labels == 1).sum()
+            neg = (split.link_labels == 0).sum()
+            precision = tn / neg
+            recall = tp / pos
+            acc = (tp + tn) / (pos + neg)
+            accuracies.append(float(acc))
+            precisions.append(precision)
+            recalls.append(recall)
+        return accuracies, precisions, recalls
 
     writer = SummaryWriter()
     for edge_type, edge_store in zip(data.edge_types, data.edge_stores):
@@ -261,16 +271,19 @@ def diagnosis_example(typedb_binary_directory,
     for epoch in range(1, 100):
         loss = train()
         writer.add_scalar('Loss/train', loss, epoch)
-        train_acc, val_acc, test_acc = test()
-        writer.add_scalar('Accuracy/train', train_acc, epoch)
-        writer.add_scalar('Accuracy/val', val_acc, epoch)
-        writer.add_scalar('Accuracy/test', test_acc, epoch)
-        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_acc:.4f}, '
-              f'Val: {val_acc:.4f}, Test: {test_acc:.4f}')
+        train_results, val_results, test_results = test()
+        writer.add_scalar('Accuracy/train', train_results[0], epoch)
+        writer.add_scalar('Accuracy/val', val_results[0], epoch)
+        writer.add_scalar('Accuracy/test', test_results[0], epoch)
+        writer.add_scalar('Precision/test', test_results[1], epoch)
+        writer.add_scalar('Recall/test', test_results[2], epoch)
+        print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_results[0]:.4f}, '
+              f'Val: {val_results[0]:.4f}, Test: {test_results[0]:.4f}, Test Precision: {test_results[1]:.4f}, '
+              f'Test Recall: {test_results[2]:.4f}')
 
-        if best_val_acc <= val_acc:
+        if best_val_acc <= val_results[0]:
             patience = start_patience
-            best_val_acc = val_acc
+            best_val_acc = val_results[0]
         else:
             patience -= 1
 
@@ -284,18 +297,27 @@ def diagnosis_example(typedb_binary_directory,
     data['disease', 'rev_diagnosis', 'person'] = data.rev_links
 
     z = model.encode(data.x_dict, data.edge_index_dict)
-    final_edge_index = model.decode_all(z).sigmoid() > 0.5
-    print(final_edge_index)
-    print(final_edge_index.nonzero(as_tuple=False).t())
+    final_edge_index = (model.decode_all(z).sigmoid() > 0.5).nonzero(as_tuple=False).cpu().detach().numpy()
     # TODO: Cross-reference all predictions with actual (but this will include training edges)
 
+    predicted_links = []
+    for p, d in final_edge_index:
+        predicted_links.append(
+            {
+                'person': data['concepts_by_type']['person'][p],
+                'disease': data['concepts_by_type']['disease'][d]
+            }
+        )
+    print("The following links have been predicted:")
+    print(predicted_links)  # Bear in mind this is predicted links across *all* data: train, val and test
+
     with session.transaction(TransactionType.WRITE) as tx:
-        write_predictions_to_typedb(ge_graphs, tx)
+        write_predictions_to_typedb(predicted_links, tx)
 
     session.close()
     client.close()
 
-    return solveds_tr, solveds_ge
+    return train_results[0], test_results[0]
 
 
 def create_database(client, database):
@@ -323,7 +345,7 @@ def get_query_handles(example_id):
     # === Hereditary Feature ===
     hereditary_query = inspect.cleandoc(f'''match
            $p isa person;
-           $par isa person;
+           $par isa parent;
            $ps(child: $p, parent: $par) isa parentship;
            $diag(patient:$par, diagnosed-disease: $d) isa familial-diagnosis;
            $d isa disease, has name $n;
@@ -423,42 +445,26 @@ def get_query_handles(example_id):
     ]
 
 
-def write_predictions_to_typedb(graphs, tx):
+def write_predictions_to_typedb(predicted_links, tx):
     """
     Take predictions from the ML model, and insert representations of those predictions back into the graph.
 
     Args:
-        graphs: graphs containing the concepts, with their class predictions and class probabilities
+        predicted_links: pairs of concepts that are predicted links
         tx: TypeDB write transaction to use
 
     Returns: None
 
     """
-    for graph in graphs:
-        for node, data in graph.nodes(data=True):
-            if data['prediction'] == 2:
-                concept = data['concept']
-                concept_type = concept.type_label
-                if concept_type == 'diagnosis' or concept_type == 'candidate-diagnosis':
-                    neighbours = graph.neighbors(node)
-
-                    for neighbour in neighbours:
-                        concept = graph.nodes[neighbour]['concept']
-                        if concept.type_label == 'person':
-                            person = concept
-                        else:
-                            disease = concept
-
-                    p = data['probabilities']
-                    query = (f'match '
-                             f'$p iid {person.iid};'
-                             f'$d iid {disease.iid};'
-                             f'insert '
-                             f'$pd(patient: $p, diagnosed-disease: $d) isa diagnosis,'
-                             f'has probability-exists {p[2]:.3f},'
-                             f'has probability-non-exists {p[1]:.3f},'  
-                             f'has probability-preexists {p[0]:.3f};')
-                    tx.query().insert(query)
+    for predicted_link in predicted_links:
+        person = predicted_link['person']
+        disease = predicted_link['disease']
+        query = (f'match '
+                 f'$p iid {person.iid}; '
+                 f'$d iid {disease.iid}; '
+                 f'insert '
+                 f'$pd(patient: $p, diagnosed-disease: $d) isa predicted-diagnosis;')
+        tx.query().insert(query)
     tx.commit()
 
 

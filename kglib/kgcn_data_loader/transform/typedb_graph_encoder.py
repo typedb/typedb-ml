@@ -101,3 +101,15 @@ class ContinuousEncoder:
 
     def __call__(self, value):
         return [(value - self.min_val) / (self.max_val - self.min_val)] * self.attribute_encoding_size
+
+
+def store_concepts_by_type(graph):
+    concepts_by_type = {}
+    for node_data in multidigraph_node_data_iterator(graph):
+        typ = node_data['type']
+        if typ in concepts_by_type:
+            concepts_by_type[typ].append(node_data['concept'])
+        else:
+            concepts_by_type[typ] = [node_data['concept']]
+    graph.concepts_by_type = concepts_by_type
+    return graph

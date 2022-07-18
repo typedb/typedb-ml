@@ -39,13 +39,16 @@ class TestDiagnosisExampleDebug(unittest.TestCase):
         self._schema_file_location = base_dir + sys.argv.pop()
 
     def test_learning_is_done(self):
-        solveds_tr, solveds_ge = diagnosis_example(self._typedb_binary_location,
-                                                   schema_file_path=self._schema_file_location,
-                                                   seed_data_file_path=self._data_file_location)
-        self.assertGreaterEqual(solveds_tr[-1], 0.7)
-        self.assertLessEqual(solveds_tr[-1], 0.99)
-        self.assertGreaterEqual(solveds_ge[-1], 0.7)
-        self.assertLessEqual(solveds_ge[-1], 0.99)
+        train_accuracy, test_accuracy = diagnosis_example(
+            self._typedb_binary_location,
+            200,
+            schema_file_path=self._schema_file_location,
+            seed_data_file_path=self._data_file_location
+        )
+        self.assertGreaterEqual(train_accuracy, 0.7)
+        self.assertLessEqual(train_accuracy, 0.99)
+        self.assertGreaterEqual(test_accuracy, 0.7)
+        self.assertLessEqual(test_accuracy, 0.99)
 
 
 if __name__ == "__main__":
