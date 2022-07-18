@@ -37,7 +37,7 @@ from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredicti
 from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
-from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
+from kglib.utils.graph.iterate import multidigraph_edge_data_iterator, multidigraph_node_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
 
@@ -82,7 +82,7 @@ def diagnosis_example(typedb_binary_directory,
         Final accuracies for training and for testing
     """
 
-    # Delete the database each time  # TODO: Remove
+    # Delete the database each time  # TODO: Remove when adapting to your own data!
     sp.check_call([
         './typedb',
         'console',
@@ -204,7 +204,6 @@ def diagnosis_example(typedb_binary_directory,
             self.conv = HGTConv(in_channels, hidden_channels, heads=heads, metadata=train_data.metadata())
 
         def encode(self, x_dict, edge_index_dict):
-            # TODO: Ideally we would mask the edge being predicted so that it isn't used for message passing
             return self.conv(x_dict, edge_index_dict)
 
         def decode(self, z, edge_label_index_dict):
@@ -465,4 +464,4 @@ def write_predictions_to_typedb(graphs, tx):
 
 if __name__ == '__main__':
     # TODO: Remove
-    diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", 50)
+    diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", 200)
