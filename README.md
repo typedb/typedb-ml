@@ -37,13 +37,13 @@ You may find the following resources useful:
 
 ### Requirements
 
-- Python >= 3.6, <= 3.7.x (TensorFlow 1.14.0 doesn't support later Python versions).
+- Python >= 3.7.x
 
 - KGLIB installed via pip: `pip install typedb-kglib`. 
 
-- [TypeDB 2.1.1](https://github.com/vaticle/typedb/releases) running in the background.
+- [TypeDB 2.11.1](https://github.com/vaticle/typedb/releases) running in the background.
 
-- `typedb-client-python` 2.1.0 ([PyPi](https://pypi.org/project/typedb-client/), [GitHub release](https://github.com/vaticle/typedb-client-python/releases)). This should be installed automatically when you `pip install typedb-kglib`.
+- `typedb-client-python` 2.11.x ([PyPi](https://pypi.org/project/typedb-client/), [GitHub release](https://github.com/vaticle/typedb-client-python/releases)). This should be installed automatically when you `pip install typedb-kglib`.
 
 ### Run the Example
 
