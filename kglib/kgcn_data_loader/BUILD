@@ -33,27 +33,13 @@ py_library(
 )
 
 py_test(
-    name = "standard_encode_test",
+    name = "encoding_test",
     srcs = [
-        "encoding/standard_encode_test.py"
+        "encoding/encoding_test.py"
     ],
     deps = [
         "kgcn_data_loader",
         "//kglib/utils"
-    ]
-)
-
-py_test(
-    name = "utils_test",
-    srcs = [
-        "utils_test.py"
-    ],
-    deps = [
-        "kgcn_data_loader",
-        "//kglib/utils/graph/test",
-        "//kglib/utils/typedb",
-        vaticle_kglib_requirement('networkx'),
-        vaticle_kglib_requirement('numpy'),
     ]
 )
 

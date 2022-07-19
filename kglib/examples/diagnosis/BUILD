@@ -24,20 +24,6 @@ load("@vaticle_kglib_pip//:requirements.bzl",
        vaticle_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
-py_test(
-    name = "diagnosis_test",
-    srcs = [
-        "diagnosis_test.py"
-    ],
-    deps = [
-        "diagnosis",
-        "//kglib/utils/graph/test",
-        vaticle_kglib_requirement('numpy'),
-        vaticle_kglib_requirement('networkx'),
-        vaticle_kglib_requirement('decorator'),
-    ]
-)
-
 py_library(
     name = "diagnosis",
     srcs = [

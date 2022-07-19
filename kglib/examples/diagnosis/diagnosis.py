@@ -253,6 +253,8 @@ def diagnosis_example(typedb_binary_directory,
             precision = tn / neg
             recall = tp / pos
             acc = (tp + tn) / (pos + neg)
+            assert acc >= ((precision + recall) / 2) - 0.001
+            assert acc <= ((precision + recall) / 2) + 0.001
             accuracies.append(float(acc))
             precisions.append(precision)
             recalls.append(recall)

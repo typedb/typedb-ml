@@ -24,7 +24,7 @@ import subprocess as sp
 
 def load_typeql_schema_file(database, typedb_binary_location, typeql_file_path):
     """Load a schema from a file"""
-    _load_typeql_file(database, typeql_file_path, typedb_binary_location, "schema")
+    _load_typeql_file(database, typeql_file_path, typedb_binary_location, "schema")  # TODO compress
 
 
 def load_typeql_data_file(database, typedb_binary_location, typeql_file_path):
@@ -40,30 +40,3 @@ def _load_typeql_file(database, typeql_file_path, typedb_binary_location, schema
         f'--command=source {typeql_file_path}',
         f'--command=commit'
     ], cwd=typedb_binary_location)
-
-
-def apply_logits_to_graphs(graph, logits_graph):
-    """
-    Take in a graph that describes the logits of the graph of interest, and store those logits on the graph as the
-    property 'logits'. The graphs must correspond with one another
-
-    Args:
-        graph: Graph to apply logits to
-        logits_graph: Graph containing logits
-
-    Returns:
-        graph with logits added as property 'logits'
-    """
-
-    for node, data in logits_graph.nodes(data=True):
-        graph.nodes[node]['logits'] = list(data['features'])
-
-    # TODO This is the desired implementation, but the graphs are altered by the model to have duplicated reversed
-    #  edges, so this won't work for now
-    # for sender, receiver, keys, data in logit_graph.edges(keys=True, data=True):
-    #     graph.edges[sender, receiver, keys]['logits'] = list(data['features'])
-
-    for sender, receiver, keys, data in graph.edges(keys=True, data=True):
-        data['logits'] = list(logits_graph.edges[sender, receiver, keys]['features'])
-
-    return graph
