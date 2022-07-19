@@ -236,11 +236,9 @@ def diagnosis_example(typedb_binary_directory,
         return float(loss)
 
     @torch.no_grad()
-    def test() -> Tuple[List[float], List[float], List[float]]:
+    def test() -> List[Tuple[float, float, float]]:
         model.eval()
-        accuracies = []
-        precisions = []
-        recalls = []
+        results = []
         for split in train_data, val_data, test_data:
             # We use `edge_index_dict` and `y_edge` for validation and testing to exclude the negative samples
             z = model.encode(split.x_dict, split.edge_index_dict)
@@ -253,12 +251,8 @@ def diagnosis_example(typedb_binary_directory,
             precision = tn / neg
             recall = tp / pos
             acc = (tp + tn) / (pos + neg)
-            assert acc >= ((precision + recall) / 2) - 0.001
-            assert acc <= ((precision + recall) / 2) + 0.001
-            accuracies.append(float(acc))
-            precisions.append(precision)
-            recalls.append(recall)
-        return accuracies, precisions, recalls
+            results.append((float(acc), precision, recall))
+        return results
 
     writer = SummaryWriter()
     for edge_type, edge_store in zip(data.edge_types, data.edge_stores):
