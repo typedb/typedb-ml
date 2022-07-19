@@ -60,7 +60,7 @@ build:
         pyenv install -s 3.6.3
         pyenv global 3.6.3 system
         bazel test //kglib/kgcn_data_loader/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-    test-kgcn-examples:
+    test-examples:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
@@ -76,7 +76,7 @@ build:
         bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test-kgcn-data-loader, test-utils, test-kgcn-tensorflow, test-end-to-end]
+      dependencies: [build, test-kgcn-data-loader, test-utils, test-examples, test-end-to-end]
       command: |
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
