@@ -33,7 +33,7 @@ load("@vaticle_kglib_pip//:requirements.bzl",
 
 load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
 load("//:deployment.bzl", github_deployment = "deployment")
-load("@vaticle_dependencies//tool/release:rules.bzl", "release_validate_deps")
+load("@vaticle_dependencies//tool/release/deps:rules.bzl", "release_validate_deps")
 
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
@@ -89,5 +89,11 @@ checkstyle_test(
         "*",
         ".grabl/*",
     ]),
-    license_type = "apache",
+    license_type = "apache-header",
+)
+
+checkstyle_test(
+    name = "checkstyle-license",
+    include = ["LICENSE"],
+    license_type = "apache-fulltext",
 )
