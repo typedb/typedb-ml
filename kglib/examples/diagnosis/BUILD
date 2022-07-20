@@ -20,8 +20,7 @@
 #
 
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@vaticle_kglib_pip//:requirements.bzl",
-       vaticle_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
@@ -33,6 +32,9 @@ py_library(
         "//kglib/examples/diagnosis/dataset",
         "//kglib/typedb",
         "@vaticle_typedb_client_python//:client_python",
+        vaticle_kglib_requirement("networkx"),
+        vaticle_kglib_requirement("torch"),
+        vaticle_kglib_requirement("torch_geometric"),
     ],
     visibility=['//visibility:public']
 )
