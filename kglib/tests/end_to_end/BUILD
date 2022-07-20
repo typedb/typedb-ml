@@ -26,7 +26,7 @@ py_test(
     name = "diagnosis",
     size = "enormous",
     srcs = [
-        "kgcn/diagnosis.py"
+        "diagnosis.py"
     ],
     deps = [
         "//kglib/examples/diagnosis",
@@ -46,9 +46,9 @@ py_test(
     name = "diagnosis-debug",
     size = "enormous",
     srcs = [
-        "kgcn/diagnosis_debug.py"
+        "diagnosis_debug.py"
     ],
-    main = "kgcn/diagnosis_debug.py",
+    main = "diagnosis_debug.py",
     deps = [
         "//kglib/examples/diagnosis",
     ],
