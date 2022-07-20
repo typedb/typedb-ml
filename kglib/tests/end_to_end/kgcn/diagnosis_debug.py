@@ -45,9 +45,9 @@ class TestDiagnosisExampleDebug(unittest.TestCase):
             schema_file_path=self._schema_file_location,
             seed_data_file_path=self._data_file_location
         )
-        self.assertGreaterEqual(train_accuracy, 0.7)
+        self.assertGreaterEqual(train_accuracy, 0.9)
         self.assertLessEqual(train_accuracy, 0.99)
-        self.assertGreaterEqual(test_accuracy, 0.7)
+        self.assertGreaterEqual(test_accuracy, 0.9)
         self.assertLessEqual(test_accuracy, 0.99)
 
 

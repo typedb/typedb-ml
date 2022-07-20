@@ -20,8 +20,8 @@
 #
 import networkx as nx
 
-from kglib.utils.graph.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
-from kglib.utils.typedb.type.type import get_edge_type_triplets, reverse_edge_type_triplets, get_thing_types
+from kglib.utils.graph.iterate import multidigraph_edge_data_iterator
+from kglib.utils.typedb.type.type import get_edge_type_triplets, reverse_edge_type_triplets
 
 
 class LinkPredictionLabeller:
@@ -32,10 +32,6 @@ class LinkPredictionLabeller:
     def __call__(self, graph):
         self.label_edges(graph)
         return graph
-
-    # def label_nodes(self, graph):
-    #     for data in multidigraph_node_data_iterator(graph):
-    #         data["y"] = 0
 
     def label_edges(self, graph):
         for data in multidigraph_edge_data_iterator(graph):
@@ -101,10 +97,10 @@ def binary_relations_to_edges(graph: nx.MultiDiGraph, binary_relation_type):
             replacement_edges[(new_edge_start, new_edge_end)] = node
     for node in replacement_edges.values():
         graph.remove_node(node)
-    return replacement_edges
+    return graph
 
 
-def prepare_edge_triplets(session, relation_type_to_predict, types_to_ignore):
+def binary_link_prediction_edge_triplets(session, relation_type_to_predict, types_to_ignore):
     edge_type_triplets = get_edge_type_triplets(session)
     edge_type_triplets = [e for e in edge_type_triplets if not (set(e).intersection(types_to_ignore))]
     replace_relation_with_binary_edge(edge_type_triplets, relation_type_to_predict)
@@ -119,13 +115,3 @@ def replace_relation_with_binary_edge(edge_type_triplets, relation_type_to_predi
     if relation_type_to_predict[1] != relation_type_to_predict[3]:
         edge_type_triplets.remove(tuple(reversed(relation_type_to_predict[:3])))
     edge_type_triplets.append((relation_type_to_predict[0], relation_type_to_predict[2], relation_type_to_predict[4]))
-
-
-def prepare_node_types(session, relation_type_to_predict, types_to_ignore):
-    node_types = get_thing_types(session)
-    for el in types_to_ignore:
-        if el in node_types:
-            node_types.remove(el)
-    # Remove the relation_to_predict as a node, since we will be using it as a binary edge instead
-    node_types.remove(relation_type_to_predict[2])
-    return node_types

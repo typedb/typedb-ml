@@ -28,7 +28,7 @@ from typedb.client import TypeDB, TypeDBSession, SessionType, TypeDBOptions, Tra
 from kglib.utils.graph.thing.queries_to_networkx_graph import build_graph_from_queries
 
 
-class TypeDBNetworkxDataSet:
+class DataSet:
     """
     Loading graphs based on queries from TypeDB.
     Note: not dependent on PyTorch or Pytorch Geometric.

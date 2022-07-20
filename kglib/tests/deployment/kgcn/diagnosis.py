@@ -27,8 +27,8 @@ from kglib.examples.diagnosis.diagnosis import diagnosis_example
 class TestDiagnosisExample(unittest.TestCase):
 
     def test_example_runs_without_exception(self):
-        diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0",
-                          num_graphs=6)
+        # TODO: Remove hard-coding
+        diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", num_graphs=6)
 
 
 if __name__ == "__main__":

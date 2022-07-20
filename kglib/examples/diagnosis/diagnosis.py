@@ -31,20 +31,21 @@ from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.nn import HGTConv
 from typedb.client import *
 
-from kglib.kgcn_data_loader.dataset.typedb_networkx_dataset import TypeDBNetworkxDataSet
+from kglib.kgcn_data_loader.dataset.dataset import DataSet
 from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges, \
-    prepare_edge_triplets, prepare_node_types
+    binary_link_prediction_edge_triplets
+from kglib.kgcn_data_loader.transform.common import clear_unneeded_fields, store_concepts_by_type
 from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
-    ContinuousEncoder, store_concepts_by_type
+    ContinuousEncoder
 from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
-from kglib.utils.graph.iterate import multidigraph_edge_data_iterator, multidigraph_node_data_iterator
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
+from kglib.utils.typedb.type.type import get_thing_types
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
 
-PREEXISTS = 0
+PREEXISTS = 0  # TODO Remove, now unnecessary
 
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
@@ -54,9 +55,23 @@ TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'alcohol-risked-disease', 'person
 # Note that this determines the edge direction when converting from a TypeDB relation
 RELATION_TYPE_TO_PREDICT = ('person', 'patient', 'diagnosis', 'diagnosed-disease', 'disease')
 
-# The learner should see candidate relations the same as the ground truth relations, so adjust these candidates to
-# look like their ground truth counterparts
-TYPES_AND_ROLES_TO_OBFUSCATE = {}
+TYPE_ENCODING_SIZE = 16
+ATTRIBUTE_ENCODING_SIZE = 16
+
+# Attribute encoders encode the value of each attribute into a fixed-length feature vector. The encoders are
+# defined on a per-type basis. Easily define your own encoders for specific attribute data in your TypeDB database
+ATTRIBUTE_ENCODERS = {
+    # Categorical Attribute types and the values of their categories
+    # TODO: Use a sentence encoder for this instead to demonstrate how to use one
+    'name': CategoricalEncoder(
+        ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol'],
+        ATTRIBUTE_ENCODING_SIZE
+    ),
+    # Continuous Attribute types and their min and max values
+    'severity': ContinuousEncoder(0, 1, ATTRIBUTE_ENCODING_SIZE),
+    'age': ContinuousEncoder(7, 80, ATTRIBUTE_ENCODING_SIZE),
+    'units-per-week': ContinuousEncoder(3, 29, ATTRIBUTE_ENCODING_SIZE)
+}
 
 
 def diagnosis_example(typedb_binary_directory,
@@ -97,62 +112,31 @@ def diagnosis_example(typedb_binary_directory,
 
     session = client.session(database, SessionType.DATA)
 
-    # During the transforms below we convert the *relations to predict* to simple edges, which means the relation
+    # During the transforms below we convert the relations to predict to simple binary edges, which means the relation
     # changes from a node to an edge. We therefore need to update the node_types and edge_types accordingly
-    node_types = prepare_node_types(session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE)
-    edge_type_triplets, edge_type_triplets_reversed = prepare_edge_triplets(session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE)
-    type_encoding_size = 16
 
-    # Attribute encoders encode the value of each attribute into a fixed-length feature vector. The encoders are
-    # defined on a per-type basis. Easily define your own encoders for specific attribute data in your TypeDB database
-    attribute_encoding_size = 16
-    attribute_encoders = {
-        # Categorical Attribute types and the values of their categories
-        # TODO: Use a sentence encoder for this instead to demonstrate how to use one
-        'name': CategoricalEncoder(
-            ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol'],
-            attribute_encoding_size
-        ),
-        # Continuous Attribute types and their min and max values
-        'severity': ContinuousEncoder(0, 1, attribute_encoding_size),
-        'age': ContinuousEncoder(7, 80, attribute_encoding_size),
-        'units-per-week': ContinuousEncoder(3, 29, attribute_encoding_size)
-    }
+    # Remove the relation from the node types, since we will be using it as a binary edge instead
+    to_ignore = list(TYPES_TO_IGNORE) + [RELATION_TYPE_TO_PREDICT[2]]
+    node_types = [t for t in get_thing_types(session) if t not in to_ignore]
+    edge_type_triplets, edge_type_triplets_reversed = binary_link_prediction_edge_triplets(
+        session, RELATION_TYPE_TO_PREDICT, TYPES_TO_IGNORE
+    )
 
-    def prepare_graph(graph):
-        # TODO: We likely need to know the relations that were replaced with binary edges later on
-        replaced_edges = binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT[1:4]),
-        return nx.convert_node_labels_to_integers(graph, label_attribute="concept")
-
-    def clear_unneeded_fields(graph):
-        for node_data in multidigraph_node_data_iterator(graph):
-            x = node_data["x"]
-            t = node_data["type"]
-            node_data.clear()
-            node_data["x"] = x
-            node_data["type"] = t
-
-        for edge_data in multidigraph_edge_data_iterator(graph):
-            x = edge_data["edge_attr"]
-            y = edge_data["y_edge"]
-            t = edge_data["type"]
-            edge_data.clear()
-            edge_data["edge_attr"] = x
-            edge_data["y_edge"] = y
-            edge_data["type"] = t
-        return graph
+    binary_edge_to_predict = RELATION_TYPE_TO_PREDICT[::2]  # Evaluates to: ('person', 'diagnosis', 'disease')
+    binary_rev_edge_to_predict = edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person')
 
     edge_types = list({triplet[1] for triplet in edge_type_triplets})
     transform = transforms.Compose([
-        prepare_graph,
-        GraphFeatureEncoder(node_types, edge_types, type_encoding_size, attribute_encoders, attribute_encoding_size),
+        lambda graph: binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT[1:4]),
+        lambda graph: nx.convert_node_labels_to_integers(graph, label_attribute="concept"),
+        GraphFeatureEncoder(node_types, edge_types, TYPE_ENCODING_SIZE, ATTRIBUTE_ENCODERS, ATTRIBUTE_ENCODING_SIZE),
         LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2]),
-        store_concepts_by_type,  # store the concepts we have in type-wise lists so that we can interpret the concepts for our predictions later
+        store_concepts_by_type,
         clear_unneeded_fields
     ])
 
     # Create a Dataset that will load graphs from TypeDB on-demand, based on an ID
-    dataset = TypeDBNetworkxDataSet(
+    dataset = DataSet(
         [0], node_types, edge_type_triplets, get_query_handles, DATABASE, ADDRESS, session, True, transform
     )
 
@@ -162,24 +146,24 @@ def diagnosis_example(typedb_binary_directory,
         as_tensor(node_type_indices), as_tensor(edge_type_indices), node_types, edge_type_triplets
     ).to(device)  # Get the first graph object.
 
+    # Reverse edges need to be present for bi-directional message-passing but the labels should not be considered
+    # for node and edge representations
     data = transforms.ToUndirected()(data)
     for edge_from, edge, edge_to in edge_type_triplets_reversed:
-        # This seems to be necessary so that the reverse edges are present for message-passing but the labels aren't
-        # considered for node and edge representations
         del data[edge_from, edge, edge_to].edge_label  # Remove "reverse" label.
 
-    binary_edge_to_predict = RELATION_TYPE_TO_PREDICT[::2]  # Evaluates to: ('person', 'diagnosis', 'disease')
-    binary_rev_edge_to_predict = edge_type_triplets_reversed[edge_type_triplets.index(RELATION_TYPE_TO_PREDICT[::2])]  # Evaluates to: ('disease', 'rev_diagnosis', 'person')
-
+    # Setting the neg_sampling_ratio higher than the number of places that a negative sample can be added causes the
+    # training set to have too few negative samples!
+    # Consider using other samplers from Pytorch Geometric in place of this one, depending on your use case
     train_data, val_data, test_data = transforms.RandomLinkSplit(
         num_val=0.2,
         num_test=0.2,
-        neg_sampling_ratio=1.0,  # Putting this ration greater than that makes the train, val, test splits have different proportions of negative examples due to a limited number of places to add negative edges in this example generated data.
+        neg_sampling_ratio=1.0,
         edge_types=binary_edge_to_predict,
         rev_edge_types=binary_rev_edge_to_predict
     )(data)
 
-    # Add a new `links` attribute to store the edges for prediction so that they aren't used for training
+    # Add a new `links` attribute to store the edges for prediction so that they are definitely isolated from training
     train_data.link_index = train_data.edge_label_index_dict[binary_edge_to_predict]
     train_data.link_labels = train_data.edge_label_dict[binary_edge_to_predict]
     val_data.link_index = val_data.edge_label_index_dict[binary_edge_to_predict]
@@ -187,16 +171,17 @@ def diagnosis_example(typedb_binary_directory,
     test_data.link_index = test_data.edge_label_index_dict[binary_edge_to_predict]
     test_data.link_labels = test_data.edge_label_dict[binary_edge_to_predict]
 
-    data.links = data['person', 'diagnosis', 'disease']
-    data.rev_links = data['disease', 'rev_diagnosis', 'person']
-    del data['person', 'diagnosis', 'disease']
-    del data['disease', 'rev_diagnosis', 'person']
-    del train_data['person', 'diagnosis', 'disease']
-    del train_data['disease', 'rev_diagnosis', 'person']
-    del val_data['person', 'diagnosis', 'disease']
-    del val_data['disease', 'rev_diagnosis', 'person']
-    del test_data['person', 'diagnosis', 'disease']
-    del test_data['disease', 'rev_diagnosis', 'person']
+    # Delete the stores for the predicted edge now that we have stored it elsewhere above
+    data.links = data[binary_edge_to_predict]
+    data.rev_links = data[binary_rev_edge_to_predict]
+    del data[binary_edge_to_predict]
+    del data[binary_rev_edge_to_predict]
+    del train_data[binary_edge_to_predict]
+    del train_data[binary_rev_edge_to_predict]
+    del val_data[binary_edge_to_predict]
+    del val_data[binary_rev_edge_to_predict]
+    del test_data[binary_edge_to_predict]
+    del test_data[binary_rev_edge_to_predict]
 
     class LinkPredictionModel(torch.nn.Module):
         def __init__(self, in_channels: Union[int, Dict[str, int]], hidden_channels=128, heads=8):
@@ -213,15 +198,11 @@ def diagnosis_example(typedb_binary_directory,
 
         def decode_all(self, z):
             logits = z['person'] @ z['disease'].t()
-            # return (logits.sigmoid() > 0.5).nonzero(as_tuple=False).t()
             return logits
 
     model = LinkPredictionModel(in_channels=-1)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data, model = data.to(device), model.to(device)
-
-    with torch.no_grad():  # Initialize lazy modules.
-        z = model.encode(train_data.x_dict, train_data.edge_index_dict)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.005, weight_decay=0.001)
 
@@ -264,7 +245,9 @@ def diagnosis_example(typedb_binary_directory,
 
     best_val_acc = 0
     start_patience = patience = 100
-    for epoch in range(1, 100):
+    train_results = None
+    test_results = None
+    for epoch in range(1, 10):
         loss = train()
         writer.add_scalar('Loss/train', loss, epoch)
         train_results, val_results, test_results = test()
@@ -289,8 +272,8 @@ def diagnosis_example(typedb_binary_directory,
             break
 
     # Put back the diagnosis edges
-    data['person', 'diagnosis', 'disease'] = data.links
-    data['disease', 'rev_diagnosis', 'person'] = data.rev_links
+    # data[binary_edge_to_predict] = data.links
+    # data[binary_rev_edge_to_predict] = data.rev_links
 
     z = model.encode(data.x_dict, data.edge_index_dict)
     final_edge_index = (model.decode_all(z).sigmoid() > 0.5).nonzero(as_tuple=False).cpu().detach().numpy()
@@ -309,6 +292,19 @@ def diagnosis_example(typedb_binary_directory,
 
     with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_typedb(predicted_links, tx)
+
+    # Now we can get the confusion matrix from querying TypeDB!
+    with session.transaction(TransactionType.READ) as tx:
+        tp = tx.query().match_aggregate("match $p isa person; $d isa disease; ($p, $d) isa diagnosis; "
+                                        "($p, $d) isa predicted-diagnosis; count;").get().as_int()
+        tn = tx.query().match_aggregate("match $p isa person; $d isa disease; not{($p, $d) isa diagnosis;}; "
+                                        "not{($p, $d) isa predicted-diagnosis;}; count;").get().as_int()
+        fp = tx.query().match_aggregate("match $p isa person; $d isa disease; not{($p, $d) isa diagnosis;}; "
+                                        "($p, $d) isa predicted-diagnosis; count;").get().as_int()
+        fn = tx.query().match_aggregate("match $p isa person; $d isa disease; ($p, $d) isa diagnosis; "
+                                        "not{($p, $d) isa predicted-diagnosis;}; count;").get().as_int()
+        print("Confusion matrix")
+        print(f"{tp} {fn}\n{fp} {tn}")
 
     session.close()
     client.close()
