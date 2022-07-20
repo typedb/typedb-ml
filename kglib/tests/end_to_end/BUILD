@@ -33,11 +33,11 @@ py_test(
         "//kglib/utils/typedb/test",
     ],
     data = [
-        "//kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files",
+        "//kglib/examples/diagnosis/dataset:diagnosis-example-typeql-files",
         "@vaticle_typedb_artifact_linux//file"
     ],
     args = [
-        "$(locations //kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files)",
+        "$(locations //kglib/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
         "$(location @vaticle_typedb_artifact_linux//file)",
     ],
 )
@@ -53,10 +53,10 @@ py_test(
         "//kglib/examples/diagnosis",
     ],
     data = [
-        "//kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files",
+        "//kglib/examples/diagnosis/dataset:diagnosis-example-typeql-files",
     ],
     args = [
-        "$(locations //kglib/utils/typedb/synthetic/examples:diagnosis-example-typeql-files)",
+        "$(locations //kglib/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
     ],
 )
 

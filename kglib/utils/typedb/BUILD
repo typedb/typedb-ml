@@ -29,7 +29,6 @@ py_library(
     deps = [
         '//kglib/utils/typedb/test',
         '//kglib/utils/typedb/object',
-        '//kglib/utils/typedb/synthetic',
         '//kglib/utils/typedb/type',
     ],
     visibility=['//visibility:public']

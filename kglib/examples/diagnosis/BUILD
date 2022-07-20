@@ -30,7 +30,7 @@ py_library(
         'diagnosis.py'
     ],
     deps = [
-        "//kglib/utils/typedb/synthetic",
+        "//kglib/examples/diagnosis/dataset",
         "//kglib/utils/typedb/type",
         "@vaticle_typedb_client_python//:client_python",
     ],
