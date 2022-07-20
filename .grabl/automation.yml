@@ -46,7 +46,7 @@ build:
       image: vaticle-ubuntu-20.04
       command: |
         find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
-    test-kgcn-data-loader:
+    test-pytorch-geometric:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
@@ -76,7 +76,7 @@ build:
         bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test-kgcn-data-loader, test-utils, test-examples, test-end-to-end]
+      dependencies: [build, test-pytorch-geometric, test-utils, test-examples, test-end-to-end]
       command: |
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
