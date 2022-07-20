@@ -27,7 +27,6 @@ py_library(
     deps = [
         '//kglib/utils/typedb',
         '//kglib/utils/graph',
-        '//kglib/utils/test'
     ],
     visibility=['//visibility:public']
 )
