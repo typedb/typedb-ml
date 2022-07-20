@@ -89,6 +89,11 @@ checkstyle_test(
         "*",
         ".grabl/*",
     ]),
+    exclude = [
+        ".bazelversion",
+        "LICENSE",
+        "VERSION",
+    ],
     license_type = "apache-header",
 )
 
