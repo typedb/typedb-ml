@@ -24,7 +24,7 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
     name = "networkx",
-    srcs = glob(['**/*.py']),
+    srcs = glob(['*.py']),
     deps = [
         '//kglib/networkx/query',
         '//kglib/networkx/thing',

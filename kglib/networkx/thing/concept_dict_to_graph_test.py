@@ -22,9 +22,9 @@
 import unittest
 import networkx as nx
 
-from kglib.utils.typedb.thing import Thing
-from kglib.utils.graph.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
-from kglib.utils.graph.thing.graph_test_case import GraphTestCase
+from kglib.typedb.thing import Thing
+from kglib.networkx.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
+from kglib.networkx.thing.graph_test_case import GraphTestCase
 
 
 class TestConceptDictToTypeDBGraph(GraphTestCase):

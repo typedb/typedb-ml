@@ -24,12 +24,12 @@ import unittest
 import networkx as nx
 from typedb.api.concept.type.attribute_type import AttributeType
 
-from kglib.utils.graph.thing.graph_test_case import GraphTestCase
-from kglib.utils.graph.thing.queries_to_networkx_graph import concept_dict_from_concept_map, \
+from kglib.networkx.thing.graph_test_case import GraphTestCase
+from kglib.networkx.thing.queries_to_networkx_graph import concept_dict_from_concept_map, \
     combine_n_graphs, build_graph_from_queries
-from kglib.utils.typedb.thing import Thing
-from kglib.utils.typedb.test.mock.answer import MockConceptMap
-from kglib.utils.typedb.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
+from kglib.typedb.thing import Thing
+from kglib.typedb.test.mock.answer import MockConceptMap
+from kglib.typedb.test.mock.concept import MockType, MockAttributeType, MockThing, MockAttribute
 
 
 def mock_sampler(input_iter):
