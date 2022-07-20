@@ -28,24 +28,24 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 py_test(
     name = "queries_to_networkx_graph_test",
     srcs = [
-        "queries_to_networkx_graph_test.py"
+        "queries_to_networkx_graph_test.py",
+        "graph_test_case.py"
     ],
     deps = [
         "thing",
         "//kglib/utils/typedb/test",
-        "//kglib/utils/graph/test",
     ]
 )
 
 py_test(
     name = "queries_to_networkx_graph_it",
     srcs = [
-        "queries_to_networkx_graph_it.py"
+        "queries_to_networkx_graph_it.py",
+        "graph_test_case.py"
     ],
     deps = [
         "thing",
         "//kglib/utils/typedb/test",
-        "//kglib/utils/graph/test",
         "@vaticle_typedb_client_python//:client_python",
     ],
     data = ["@vaticle_typedb_artifact_linux//file"],
@@ -56,11 +56,11 @@ py_test(
 py_test(
     name = "concept_dict_to_graph_test",
     srcs = [
-        "concept_dict_to_graph_test.py"
+        "concept_dict_to_graph_test.py",
+        "graph_test_case.py"
     ],
     deps = [
         "thing",
-        "//kglib/utils/graph/test",
     ],
 )
 
