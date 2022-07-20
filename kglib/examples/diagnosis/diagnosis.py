@@ -38,7 +38,7 @@ from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, stor
 from kglib.pytorch_geometric.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
 from kglib.pytorch_geometric.utils import load_typeql_schema_file, load_typeql_data_file
-from kglib.networkx.query.query_graph import QueryGraph
+from kglib.networkx.query_graph import QueryGraph
 from kglib.examples.diagnosis.dataset.generate import generate_example_data
 from kglib.typedb.type import get_thing_types
 

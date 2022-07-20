@@ -24,8 +24,8 @@ import unittest
 import networkx as nx
 from typedb.api.concept.type.attribute_type import AttributeType
 
-from kglib.networkx.thing.graph_test_case import GraphTestCase
-from kglib.networkx.thing.queries_to_networkx_graph import concept_dict_from_concept_map, \
+from kglib.networkx.graph_test_case import GraphTestCase
+from kglib.networkx.queries_to_networkx_graph import concept_dict_from_concept_map, \
     combine_n_graphs, build_graph_from_queries
 from kglib.typedb.thing import Thing
 from kglib.typedb.test.mock.answer import MockConceptMap

@@ -20,16 +20,76 @@
 #
 
 load("@rules_python//python:defs.bzl", "py_library")
+load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
     name = "networkx",
-    srcs = glob(['*.py']),
+    srcs = [
+        'query_graph.py',
+        'concept_dict_to_networkx_graph.py',
+        'queries_to_networkx_graph.py'
+    ],
     deps = [
-        '//kglib/networkx/query',
-        '//kglib/networkx/thing',
+        "//kglib/typedb",
+        vaticle_kglib_requirement('networkx'),
+        vaticle_kglib_requirement('decorator'),
     ],
     visibility=['//visibility:public']
+)
+
+py_test(
+    name = "query_graph_test",
+    srcs = [
+        "query_graph_test.py",
+        "query_graph.py"
+    ],
+    deps = [
+        vaticle_kglib_requirement('networkx'),
+    ]
+)
+
+py_test(
+    name = "queries_to_networkx_graph_test",
+    srcs = [
+        "queries_to_networkx_graph_test.py",
+        "queries_to_networkx_graph.py",
+        "graph_test_case.py"
+    ],
+    deps = [
+        "//kglib/typedb",
+        vaticle_kglib_requirement('networkx'),
+    ]
+)
+
+py_test(
+    name = "queries_to_networkx_graph_it",
+    srcs = [
+        "queries_to_networkx_graph_it.py",
+        "queries_to_networkx_graph.py",
+        "graph_test_case.py"
+    ],
+    deps = [
+        "//kglib/typedb/test",
+        "@vaticle_typedb_client_python//:client_python",
+        vaticle_kglib_requirement('networkx'),
+    ],
+    data = ["@vaticle_typedb_artifact_linux//file"],
+    args = ["$(location @vaticle_typedb_artifact_linux//file)"],
+)
+
+
+py_test(
+    name = "concept_dict_to_graph_test",
+    srcs = [
+        "concept_dict_to_graph_test.py",
+        "concept_dict_to_networkx_graph.py",
+        "graph_test_case.py"
+    ],
+    deps = [
+        "//kglib/typedb",
+        vaticle_kglib_requirement('networkx'),
+    ],
 )
 
 checkstyle_test(

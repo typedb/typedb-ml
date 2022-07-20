@@ -26,8 +26,8 @@ import networkx as nx
 from typedb.api.concept.type.attribute_type import AttributeType
 from typedb.client import *
 
-from kglib.networkx.thing.graph_test_case import GraphTestCase
-from kglib.networkx.thing.queries_to_networkx_graph import build_graph_from_queries
+from kglib.networkx.graph_test_case import GraphTestCase
+from kglib.networkx.queries_to_networkx_graph import build_graph_from_queries
 from kglib.typedb.thing import build_thing
 from kglib.typedb.test.base import TypeDBServer
 

@@ -21,7 +21,7 @@
 
 import unittest
 
-from kglib.networkx.query.query_graph import QueryGraph
+from kglib.networkx.query_graph import QueryGraph
 
 
 class TestQueryGraph(unittest.TestCase):

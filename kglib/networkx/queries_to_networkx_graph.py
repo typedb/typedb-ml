@@ -25,7 +25,7 @@ from functools import reduce
 import networkx as nx
 
 from kglib.typedb.thing import build_thing
-from kglib.networkx.thing.concept_dict_to_networkx_graph import concept_dict_to_graph
+from kglib.networkx.concept_dict_to_networkx_graph import concept_dict_to_graph
 
 
 def concept_dict_from_concept_map(concept_map):
