@@ -41,7 +41,7 @@ checkstyle_test(
     name = "checkstyle",
     include = glob(["*"]),
     exclude = glob([
-        *.md
+        "*.md"
     ]),
     license_type = "apache-header",
 )
