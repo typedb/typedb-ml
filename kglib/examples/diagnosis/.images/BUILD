@@ -28,5 +28,5 @@ checkstyle_test(
         "*.png",
         "*.svg"
     ]),
-    license_type = "apache",
+    license_type = "apache-header",
 )

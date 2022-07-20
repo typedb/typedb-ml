@@ -32,17 +32,6 @@ py_library(
     visibility=['//visibility:public']
 )
 
-py_test(
-    name = "encoding_test",
-    srcs = [
-        "encoding/encoding_test.py"
-    ],
-    deps = [
-        "kgcn_data_loader",
-        "//kglib/utils"
-    ]
-)
-
 checkstyle_test(
     name = "checkstyle",
     include = glob([
