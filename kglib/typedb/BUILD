@@ -31,7 +31,7 @@ py_library(
         'thing.py',
     ],
     deps = [
-        '//kglib/utils/typedb/test',
+        '//kglib/typedb/test',
         "@vaticle_typedb_client_python//:client_python",
     ],
     visibility=['//visibility:public']

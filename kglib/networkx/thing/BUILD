@@ -33,7 +33,7 @@ py_test(
     ],
     deps = [
         "thing",
-        "//kglib/utils/typedb/test",
+        "//kglib/typedb/test",
     ]
 )
 
@@ -45,7 +45,7 @@ py_test(
     ],
     deps = [
         "thing",
-        "//kglib/utils/typedb/test",
+        "//kglib/typedb/test",
         "@vaticle_typedb_client_python//:client_python",
     ],
     data = ["@vaticle_typedb_artifact_linux//file"],
@@ -71,7 +71,7 @@ py_library(
         'queries_to_networkx_graph.py'
     ],
     deps = [
-        "//kglib/utils/typedb",
+        "//kglib/typedb",
         vaticle_kglib_requirement('networkx'),
         vaticle_kglib_requirement('decorator'),
     ],

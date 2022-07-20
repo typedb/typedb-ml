@@ -52,14 +52,21 @@ build:
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/utils/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-    test-utils:
+        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-typedb:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //kglib/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-neworkx:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
+        bazel test //kglib/neworkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-examples:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
@@ -76,7 +83,7 @@ build:
         bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test-pytorch-geometric, test-utils, test-examples, test-end-to-end]
+      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
       command: |
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD

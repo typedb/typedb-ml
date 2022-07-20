@@ -23,10 +23,11 @@ load("@rules_python//python:defs.bzl", "py_library")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
-    name = "utils",
+    name = "networkx",
+    srcs = glob(['**/*.py']),
     deps = [
-        '//kglib/utils/typedb',
-        '//kglib/utils/graph',
+        '//kglib/networkx/query',
+        '//kglib/networkx/thing',
     ],
     visibility=['//visibility:public']
 )

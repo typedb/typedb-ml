@@ -29,7 +29,9 @@ py_library(
         '__init__.py',
     ],
     deps = [
-        '//kglib/utils',
+        '//kglib/typedb',
+        '//kglib/networkx',
+        '//kglib/pytorch_geometric',
     ],
     visibility=['//visibility:public']
 )

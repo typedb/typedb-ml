@@ -30,7 +30,7 @@ py_test(
     ],
     deps = [
         "//kglib/examples/diagnosis",
-        "//kglib/utils/typedb/test",
+        "//kglib/typedb/test",
     ],
     data = [
         "//kglib/examples/diagnosis/dataset:diagnosis-example-typeql-files",
