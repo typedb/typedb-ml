@@ -31,7 +31,7 @@ py_library(
     ],
     deps = [
         "//kglib/examples/diagnosis/dataset",
-        "//kglib/utils/typedb/type",
+        "//kglib/utils/typedb",
         "@vaticle_typedb_client_python//:client_python",
     ],
     visibility=['//visibility:public']

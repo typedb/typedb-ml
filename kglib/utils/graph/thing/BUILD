@@ -71,7 +71,7 @@ py_library(
         'queries_to_networkx_graph.py'
     ],
     deps = [
-        "//kglib/utils/typedb/object",
+        "//kglib/utils/typedb",
         vaticle_kglib_requirement('networkx'),
         vaticle_kglib_requirement('decorator'),
     ],

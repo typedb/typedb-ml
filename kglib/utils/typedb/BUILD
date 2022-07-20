@@ -26,10 +26,13 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
     name = "typedb",
+    srcs = [
+        'type.py',
+        'thing.py',
+    ],
     deps = [
         '//kglib/utils/typedb/test',
-        '//kglib/utils/typedb/object',
-        '//kglib/utils/typedb/type',
+        "@vaticle_typedb_client_python//:client_python",
     ],
     visibility=['//visibility:public']
 )
