@@ -22,7 +22,7 @@ import sys
 import unittest
 
 from kglib.examples.diagnosis.diagnosis import diagnosis_example
-from kglib.utils.typedb.test.base import TypeDBServer
+from kglib.typedb.test.base import TypeDBServer
 
 
 class TestDiagnosisExample(unittest.TestCase):

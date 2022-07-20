@@ -20,8 +20,8 @@
 #
 import networkx as nx
 
-from kglib.utils.graph.iterate import multidigraph_edge_data_iterator
-from kglib.utils.typedb.type.type import get_edge_type_triplets, reverse_edge_type_triplets
+from kglib.networkx.iterate import multidigraph_edge_data_iterator
+from kglib.typedb.type.type import get_edge_type_triplets, reverse_edge_type_triplets
 
 
 class LinkPredictionLabeller:
