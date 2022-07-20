@@ -89,7 +89,9 @@ checkstyle_test(
         "*",
         ".grabl/*",
     ]),
-    exclude = [
+    exclude = glob([
+        *.md
+    ]) + [
         ".bazelversion",
         "LICENSE",
         "VERSION",

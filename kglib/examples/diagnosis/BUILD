@@ -40,5 +40,8 @@ py_library(
 checkstyle_test(
     name = "checkstyle",
     include = glob(["*"]),
+    exclude = glob([
+        *.md
+    ]),
     license_type = "apache-header",
 )
