@@ -31,13 +31,13 @@ from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.nn import HGTConv
 from typedb.client import *
 
-from kglib.kgcn_data_loader.dataset.dataset import DataSet
-from kglib.kgcn_data_loader.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges, \
+from kglib.pytorch_geometric.dataset.dataset import DataSet
+from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges, \
     binary_link_prediction_edge_triplets
-from kglib.kgcn_data_loader.transform.common import clear_unneeded_fields, store_concepts_by_type
-from kglib.kgcn_data_loader.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
+from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
+from kglib.pytorch_geometric.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
-from kglib.kgcn_data_loader.utils import load_typeql_schema_file, load_typeql_data_file
+from kglib.pytorch_geometric.utils import load_typeql_schema_file, load_typeql_data_file
 from kglib.utils.graph.query.query_graph import QueryGraph
 from kglib.utils.typedb.synthetic.examples.diagnosis.generate import generate_example_data
 from kglib.utils.typedb.type.type import get_thing_types

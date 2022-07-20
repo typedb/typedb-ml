@@ -24,7 +24,7 @@ load("@vaticle_kglib_pip//:requirements.bzl",
        vaticle_kglib_requirement = "requirement")
 
 py_library(
-    name = "kgcn_data_loader",
+    name = "pytorch_geometric",
     srcs = glob([
         "*.py",
         "**/*.py"

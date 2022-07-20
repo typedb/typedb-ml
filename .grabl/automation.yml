@@ -59,7 +59,7 @@ build:
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/kgcn_data_loader/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-examples:
       image: vaticle-ubuntu-20.04
       timeout: "10m"

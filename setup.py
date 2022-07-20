@@ -24,10 +24,10 @@ from setuptools import setup
 setup(
     name='kglib',
     version='',
-    packages=['kglib', 'kglib.utils', 'kglib.kgcn_tensorflow', 'kglib.kgcn_data_loader'],
+    packages=['kglib', 'kglib.utils', 'kglib.pytorch_geometric'],
     url='',
     license='',
-    author='jms_fltchr',
+    author='jmsfltchr',
     author_email='',
     description=''
 )
