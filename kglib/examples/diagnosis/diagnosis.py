@@ -96,13 +96,6 @@ def diagnosis_example(typedb_binary_directory,
         Final accuracies for training and for testing
     """
 
-    # Delete the database each time  # TODO: Remove when adapting to your own data!
-    sp.check_call([
-        './typedb',
-        'console',
-        f'--command=database delete {database}',
-    ], cwd=typedb_binary_directory)
-
     client = TypeDB.core_client(address)
     create_database(client, database)
 
@@ -345,12 +338,12 @@ def get_query_handles(example_id):
 
     vars = p, par, ps, d, diag, n = 'p', 'par', 'ps', 'd', 'diag', 'n'
     hereditary_query_graph = (QueryGraph()
-                              .add_vars(vars, PREEXISTS)
-                              .add_role_edge(ps, p, 'child', PREEXISTS)
-                              .add_role_edge(ps, par, 'parent', PREEXISTS)
-                              .add_role_edge(diag, par, 'patient', PREEXISTS)
-                              .add_role_edge(diag, d, 'diagnosed-disease', PREEXISTS)
-                              .add_has_edge(d, n, PREEXISTS))
+                              .add_vars(vars)
+                              .add_role_edge(ps, p, 'child')
+                              .add_role_edge(ps, par, 'parent')
+                              .add_role_edge(diag, par, 'patient')
+                              .add_role_edge(diag, d, 'diagnosed-disease')
+                              .add_has_edge(d, n))
 
     # === Consumption Feature ===
     consumption_query = inspect.cleandoc(f'''match
@@ -361,11 +354,11 @@ def get_query_handles(example_id):
 
     vars = p, s, n, c, u = 'p', 's', 'n', 'c', 'u'
     consumption_query_graph = (QueryGraph()
-                               .add_vars(vars, PREEXISTS)
-                               .add_has_edge(s, n, PREEXISTS)
-                               .add_role_edge(c, p, 'consumer', PREEXISTS)
-                               .add_role_edge(c, s, 'consumed-substance', PREEXISTS)
-                               .add_has_edge(c, u, PREEXISTS))
+                               .add_vars(vars)
+                               .add_has_edge(s, n)
+                               .add_role_edge(c, p, 'consumer')
+                               .add_role_edge(c, s, 'consumed-substance')
+                               .add_has_edge(c, u))
 
     # === Age Feature ===
     person_age_query = inspect.cleandoc(f'''match 
@@ -374,8 +367,8 @@ def get_query_handles(example_id):
 
     vars = p, a = 'p', 'a'
     person_age_query_graph = (QueryGraph()
-                              .add_vars(vars, PREEXISTS)
-                              .add_has_edge(p, a, PREEXISTS))
+                              .add_vars(vars)
+                              .add_has_edge(p, a))
 
     # === Risk Factors Feature ===
     risk_factor_query = inspect.cleandoc(f'''match 
@@ -386,9 +379,9 @@ def get_query_handles(example_id):
 
     vars = p, d, r = 'p', 'd', 'r'
     risk_factor_query_graph = (QueryGraph()
-                               .add_vars(vars, PREEXISTS)
-                               .add_role_edge(r, p, 'person-at-risk', PREEXISTS)
-                               .add_role_edge(r, d, 'risked-disease', PREEXISTS))
+                               .add_vars(vars)
+                               .add_role_edge(r, p, 'person-at-risk')
+                               .add_role_edge(r, d, 'risked-disease'))
 
     # === Symptom ===
     vars = p, s, sn, d, dn, sp, sev, c = 'p', 's', 'sn', 'd', 'dn', 'sp', 'sev', 'c'
@@ -402,14 +395,14 @@ def get_query_handles(example_id):
           ''')
 
     symptom_query_graph = (QueryGraph()
-                           .add_vars(vars, PREEXISTS)
-                           .add_has_edge(s, sn, PREEXISTS)
-                           .add_has_edge(d, dn, PREEXISTS)
-                           .add_role_edge(sp, s, 'presented-symptom', PREEXISTS)
-                           .add_has_edge(sp, sev, PREEXISTS)
-                           .add_role_edge(sp, p, 'symptomatic-patient', PREEXISTS)
-                           .add_role_edge(c, s, 'effect', PREEXISTS)
-                           .add_role_edge(c, d, 'cause', PREEXISTS))
+                           .add_vars(vars)
+                           .add_has_edge(s, sn)
+                           .add_has_edge(d, dn)
+                           .add_role_edge(sp, s, 'presented-symptom')
+                           .add_has_edge(sp, sev)
+                           .add_role_edge(sp, p, 'symptomatic-patient')
+                           .add_role_edge(c, s, 'effect')
+                           .add_role_edge(c, d, 'cause'))
 
     # === Diagnosis ===
 
@@ -422,10 +415,10 @@ def get_query_handles(example_id):
           ''')
 
     diagnosis_query_graph = (QueryGraph()
-                             .add_vars([diag], PREEXISTS)
-                             .add_vars([d, p, dn], PREEXISTS)
-                             .add_role_edge(diag, d, 'diagnosed-disease', PREEXISTS)
-                             .add_role_edge(diag, p, 'patient', PREEXISTS))
+                             .add_vars([diag])
+                             .add_vars([d, p, dn])
+                             .add_role_edge(diag, d, 'diagnosed-disease')
+                             .add_role_edge(diag, p, 'patient'))
 
     return [
         (symptom_query, lambda x: x, symptom_query_graph),
