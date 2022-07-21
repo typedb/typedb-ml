@@ -27,8 +27,8 @@ py_library(
     name = "networkx",
     srcs = [
         'query_graph.py',
-        'concept_dict_to_networkx_graph.py',
-        'queries_to_networkx_graph.py'
+        'concept_dict_to_networkx.py',
+        'queries_to_networkx.py'
     ],
     deps = [
         "//kglib/typedb",
@@ -50,11 +50,11 @@ py_test(
 )
 
 py_test(
-    name = "queries_to_networkx_graph_test",
+    name = "queries_to_networkx_test",
     srcs = [
-        "queries_to_networkx_graph_test.py",
-        "queries_to_networkx_graph.py",
-        "concept_dict_to_networkx_graph.py"
+        "queries_to_networkx_test.py",
+        "queries_to_networkx.py",
+        "concept_dict_to_networkx.py"
         "graph_test_case.py"
     ],
     deps = [
@@ -64,10 +64,10 @@ py_test(
 )
 
 py_test(
-    name = "queries_to_networkx_graph_it",
+    name = "queries_to_networkx_it",
     srcs = [
-        "queries_to_networkx_graph_it.py",
-        "queries_to_networkx_graph.py",
+        "queries_to_networkx_it.py",
+        "queries_to_networkx.py",
         "graph_test_case.py"
     ],
     deps = [
@@ -81,10 +81,10 @@ py_test(
 
 
 py_test(
-    name = "concept_dict_to_graph_test",
+    name = "concept_dict_to_networkx_test",
     srcs = [
-        "concept_dict_to_graph_test.py",
-        "concept_dict_to_networkx_graph.py",
+        "concept_dict_to_networkx_test.py",
+        "concept_dict_to_networkx.py",
         "graph_test_case.py"
     ],
     deps = [

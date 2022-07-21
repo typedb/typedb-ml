@@ -25,7 +25,7 @@ import networkx as nx
 from torch_geometric.utils import from_networkx
 from typedb.client import TypeDB, TypeDBSession, SessionType, TypeDBOptions, TransactionType
 
-from kglib.networkx.queries_to_networkx_graph import build_graph_from_queries
+from kglib.networkx.queries_to_networkx import build_graph_from_queries
 
 
 class DataSet:
