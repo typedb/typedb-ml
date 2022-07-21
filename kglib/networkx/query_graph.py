@@ -24,48 +24,45 @@ import networkx as nx
 
 class QueryGraph(nx.MultiDiGraph):
     """
-    A custom graph to represent a query. Has additional helper methods specific to adding Graql patterns.
+    A custom graph to represent a query. Has additional helper methods specific to adding TypeQL patterns.
     """
 
-    def add_vars(self, vars, solution):
+    def add_vars(self, vars):
         """
-        Add Graql variables, stored as nodes in the graph
+        Add variables, stored as nodes in the graph
         Args:
             vars: String variables
-            solution: Indicator of the ground truth class that the variables belongs to
 
         Returns:
             self
         """
         for var in vars:
-            self.add_node(var, solution=solution)
+            self.add_node(var)
         return self
 
-    def add_has_edge(self, owner_var, attribute_var, solution):
+    def add_has_edge(self, owner_var, attribute_var):
         """
         Add a "has" edge to represent ownership of an attribute
         Args:
             owner_var: The variable of the owner
             attribute_var: The variable of the owned attribute
-            solution: Indicator of the ground truth class that the edge belongs to
 
         Returns:
             self
         """
-        self.add_edge(owner_var, attribute_var, type='has', solution=solution)
+        self.add_edge(owner_var, attribute_var, type='has')
         return self
 
-    def add_role_edge(self, relation_var, roleplayer_var, role_label, solution):
+    def add_role_edge(self, relation_var, roleplayer_var, role_label):
         """
         Add an edge to represent the role a variable plays in a relation
         Args:
             relation_var: The variable of the relation
             roleplayer_var: The variable of the roleplayer in the relation
             role_label: The role the roleplayer plays in the relation
-            solution: Indicator of the ground truth class that the edge belongs to
 
         Returns:
             self
         """
-        self.add_edge(relation_var, roleplayer_var, type=role_label, solution=solution)
+        self.add_edge(relation_var, roleplayer_var, type=role_label)
         return self

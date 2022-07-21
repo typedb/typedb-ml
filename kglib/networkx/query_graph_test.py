@@ -28,30 +28,30 @@ class TestQueryGraph(unittest.TestCase):
 
     def test_add_single_var_adds_variable_node_as_expected(self):
         g = QueryGraph()
-        g.add_vars(['a'], 0)
-        self.assertDictEqual({'solution': 0}, g.nodes['a'])
+        g.add_vars(['a'])
+        self.assertDictEqual({}, g.nodes['a'])
 
     def test_add_vars_adds_variable_nodes_as_expected(self):
         g = QueryGraph()
-        g.add_vars(['a', 'b'], 0)
+        g.add_vars(['a', 'b'])
         nodes = {node for node in g.nodes}
         self.assertSetEqual({'a', 'b'}, nodes)
 
     def test_add_has_edge_adds_edge_as_expected(self):
         g = QueryGraph()
-        g.add_vars('a', 'b')
-        g.add_has_edge('a', 'b', 0)
+        g.add_vars('a')
+        g.add_has_edge('a', 'b')
         edges = [edge for edge in g.edges]
         self.assertEqual(1, len(edges))
-        self.assertDictEqual({'type': 'has', 'solution': 0}, g.edges['a', 'b', 0])
+        self.assertDictEqual({'type': 'has'}, g.edges['a', 'b', 0])
 
     def test_add_role_edge_adds_role_as_expected(self):
         g = QueryGraph()
-        g.add_vars('a', 'b')
-        g.add_role_edge('a', 'b', 'role_label', 1)
+        g.add_vars('a')
+        g.add_role_edge('a', 'b', 'role_label')
         edges = [edge for edge in g.edges]
         self.assertEqual(1, len(edges))
-        self.assertDictEqual({'type': 'role_label', 'solution': 1}, g.edges['a', 'b', 0])
+        self.assertDictEqual({'type': 'role_label'}, g.edges['a', 'b', 0])
 
 
 if __name__ == "__main__":

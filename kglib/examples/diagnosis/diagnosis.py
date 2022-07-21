@@ -20,7 +20,6 @@
 #
 
 import inspect
-import subprocess as sp
 
 import networkx as nx
 import torch
@@ -31,15 +30,16 @@ from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.nn import HGTConv
 from typedb.client import *
 
+from kglib.examples.diagnosis.dataset.generate import generate_example_data
+from kglib.networkx.query_graph import QueryGraph
 from kglib.pytorch_geometric.dataset.dataset import DataSet
-from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, binary_relations_to_edges, \
+from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, \
+    binary_relations_to_edges, \
     binary_link_prediction_edge_triplets
 from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
 from kglib.pytorch_geometric.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
 from kglib.pytorch_geometric.utils import load_typeql_schema_file, load_typeql_data_file
-from kglib.networkx.query_graph import QueryGraph
-from kglib.examples.diagnosis.dataset.generate import generate_example_data
 from kglib.typedb.type import get_thing_types
 
 DATABASE = "diagnosis"

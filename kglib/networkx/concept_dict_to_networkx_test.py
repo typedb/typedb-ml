@@ -166,9 +166,9 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
 
     def test_variable_graph_properties_are_transferred_to_graph(self):
         variable_graph = nx.MultiDiGraph()
-        variable_graph.add_node('x', input=1, solution=1)
-        variable_graph.add_node('y', input=1, solution=1)
-        variable_graph.add_edge('y', 'x', type='employee', input=0, solution=1)
+        variable_graph.add_node('x', input=1)
+        variable_graph.add_node('y', input=1)
+        variable_graph.add_edge('y', 'x', type='employee', input=0)
 
         person = Thing('V123', 'person', 'entity')
         employment = Thing('V456', 'employment', 'relation')
@@ -176,9 +176,9 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
 
         typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
         expected_typedb_graph = nx.MultiDiGraph()
-        expected_typedb_graph.add_node(person, type='person', input=1, solution=1)
-        expected_typedb_graph.add_node(employment, type='employment', input=1, solution=1)
-        expected_typedb_graph.add_edge(employment, person, type='employee', input=0, solution=1)
+        expected_typedb_graph.add_node(person, type='person', input=1)
+        expected_typedb_graph.add_node(employment, type='employment', input=1)
+        expected_typedb_graph.add_edge(employment, person, type='employee', input=0)
 
         self.assertGraphsEqual(expected_typedb_graph, typedb_graph)
 

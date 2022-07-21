@@ -214,47 +214,47 @@ class TestCombineGraphs(GraphTestCase):
         person_a = Thing('V123', 'person', 'entity')
         name_a = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         typedb_graph_a = nx.MultiDiGraph(name='a')
-        typedb_graph_a.add_node(person_a, input=1, solution=1)
-        typedb_graph_a.add_node(name_a, input=1, solution=1)
-        typedb_graph_a.add_edge(person_a, name_a, type='has', input=0, solution=1)
+        typedb_graph_a.add_node(person_a, input=1)
+        typedb_graph_a.add_node(name_a, input=1)
+        typedb_graph_a.add_edge(person_a, name_a, type='has', input=0)
 
         person_b = Thing('V123', 'person', 'entity')
         name_b = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         typedb_graph_b = nx.MultiDiGraph(name='b')
-        typedb_graph_b.add_node(person_b, input=1, solution=1)
-        typedb_graph_b.add_node(name_b, input=0, solution=1)
-        typedb_graph_b.add_edge(person_b, name_b, type='has', input=0, solution=1)
+        typedb_graph_b.add_node(person_b, input=1)
+        typedb_graph_b.add_node(name_b, input=0)
+        typedb_graph_b.add_edge(person_b, name_b, type='has', input=0)
 
         with self.assertRaises(ValueError) as context:
             combine_n_graphs([typedb_graph_a, typedb_graph_b])
 
         self.assertEqual(('Found non-matching node properties for node <name, V1234: Bob> '
                           'between graphs a and b:\n'
-                          'In graph a: {\'input\': 1, \'solution\': 1}\n'
-                          'In graph b: {\'input\': 0, \'solution\': 1}'), str(context.exception))
+                          'In graph a: {\'input\': 1}\n'
+                          'In graph b: {\'input\': 0}'), str(context.exception))
 
     def test_when_graph_edge_properties_are_mismatched_exception_is_raised(self):
         person_a = Thing('V123', 'person', 'entity')
         name_a = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         typedb_graph_a = nx.MultiDiGraph(name='a')
-        typedb_graph_a.add_node(person_a, input=1, solution=1)
-        typedb_graph_a.add_node(name_a, input=1, solution=1)
-        typedb_graph_a.add_edge(person_a, name_a, type='has', input=0, solution=1)
+        typedb_graph_a.add_node(person_a, input=1)
+        typedb_graph_a.add_node(name_a, input=1)
+        typedb_graph_a.add_edge(person_a, name_a, type='has', input=0)
 
         person_b = Thing('V123', 'person', 'entity')
         name_b = Thing('V1234', 'name', 'attribute', value_type='string', value='Bob')
         typedb_graph_b = nx.MultiDiGraph(name='b')
-        typedb_graph_b.add_node(person_b, input=1, solution=1)
-        typedb_graph_b.add_node(name_b, input=1, solution=1)
-        typedb_graph_b.add_edge(person_b, name_b, type='has', input=1, solution=0)
+        typedb_graph_b.add_node(person_b, input=1)
+        typedb_graph_b.add_node(name_b, input=1)
+        typedb_graph_b.add_edge(person_b, name_b, type='has', input=1)
 
         with self.assertRaises(ValueError) as context:
             combine_n_graphs([typedb_graph_a, typedb_graph_b])
 
         self.assertEqual(('Found non-matching edge properties for edge (<person, V123>, <name, V1234: Bob>, 0) '
                           'between graphs a and b:\n'
-                          'In graph a: {\'type\': \'has\', \'input\': 0, \'solution\': 1}\n'
-                          'In graph b: {\'type\': \'has\', \'input\': 1, \'solution\': 0}'), str(context.exception))
+                          'In graph a: {\'type\': \'has\', \'input\': 0}\n'
+                          'In graph b: {\'type\': \'has\', \'input\': 1}'), str(context.exception))
 
 
 if __name__ == "__main__":
