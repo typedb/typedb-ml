@@ -20,6 +20,7 @@
 #
 import sys
 import unittest
+import os
 
 from kglib.examples.diagnosis.diagnosis import diagnosis_example
 from kglib.typedb.test.base import TypeDBServer
@@ -27,11 +28,12 @@ from kglib.typedb.test.base import TypeDBServer
 
 class TestDiagnosisExample(unittest.TestCase):
     def setUp(self):
+        cwd = os.getcwd()
         self._tdb = TypeDBServer(sys.argv.pop())
         self._tdb.start()
         self._typedb_binary_location = self._tdb.typedb_binary_location
-        self._data_file_location = sys.argv.pop()
-        self._schema_file_location = sys.argv.pop()
+        self._data_file_location = cwd + '/' + sys.argv.pop()
+        self._schema_file_location = cwd + '/' + sys.argv.pop()
 
     def tearDown(self):
         self._tdb.stop()
