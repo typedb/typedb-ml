@@ -25,7 +25,7 @@ from functools import reduce
 import networkx as nx
 
 from kglib.typedb.thing import build_thing
-from kglib.networkx.concept_dict_to_networkx import concept_dict_to_graph
+from kglib.networkx.concept_dict_to_networkx import concept_dict_to_networkx
 
 
 def concept_dict_from_concept_map(concept_map):
@@ -85,7 +85,7 @@ def combine_n_graphs(graphs_list):
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, typedb_transaction,
-                             concept_dict_converter=concept_dict_to_graph):
+                             concept_dict_converter=concept_dict_to_networkx):
     """
     Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
     queries (variable graphs)of those queries, over a TypeDB transaction

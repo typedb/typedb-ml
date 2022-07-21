@@ -23,7 +23,7 @@ import unittest
 import networkx as nx
 
 from kglib.typedb.thing import Thing
-from kglib.networkx.concept_dict_to_networkx import concept_dict_to_graph
+from kglib.networkx.concept_dict_to_networkx import concept_dict_to_networkx
 from kglib.networkx.graph_test_case import GraphTestCase
 
 
@@ -35,7 +35,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         person = Thing('V123', 'person', 'entity')
         concept_dict = {'x': person}
 
-        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
         expected_typedb_graph = nx.MultiDiGraph()
         expected_typedb_graph.add_node(person, type='person')
 
@@ -48,7 +48,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         name = Thing('V123', 'name', 'attribute', value_type='string', value='Bob')
         concept_dict = {'x': name}
 
-        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
         expected_typedb_graph = nx.MultiDiGraph()
         expected_typedb_graph.add_node(name, type='name', value_type='string', value='Bob')
 
@@ -64,7 +64,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         employment = Thing('V456', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
         expected_typedb_graph = nx.MultiDiGraph()
         expected_typedb_graph.add_node(person, type='person')
         expected_typedb_graph.add_node(employment, type='employment')
@@ -85,7 +85,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         employment = Thing('V12345', 'employment', 'relation')
         concept_dict = {'x': person, 'y': company, 'r': employment}
 
-        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
 
         expected_typedb_graph = nx.MultiDiGraph()
         expected_typedb_graph.add_node(person, type='person')
@@ -106,7 +106,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         concept_dict = {'x': person,
                         'y': person2}
 
-        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
         expected_typedb_graph = nx.MultiDiGraph()
         expected_typedb_graph.add_node(person, type='person')
 
@@ -123,7 +123,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         concept_dict = {'x': person, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
-            _ = concept_dict_to_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_networkx(concept_dict, variable_graph)
 
         self.assertEqual('An edge in the variable_graph originates from a non-relation, check the variable_graph!',
                          str(context.exception))
@@ -139,7 +139,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         concept_dict = {'x': name, 'y': employment}
 
         with self.assertRaises(ValueError) as context:
-            _ = concept_dict_to_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_networkx(concept_dict, variable_graph)
 
         self.assertEqual('An edge in the variable_graph originates from a non-relation, check the variable_graph!',
                          str(context.exception))
@@ -156,7 +156,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
                         'a': thing}
 
         with self.assertRaises(ValueError) as context:
-            _ = concept_dict_to_graph(concept_dict, variable_graph)
+            _ = concept_dict_to_networkx(concept_dict, variable_graph)
 
         self.assertEqual(
             'The variables in the variable_graph must match those in the concept_dict\n'
@@ -174,7 +174,7 @@ class TestConceptDictToTypeDBGraph(GraphTestCase):
         employment = Thing('V456', 'employment', 'relation')
         concept_dict = {'x': person, 'y': employment}
 
-        typedb_graph = concept_dict_to_graph(concept_dict, variable_graph)
+        typedb_graph = concept_dict_to_networkx(concept_dict, variable_graph)
         expected_typedb_graph = nx.MultiDiGraph()
         expected_typedb_graph.add_node(person, type='person', input=1, solution=1)
         expected_typedb_graph.add_node(employment, type='employment', input=1, solution=1)

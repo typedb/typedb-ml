@@ -22,7 +22,7 @@
 import networkx as nx
 
 
-def concept_dict_to_graph(concept_dict, variable_graph):
+def concept_dict_to_networkx(concept_dict, variable_graph):
     """
     Create a new graph from a concept_dict, based on a `variable_graph` that describes the interactions between the
     variables in the `concept_dict`
