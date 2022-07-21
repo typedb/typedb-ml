@@ -54,6 +54,7 @@ py_test(
     srcs = [
         "queries_to_networkx_graph_test.py",
         "queries_to_networkx_graph.py",
+        "concept_dict_to_networkx_graph.py"
         "graph_test_case.py"
     ],
     deps = [
