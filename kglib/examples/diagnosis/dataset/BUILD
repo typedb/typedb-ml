@@ -63,7 +63,6 @@ checkstyle_test(
     name = "checkstyle",
     include = glob([
         "*",
-        "diagnosis/*"
     ]),
     license_type = "apache-header",
 )
