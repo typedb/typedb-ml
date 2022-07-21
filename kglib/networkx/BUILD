@@ -71,6 +71,7 @@ py_test(
         "graph_test_case.py"
     ],
     deps = [
+        "//kglib/typedb",
         "//kglib/typedb/test",
         "@vaticle_typedb_client_python//:client_python",
         vaticle_kglib_requirement('networkx'),
