@@ -23,13 +23,11 @@ exports_files(["requirements.txt", "RELEASE_TEMPLATE.md"])
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-load("@vaticle_kglib_pip//:requirements.bzl",
-       vaticle_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
 
 load("@vaticle_bazel_distribution//github:rules.bzl", "deploy_github")
 load("@vaticle_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
-load("@vaticle_kglib_pip//:requirements.bzl",
-       vaticle_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
 
 load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
 load("//:deployment.bzl", github_deployment = "deployment")
@@ -58,7 +56,7 @@ assemble_pip(
     author = "Vaticle",
     author_email = "community@vaticle.com",
     license = "Apache-2.0",
-    requirements_file = "//:requirements.txt",
+    requirements_file = "//:install_requires.txt",
     keywords = ["machine learning", "logical reasoning", "knowledege graph", "typedb", "database", "graph",
                 "knowledgebase", "knowledge-engineering"],
 
