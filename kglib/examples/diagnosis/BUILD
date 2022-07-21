@@ -31,6 +31,7 @@ py_library(
     deps = [
         "//kglib/examples/diagnosis/dataset",
         "//kglib/typedb",
+        "//kglib/pytorch_geometric",
         "@vaticle_typedb_client_python//:client_python",
         vaticle_kglib_requirement("networkx"),
         vaticle_kglib_requirement("torch"),
