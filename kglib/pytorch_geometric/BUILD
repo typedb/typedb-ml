@@ -20,8 +20,7 @@
 #
 
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
-load("@vaticle_kglib_pip//:requirements.bzl",
-       vaticle_kglib_requirement = "requirement")
+load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
 
 py_library(
     name = "pytorch_geometric",
@@ -29,6 +28,13 @@ py_library(
         "*.py",
         "**/*.py"
     ]),
+    deps = [
+        vaticle_kglib_requirement("networkx"),
+        vaticle_kglib_requirement("torch"),
+        vaticle_kglib_requirement("torch_geometric"),
+        vaticle_kglib_requirement("torch_sparse"),
+        vaticle_kglib_requirement("torch_scatter"),
+    ],
     visibility=['//visibility:public']
 )
 

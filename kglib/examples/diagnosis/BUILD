@@ -35,6 +35,8 @@ py_library(
         vaticle_kglib_requirement("networkx"),
         vaticle_kglib_requirement("torch"),
         vaticle_kglib_requirement("torch_geometric"),
+        vaticle_kglib_requirement("torch_sparse"),
+        vaticle_kglib_requirement("torch_scatter"),
     ],
     visibility=['//visibility:public']
 )
