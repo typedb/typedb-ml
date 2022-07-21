@@ -40,7 +40,7 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 assemble_pip(
     name = "assemble-pip",
     target = "//kglib:kglib",
-    package_name = "typedb-kglib",
+    package_name = "vaticle-kglib",
     classifiers = [
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
