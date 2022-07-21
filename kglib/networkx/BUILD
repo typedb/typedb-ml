@@ -28,7 +28,8 @@ py_library(
     srcs = [
         'query_graph.py',
         'concept_dict_to_networkx.py',
-        'queries_to_networkx.py'
+        'queries_to_networkx.py',
+        'iterate.py',
     ],
     deps = [
         "//kglib/typedb",

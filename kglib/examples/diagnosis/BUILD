@@ -31,12 +31,15 @@ py_library(
     deps = [
         "//kglib/examples/diagnosis/dataset",
         "//kglib/typedb",
+        "//kglib/pytorch_geometric",
+        "//kglib/networkx",
         "@vaticle_typedb_client_python//:client_python",
         vaticle_kglib_requirement("networkx"),
         vaticle_kglib_requirement("torch"),
         vaticle_kglib_requirement("torch_geometric"),
         vaticle_kglib_requirement("torch_sparse"),
         vaticle_kglib_requirement("torch_scatter"),
+        vaticle_kglib_requirement("tensorboard"),
     ],
     visibility=['//visibility:public']
 )
