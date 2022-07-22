@@ -93,9 +93,9 @@ build:
     test-deployment-pip:
       image: vaticle-ubuntu-20.04
       dependencies: [deploy-pip-snapshot]
-      filter:
-        owner: vaticle
-        branch: master
+#      filter:
+#        owner: vaticle
+#        branch: master
       type: foreground
       command: |
         pyenv global 3.7.2
