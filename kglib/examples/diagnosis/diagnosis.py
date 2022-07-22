@@ -45,8 +45,6 @@ from kglib.typedb.type import get_thing_types
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
 
-PREEXISTS = 0  # TODO Remove, now unnecessary
-
 # Ignore any types that exist in the TypeDB instance but which aren't being used for learning to reduce the
 # number of categories to embed
 TYPES_TO_IGNORE = {'risk-factor', 'person-id', 'alcohol-risked-disease', 'person-at-alcohol-risk',
@@ -270,8 +268,8 @@ def diagnosis_example(typedb_binary_directory,
 
     z = model.encode(data.x_dict, data.edge_index_dict)
     final_edge_index = (model.decode_all(z).sigmoid() > 0.5).nonzero(as_tuple=False).cpu().detach().numpy()
-    # TODO: Cross-reference all predictions with actual (but this will include training edges)
 
+    # Get back the concepts for each of links predicted in order to insert the predictions into TypeDB
     predicted_links = []
     for p, d in final_edge_index:
         predicted_links.append(
@@ -286,7 +284,8 @@ def diagnosis_example(typedb_binary_directory,
     with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_typedb(predicted_links, tx)
 
-    # Now we can get the confusion matrix from querying TypeDB!
+    # Now we can get the confusion matrix from querying TypeDB! (Note that this includes training and validation
+    # examples, but serves as a demo for seeing the predictions made.)
     with session.transaction(TransactionType.READ) as tx:
         tp = tx.query().match_aggregate("match $p isa person; $d isa disease; ($p, $d) isa diagnosis; "
                                         "($p, $d) isa predicted-diagnosis; count;").get().as_int()
