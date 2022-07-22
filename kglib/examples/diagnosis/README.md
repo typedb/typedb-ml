@@ -6,7 +6,7 @@ This example demonstrates how to build a Graph Neural Network (GNN) machine lear
 
 ## Run the Example
 
-Once you have [installed KGLIB](../../../###install) you can run the example as follows:
+Once you have [installed KGLIB](/README.md#install) you can run the example as follows:
 
 1. Make sure a TypeDB server (version 2.10+) is running locally 
 
