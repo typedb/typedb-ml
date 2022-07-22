@@ -6,7 +6,7 @@ This example demonstrates how to build a Graph Neural Network (GNN) machine lear
 
 ## Run the Example
 
-Once you have [installed KGLIB](../../###install) you can run the example as follows:
+Once you have [installed KGLIB](../../../###install) you can run the example as follows:
 
 1. Make sure a TypeDB server (version 2.10+) is running locally 
 
@@ -47,9 +47,6 @@ We collapse these TypeDB `diagnosis` relations from a relation node into a binar
 ## Tensorboard
 
 The example demonstrates how to plot histograms for the features of each node type in the data such that you can easily debug whether they are properly normalised. It also shows the trend of scalars during learning. Try it with `tensorboard --logdir runs`.
-
-![Tensorboard](.images/tensorboard.png)
-
 
 ## Synthetic Data
 

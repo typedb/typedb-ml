@@ -24,7 +24,7 @@ There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geo
 - It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but KGLIB provides `store_concepts_by_type` to map concepts by type so that they can be re-associated after learning is finished.
 - A `FeatureEncoder` to orchestrate encoders to generate features for graphs.
 - Encoders for Continuous and Categorical values to apply encodings/embedding spaces to the types and attribute values present in TypeDB data.
-- A [full example for link prediction](/kglib/examples/diagnosis)
+- A [full example for link prediction](kglib/examples/diagnosis)
 ### Other
 - Example usage of Tensorboard for PyG `HeteroData`
 
