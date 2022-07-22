@@ -24,6 +24,7 @@ There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geo
 - It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but KGLIB provides `store_concepts_by_type` to map concepts by type so that they can be reassociated after learning is finished.
 - A `FeatureEncoder`
 <!-- TODO List more features -->
+
 ## Machine Learning Pipeline
 
 The pipeline is as follows:
@@ -33,11 +34,6 @@ The pipeline is as follows:
 4. Feed the features to a learning algorithm (see below)
 5. Optionally, store the predictions made by the learner in TypeDB. These predictions can then be queried using TypeQL. This means we can trivially run more learning tasks over the knowledge base, including the newly made predictions. This is knowledge graph completion.
 
-## Learning Algorithms 
-This repo contains one algorithmic implementation: [*Knowledge Graph Convolutional Network* (KGCN)](kglib/kgcn_tensorflow). This is a generic method for relation predication over any TypeDB database. There is a [full worked example](kglib/kgcn_tensorflow/examples/diagnosis) and an explanation of how the approach works.
-
-You are encouraged to use the tools available in KGLIB to interface TypeDB to your own algorithmic implementations, or to use/leverage prebuilt implementations available from popular libraries such as [PyTorch Geometric](https://github.com/rusty1s/pytorch_geometric) or [Graph Nets](https://github.com/deepmind/graph_nets) (TensorFlow/Sonnet). 
-
 ## Resources
 You may find the following resources useful: 
 - [Strongly Typed Data for Machine Learning](https://www.youtube.com/watch?v=qhUyurWMiSQ) (YouTube)
@@ -45,11 +41,11 @@ You may find the following resources useful:
 
 ## Quickstart
 
-### Requirements
+### Install
 
 - Python >= 3.7.x
 
-- Grab the `requirements.txt` from [here](requirements.txt) and install the requirements with `pip install requirements.txt`. This is due to some intricacies installing PyG's dependencies, see [here](https://github.com/pyg-team/pytorch_geometric/issues/861) for details.
+- Grab the `requirements.txt` file from [here](requirements.txt) and install the requirements with `pip install requirements.txt`. This is due to some intricacies installing PyG's dependencies, see [here](https://github.com/pyg-team/pytorch_geometric/issues/861) for details.
 
 - Installed KGLIB: `pip install typedb-kglib`. 
 
@@ -59,7 +55,7 @@ You may find the following resources useful:
 
 ### Run the Example
 
-Take a look at [The PyTorch Geometric heterogeneous data example](kglib/examples/diagnosis) to see a walkthrough of how to use KGLIB to build a GNN that runs over data from TypeDB.
+Take a look at the [PyTorch Geometric heterogeneous link prediction example](kglib/examples/diagnosis) to see how to use KGLIB to build a GNN on TypeDB data.
 
 ### Building from source
 

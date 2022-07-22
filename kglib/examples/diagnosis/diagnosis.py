@@ -18,8 +18,9 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-
+import argparse
 import inspect
+import os
 
 import networkx as nx
 import torch
@@ -60,7 +61,6 @@ ATTRIBUTE_ENCODING_SIZE = 16
 # defined on a per-type basis. Easily define your own encoders for specific attribute data in your TypeDB database
 ATTRIBUTE_ENCODERS = {
     # Categorical Attribute types and the values of their categories
-    # TODO: Use a sentence encoder for this instead to demonstrate how to use one
     'name': CategoricalEncoder(
         ['Diabetes Type II', 'Multiple Sclerosis', 'Blurred vision', 'Fatigue', 'Cigarettes', 'Alcohol'],
         ATTRIBUTE_ENCODING_SIZE
@@ -76,8 +76,8 @@ def diagnosis_example(typedb_binary_directory,
                       num_graphs,
                       database=DATABASE,
                       address=ADDRESS,
-                      schema_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
-                      seed_data_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
+                      schema_file_path="kglib/examples/diagnosis/dataset/schema.tql",
+                      seed_data_file_path="kglib/examples/diagnosis/dataset/seed_data.tql"):
     """
     Args:
         typedb_binary_directory: Location of the TypeDB binary for the purpose of loading initial schema and data
@@ -450,5 +450,14 @@ def write_predictions_to_typedb(predicted_links, tx):
 
 
 if __name__ == '__main__':
-    # TODO: Remove
-    diagnosis_example("/Users/jamesfletcher/programming/typedb-dists/typedb-all-mac-2.11.0", 200)
+    parser = argparse.ArgumentParser(description="Just an example",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--graphs", help="num graphs", default=200)
+    parser.add_argument("typedb", help="TypeDB location")
+    args = parser.parse_args()
+    cwd = os.getcwd()
+    diagnosis_example(args.typedb, args.graphs,
+                      database=DATABASE,
+                      address=ADDRESS,
+                      schema_file_path=cwd + '/' + "kglib/examples/diagnosis/dataset/schema.tql",
+                      seed_data_file_path=cwd + '/' + "kglib/examples/diagnosis/dataset/seed_data.tql")
