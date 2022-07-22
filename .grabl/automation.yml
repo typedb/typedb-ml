@@ -25,7 +25,6 @@ config:
     dependencies: [build]
     typedb-client-python: [build, release]
     typedb-common: [build, release]
-    typedb: [build, release]
 
 build:
   quality:

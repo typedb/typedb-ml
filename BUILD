@@ -75,7 +75,6 @@ release_validate_deps(
     name = "release-validate-deps",
     refs = "@vaticle_kglib_workspace_refs//:refs.json",
     tagged_deps = [
-        "@vaticle_typedb",
         "@vaticle_typedb_client_python",
     ],
     tags = ["manual"]
