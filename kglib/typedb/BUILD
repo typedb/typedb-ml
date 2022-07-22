@@ -29,6 +29,7 @@ py_library(
     srcs = [
         'type.py',
         'thing.py',
+        'load.py',
     ],
     deps = [
         '//kglib/typedb/test',

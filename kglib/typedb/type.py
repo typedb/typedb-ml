@@ -77,7 +77,6 @@ def get_has_triplets(tx):
 
 
 def get_edge_type_triplets(session):
-    # TODO: Naming is too close to get_types where the result is very different
     with session.transaction(TransactionType.READ) as tx:
         edge_types = get_role_triplets(tx) + get_has_triplets(tx)
     return edge_types

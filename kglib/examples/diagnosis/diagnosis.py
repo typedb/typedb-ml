@@ -39,7 +39,7 @@ from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredict
 from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
 from kglib.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
-from kglib.pytorch_geometric.utils import load_typeql_schema_file, load_typeql_data_file
+from kglib.typedb.load import load_typeql_file, TransactionType
 from kglib.typedb.type import get_thing_types
 
 DATABASE = "diagnosis"
@@ -76,19 +76,16 @@ def diagnosis_example(typedb_binary_directory,
                       num_graphs,
                       database=DATABASE,
                       address=ADDRESS,
-                      # TODO: remove hard-coding
-                      schema_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
-                      seed_data_file_path="/Users/jamesfletcher/programming/research/kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
+                      schema_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/schema.tql",
+                      seed_data_file_path="kglib/utils/typedb/synthetic/examples/diagnosis/seed_data.tql"):
     """
-    Run the diagnosis example from start to finish, including traceably ingesting predictions back into TypeDB
-
     Args:
-        typedb_binary_directory: Location of the typedb binary for the purpose of loading initial schema and data
+        typedb_binary_directory: Location of the TypeDB binary for the purpose of loading initial schema and data
         num_graphs: Number of graphs to use for training and testing combined
-        database: The name of the database to retrieve example subgraphs from
+        database: The name of the database to retrieve data from
         address: The address of the running TypeDB instance
         schema_file_path: Path to the diagnosis schema file
-        seed_data_file_path: Path to the file containing seed data, that doesn't grow as synthetic data is added
+        seed_data_file_path: Path to the file containing seed data
 
     Returns:
         Final accuracies for training and for testing
@@ -97,8 +94,8 @@ def diagnosis_example(typedb_binary_directory,
     client = TypeDB.core_client(address)
     create_database(client, database)
 
-    load_typeql_schema_file(database, typedb_binary_directory, schema_file_path)
-    load_typeql_data_file(database, typedb_binary_directory, seed_data_file_path)
+    load_typeql_file(typedb_binary_directory, database, schema_file_path, TransactionType.Schema)
+    load_typeql_file(typedb_binary_directory, database, seed_data_file_path, TransactionType.Data)
     generate_example_data(client, num_graphs, database=database)
 
     session = client.session(database, SessionType.DATA)

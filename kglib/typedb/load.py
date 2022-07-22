@@ -20,23 +20,31 @@
 #
 
 import subprocess as sp
+from enum import Enum
 
 
-def load_typeql_schema_file(database, typedb_binary_location, typeql_file_path):
-    """Load a schema from a file"""
-    _load_typeql_file(database, typeql_file_path, typedb_binary_location, "schema")  # TODO compress
+class TransactionType(Enum):
+    Schema = 1
+    Data = 2
 
 
-def load_typeql_data_file(database, typedb_binary_location, typeql_file_path):
-    """Load data from a file"""
-    _load_typeql_file(database, typeql_file_path, typedb_binary_location, "data")
+def load_typeql_file(typedb_binary_location: str, database_name: str, typeql_file_path: str,
+                     transaction_type: TransactionType):
+    """
+    Load a file into a TypeDB database
 
-
-def _load_typeql_file(database, typeql_file_path, typedb_binary_location, schema_or_data):
+    Args:
+        typedb_binary_location: the location of TypeDB
+        database_name: The name of the TypeDB database to load into
+        typeql_file_path: The path to the file to load
+        transaction_type: The content of the file and therefore the transaction type to use, either schema or data
+    Returns:
+        None
+    """
     sp.check_call([
         './typedb',
         'console',
-        f'--command=transaction {database} {schema_or_data} write',
+        f'--command=transaction {database_name} {transaction_type} write',
         f'--command=source {typeql_file_path}',
         f'--command=commit'
     ], cwd=typedb_binary_location)

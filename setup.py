@@ -24,7 +24,7 @@ from setuptools import setup
 setup(
     name='kglib',
     version='',
-    packages=['kglib', 'kglib.utils', 'kglib.pytorch_geometric'],
+    packages=['kglib', 'kglib.networkx', 'kglib.pytorch_geometric', 'kglib.typedb'],
     url='',
     license='',
     author='jmsfltchr',

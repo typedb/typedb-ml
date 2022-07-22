@@ -44,8 +44,10 @@ def store_concepts_by_type(graph):
     """
     Organises concepts by type the same way `data.to_heterogeneous()` organises nodes by type. This is necessary to
     be able to map back from a `HeteroData` object to the TypeDB concepts that the nodes refer to.
-    :param graph: NetworkX graph to operate on
-    :return: The same graph, with a field `concepts_by_type` holding concepts organised by type
+    Args:
+        graph: NetworkX graph to operate on
+    Returns:
+        The same graph, with a field `concepts_by_type` holding concepts organised by type
     """
     concepts_by_type = {}
     for node_data in multidigraph_node_data_iterator(graph):
