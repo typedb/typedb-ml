@@ -35,11 +35,9 @@ from kglib.examples.diagnosis.dataset.generate import generate_example_data
 from kglib.networkx.query_graph import QueryGraph
 from kglib.pytorch_geometric.dataset.dataset import DataSet
 from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, \
-    binary_relations_to_edges, \
-    binary_link_prediction_edge_triplets
+    binary_relations_to_edges, binary_link_prediction_edge_triplets
 from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
-from kglib.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, \
-    ContinuousEncoder
+from kglib.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, ContinuousEncoder
 from kglib.typedb.load import load_typeql_file, FileType
 from kglib.typedb.type import get_thing_types
 

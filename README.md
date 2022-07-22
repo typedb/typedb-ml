@@ -10,20 +10,23 @@
 
 There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geometric (PyG)](https://github.com/pyg-team/pytorch_geometric).
 
-[NetworkX](https://networkx.org) integration allows you to use a [large library of algorithms](https://networkx.org/documentation/stable/reference/algorithms/index.html) over graphs you export into NetworkX from TypeDB.
+[NetworkX](https://networkx.org) integration allows you to use a [large library of algorithms](https://networkx.org/documentation/stable/reference/algorithms/index.html) over graph data exported from TypeDB.
 
-[PyTorch Geometric (PyG)](https://github.com/pyg-team/pytorch_geometric) integration gives a toolbox to build Graph Neural Networks (GNNs) over your TypeDB data, with an example included for link prediction (binary relation prediction in TypeDB terms).
+[PyTorch Geometric (PyG)](https://github.com/pyg-team/pytorch_geometric) integration gives you a toolbox to build Graph Neural Networks (GNNs) for your TypeDB data, with an example included for link prediction (or: binary relation prediction, in TypeDB terms). The structure of the GNNs are totally customisable, with network components for popular topics such as graph attention and graph transformers built-in.  
 
 ## Features
 
 ### NetworkX
-- Declare the graph structure of your queries: "graph handles", with sampling functions.
-- Use query handles to query a TypeDB instance and combine many results across many queries into a single graph (`build_graph_from_queries`).
+- Declare the graph structure of your queries, with optional sampling functions.
+- Query a TypeDB instance and combine many results across many queries into a single graph (`build_graph_from_queries`).
 ### PyTorch Geometric
 - A `DataSet` object to lazily load graphs from a TypeDB instance. Each graph is converted to a PyG `Data` object.
-- It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but KGLIB provides `store_concepts_by_type` to map concepts by type so that they can be reassociated after learning is finished.
-- A `FeatureEncoder`
-<!-- TODO List more features -->
+- It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but KGLIB provides `store_concepts_by_type` to map concepts by type so that they can be re-associated after learning is finished.
+- A `FeatureEncoder` to orchestrate encoders to generate features for graphs.
+- Encoders for Continuous and Categorical values to apply encodings/embedding spaces to the types and attribute values present in TypeDB data.
+- A [full example for link prediction](/kglib/examples/diagnosis)
+### Other
+- Example usage of Tensorboard for PyG `HeteroData`
 
 ## Machine Learning Pipeline
 
