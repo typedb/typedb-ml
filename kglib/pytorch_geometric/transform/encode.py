@@ -74,14 +74,13 @@ class FeatureEncoder:
 
             type_embedding = self.node_type_embedding(torch.as_tensor(self.node_types.index(node_data['type'])))
             node_data['x'] = torch.hstack([type_embedding, torch.as_tensor(encoded_value)])\
-                .cpu().detach().numpy()  # TODO: Conversion to numpy array, otherwise the graph representation breaks
+                .cpu().detach().numpy()  # Conversion to numpy array, otherwise the graph representation breaks
 
     def encode_edge_features(self, graph):
         for edge_data in multidigraph_edge_data_iterator(graph):
             type_embedding = self.node_type_embedding(torch.as_tensor(self.edge_types.index(edge_data['type'])))
-            # TODO: Unnecessary empty array added to have common features size between nodes and edges
             edge_data['edge_attr'] = torch.hstack([type_embedding, torch.as_tensor([0] * self.attribute_encoding_size)])\
-                .cpu().detach().numpy()  # TODO: Conversion to numpy array, otherwise the graph representation breaks
+                .cpu().detach().numpy()  # Conversion to numpy array, otherwise the graph representation breaks
 
 
 class CategoricalEncoder:
