@@ -38,9 +38,9 @@ The pipeline is as follows:
 5. Optionally, store the predictions made by the learner in TypeDB. These predictions can then be queried using TypeQL. This means we can trivially run more learning tasks over the knowledge base, including the newly made predictions. This is knowledge graph completion.
 
 ## Resources
-You may find the following resources useful: 
-- [Strongly Typed Data for Machine Learning](https://www.youtube.com/watch?v=qhUyurWMiSQ) (YouTube)
-- [How Can We Complete a Knowledge Graph?](https://www.youtube.com/watch?v=nYDi1_UaFtU) (YouTube)
+You may find the following resources useful, particularly to understand why KGLIB started: 
+- [Strongly Typed Data for Machine Learning](https://www.youtube.com/watch?v=qhUyurWMiSQ) (YouTube, 2021)
+- [How Can We Complete a Knowledge Graph?](https://www.youtube.com/watch?v=nYDi1_UaFtU) (YouTube, 2018)
 
 ## Quickstart
 
