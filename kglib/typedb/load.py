@@ -24,8 +24,8 @@ from enum import Enum
 
 
 class TransactionType(Enum):
-    Schema = 1
-    Data = 2
+    Schema = "schema"
+    Data = "data"
 
 
 def load_typeql_file(typedb_binary_location: str, database_name: str, typeql_file_path: str,
@@ -44,7 +44,7 @@ def load_typeql_file(typedb_binary_location: str, database_name: str, typeql_fil
     sp.check_call([
         './typedb',
         'console',
-        f'--command=transaction {database_name} {transaction_type} write',
+        f'--command=transaction {database_name} {transaction_type.value} write',
         f'--command=source {typeql_file_path}',
         f'--command=commit'
     ], cwd=typedb_binary_location)
