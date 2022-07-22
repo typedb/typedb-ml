@@ -39,7 +39,7 @@ from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredict
 from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
 from kglib.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
-from kglib.typedb.load import load_typeql_file, TransactionType
+from kglib.typedb.load import load_typeql_file, FileType
 from kglib.typedb.type import get_thing_types
 
 DATABASE = "diagnosis"
@@ -94,8 +94,8 @@ def diagnosis_example(typedb_binary_directory,
     client = TypeDB.core_client(address)
     create_database(client, database)
 
-    load_typeql_file(typedb_binary_directory, database, schema_file_path, TransactionType.Schema)
-    load_typeql_file(typedb_binary_directory, database, seed_data_file_path, TransactionType.Data)
+    load_typeql_file(typedb_binary_directory, database, schema_file_path, FileType.Schema)
+    load_typeql_file(typedb_binary_directory, database, seed_data_file_path, FileType.Data)
     generate_example_data(client, num_graphs, database=database)
 
     session = client.session(database, SessionType.DATA)
