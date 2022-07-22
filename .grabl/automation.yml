@@ -85,6 +85,8 @@ build:
       image: vaticle-ubuntu-20.04
       dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
       command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
         export DEPLOY_PIP_USERNAME=$REPO_VATICLE_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_VATICLE_PASSWORD
         bazel run --define version=$(git rev-parse HEAD) //:deploy-pip -- snapshot
@@ -104,7 +106,7 @@ build:
         bazel run //test:typedb-extractor -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
-        cd kglib/tests/deployment/ && python -m unittest kgcn.diagnosis && export TEST_SUCCESS=0 ||
+        cd kglib/tests/deployment/ && python -m unittest diagnosis && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')
         exit $TEST_SUCCESS
