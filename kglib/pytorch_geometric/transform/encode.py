@@ -29,7 +29,8 @@ from kglib.networkx.iterate import (
 )
 
 
-class GraphFeatureEncoder:
+class FeatureEncoder:
+    # TODO: Rephrase
     """Transform of the networkx graph as it comes out of TypeDB
     to a networkx graph that pytorch geometric likes to ingest.
     Now this is very much geared to pytorch geometric especially

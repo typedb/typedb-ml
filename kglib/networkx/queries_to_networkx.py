@@ -28,62 +28,6 @@ from kglib.typedb.thing import build_thing
 from kglib.networkx.concept_dict_to_networkx import concept_dict_to_networkx
 
 
-def concept_dict_from_concept_map(concept_map):
-    """
-    Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
-    information required about those concepts.
-
-    Args:
-        concept_map: A dict of Concepts provided by TypeDB keyed by query variables
-
-    Returns:
-        A dictionary of concepts keyed by query variables
-    """
-    return {variable: build_thing(typedb_concept) for variable, typedb_concept in concept_map.map().items()}
-
-
-def combine_2_graphs(graph1, graph2):
-    """
-    Combine two graphs into one. Do this by recognising common nodes between the two.
-    Args:
-        graph1: Graph to compare
-        graph2: Graph to compare
-    Returns:
-        Combined graph
-    """
-
-    for node, data in graph1.nodes(data=True):
-        if graph2.has_node(node):
-            data2 = graph2.nodes[node]
-            if data2 != data:
-                raise ValueError((f'Found non-matching node properties for node {node} '
-                                  f'between graphs {graph1} and {graph2}:\n'
-                                  f'In graph {graph1}: {data}\n'
-                                  f'In graph {graph2}: {data2}'))
-
-    for sender, receiver, keys, data in graph1.edges(data=True, keys=True):
-        if graph2.has_edge(sender, receiver, keys):
-            data2 = graph2.edges[sender, receiver, keys]
-            if data2 != data:
-                raise ValueError((f'Found non-matching edge properties for edge {sender, receiver, keys} '
-                                  f'between graphs {graph1} and {graph2}:\n'
-                                  f'In graph {graph1}: {data}\n'
-                                  f'In graph {graph2}: {data2}'))
-
-    return nx.compose(graph1, graph2)
-
-
-def combine_n_graphs(graphs_list):
-    """
-    Combine N graphs into one. Do this by recognising common nodes between the two.
-    Args:
-        graphs_list: List of graphs to combine
-    Returns:
-        Combined graph
-    """
-    return reduce(lambda x, y: combine_2_graphs(x, y), graphs_list)
-
-
 def build_graph_from_queries(query_sampler_variable_graph_tuples, transaction,
                              concept_dict_converter=concept_dict_to_networkx):
     """
@@ -139,3 +83,60 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, transaction,
 
     concept_graph = combine_n_graphs(query_concept_graphs)
     return concept_graph
+
+
+def concept_dict_from_concept_map(concept_map):
+    """
+    Given a concept map, build a dictionary of the variables present and the concepts they refer to, locally storing any
+    information required about those concepts.
+
+    Args:
+        concept_map: A dict of Concepts provided by TypeDB keyed by query variables
+
+    Returns:
+        A dictionary of concepts keyed by query variables
+    """
+    return {variable: build_thing(typedb_concept) for variable, typedb_concept in concept_map.map().items()}
+
+
+def combine_2_graphs(graph1, graph2):
+    """
+    Combine two graphs into one. Do this by recognising common nodes between the two.
+    Args:
+        graph1: Graph to compare
+        graph2: Graph to compare
+    Returns:
+        Combined graph
+    """
+
+    for node, data in graph1.nodes(data=True):
+        if graph2.has_node(node):
+            data2 = graph2.nodes[node]
+            if data2 != data:
+                raise ValueError((f'Found non-matching node properties for node {node} '
+                                  f'between graphs {graph1} and {graph2}:\n'
+                                  f'In graph {graph1}: {data}\n'
+                                  f'In graph {graph2}: {data2}'))
+
+    for sender, receiver, keys, data in graph1.edges(data=True, keys=True):
+        if graph2.has_edge(sender, receiver, keys):
+            data2 = graph2.edges[sender, receiver, keys]
+            if data2 != data:
+                raise ValueError((f'Found non-matching edge properties for edge {sender, receiver, keys} '
+                                  f'between graphs {graph1} and {graph2}:\n'
+                                  f'In graph {graph1}: {data}\n'
+                                  f'In graph {graph2}: {data2}'))
+
+    return nx.compose(graph1, graph2)
+
+
+def combine_n_graphs(graphs_list):
+    """
+    Combine N graphs into one. Do this by recognising common nodes between the two.
+    Args:
+        graphs_list: List of graphs to combine
+    Returns:
+        Combined graph
+    """
+    return reduce(lambda x, y: combine_2_graphs(x, y), graphs_list)
+

@@ -37,7 +37,7 @@ from kglib.pytorch_geometric.transform.binary_link_prediction import LinkPredict
     binary_relations_to_edges, \
     binary_link_prediction_edge_triplets
 from kglib.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
-from kglib.pytorch_geometric.transform.typedb_graph_encoder import GraphFeatureEncoder, CategoricalEncoder, \
+from kglib.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, \
     ContinuousEncoder
 from kglib.pytorch_geometric.utils import load_typeql_schema_file, load_typeql_data_file
 from kglib.typedb.type import get_thing_types
@@ -122,7 +122,7 @@ def diagnosis_example(typedb_binary_directory,
     transform = transforms.Compose([
         lambda graph: binary_relations_to_edges(graph, RELATION_TYPE_TO_PREDICT[1:4]),
         lambda graph: nx.convert_node_labels_to_integers(graph, label_attribute="concept"),
-        GraphFeatureEncoder(node_types, edge_types, TYPE_ENCODING_SIZE, ATTRIBUTE_ENCODERS, ATTRIBUTE_ENCODING_SIZE),
+        FeatureEncoder(node_types, edge_types, TYPE_ENCODING_SIZE, ATTRIBUTE_ENCODERS, ATTRIBUTE_ENCODING_SIZE),
         LinkPredictionLabeller(RELATION_TYPE_TO_PREDICT[2]),
         store_concepts_by_type,
         clear_unneeded_fields

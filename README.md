@@ -6,15 +6,25 @@
 
 # TypeDB KGLIB (Knowledge Graph Library)
 
-**KGLIB provides tools to enable machine learning with [TypeDB](https://github.com/vaticle/typedb).**
+**KGLIB provides tools to enable graph algorithms and machine learning with [TypeDB](https://github.com/vaticle/typedb).**
 
-This library is under development and will henceforth be transformed into primarily infrastructure tools and integrations between TypeDB and machine learning libraries.
+There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geometric (PyG)](https://github.com/pyg-team/pytorch_geometric).
 
+[NetworkX](https://networkx.org) integration allows you to use a [large library of algorithms](https://networkx.org/documentation/stable/reference/algorithms/index.html) over graphs you export into NetworkX from TypeDB.
+
+[PyTorch Geometric (PyG)](https://github.com/pyg-team/pytorch_geometric) integration gives a toolbox to build Graph Neural Networks (GNNs) over your TypeDB data, with an example included for link prediction (binary relation prediction in TypeDB terms).
+
+## Features
+
+### NetworkX
+- Declare the graph structure of your queries: "graph handles", with sampling functions.
+- Use query handles to query a TypeDB instance and combine many results across many queries into a single graph (`build_graph_from_queries`).
+### PyTorch Geometric
+- A `DataSet` object to lazily load graphs from a TypeDB instance. Each graph is converted to a PyG `Data` object.
+- It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but KGLIB provides `store_concepts_by_type` to map concepts by type so that they can be reassociated after learning is finished.
+- A `FeatureEncoder`
+<!-- TODO List more features -->
 ## Machine Learning Pipeline
-
-![Flow Diagram](kglib/kgcn_tensorflow/.images/knowledge_graph_machine_learning.png)
-
-The pipeline provided helps by allowing us to extract subgraphs from TypeDB. Each subgraph is a training example, which are sent to the learner in batches. Algorithms using this approach are scalable since they do not need to hold the whole graph in memory for training.
 
 The pipeline is as follows:
 1. Extract data from `TypeDB` into Python [NetworkX](https://networkx.org) in-memory subgraphs by specifying multiple [TypeQL](https://github.com/vaticle/typeql) queries.
@@ -39,7 +49,9 @@ You may find the following resources useful:
 
 - Python >= 3.7.x
 
-- KGLIB installed via pip: `pip install typedb-kglib`. 
+- Grab the `requirements.txt` from [here](requirements.txt) and install the requirements with `pip install requirements.txt`. This is due to some intricacies installing PyG's dependencies, see [here](https://github.com/pyg-team/pytorch_geometric/issues/861) for details.
+
+- Installed KGLIB: `pip install typedb-kglib`. 
 
 - [TypeDB 2.11.1](https://github.com/vaticle/typedb/releases) running in the background.
 
@@ -47,11 +59,11 @@ You may find the following resources useful:
 
 ### Run the Example
 
-Take a look at [*Knowledge Graph Convolutional Networks* (KGCNs)](kglib/kgcn_tensorflow) to see a walkthrough of how to use the library.
+Take a look at [The PyTorch Geometric heterogeneous data example](kglib/examples/diagnosis) to see a walkthrough of how to use KGLIB to build a GNN that runs over data from TypeDB.
 
 ### Building from source
 
-It's expected that you will use Pip to install, but should you need to make your own changes to the library, and import it into your project, you can build from source as follows.
+It's expected that you will use Pip to install, but should you need to make your own changes to the library, and import it into your project, you can build from source as follows:
 
 Clone KGLIB:
 
@@ -71,7 +83,7 @@ Build all targets:
 bazel build //...
 ```
 
-Run all tests. Requires Python 3.6+ on your `PATH`. Test dependencies are for Linux since that is the CI environment: 
+Run all tests. Requires Python 3.7+ on your `PATH`. Test dependencies are for Linux since that is the CI environment: 
 
 ```
 bazel test //kglib/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
@@ -85,6 +97,6 @@ bazel build //:assemble-pip
 
 ## Development
 
-To follow the development conversation, please join the [Vaticle Discord](https://discord.com/invite/grakn), and join the `#kglib` channel. Alternatively, start a new topic on the [Vaticle Discussion Forum](https://forum.vaticle.com).
+To follow the development conversation, please join the [Vaticle Discord](https://discord.com/invite/vaticle), and join the `#kglib` channel. Alternatively, start a new topic on the [Vaticle Discussion Forum](https://forum.vaticle.com).
 
-KGLIB requires that you have migrated your data into a [TypeDB](https://github.com/vaticle/typedb) or TypeDB Cluster instance. There is an [official examples repo](https://github.com/vaticle/examples) for how to go about this, and information available on [migration in the docs](https://docs.vaticle.com/docs/examples/phone-calls-migration-python). Alternatively, there are fantastic community-led projects growing in the [TypeDB OSI](https://typedb.org) to facilitate fast and easy data loading.
+KGLIB requires that you have migrated your data into a [TypeDB](https://github.com/vaticle/typedb) or TypeDB Cluster instance. There is an [official examples repo](https://github.com/vaticle/examples) for how to go about this, and information available on [migration in the docs](https://docs.vaticle.com/docs/examples/phone-calls-migration-python). Alternatively, there are fantastic community-led projects growing in the [TypeDB OSI](https://typedb.org) to facilitate fast and easy data loading, for example [TypeDB Loader](https://github.com/typedb-osi/typedb-loader).
