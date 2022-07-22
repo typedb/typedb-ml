@@ -98,6 +98,7 @@ build:
 #        branch: master
       type: foreground
       command: |
+        pyenv install -s 3.7.2
         pyenv global 3.7.2
         pip3 install -U pip
         sudo unlink /usr/bin/python3
