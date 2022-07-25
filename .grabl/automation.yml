@@ -103,7 +103,7 @@ build:
         sudo unlink /usr/bin/python3
         sudo ln -s $(which python3) /usr/bin/python3
         sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.7.2/lib/python3.7/site-packages/lsb_release.py
-        bazel run //test:typedb-extractor -- typedb-all-linux
+        bazel run //test:typedb-extractor-linux -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
         cd kglib/tests/deployment/ && python -m unittest diagnosis && export TEST_SUCCESS=0 ||
