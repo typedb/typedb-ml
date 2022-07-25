@@ -279,9 +279,10 @@ def diagnosis_example(typedb_binary_directory,
     with session.transaction(TransactionType.WRITE) as tx:
         write_predictions_to_typedb(predicted_links, tx)
 
-    # Now we can get the confusion matrix from querying TypeDB! (Note that this includes training and validation
-    # examples, but serves as a demo for seeing the predictions made.)
+    # Now we can get the confusion matrix from querying TypeDB! Note that this includes training and validation
+    # examples, but serves as a demo for seeing the predictions made.
     with session.transaction(TransactionType.READ) as tx:
+        # Also try these queries in TypeDB Studio omitting "count;" to visualise the predicted relations
         tp = tx.query().match_aggregate("match $p isa person; $d isa disease; ($p, $d) isa diagnosis; "
                                         "($p, $d) isa predicted-diagnosis; count;").get().as_int()
         tn = tx.query().match_aggregate("match $p isa person; $d isa disease; not{($p, $d) isa diagnosis;}; "

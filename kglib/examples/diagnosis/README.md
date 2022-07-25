@@ -8,7 +8,7 @@ This example demonstrates how to build a Graph Neural Network (GNN) machine lear
 
 Once you have installed KGLIB (see root README for instructions) you can run the example as follows:
 
-1. Make sure a TypeDB server (version 2.10+) is running locally 
+1. Make sure a TypeDB server (version 2.11.1 or later) is running locally   
 
 2. Clone KGLIB (shallow clone: `git clone --depth 1`) and from the project root, run the example: `python -m kglib.examples.diagnosis.diagnosis "/path/to/my/typedb/install/directory"`
 
@@ -18,23 +18,19 @@ Once you have installed KGLIB (see root README for instructions) you can run the
 
 The process conducted by the example is as follows:
 
-1. Generate a synthetic graph
-   - This requires specifying queries that will retrieve Concepts from TypeDB
+1. Define the data retrieval
+   - This requires specifying queries that will retrieve Concepts from TypeDB (in `get_query_handles`)
    - The answers from these queries are merged together into an in-memory NetworkX graph
 2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
-3. Configure the encoders for the different types present
+3. Configure the `ATTRIBUTE_ENCODERS` for the different types present
 4. Run the defined pipeline, including splitting and transformations of the graph(s) and defining and feeding a neural network. In this example we use `Heterogeneous Graph Transformer (HGTConv)` which is effective for our synthetic data.  
-5. Write the predictions made to TypeDB
+5. Write the predictions made to TypeDB. Note that the example inserts link predictions made for all valid link locations. These include and overlap with node used in the training set as well as the validation and test set. Therefore the confusion matrix given is a very biased view just for demonstration purposes of how to use predictions. The number of predictions made is `N` x `M` where `N` here is the number of people and `M` is the number of diseases. This step becomes more interesting in graphs where `N x M` is larger, and accommodates making such predictions quite easily. Think for example of protein-protein interaction networks in Life Sciences.
 
 ### Modifying the Example
 
 As much as possible the example here has been made as a template for link prediction or any other PyTorch Geometric task. To change and experiment with various other neural network configurations should be easy enough by modifying the layers in `LinkPredictionModel`. If you need a different problem formulation then take a look at the [examples in PyG](https://github.com/pyg-team/pytorch_geometric/tree/master/examples/hetero) for inspiration.
 
 You'll need to change steps 1, 2 and 3 above to suit your own schema and data. When specifying encoders for the different types present, if you need to encode full strings as features, take a look at this [sentence transformers](https://pypi.org/project/sentence-transformers/) project, which is used in some PyG examples.
-
-## Binary Relation Prediction a.k.a. Link Prediction
-
-This example can predict binary relations only; additional effort is required to predict ternary or N-ary relations.
 
 ### How does Link Prediction work?
 
@@ -43,6 +39,11 @@ The methodology used here for relation prediction is as follows:
 In this example, we aim to predict `diagnosis` relations. Each person in the dataset should either have a diagnosis of `"Multiple Scleerosis"` or of `"Diabetes Type II"`. We have the correct `diagnosis` relations, and we use `RandomLinkSplit` to split these examples into train, validation and test sets, and to create negative samples.
 
 We collapse these TypeDB `diagnosis` relations from a relation node into a binary edge, since we know this is a binary relation type with only ever two roleplayers. We use this simplification as it makes it trivial to predict all possible (and valid) binary relations between `disease` and `person` types, simply using the matrix dot product of the learned representation of each `disease` and each `person`. You can see this in `decode_all`. It's likely this approach can be extended to handle ternary or N-ary relations, but we don't support functionality for it here yet.
+
+## Binary Relation Prediction a.k.a. Link Prediction
+
+This example can predict binary relations only; additional effort is required to predict ternary or N-ary relations. Predicting ternary or N-ary relations ought to be possible using an appropriate operator over the representations of the roleplayers involved. But, this op needs to compute the predictions for `L` x `M` x `N` possible relations for a ternary relation where each roleplayer type has `L`, `M`, and `N` instances. This will also require extra work to manage the ground-truth labels rather than treating them as binary as we do here.
+
 
 ## Tensorboard
 

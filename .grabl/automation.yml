@@ -41,48 +41,48 @@ build:
         bazel build //...
         bazel run @vaticle_dependencies//tool/checkstyle:test-coverage
         bazel test $(bazel query 'kind(checkstyle_test, //...)') --test_output=errors
-#    test-markdown-link-health:
-#      image: vaticle-ubuntu-20.04
-#      command: |
-#        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
-#    test-pytorch-geometric:
-#      image: vaticle-ubuntu-20.04
-#      timeout: "10m"
-#      command: |
-#        pyenv install -s 3.7.2
-#        pyenv global 3.7.2 system
-#        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-#    test-typedb:
-#      image: vaticle-ubuntu-20.04
-#      timeout: "10m"
-#      command: |
-#        pyenv install -s 3.7.2
-#        pyenv global 3.7.2 system
-#        bazel test //kglib/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-#    test-networkx:
-#      image: vaticle-ubuntu-20.04
-#      timeout: "10m"
-#      command: |
-#        pyenv install -s 3.7.2
-#        pyenv global 3.7.2 system
-#        bazel test //kglib/networkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-#    test-examples:
-#      image: vaticle-ubuntu-20.04
-#      timeout: "10m"
-#      command: |
-#        pyenv install -s 3.7.2
-#        pyenv global 3.7.2 system
-#        bazel test //kglib/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-#    test-end-to-end:
-#      image: vaticle-ubuntu-20.04
-#      timeout: "30m"
-#      command: |
-#        pyenv install -s 3.7.2
-#        pyenv global 3.7.2 system
-#        bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-markdown-link-health:
+      image: vaticle-ubuntu-20.04
+      command: |
+        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
+    test-pytorch-geometric:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
+        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-typedb:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
+        bazel test //kglib/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-networkx:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
+        bazel test //kglib/networkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-examples:
+      image: vaticle-ubuntu-20.04
+      timeout: "10m"
+      command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
+        bazel test //kglib/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+    test-end-to-end:
+      image: vaticle-ubuntu-20.04
+      timeout: "30m"
+      command: |
+        pyenv install -s 3.7.2
+        pyenv global 3.7.2 system
+        bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-#      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
+      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
@@ -92,9 +92,9 @@ build:
     test-deployment-pip:
       image: vaticle-ubuntu-20.04
       dependencies: [deploy-pip-snapshot]
-#      filter:
-#        owner: vaticle
-#        branch: master
+      filter:
+        owner: vaticle
+        branch: master
       type: foreground
       command: |
         pyenv install -s 3.7.2

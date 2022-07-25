@@ -28,15 +28,6 @@ There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geo
 ### Other
 - Example usage of Tensorboard for PyG `HeteroData`
 
-## Machine Learning Pipeline
-
-The pipeline is as follows:
-1. Extract data from `TypeDB` into Python [NetworkX](https://networkx.org) in-memory subgraphs by specifying multiple [TypeQL](https://github.com/vaticle/typeql) queries.
-2. Encode the nodes and edges of the NetworkX graphs
-3. Either (a) transform the encoded values into features, ready for input into a graph/geometric learning pipeline (for example the upcoming PyTorch implementation); or (b) Embed the encoded values according to the Types present in your database (TensorFlow only, PyTorch coming soon). This type-centric embedding is crucial to extracting the context explicitly captured in TypeDB's Type System. 
-4. Feed the features to a learning algorithm (see below)
-5. Optionally, store the predictions made by the learner in TypeDB. These predictions can then be queried using TypeQL. This means we can trivially run more learning tasks over the knowledge base, including the newly made predictions. This is knowledge graph completion.
-
 ## Resources
 You may find the following resources useful, particularly to understand why KGLIB started: 
 - [Strongly Typed Data for Machine Learning](https://www.youtube.com/watch?v=qhUyurWMiSQ) (YouTube, 2021)
