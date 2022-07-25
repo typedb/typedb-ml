@@ -41,48 +41,48 @@ build:
         bazel build //...
         bazel run @vaticle_dependencies//tool/checkstyle:test-coverage
         bazel test $(bazel query 'kind(checkstyle_test, //...)') --test_output=errors
-    test-markdown-link-health:
-      image: vaticle-ubuntu-20.04
-      command: |
-        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
-    test-pytorch-geometric:
-      image: vaticle-ubuntu-20.04
-      timeout: "10m"
-      command: |
-        pyenv install -s 3.7.2
-        pyenv global 3.7.2 system
-        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-    test-typedb:
-      image: vaticle-ubuntu-20.04
-      timeout: "10m"
-      command: |
-        pyenv install -s 3.7.2
-        pyenv global 3.7.2 system
-        bazel test //kglib/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-    test-networkx:
-      image: vaticle-ubuntu-20.04
-      timeout: "10m"
-      command: |
-        pyenv install -s 3.7.2
-        pyenv global 3.7.2 system
-        bazel test //kglib/networkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-    test-examples:
-      image: vaticle-ubuntu-20.04
-      timeout: "10m"
-      command: |
-        pyenv install -s 3.7.2
-        pyenv global 3.7.2 system
-        bazel test //kglib/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
-    test-end-to-end:
-      image: vaticle-ubuntu-20.04
-      timeout: "30m"
-      command: |
-        pyenv install -s 3.7.2
-        pyenv global 3.7.2 system
-        bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+#    test-markdown-link-health:
+#      image: vaticle-ubuntu-20.04
+#      command: |
+#        find . -name \*.md | xargs -L1 npx markdown-link-check@3.8.0 -v
+#    test-pytorch-geometric:
+#      image: vaticle-ubuntu-20.04
+#      timeout: "10m"
+#      command: |
+#        pyenv install -s 3.7.2
+#        pyenv global 3.7.2 system
+#        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+#    test-typedb:
+#      image: vaticle-ubuntu-20.04
+#      timeout: "10m"
+#      command: |
+#        pyenv install -s 3.7.2
+#        pyenv global 3.7.2 system
+#        bazel test //kglib/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+#    test-networkx:
+#      image: vaticle-ubuntu-20.04
+#      timeout: "10m"
+#      command: |
+#        pyenv install -s 3.7.2
+#        pyenv global 3.7.2 system
+#        bazel test //kglib/networkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+#    test-examples:
+#      image: vaticle-ubuntu-20.04
+#      timeout: "10m"
+#      command: |
+#        pyenv install -s 3.7.2
+#        pyenv global 3.7.2 system
+#        bazel test //kglib/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+#    test-end-to-end:
+#      image: vaticle-ubuntu-20.04
+#      timeout: "30m"
+#      command: |
+#        pyenv install -s 3.7.2
+#        pyenv global 3.7.2 system
+#        bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
+#      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
@@ -105,6 +105,7 @@ build:
         sudo ln -s /usr/share/pyshared/lsb_release.py /opt/pyenv/versions/3.7.2/lib/python3.7/site-packages/lsb_release.py
         bazel run //test:typedb-extractor-linux -- typedb-all-linux
         ./typedb-all-linux/typedb server &
+        pip install -r requirements.txt
         pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple vaticle-kglib==0.0.0-$GRABL_COMMIT
         cd kglib/tests/deployment/ && python -m unittest diagnosis && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
