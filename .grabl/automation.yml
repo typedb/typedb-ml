@@ -75,7 +75,7 @@ build:
         bazel test //kglib/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-end-to-end:
       image: vaticle-ubuntu-20.04
-      timeout: "30m"
+      timeout: "10m"
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
