@@ -20,7 +20,7 @@
 #
 
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
+load("@vaticle_typedb_kglib_pip//:requirements.bzl", vaticle_typedb_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
@@ -31,11 +31,11 @@ py_library(
     ],
     deps = [
         "@vaticle_typedb_client_python//:client_python",
-        vaticle_kglib_requirement('numpy'),
-        vaticle_kglib_requirement('pandas'),
-        vaticle_kglib_requirement('pytz'),
-        vaticle_kglib_requirement('python-dateutil'),
-        vaticle_kglib_requirement('six')
+        vaticle_typedb_kglib_requirement('numpy'),
+        vaticle_typedb_kglib_requirement('pandas'),
+        vaticle_typedb_kglib_requirement('pytz'),
+        vaticle_typedb_kglib_requirement('python-dateutil'),
+        vaticle_typedb_kglib_requirement('six')
     ],
     visibility=['//visibility:public']
 )

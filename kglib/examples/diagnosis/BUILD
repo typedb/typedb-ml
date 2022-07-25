@@ -20,7 +20,7 @@
 #
 
 load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
+load("@vaticle_typedb_kglib_pip//:requirements.bzl", vaticle_typedb_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
@@ -34,12 +34,12 @@ py_library(
         "//kglib/networkx",
         "//kglib/typedb",
         "@vaticle_typedb_client_python//:client_python",
-        vaticle_kglib_requirement("networkx"),
-        vaticle_kglib_requirement("torch"),
-        vaticle_kglib_requirement("torch_geometric"),
-        vaticle_kglib_requirement("torch_sparse"),
-        vaticle_kglib_requirement("torch_scatter"),
-        vaticle_kglib_requirement("tensorboard"),
+        vaticle_typedb_kglib_requirement("networkx"),
+        vaticle_typedb_kglib_requirement("torch"),
+        vaticle_typedb_kglib_requirement("torch_geometric"),
+        vaticle_typedb_kglib_requirement("torch_sparse"),
+        vaticle_typedb_kglib_requirement("torch_scatter"),
+        vaticle_typedb_kglib_requirement("tensorboard"),
     ],
     visibility=['//visibility:public']
 )

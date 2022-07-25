@@ -106,7 +106,7 @@ build:
         bazel run //test:typedb-extractor-linux -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install -r requirements.txt
-        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple vaticle-kglib==0.0.0-$GRABL_COMMIT
+        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
         python -m kglib.examples.diagnosis.diagnosis "./typedb-all-linux" && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')

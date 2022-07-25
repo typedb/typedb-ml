@@ -23,11 +23,11 @@ exports_files(["requirements.txt", "RELEASE_TEMPLATE.md"])
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
+load("@vaticle_typedb_kglib_pip//:requirements.bzl", vaticle_typedb_kglib_requirement = "requirement")
 
 load("@vaticle_bazel_distribution//github:rules.bzl", "deploy_github")
 load("@vaticle_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
-load("@vaticle_kglib_pip//:requirements.bzl", vaticle_kglib_requirement = "requirement")
+load("@vaticle_typedb_kglib_pip//:requirements.bzl", vaticle_typedb_kglib_requirement = "requirement")
 
 load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
 load("//:deployment.bzl", github_deployment = "deployment")
@@ -38,7 +38,7 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 assemble_pip(
     name = "assemble-pip",
     target = "//kglib:kglib",
-    package_name = "vaticle-kglib",
+    package_name = "typedb-kglib",
     classifiers = [
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
@@ -73,7 +73,7 @@ deploy_pip(
 
 release_validate_deps(
     name = "release-validate-deps",
-    refs = "@vaticle_kglib_workspace_refs//:refs.json",
+    refs = "@vaticle_typedb_kglib_workspace_refs//:refs.json",
     tagged_deps = [
         "@vaticle_typedb_client_python",
     ],
