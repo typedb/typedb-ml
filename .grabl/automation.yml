@@ -81,7 +81,7 @@ build:
         bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
-      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
+#      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system

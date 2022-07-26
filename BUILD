@@ -75,7 +75,7 @@ release_validate_python_deps(
     name = "release-validate-python-deps",
     requirements = "//:install_requires.txt",
     tagged_deps = [
-        "typedb-client-python",
+        "typedb-client",
     ],
 )
 
