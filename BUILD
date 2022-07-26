@@ -31,7 +31,7 @@ load("@vaticle_typedb_kglib_pip//:requirements.bzl", vaticle_typedb_kglib_requir
 
 load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
 load("//:deployment.bzl", github_deployment = "deployment")
-load("@vaticle_dependencies//tool/release/deps:rules.bzl", "release_validate_deps")
+load("@vaticle_dependencies//tool/release/deps:rules.bzl", "release_validate_python_deps")
 
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
@@ -71,13 +71,12 @@ deploy_pip(
     release = deployment["pypi.release"],
 )
 
-release_validate_deps(
-    name = "release-validate-deps",
-    refs = "@vaticle_typedb_kglib_workspace_refs//:refs.json",
+release_validate_python_deps(
+    name = "release-validate-python-deps",
+    requirements = "//:install_requires.txt",
     tagged_deps = [
-        "@vaticle_typedb_client_python",
+        "typedb-client-python",
     ],
-    tags = ["manual"]
 )
 
 checkstyle_test(

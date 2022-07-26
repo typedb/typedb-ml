@@ -20,8 +20,7 @@
 #
 
 load("@rules_python//python:defs.bzl", "py_library")
-load("@vaticle_typedb_kglib_pip//:requirements.bzl",
-       vaticle_typedb_kglib_requirement = "requirement")
+load("@vaticle_typedb_kglib_pip//:requirements.bzl", vaticle_typedb_kglib_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
