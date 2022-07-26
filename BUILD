@@ -73,7 +73,7 @@ deploy_pip(
 
 release_validate_python_deps(
     name = "release-validate-python-deps",
-    requirements = "//:install_requires.txt",
+    requirements = "//:requirements.txt",
     tagged_deps = [
         "typedb-client",
     ],
