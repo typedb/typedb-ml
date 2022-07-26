@@ -52,7 +52,7 @@ assemble_pip(
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
-    url = "https://github.com/vaticle/kglib",
+    url = "https://github.com/vaticle/typedb-kglib",
     author = "Vaticle",
     author_email = "community@vaticle.com",
     license = "Apache-2.0",
