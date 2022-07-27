@@ -19,15 +19,25 @@
 # under the License.
 #
 
-from setuptools import setup
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@vaticle_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
-setup(
-    name='typedb-ml',
-    version='',
-    packages=['typedb', 'ml', 'ml.networkx', 'ml.pytorch_geometric', 'ml.typedb'],
-    url='',
-    license='',
-    author='jmsfltchr',
-    author_email='',
-    description=''
+py_library(
+    name = "ml",
+    srcs = [
+        '__init__.py',
+    ],
+    deps = [
+        '//typedb/ml/typedb',
+        '//typedb/ml/networkx',
+        '//typedb/ml/pytorch_geometric',
+    ],
+    visibility=['//visibility:public']
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    include = glob(["*"]),
+    license_type = "apache-header",
 )

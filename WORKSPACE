@@ -19,7 +19,7 @@
 # under the License.
 #
 
-workspace(name = "vaticle_typedb_kglib")
+workspace(name = "vaticle_typedb_ml")
 
 ################################
 # Load @vaticle_dependencies #
@@ -102,7 +102,7 @@ pip_install(
 )
 
 pip_install(
-    name = "vaticle_typedb_kglib_pip",
+    name = "vaticle_typedb_ml_pip",
     requirements = "//:requirements_dev.txt",
 )
 
@@ -119,5 +119,5 @@ maven(vaticle_dependencies_tool_maven_artifacts)
 
 load("@vaticle_bazel_distribution//common:rules.bzl", "workspace_refs")
 workspace_refs(
-    name = "vaticle_typedb_kglib_workspace_refs"
+    name = "vaticle_typedb_ml_workspace_refs"
 )

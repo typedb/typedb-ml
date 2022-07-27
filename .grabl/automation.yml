@@ -50,35 +50,35 @@ build:
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //typedb/ml/pytorch_geometric/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-typedb:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //typedb/ml/typedb/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-networkx:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/networkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //typedb/ml/networkx/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-examples:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //typedb/ml/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-end-to-end:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //kglib/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //typedb/ml/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     deploy-pip-snapshot:
       image: vaticle-ubuntu-20.04
 #      dependencies: [build, test-pytorch-geometric, test-typedb, test-networkx, test-examples, test-end-to-end]
@@ -105,8 +105,8 @@ build:
         bazel run //test:typedb-extractor-linux -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install -r requirements.txt
-        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-kglib==0.0.0-$GRABL_COMMIT
-        python -m kglib.examples.diagnosis.diagnosis "./typedb-all-linux" && export TEST_SUCCESS=0 ||
+        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-ml==0.0.0-$GRABL_COMMIT
+        python -m typedb.ml.examples.diagnosis.diagnosis "./typedb-all-linux" && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')
         exit $TEST_SUCCESS

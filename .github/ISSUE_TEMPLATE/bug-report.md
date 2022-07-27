@@ -14,7 +14,7 @@ Please replace every line in curly brackets ( { like this } ) with appropriate a
 
 1. OS (where TypeDB server runs): { e.g. Mac OS 10, Windows 10, Ubuntu 16.4, etc. }
 2. TypeDB version (and platform): { e.g. TypeDB 2.1.0, or TypeDB Cluster 2.1.1 on Google Cloud }
-3. TypeDB KGLIB and client-python version: { e.g. KGLIB 0.1 and client-python 1.4 }
+3. TypeDB, typedb-ml and client-python version: { e.g. typedb-ml 0.2 and client-python 1.4 }
 4. Python version: { e.g. 2.7, 3.6, etc. }
 5. Other environment details:
 
