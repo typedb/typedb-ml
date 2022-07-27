@@ -69,7 +69,7 @@ class QueryGraph(nx.MultiDiGraph):
 
 
 class Query:
-    def __init__(self, graph: QueryGraph, string: str):
+    def __init__(self, graph: nx.MultiDiGraph, string: str):
         self.graph = graph
         self.string = string
 

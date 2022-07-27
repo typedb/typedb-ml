@@ -23,13 +23,13 @@ import sys
 import unittest
 
 import networkx as nx
-from typedb.api.concept.type.attribute_type import AttributeType
 from typedb.client import *
 
 from typedb_ml.networkx.graph_test_case import GraphTestCase
 from typedb_ml.networkx.queries_to_networkx import build_graph_from_queries
-from typedb_ml.typedb.thing import build_thing
+from typedb_ml.networkx.query_graph import Query
 from typedb_ml.typedb.test.base import TypeDBServer
+from typedb_ml.typedb.thing import build_thing
 
 
 class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
@@ -71,13 +71,11 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
         g3.add_edge('r', 'x', type='child')
         g3.add_edge('r', 'y', type='parent')
 
-        query_sampler_variable_graph_tuples = [('match $x isa person;', mock_sampler, g1),
-                                               ('match $x isa person, has name $n;', mock_sampler, g2),
-                                               ('match $x isa person; $r(child: $x, parent: $y);', mock_sampler, g3),
-                                               # TODO Add functionality for loading schema at a later date
-                                               # ('match $x sub person; $x sub $type;', g4),
-                                               # ('match $x sub $y;', g5),
-                                               ]
+        queries = [
+            Query(g1, 'match $x isa person;'),
+            Query(g2, 'match $x isa person, has name $n;'),
+            Query(g3, 'match $x isa person; $r(child: $x, parent: $y);'),
+        ]
 
         with self._client.session(self._database, SessionType.SCHEMA) as session:
 
@@ -91,7 +89,7 @@ class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):
                 tx.query().insert(ITBuildGraphFromQueriesWithRealTypeDB.DATA)
                 tx.commit()
             with session.transaction(TransactionType.READ) as tx:
-                combined_graph = build_graph_from_queries(query_sampler_variable_graph_tuples, tx)
+                combined_graph = build_graph_from_queries(queries, tx)
 
                 person_exp = build_thing(next(tx.query().match('match $x isa person;')).get('x'))
                 name_exp = build_thing(next(tx.query().match('match $x isa name;')).get('x'))

@@ -74,7 +74,7 @@ def build_graph_from_queries(queries, transaction, concept_dict_converter=concep
         # Raise exception when none of the queries returned any results
         raise RuntimeError(
             f'The graph from queries: '
-            f'{[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in queries]}\n'
+            f'{[query.string for query in queries]}\n'
             f'could not be created, since none of these queries returned results'
         )
 
