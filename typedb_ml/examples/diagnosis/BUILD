@@ -19,51 +19,36 @@
 # under the License.
 #
 
-load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_python//python:defs.bzl", "py_test", "py_library")
+load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
-py_test(
+py_library(
     name = "diagnosis",
-    size = "enormous",
     srcs = [
-        "diagnosis.py"
+        'diagnosis.py'
     ],
     deps = [
-        "//typedb/ml/examples/diagnosis",
-        "//typedb/ml/typedb/test",
+        "//typedb_ml/examples/diagnosis/dataset",
+        "//typedb_ml/pytorch_geometric",
+        "//typedb_ml/networkx",
+        "//typedb_ml/typedb",
+        "@vaticle_typedb_client_python//:client_python",
+        vaticle_typedb_ml_requirement("networkx"),
+        vaticle_typedb_ml_requirement("torch"),
+        vaticle_typedb_ml_requirement("torch_geometric"),
+        vaticle_typedb_ml_requirement("torch_sparse"),
+        vaticle_typedb_ml_requirement("torch_scatter"),
+        vaticle_typedb_ml_requirement("tensorboard"),
     ],
-    data = [
-        "//typedb/ml/examples/diagnosis/dataset:diagnosis-example-typeql-files",
-        "@vaticle_typedb_artifact_linux//file"
-    ],
-    args = [
-        "$(locations //typedb/ml/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
-        "$(location @vaticle_typedb_artifact_linux//file)",
-    ],
-)
-
-py_test(
-    name = "diagnosis-debug",
-    size = "enormous",
-    srcs = [
-        "diagnosis_debug.py"
-    ],
-    main = "diagnosis_debug.py",
-    deps = [
-        "//typedb/ml/examples/diagnosis",
-    ],
-    data = [
-        "//typedb/ml/examples/diagnosis/dataset:diagnosis-example-typeql-files",
-    ],
-    args = [
-        "$(locations //typedb/ml/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
-    ],
+    visibility=['//visibility:public']
 )
 
 checkstyle_test(
     name = "checkstyle",
-    include = glob([
-        "*",
+    include = glob(["*"]),
+    exclude = glob([
+        "*.md"
     ]),
     license_type = "apache-header",
 )

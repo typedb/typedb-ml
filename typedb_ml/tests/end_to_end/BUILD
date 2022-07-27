@@ -19,26 +19,51 @@
 # under the License.
 #
 
-load("@rules_python//python:defs.bzl", "py_library")
-load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
+load("@rules_python//python:defs.bzl", "py_test")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
-py_library(
-    name = "typedb",
+py_test(
+    name = "diagnosis",
+    size = "enormous",
     srcs = [
-        'type.py',
-        'thing.py',
-        'load.py',
+        "diagnosis.py"
     ],
     deps = [
-        '//typedb/ml/typedb/test',
-        "@vaticle_typedb_client_python//:client_python",
+        "//typedb_ml/examples/diagnosis",
+        "//typedb_ml/typedb/test",
     ],
-    visibility=['//visibility:public']
+    data = [
+        "//typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files",
+        "@vaticle_typedb_artifact_linux//file"
+    ],
+    args = [
+        "$(locations //typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
+        "$(location @vaticle_typedb_artifact_linux//file)",
+    ],
+)
+
+py_test(
+    name = "diagnosis-debug",
+    size = "enormous",
+    srcs = [
+        "diagnosis_debug.py"
+    ],
+    main = "diagnosis_debug.py",
+    deps = [
+        "//typedb_ml/examples/diagnosis",
+    ],
+    data = [
+        "//typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files",
+    ],
+    args = [
+        "$(locations //typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
+    ],
 )
 
 checkstyle_test(
     name = "checkstyle",
-    include = glob(["*"]),
+    include = glob([
+        "*",
+    ]),
     license_type = "apache-header",
 )

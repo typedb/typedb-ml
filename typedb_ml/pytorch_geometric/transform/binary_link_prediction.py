@@ -20,8 +20,8 @@
 #
 import networkx as nx
 
-from typedb.ml.networkx.iterate import multidigraph_edge_data_iterator
-from typedb.ml.typedb.type import get_edge_type_triplets, reverse_edge_type_triplets
+from typedb_ml.networkx.iterate import multidigraph_edge_data_iterator
+from typedb_ml.typedb.type import get_edge_type_triplets, reverse_edge_type_triplets
 
 
 class LinkPredictionLabeller:

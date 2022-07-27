@@ -26,10 +26,10 @@ import networkx as nx
 from typedb.api.concept.type.attribute_type import AttributeType
 from typedb.client import *
 
-from typedb.ml.networkx.graph_test_case import GraphTestCase
-from typedb.ml.networkx.queries_to_networkx import build_graph_from_queries
-from typedb.ml.typedb.thing import build_thing
-from typedb.ml.typedb.test.base import TypeDBServer
+from typedb_ml.networkx.graph_test_case import GraphTestCase
+from typedb_ml.networkx.queries_to_networkx import build_graph_from_queries
+from typedb_ml.typedb.thing import build_thing
+from typedb_ml.typedb.test.base import TypeDBServer
 
 
 class ITBuildGraphFromQueriesWithRealTypeDB(GraphTestCase):

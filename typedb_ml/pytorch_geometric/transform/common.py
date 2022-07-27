@@ -18,7 +18,7 @@
 #  specific language governing permissions and limitations
 #  under the License.
 #
-from typedb.ml.networkx.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
+from typedb_ml.networkx.iterate import multidigraph_node_data_iterator, multidigraph_edge_data_iterator
 
 
 def clear_unneeded_fields(graph):

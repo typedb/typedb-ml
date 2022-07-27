@@ -32,7 +32,7 @@ py_library(
         'iterate.py',
     ],
     deps = [
-        "//typedb/ml/typedb",
+        "//typedb_ml/typedb",
         vaticle_typedb_ml_requirement('networkx'),
         vaticle_typedb_ml_requirement('decorator'),
     ],
@@ -59,7 +59,7 @@ py_test(
         "graph_test_case.py"
     ],
     deps = [
-        "//typedb/ml/typedb",
+        "//typedb_ml/typedb",
         vaticle_typedb_ml_requirement('networkx'),
     ]
 )
@@ -73,8 +73,8 @@ py_test(
         "graph_test_case.py"
     ],
     deps = [
-        "//typedb/ml/typedb",
-        "//typedb/ml/typedb/test",
+        "//typedb_ml/typedb",
+        "//typedb_ml/typedb/test",
         "@vaticle_typedb_client_python//:client_python",
         vaticle_typedb_ml_requirement('networkx'),
     ],
@@ -91,7 +91,7 @@ py_test(
         "graph_test_case.py"
     ],
     deps = [
-        "//typedb/ml/typedb",
+        "//typedb_ml/typedb",
         vaticle_typedb_ml_requirement('networkx'),
     ],
 )

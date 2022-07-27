@@ -22,9 +22,9 @@
 import unittest
 import networkx as nx
 
-from typedb.ml.typedb.thing import Thing
-from typedb.ml.networkx.concept_dict_to_networkx import concept_dict_to_networkx
-from typedb.ml.networkx.graph_test_case import GraphTestCase
+from typedb_ml.typedb.thing import Thing
+from typedb_ml.networkx.concept_dict_to_networkx import concept_dict_to_networkx
+from typedb_ml.networkx.graph_test_case import GraphTestCase
 
 
 class TestConceptDictToTypeDBGraph(GraphTestCase):

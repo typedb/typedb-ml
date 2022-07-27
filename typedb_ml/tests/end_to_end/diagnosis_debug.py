@@ -22,14 +22,14 @@ import os
 import sys
 import unittest
 
-from typedb.ml.examples.diagnosis.diagnosis import diagnosis_example
+from typedb_ml.examples.diagnosis.diagnosis import diagnosis_example
 
 
 class TestDiagnosisExampleDebug(unittest.TestCase):
     """
     A copy of the end-to-end test for local debugging. Requires a TypeDB server to be started in the background
     manually. Run with:
-    bazel test //typedb/ml/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH --test_arg=--<path/to/your/typedb/directory>
+    bazel test //typedb_ml/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH --test_arg=--<path/to/your/typedb/directory>
     """
 
     def setUp(self):

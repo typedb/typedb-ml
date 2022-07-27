@@ -23,7 +23,7 @@ from typing import List
 import torch
 from torch.nn import Embedding
 
-from typedb.ml.networkx.iterate import (
+from typedb_ml.networkx.iterate import (
     multidigraph_node_data_iterator,
     multidigraph_edge_data_iterator,
 )

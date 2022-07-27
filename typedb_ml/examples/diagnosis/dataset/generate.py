@@ -24,7 +24,7 @@ import inspect
 import numpy as np
 from typedb.client import *
 
-from typedb.ml.examples.diagnosis.dataset.pmf import PMF
+from typedb_ml.examples.diagnosis.dataset.pmf import PMF
 
 
 def get_example_queries(pmf, example_id):

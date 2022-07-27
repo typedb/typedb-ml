@@ -31,15 +31,15 @@ from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.nn import HGTConv
 from typedb.client import *
 
-from typedb.ml.examples.diagnosis.dataset.generate import generate_example_data
-from typedb.ml.networkx.query_graph import QueryGraph
-from typedb.ml.pytorch_geometric.dataset.dataset import DataSet
-from typedb.ml.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, \
+from typedb_ml.examples.diagnosis.dataset.generate import generate_example_data
+from typedb_ml.networkx.query_graph import QueryGraph
+from typedb_ml.pytorch_geometric.dataset.dataset import DataSet
+from typedb_ml.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, \
     binary_relations_to_edges, binary_link_prediction_edge_triplets
-from typedb.ml.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
-from typedb.ml.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, ContinuousEncoder
-from typedb.ml.typedb.load import load_typeql_file, FileType
-from typedb.ml.typedb.type import get_thing_types
+from typedb_ml.pytorch_geometric.transform.common import clear_unneeded_fields, store_concepts_by_type
+from typedb_ml.pytorch_geometric.transform.encode import FeatureEncoder, CategoricalEncoder, ContinuousEncoder
+from typedb_ml.typedb.load import load_typeql_file, FileType
+from typedb_ml.typedb.type import get_thing_types
 
 DATABASE = "diagnosis"
 ADDRESS = "localhost:1729"
@@ -74,8 +74,8 @@ def diagnosis_example(typedb_binary_directory,
                       num_graphs,
                       database=DATABASE,
                       address=ADDRESS,
-                      schema_file_path="typedb/ml/examples/diagnosis/dataset/schema.tql",
-                      seed_data_file_path="typedb/ml/examples/diagnosis/dataset/seed_data.tql"):
+                      schema_file_path="typedb_ml/examples/diagnosis/dataset/schema.tql",
+                      seed_data_file_path="typedb_ml/examples/diagnosis/dataset/seed_data.tql"):
     """
     Args:
         typedb_binary_directory: Location of the TypeDB binary for the purpose of loading initial schema and data
@@ -458,5 +458,5 @@ if __name__ == '__main__':
     diagnosis_example(args.typedb, args.graphs,
                       database=DATABASE,
                       address=ADDRESS,
-                      schema_file_path=cwd + '/' + "typedb/ml/examples/diagnosis/dataset/schema.tql",
-                      seed_data_file_path=cwd + '/' + "typedb/ml/examples/diagnosis/dataset/seed_data.tql")
+                      schema_file_path=cwd + '/' + "typedb_ml/examples/diagnosis/dataset/schema.tql",
+                      seed_data_file_path=cwd + '/' + "typedb_ml/examples/diagnosis/dataset/seed_data.tql")

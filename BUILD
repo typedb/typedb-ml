@@ -37,7 +37,7 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 assemble_pip(
     name = "assemble-pip",
-    target = "//typedb:ml",
+    target = "//typedb_ml:typedb-ml",
     package_name = "typedb-ml",
     classifiers = [
         "Programming Language :: Python :: 3",

@@ -21,7 +21,7 @@
 
 import unittest
 
-from typedb.ml.networkx.query_graph import QueryGraph
+from typedb_ml.networkx.query_graph import QueryGraph
 
 
 class TestQueryGraph(unittest.TestCase):

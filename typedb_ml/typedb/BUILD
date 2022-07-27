@@ -19,16 +19,20 @@
 # under the License.
 #
 
-load("@rules_python//python:defs.bzl", "py_library", "py_test")
-load("@vaticle_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
-    name = "ml",
+    name = "typedb",
+    srcs = [
+        'type.py',
+        'thing.py',
+        'load.py',
+    ],
     deps = [
-        '//typedb/ml/typedb',
-        '//typedb/ml/networkx',
-        '//typedb/ml/pytorch_geometric',
+        '//typedb_ml/typedb/test',
+        "@vaticle_typedb_client_python//:client_python",
     ],
     visibility=['//visibility:public']
 )

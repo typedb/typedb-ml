@@ -25,7 +25,7 @@ There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geo
 - It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but TypeDB-ML provides `store_concepts_by_type` to map concepts by type so that they can be re-associated after learning is finished.
 - A `FeatureEncoder` to orchestrate encoders to generate features for graphs.
 - Encoders for Continuous and Categorical values to apply encodings/embedding spaces to the types and attribute values present in TypeDB data.
-- A [full example for link prediction](typedb/ml/examples/diagnosis)
+- A [full example for link prediction](typedb_ml/examples/diagnosis)
 ### Other
 - Example usage of Tensorboard for PyG `HeteroData`
 
@@ -50,7 +50,7 @@ You may find the following resources useful, particularly to understand why Type
 
 ### Run the Example
 
-Take a look at the [PyTorch Geometric heterogeneous link prediction example](typedb/ml/examples/diagnosis) to see how to use TypeDB-ML to build a GNN on TypeDB data.
+Take a look at the [PyTorch Geometric heterogeneous link prediction example](typedb_ml/examples/diagnosis) to see how to use TypeDB-ML to build a GNN on TypeDB data.
 
 ### Building from source
 
@@ -77,7 +77,7 @@ bazel build //...
 Run all tests. Requires Python 3.7+ on your `PATH`. Test dependencies are for Linux since that is the CI environment: 
 
 ```
-bazel test //typedb/ml/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+bazel test //typedb_ml/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
 ```
 
 Build the pip distribution. Outputs to `bazel-bin`:

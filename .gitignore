@@ -35,6 +35,6 @@ tmp/
 __pycache__/
 
 # Data input/output directories
-typedb/ml/examples/diagnosis/events/
+typedb_ml/examples/diagnosis/events/
 
 *.egg-info/

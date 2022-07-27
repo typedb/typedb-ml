@@ -24,8 +24,8 @@ import warnings
 from functools import reduce
 import networkx as nx
 
-from typedb.ml.typedb.thing import build_thing
-from typedb.ml.networkx.concept_dict_to_networkx import concept_dict_to_networkx
+from typedb_ml.typedb.thing import build_thing
+from typedb_ml.networkx.concept_dict_to_networkx import concept_dict_to_networkx
 
 
 def build_graph_from_queries(query_sampler_variable_graph_tuples, transaction,

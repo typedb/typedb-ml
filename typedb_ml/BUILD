@@ -19,27 +19,19 @@
 # under the License.
 #
 
-load("@rules_python//python:defs.bzl", "py_test", "py_library")
-load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load("@vaticle_bazel_distribution_pip//:requirements.bzl", deployment_requirement = "requirement")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
-    name = "diagnosis",
+    name = "typedb-ml",
     srcs = [
-        'diagnosis.py'
+        '__init__.py',
     ],
     deps = [
-        "//typedb/ml/examples/diagnosis/dataset",
-        "//typedb/ml/pytorch_geometric",
-        "//typedb/ml/networkx",
-        "//typedb/ml/typedb",
-        "@vaticle_typedb_client_python//:client_python",
-        vaticle_typedb_ml_requirement("networkx"),
-        vaticle_typedb_ml_requirement("torch"),
-        vaticle_typedb_ml_requirement("torch_geometric"),
-        vaticle_typedb_ml_requirement("torch_sparse"),
-        vaticle_typedb_ml_requirement("torch_scatter"),
-        vaticle_typedb_ml_requirement("tensorboard"),
+        '//typedb_ml/typedb',
+        '//typedb_ml/networkx',
+        '//typedb_ml/pytorch_geometric',
     ],
     visibility=['//visibility:public']
 )
@@ -47,8 +39,5 @@ py_library(
 checkstyle_test(
     name = "checkstyle",
     include = glob(["*"]),
-    exclude = glob([
-        "*.md"
-    ]),
     license_type = "apache-header",
 )

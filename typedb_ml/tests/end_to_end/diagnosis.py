@@ -22,8 +22,8 @@ import sys
 import unittest
 import os
 
-from typedb.ml.examples.diagnosis.diagnosis import diagnosis_example
-from typedb.ml.typedb.test.base import TypeDBServer
+from typedb_ml.examples.diagnosis.diagnosis import diagnosis_example
+from typedb_ml.typedb.test.base import TypeDBServer
 
 
 class TestDiagnosisExample(unittest.TestCase):
