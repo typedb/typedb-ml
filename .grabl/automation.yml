@@ -71,7 +71,7 @@ build:
       command: |
         pyenv install -s 3.7.2
         pyenv global 3.7.2 system
-        bazel test //typedb_ml/examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
+        bazel test //examples/... --test_output=streamed --spawn_strategy=standalone --action_env=PATH
     test-end-to-end:
       image: vaticle-ubuntu-20.04
       timeout: "10m"
@@ -106,7 +106,7 @@ build:
         ./typedb-all-linux/typedb server &
         pip install -r requirements.txt
         pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-ml==0.0.0-$GRABL_COMMIT
-        python -m typedb_ml.examples.diagnosis.diagnosis "./typedb-all-linux" && export TEST_SUCCESS=0 ||
+        python -m examples.diagnosis.diagnosis "./typedb-all-linux" && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')
         exit $TEST_SUCCESS

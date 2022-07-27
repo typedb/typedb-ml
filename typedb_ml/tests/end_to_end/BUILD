@@ -29,15 +29,15 @@ py_test(
         "diagnosis.py"
     ],
     deps = [
-        "//typedb_ml/examples/diagnosis",
+        "//examples/diagnosis",
         "//typedb_ml/typedb/test",
     ],
     data = [
-        "//typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files",
+        "//examples/diagnosis/dataset:diagnosis-example-typeql-files",
         "@vaticle_typedb_artifact_linux//file"
     ],
     args = [
-        "$(locations //typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
+        "$(locations //examples/diagnosis/dataset:diagnosis-example-typeql-files)",
         "$(location @vaticle_typedb_artifact_linux//file)",
     ],
 )
@@ -50,13 +50,13 @@ py_test(
     ],
     main = "diagnosis_debug.py",
     deps = [
-        "//typedb_ml/examples/diagnosis",
+        "//examples/diagnosis",
     ],
     data = [
-        "//typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files",
+        "//examples/diagnosis/dataset:diagnosis-example-typeql-files",
     ],
     args = [
-        "$(locations //typedb_ml/examples/diagnosis/dataset:diagnosis-example-typeql-files)",
+        "$(locations //examples/diagnosis/dataset:diagnosis-example-typeql-files)",
     ],
 )
 

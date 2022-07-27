@@ -22,7 +22,7 @@ import sys
 import unittest
 import os
 
-from typedb_ml.examples.diagnosis.diagnosis import diagnosis_example
+from examples.diagnosis.diagnosis import diagnosis_example
 from typedb_ml.typedb.test.base import TypeDBServer
 
 

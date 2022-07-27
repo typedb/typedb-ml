@@ -29,7 +29,7 @@ py_library(
         'diagnosis.py'
     ],
     deps = [
-        "//typedb_ml/examples/diagnosis/dataset",
+        "//examples/diagnosis/dataset",
         "//typedb_ml/pytorch_geometric",
         "//typedb_ml/networkx",
         "//typedb_ml/typedb",

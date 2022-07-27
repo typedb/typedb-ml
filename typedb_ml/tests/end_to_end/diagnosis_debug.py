@@ -22,7 +22,7 @@ import os
 import sys
 import unittest
 
-from typedb_ml.examples.diagnosis.diagnosis import diagnosis_example
+from examples.diagnosis.diagnosis import diagnosis_example
 
 
 class TestDiagnosisExampleDebug(unittest.TestCase):

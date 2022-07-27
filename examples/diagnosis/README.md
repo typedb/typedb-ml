@@ -10,7 +10,7 @@ Once you have installed TypeDB-ML (see root README for instructions) you can run
 
 1. Make sure a TypeDB server (version 2.11.1 or later) is running locally   
 
-2. Clone TypeDB-ML (shallow clone: `git clone --depth 1`) and from the project root, run the example: `python -m typedb_ml.examples.diagnosis.diagnosis "/path/to/my/typedb/install/directory"`
+2. Clone TypeDB-ML (shallow clone: `git clone --depth 1`) and from the project root, run the example: `python -m examples.diagnosis.diagnosis "/path/to/my/typedb/install/directory"`
 
 3. The database, schema and seed data will be set up and data will be generated synthetically. You should see console output to indicate that the pipeline is running and that the model is learning. Finally, the predicted relations are shown, and they are written back into TypeDB as the type `predicted-diagnosis`.
 

@@ -31,7 +31,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.nn import HGTConv
 from typedb.client import *
 
-from typedb_ml.examples.diagnosis.dataset.generate import generate_example_data
+from examples.diagnosis.dataset.generate import generate_example_data
 from typedb_ml.networkx.query_graph import QueryGraph
 from typedb_ml.pytorch_geometric.dataset.dataset import DataSet
 from typedb_ml.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, \
@@ -74,8 +74,8 @@ def diagnosis_example(typedb_binary_directory,
                       num_graphs,
                       database=DATABASE,
                       address=ADDRESS,
-                      schema_file_path="typedb_ml/examples/diagnosis/dataset/schema.tql",
-                      seed_data_file_path="typedb_ml/examples/diagnosis/dataset/seed_data.tql"):
+                      schema_file_path="examples/diagnosis/dataset/schema.tql",
+                      seed_data_file_path="examples/diagnosis/dataset/seed_data.tql"):
     """
     Args:
         typedb_binary_directory: Location of the TypeDB binary for the purpose of loading initial schema and data
@@ -456,5 +456,5 @@ if __name__ == '__main__':
     diagnosis_example(args.typedb, args.graphs,
                       database=DATABASE,
                       address=ADDRESS,
-                      schema_file_path=cwd + '/' + "typedb_ml/examples/diagnosis/dataset/schema.tql",
-                      seed_data_file_path=cwd + '/' + "typedb_ml/examples/diagnosis/dataset/seed_data.tql")
+                      schema_file_path=cwd + '/' + "examples/diagnosis/dataset/schema.tql",
+                      seed_data_file_path=cwd + '/' + "examples/diagnosis/dataset/seed_data.tql")
