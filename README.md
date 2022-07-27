@@ -5,7 +5,7 @@
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typeql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/typeql)
 
 # TypeDB ML
-Previously known as KGLIB.
+_Previously known as KGLIB._
 
 **TypeDB ML provides tools to enable graph algorithms and machine learning with [TypeDB](https://github.com/vaticle/typedb).**
 

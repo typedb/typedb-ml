@@ -23,61 +23,38 @@ from typing import Sequence, Callable, Optional
 
 import networkx as nx
 from torch_geometric.utils import from_networkx
-from typedb.client import TypeDB, TypeDBSession, SessionType, TypeDBOptions, TransactionType
+from typedb.client import TypeDBSession, TypeDBOptions, TransactionType
 
 from typedb_ml.networkx.queries_to_networkx import build_graph_from_queries
 
 
 class DataSet:
     """
-    Loading graphs based on queries from TypeDB.
-    Note: not dependent on PyTorch or Pytorch Geometric.
+    A DataSet to lazily load graphs based on queries from TypeDB and some arbitrary id.
     """
 
     def __init__(
-        self,
-        indices: Sequence,
-        node_types,
-        edge_type_triplets,
-        get_query_handles_for_id: Callable,
-        database: Optional[str] = None,
-        uri: Optional[str] = "localhost:1729",
-        session: Optional[TypeDBSession] = None,
-        infer: bool = True,
-        transform: Optional[Callable[[nx.Graph], nx.Graph]] = None,
+            self,
+            indices: Sequence,
+            node_types,
+            edge_type_triplets,
+            get_query_handles_for_id: Callable,
+            session: Optional[TypeDBSession] = None,
+            infer: bool = True,
+            transform: Optional[Callable[[nx.Graph], nx.Graph]] = None,
     ):
-        assert (database and uri) or session
         self._indices = indices
         self._node_types = node_types
         self._edge_type_triplets = edge_type_triplets
         self.get_query_handles_for_id = get_query_handles_for_id
         self._infer = infer
         self._transform = transform
-        self._uri = uri
-        self._database = database
-        self._typedb_session = session
-
-    @property
-    def typedb_session(self):
-        """
-        Did this like this in an attempt to make it
-        also work when using with a DataLoader with
-        num_workers > 0.
-
-        TODO: it does not, so look into this.
-        """
-        if not self._typedb_session:
-            print("setting up session")
-            print(self)
-            client = TypeDB.core_client(self._uri)
-            self._typedb_session = client.session(database=self._database, session_type=SessionType.DATA)
-        return self._typedb_session
+        self.session = session
 
     def __len__(self):
         return len(self._indices)
 
     def __getitem__(self, idx):
-        print(type(self._typedb_session))
         id = self._indices[idx]
         print(f"Fetching graph for id: {id}")
         graph_query_handles = self.get_query_handles_for_id(id)
@@ -85,7 +62,7 @@ class DataSet:
         options = TypeDBOptions.core()
         options.infer = self._infer
 
-        with self.typedb_session.transaction(TransactionType.READ, options=options) as tx:
+        with self.session.transaction(TransactionType.READ, options=options) as tx:
             # Build a graph from the queries, samplers, and query graphs
             graph = build_graph_from_queries(graph_query_handles, tx)
         graph.name = id
@@ -104,6 +81,5 @@ class DataSet:
     def edge_type_indices(self, graph):
         indices = []
         for src, dst, data in graph.edges(data=True):
-            # indices.append(self._edge_type_triplets.index(data['type']))
             indices.append(self._edge_type_triplets.index((graph.nodes[src]["type"], data["type"], graph.nodes[dst]["type"])))
         return indices

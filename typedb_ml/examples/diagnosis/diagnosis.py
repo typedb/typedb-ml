@@ -122,9 +122,7 @@ def diagnosis_example(typedb_binary_directory,
     ])
 
     # Create a Dataset that will load graphs from TypeDB on-demand, based on an ID
-    dataset = DataSet(
-        [0], node_types, edge_type_triplets, get_query_handles, DATABASE, ADDRESS, session, True, transform
-    )
+    dataset = DataSet([0], node_types, edge_type_triplets, get_query_handles, session, True, transform)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data, node_type_indices, edge_type_indices = dataset[0]

@@ -30,24 +30,11 @@ from typedb_ml.networkx.iterate import (
 
 
 class FeatureEncoder:
-    # TODO: Rephrase
-    """Transform of the networkx graph as it comes out of TypeDB
-    to a networkx graph that pytorch geometric likes to ingest.
-    Now this is very much geared to pytorch geometric especially
-    because I set the attribute names to things like "x" and
-    "edge_attr" which are the standard names in pytorch geometric.
-
-    One thing I encountered when trying to load the graph form the
-    original typedb-ml example directly in pytorch geometric is that
-    since in the original example the feature vector on the nodes
-    and the edges were both called "features", the stock function
-    from pytorch geometric: torch_geometric.utils.from_networkx
-    does not deal with this well (it ends up overwriting node
-    features with edge features).
-
-    :arg graph: networkx graph object
-    :returns: networkx graph object
-
+    """
+    Feature encoder for NetworkX representations of TypeDB data. Type data is assumed always present for each node
+    and edge, consistent with the TypeDB knowledge model. Therefore, this encoder provides a de-factor method to
+    embed that type information. Supply attribute-specific encoders to handle encoding values of attributes,
+    since the meaning of these values is domain-dependent.
     """
 
     def __init__(self, node_types, edge_types, type_encoding_size, attribute_encoders, attribute_encoding_size):
