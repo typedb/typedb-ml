@@ -20,6 +20,7 @@
 #
 
 load("@rules_python//python:defs.bzl", "py_test")
+load("@vaticle_bazel_distribution//artifact:rules.bzl", "artifact_extractor")
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_test(
@@ -58,6 +59,11 @@ py_test(
     args = [
         "$(locations //examples/diagnosis/dataset:diagnosis-example-typeql-files)",
     ],
+)
+
+artifact_extractor(
+    name = "typedb-extractor-linux",
+    artifact = "@vaticle_typedb_artifact_linux//file",
 )
 
 checkstyle_test(

@@ -29,7 +29,7 @@ class TestDiagnosisExampleDebug(unittest.TestCase):
     """
     A copy of the end-to-end test for local debugging. Requires a TypeDB server to be started in the background
     manually. Run with:
-    bazel test //typedb_ml/tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH --test_arg=--<path/to/your/typedb/directory>
+    bazel test //tests/end_to_end:diagnosis --test_output=streamed --spawn_strategy=standalone --action_env=PATH --test_arg=--<path/to/your/typedb/directory>
     """
 
     def setUp(self):
