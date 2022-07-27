@@ -56,6 +56,7 @@ py_test(
         "queries_to_networkx_test.py",
         "queries_to_networkx.py",
         "concept_dict_to_networkx.py",
+        "query_graph.py",
         "graph_test_case.py"
     ],
     deps = [
@@ -70,6 +71,7 @@ py_test(
         "queries_to_networkx_it.py",
         "queries_to_networkx.py",
         "concept_dict_to_networkx.py",
+        "query_graph.py",
         "graph_test_case.py"
     ],
     deps = [
