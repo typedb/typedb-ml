@@ -25,9 +25,6 @@ load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 py_library(
     name = "ml",
-    srcs = [
-        '__init__.py',
-    ],
     deps = [
         '//typedb/ml/typedb',
         '//typedb/ml/networkx',
