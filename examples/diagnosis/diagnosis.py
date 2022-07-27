@@ -32,7 +32,7 @@ from torch_geometric.nn import HGTConv
 from typedb.client import *
 
 from examples.diagnosis.dataset.generate import generate_example_data
-from typedb_ml.networkx.query_graph import QueryGraph
+from typedb_ml.networkx.query_graph import QueryGraph, Query
 from typedb_ml.pytorch_geometric.dataset.dataset import DataSet
 from typedb_ml.pytorch_geometric.transform.binary_link_prediction import LinkPredictionLabeller, \
     binary_relations_to_edges, binary_link_prediction_edge_triplets
@@ -122,7 +122,7 @@ def diagnosis_example(typedb_binary_directory,
     ])
 
     # Create a Dataset that will load graphs from TypeDB on-demand, based on an ID
-    dataset = DataSet([0], node_types, edge_type_triplets, get_query_handles, session, True, transform)
+    dataset = DataSet([0], node_types, edge_type_triplets, build_queries, session, True, transform)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     data, node_type_indices, edge_type_indices = dataset[0]
@@ -231,7 +231,7 @@ def diagnosis_example(typedb_binary_directory,
     start_patience = patience = 100
     train_results = None
     test_results = None
-    for epoch in range(1, 10):
+    for epoch in range(1, 100):
         loss = train()
         writer.add_scalar('Loss/train', loss, epoch)
         train_results, val_results, test_results = test()
@@ -254,10 +254,6 @@ def diagnosis_example(typedb_binary_directory,
             print('Stopping training as validation accuracy did not improve '
                   f'for {start_patience} epochs')
             break
-
-    # Put back the diagnosis edges
-    # data[binary_edge_to_predict] = data.links
-    # data[binary_rev_edge_to_predict] = data.rev_links
 
     z = model.encode(data.x_dict, data.edge_index_dict)
     final_edge_index = (model.decode_all(z).sigmoid() > 0.5).nonzero(as_tuple=False).cpu().detach().numpy()
@@ -306,19 +302,18 @@ def create_database(client, database):
     client.databases().create(database)
 
 
-def get_query_handles(example_id):
+def build_queries(subgraph_id: int) -> List[Query]:
     """
-    Creates an iterable, each element containing a TypeQL query, a function to sample the answers, and a QueryGraph
-    object which must be the TypeDB graph representation of the query. This tuple is termed a "query_handle"
+    Creates a tuple of Query objects that contain the information needed to convert query answers into NetworkX graphs.
 
     Args:
-        example_id: A uniquely identifiable attribute value used to anchor the results of the queries to a specific
-                    subgraph
+        subgraph_id: A uniquely identifiable id used to anchor the results of the queries to a specific subgraph,
+        designed so that the user can easily query for segmented subgraphs to be used as batches.
 
     Returns:
-        query handles
+        List of Query
     """
-    assert example_id == 0
+    assert subgraph_id == 0  # In this example the graph is small so we don't use any subgraphs
 
     # === Hereditary Feature ===
     hereditary_query = inspect.cleandoc(f'''match
@@ -414,12 +409,12 @@ def get_query_handles(example_id):
                              .add_role_edge(diag, p, 'patient'))
 
     return [
-        (symptom_query, lambda x: x, symptom_query_graph),
-        (diagnosis_query, lambda x: x, diagnosis_query_graph),
-        (risk_factor_query, lambda x: x, risk_factor_query_graph),
-        (person_age_query, lambda x: x, person_age_query_graph),
-        (consumption_query, lambda x: x, consumption_query_graph),
-        (hereditary_query, lambda x: x, hereditary_query_graph)
+        Query(symptom_query_graph, symptom_query),
+        Query(diagnosis_query_graph, diagnosis_query),
+        Query(risk_factor_query_graph, risk_factor_query),
+        Query(person_age_query_graph, person_age_query),
+        Query(consumption_query_graph, consumption_query),
+        Query(hereditary_query_graph, hereditary_query)
     ]
 
 

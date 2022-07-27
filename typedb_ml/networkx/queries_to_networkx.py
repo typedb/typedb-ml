@@ -28,15 +28,12 @@ from typedb_ml.typedb.thing import build_thing
 from typedb_ml.networkx.concept_dict_to_networkx import concept_dict_to_networkx
 
 
-def build_graph_from_queries(query_sampler_variable_graph_tuples, transaction,
-                             concept_dict_converter=concept_dict_to_networkx):
+def build_graph_from_queries(queries, transaction, concept_dict_converter=concept_dict_to_networkx):
     """
-    Builds a graph of Things, interconnected by roles (and *has*), from a set of queries and graphs representing those
-    queries (variable graphs)of those queries, over a TypeDB transaction
+    Builds a graph of Things, interconnected by _roles_ and _has_ edges, from a set of Query objects
 
     Args:
-        query_sampler_variable_graph_tuples: A list of tuples, each tuple containing a query, a sampling function,
-            and a variable_graph
+        queries: An iterable of Query objects
         transaction: A TypeDB transaction
         concept_dict_converter: The function to use to convert from concept_dicts to a TypeDB model. This could be
             a typical model or a mathematical model
@@ -47,21 +44,21 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, transaction,
 
     query_concept_graphs = []
 
-    for query, sampler, variable_graph in query_sampler_variable_graph_tuples:
+    for query in queries:
 
-        print("working on query: " + query)
-        concept_maps = sampler(transaction.query().match(query))
-        print("query completed")
+        print("Working on query: " + query.string)
+        concept_maps = transaction.query().match(query.string)
+        print("Query completed")
 
         concept_dicts = [concept_dict_from_concept_map(concept_map) for concept_map in concept_maps]
-        print("constructed concept_dicts")
+        print("Constructed concept_dicts")
 
         answer_concept_graphs = []
         for concept_dict in concept_dicts:
             try:
-                answer_concept_graphs.append(concept_dict_converter(concept_dict, variable_graph))
+                answer_concept_graphs.append(concept_dict_converter(concept_dict, query.graph))
             except ValueError as e:
-                raise ValueError(str(e) + f'Encountered processing query:\n \"{query}\"')
+                raise ValueError(str(e) + f'Encountered processing query:\n \"{query.string}\"')
 
         if len(answer_concept_graphs) > 1:
             query_concept_graph = combine_n_graphs(answer_concept_graphs)
@@ -77,7 +74,7 @@ def build_graph_from_queries(query_sampler_variable_graph_tuples, transaction,
         # Raise exception when none of the queries returned any results
         raise RuntimeError(
             f'The graph from queries: '
-            f'{[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in query_sampler_variable_graph_tuples]}\n'
+            f'{[query_sampler_variable_graph_tuple[0] for query_sampler_variable_graph_tuple in queries]}\n'
             f'could not be created, since none of these queries returned results'
         )
 

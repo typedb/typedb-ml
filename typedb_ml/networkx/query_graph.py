@@ -66,3 +66,12 @@ class QueryGraph(nx.MultiDiGraph):
         """
         self.add_edge(relation_var, roleplayer_var, type=role_label)
         return self
+
+
+class Query:
+    def __init__(self, graph: QueryGraph, string: str):
+        self.graph = graph
+        self.string = string
+
+    def __str__(self):
+        return self.string

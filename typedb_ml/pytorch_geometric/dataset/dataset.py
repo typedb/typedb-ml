@@ -38,7 +38,7 @@ class DataSet:
             indices: Sequence,
             node_types,
             edge_type_triplets,
-            get_query_handles_for_id: Callable,
+            queries_for_id: Callable,
             session: Optional[TypeDBSession] = None,
             infer: bool = True,
             transform: Optional[Callable[[nx.Graph], nx.Graph]] = None,
@@ -46,7 +46,7 @@ class DataSet:
         self._indices = indices
         self._node_types = node_types
         self._edge_type_triplets = edge_type_triplets
-        self.get_query_handles_for_id = get_query_handles_for_id
+        self.queries_for_id = queries_for_id
         self._infer = infer
         self._transform = transform
         self.session = session
@@ -57,14 +57,14 @@ class DataSet:
     def __getitem__(self, idx):
         id = self._indices[idx]
         print(f"Fetching graph for id: {id}")
-        graph_query_handles = self.get_query_handles_for_id(id)
+        queries = self.queries_for_id(id)
 
         options = TypeDBOptions.core()
         options.infer = self._infer
 
         with self.session.transaction(TransactionType.READ, options=options) as tx:
-            # Build a graph from the queries, samplers, and query graphs
-            graph = build_graph_from_queries(graph_query_handles, tx)
+            # Build a graph from the queries
+            graph = build_graph_from_queries(queries, tx)
         graph.name = id
         if self._transform:
             graph = self._transform(graph)

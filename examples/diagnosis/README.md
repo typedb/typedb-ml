@@ -19,7 +19,7 @@ Once you have installed TypeDB-ML (see root README for instructions) you can run
 The process conducted by the example is as follows:
 
 1. Define the data retrieval
-   - This requires specifying queries that will retrieve Concepts from TypeDB (in `get_query_handles`)
+   - This requires specifying queries that will retrieve Concepts from TypeDB (in `build_queries`)
    - The answers from these queries are merged together into an in-memory NetworkX graph
 2. Find the Types and Roles present in the schema. If any are not needed for learning then they should be excluded from the exhaustive list for better accuracy.
 3. Configure the `ATTRIBUTE_ENCODERS` for the different types present
