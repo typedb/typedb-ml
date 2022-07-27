@@ -32,5 +32,5 @@ def vaticle_typedb_client_python():
     git_repository(
         name = "vaticle_typedb_client_python",
         remote = "https://github.com/vaticle/typedb-client-python",
-        commit = "2.11.1" # sync-marker: do not remove this comment, this is used for sync-dependencies by @vaticle_typedb_client_python
+        tag = "2.11.1" # sync-marker: do not remove this comment, this is used for sync-dependencies by @vaticle_typedb_client_python
     )
