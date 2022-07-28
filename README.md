@@ -40,7 +40,7 @@ You may find the following resources useful, particularly to understand why Type
 
 - Python >= 3.7.x
 
-- Grab the `requirements.txt` file from [here](requirements.txt) and install the requirements with `pip install requirements.txt`. This is due to some intricacies installing PyG's dependencies, see [here](https://github.com/pyg-team/pytorch_geometric/issues/861) for details.
+- Grab the `requirements.txt` file from [here](requirements.txt) and install the requirements with `pip install -r requirements.txt`. This is due to some intricacies installing PyG's dependencies, see [here](https://github.com/pyg-team/pytorch_geometric/issues/861) for details.
 
 - Installed TypeDB-ML: `pip install typedb-ml`. 
 
