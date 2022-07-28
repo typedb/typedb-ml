@@ -23,27 +23,25 @@ exports_files(["requirements.txt", "RELEASE_TEMPLATE.md"])
 
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-load("@vaticle_kglib_pip//:requirements.bzl",
-       vaticle_kglib_requirement = "requirement")
+load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
 
 load("@vaticle_bazel_distribution//github:rules.bzl", "deploy_github")
 load("@vaticle_bazel_distribution//pip:rules.bzl", "assemble_pip", "deploy_pip")
-load("@vaticle_kglib_pip//:requirements.bzl",
-       vaticle_kglib_requirement = "requirement")
+load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
 
 load("@vaticle_dependencies//distribution:deployment.bzl", "deployment")
 load("//:deployment.bzl", github_deployment = "deployment")
-load("@vaticle_dependencies//tool/release/deps:rules.bzl", "release_validate_deps")
+load("@vaticle_dependencies//tool/release/deps:rules.bzl", "release_validate_python_deps")
 
 load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
 
 assemble_pip(
     name = "assemble-pip",
-    target = "//kglib:kglib",
-    package_name = "vaticle-kglib",
+    target = "//typedb_ml:typedb-ml",
+    package_name = "typedb-ml",
     classifiers = [
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Intended Audience :: Developers",
@@ -54,11 +52,11 @@ assemble_pip(
         "Topic :: Software Development :: Libraries",
         "Topic :: Software Development :: Libraries :: Python Modules"
     ],
-    url = "https://github.com/vaticle/kglib",
+    url = "https://github.com/vaticle/typedb-ml",
     author = "Vaticle",
     author_email = "community@vaticle.com",
     license = "Apache-2.0",
-    requirements_file = "//:requirements.txt",
+    requirements_file = "//:install_requires.txt",
     keywords = ["machine learning", "logical reasoning", "knowledege graph", "typedb", "database", "graph",
                 "knowledgebase", "knowledge-engineering"],
 
@@ -73,14 +71,12 @@ deploy_pip(
     release = deployment["pypi.release"],
 )
 
-release_validate_deps(
-    name = "release-validate-deps",
-    refs = "@vaticle_kglib_workspace_refs//:refs.json",
+release_validate_python_deps(
+    name = "release-validate-python-deps",
+    requirements = "//:requirements.txt",
     tagged_deps = [
-        "@vaticle_typedb",
-        "@vaticle_typedb_client_python",
+        "typedb-client",
     ],
-    tags = ["manual"]
 )
 
 checkstyle_test(
@@ -89,6 +85,13 @@ checkstyle_test(
         "*",
         ".grabl/*",
     ]),
+    exclude = glob([
+        "*.md"
+    ]) + [
+        ".bazelversion",
+        "LICENSE",
+        "VERSION",
+    ],
     license_type = "apache-header",
 )
 

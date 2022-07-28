@@ -19,9 +19,6 @@
 # under the License.
 #
 
---find-links https://download.pytorch.org/whl/cpu/torch_stable.html
---find-links https://data.pyg.org/whl/torch-1.11.0+cpu.html
-
 absl-py==1.2.0
 cachetools==5.2.0
 certifi==2022.6.15

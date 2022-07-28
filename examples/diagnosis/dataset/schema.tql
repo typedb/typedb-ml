@@ -1,0 +1,168 @@
+#
+# Copyright (C) 2022 Vaticle
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+define
+
+person-id sub attribute,
+    value long;
+
+age sub attribute,
+    value long;
+
+name sub attribute,
+    value string;
+
+severity sub attribute,
+    value double;
+
+units-per-week sub attribute,
+    value long;
+
+person sub entity,
+    owns person-id @key,
+    owns age,
+    plays diagnosis:patient,
+    plays predicted-diagnosis:patient,
+    plays symptom-presentation:symptomatic-patient,
+    plays consumption:consumer,
+    plays age-risk-factor:person-at-age-risk,
+    plays hereditary-risk-factor:person-at-hereditary-risk,
+    plays smoking-risk-factor:person-at-smoking-risk,
+    plays alcohol-risk-factor:person-at-alcohol-risk,
+    plays parentship:child;
+
+disease sub entity,
+    owns name @key,
+    plays causality:cause,
+    plays diagnosis:diagnosed-disease,
+    plays familial-diagnosis:diagnosed-disease,
+    plays predicted-diagnosis:diagnosed-disease,
+    plays age-risk-factor:age-risked-disease,
+    plays hereditary-risk-factor:hereditary-risked-disease,
+    plays smoking-risk-factor:smoking-risked-disease,
+    plays alcohol-risk-factor:alcohol-risked-disease;
+
+parent sub entity,
+    plays parentship:parent,
+    plays familial-diagnosis:patient;
+
+substance sub entity,
+    owns name @key,
+    plays consumption:consumed-substance;
+
+parentship sub relation,
+    relates child,
+    relates parent;
+
+diagnosis sub relation,
+    relates patient,
+    relates diagnosed-disease;
+
+familial-diagnosis sub relation,
+    relates patient,
+    relates diagnosed-disease;
+
+predicted-diagnosis sub relation,
+    relates patient,
+    relates diagnosed-disease;
+
+causality sub relation,
+    relates cause,
+    relates effect;
+
+symptom sub entity,
+    owns name @key,
+    plays symptom-presentation:presented-symptom,
+    plays causality:effect;
+
+symptom-presentation sub relation,
+    owns severity,
+    relates presented-symptom,
+    relates symptomatic-patient;
+
+risk-factor sub relation,
+    abstract,
+    relates person-at-risk,
+    relates risked-disease;
+
+consumption sub relation,
+    owns units-per-week,
+    relates consumer,
+    relates consumed-substance;
+
+rule alcohol-risk-of-diabetes:
+when {
+    $p isa person;
+    $c(consumer: $p, consumed-substance: $s) isa consumption, has units-per-week $u;
+    $u >= 10;
+    $s isa substance, has name "Alcohol";
+    $d isa disease, has name "Diabetes Type II";
+} then {
+    (person-at-alcohol-risk: $p, alcohol-risked-disease: $d) isa alcohol-risk-factor;
+};
+
+rule over-40-risk-of-diabetes:
+when {
+    $p isa person, has age $a;
+    $a >= 40;
+    $d isa disease, has name "Diabetes Type II";
+} then {
+    (person-at-age-risk: $p, age-risked-disease: $d) isa age-risk-factor;
+};
+
+rule heriditary-risk-of-diabetes:
+when {
+    $p isa person;
+    $parent isa parent;
+    $cause(parent: $parent, child: $p) isa parentship;
+    $dia(patient: $parent, diagnosed-disease: $d) isa familial-diagnosis;
+    $d isa disease, has name "Diabetes Type II";
+} then {
+    (person-at-hereditary-risk: $p, hereditary-risked-disease: $d) isa hereditary-risk-factor;
+};
+
+
+rule smoking-risk-of-multiple-sclerosis:
+when {
+    $p isa person;
+    $c(consumer: $p, consumed-substance: $s) isa consumption, has units-per-week $u;
+    $u >= 12;
+    $s isa substance, has name "Cigarettes";
+    $d isa disease, has name "Multiple Sclerosis";
+} then {
+    (person-at-smoking-risk: $p, smoking-risked-disease: $d) isa smoking-risk-factor;
+};
+
+hereditary-risk-factor sub risk-factor,
+    relates person-at-hereditary-risk as person-at-risk,
+    relates hereditary-risked-disease as risked-disease;
+
+age-risk-factor sub risk-factor,
+    relates person-at-age-risk as person-at-risk,
+    relates age-risked-disease as risked-disease;
+
+alcohol-risk-factor sub risk-factor,
+    relates person-at-alcohol-risk as person-at-risk,
+    relates alcohol-risked-disease as risked-disease;
+
+smoking-risk-factor sub risk-factor,
+    relates person-at-smoking-risk as person-at-risk,
+    relates smoking-risked-disease as risked-disease;

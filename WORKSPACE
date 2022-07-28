@@ -19,7 +19,7 @@
 # under the License.
 #
 
-workspace(name = "vaticle_kglib")
+workspace(name = "vaticle_typedb_ml")
 
 ################################
 # Load @vaticle_dependencies #
@@ -46,13 +46,13 @@ kt_register_toolchains()
 # Load //builder/python
 load("@vaticle_dependencies//builder/python:deps.bzl", python_deps = "deps")
 python_deps()
-load("@rules_python//python:pip.bzl", "pip_install")
+load("@rules_python//python:pip.bzl", "pip_repositories")
+pip_repositories()
 
 # Load //builder/grpc
 load("@vaticle_dependencies//builder/grpc:deps.bzl", grpc_deps = "deps")
 grpc_deps()
-load("@com_github_grpc_grpc//bazel:grpc_deps.bzl",
-com_github_grpc_grpc_deps = "grpc_deps")
+load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", com_github_grpc_grpc_deps = "grpc_deps")
 com_github_grpc_grpc_deps()
 
 # Load //tool/common
@@ -89,23 +89,21 @@ github_deps()
 # Load @vaticle dependencies #
 ################################
 
+load("//dependencies/vaticle:artifacts.bzl", "vaticle_typedb_artifacts")
+vaticle_typedb_artifacts()
+
 load("//dependencies/vaticle:repositories.bzl", "vaticle_typedb_client_python")
 vaticle_typedb_client_python()
 
+load("@rules_python//python:pip.bzl", "pip_install")
 pip_install(
     name = "vaticle_typedb_client_python_pip",
     requirements = "@vaticle_typedb_client_python//:requirements.txt",
 )
 
-load("//dependencies/vaticle:repositories.bzl", "vaticle_common")
-vaticle_common()
-
-load("//dependencies/vaticle:artifacts.bzl", "vaticle_typedb_artifacts")
-vaticle_typedb_artifacts()
-
 pip_install(
-    name = "vaticle_kglib_pip",
-    requirements = "//:requirements-dev.txt",
+    name = "vaticle_typedb_ml_pip",
+    requirements = "//:requirements_dev.txt",
 )
 
 ############################
@@ -121,5 +119,5 @@ maven(vaticle_dependencies_tool_maven_artifacts)
 
 load("@vaticle_bazel_distribution//common:rules.bzl", "workspace_refs")
 workspace_refs(
-    name = "vaticle_kglib_workspace_refs"
+    name = "vaticle_typedb_ml_workspace_refs"
 )

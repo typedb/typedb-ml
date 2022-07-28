@@ -21,5 +21,5 @@
 
 deployment = {
     "github.organisation" : "vaticle",
-    "github.repository" : "kglib"
+    "github.repository" : "typedb-ml"
 }

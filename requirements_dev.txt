@@ -19,6 +19,7 @@
 # under the License.
 #
 
+--extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple
 --find-links https://download.pytorch.org/whl/cpu/torch_stable.html
 --find-links https://data.pyg.org/whl/torch-1.11.0+cpu.html
 
@@ -61,8 +62,6 @@ torch-geometric==2.0.4
 torch-scatter==2.0.9
 torch-sparse==0.6.14
 tqdm==4.64.0
-typedb-client==2.9.0
-typedb-protocol==2.9.0
 typing-extensions==4.3.0
 urllib3==1.26.10
 Werkzeug==2.1.2

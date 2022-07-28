@@ -18,16 +18,3 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-from setuptools import setup
-
-setup(
-    name='typedb_ml',
-    version='',
-    packages=['typedb_ml', 'typedb_ml.networkx', 'typedb_ml.pytorch_geometric', 'typedb_ml.typedb'],
-    url='',
-    license='',
-    author='jmsfltchr',
-    author_email='',
-    description=''
-)

@@ -19,15 +19,30 @@
 # under the License.
 #
 
-from setuptools import setup
+load("@vaticle_dependencies//tool/checkstyle:rules.bzl", "checkstyle_test")
+load("@vaticle_typedb_ml_pip//:requirements.bzl", vaticle_typedb_ml_requirement = "requirement")
 
-setup(
-    name='typedb_ml',
-    version='',
-    packages=['typedb_ml', 'typedb_ml.networkx', 'typedb_ml.pytorch_geometric', 'typedb_ml.typedb'],
-    url='',
-    license='',
-    author='jmsfltchr',
-    author_email='',
-    description=''
+py_library(
+    name = "pytorch_geometric",
+    srcs = glob([
+        "*.py",
+        "**/*.py"
+    ]),
+    deps = [
+        vaticle_typedb_ml_requirement("networkx"),
+        vaticle_typedb_ml_requirement("torch"),
+        vaticle_typedb_ml_requirement("torch_geometric"),
+        vaticle_typedb_ml_requirement("torch_sparse"),
+        vaticle_typedb_ml_requirement("torch_scatter"),
+    ],
+    visibility=['//visibility:public']
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    include = glob([
+        "*",
+        "**/*"
+    ]),
+    license_type = "apache-header",
 )
