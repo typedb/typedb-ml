@@ -147,5 +147,5 @@ release:
         bazel run @vaticle_dependencies//distribution/artifact:create-netrc
         export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
-        bazel run --define version=$(cat VERSION) //:deploy-pip
+        bazel run --define version=$(cat VERSION) //:deploy-pip -- release
       dependencies: [deploy-github]
