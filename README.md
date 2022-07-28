@@ -52,7 +52,15 @@ You may find the following resources useful, particularly to understand why Type
 
 Take a look at the [PyTorch Geometric heterogeneous link prediction example](examples/diagnosis) to see how to use TypeDB-ML to build a GNN on TypeDB data.
 
-### Building from source
+## Development
+
+To follow the development conversation, please join the [Vaticle Discord](https://discord.com/invite/vaticle), and join the `#typedb-ml` channel. Alternatively, start a new topic on the [Vaticle Discussion Forum](https://forum.vaticle.com).
+
+TypeDB-ML requires that you have migrated your data into a [TypeDB](https://github.com/vaticle/typedb) or TypeDB 
+Cluster instance. There is an [official examples repo](https://github.com/vaticle/examples) for how to go about this, and information available on [migration in the docs](https://docs.vaticle.com/docs/examples/phone-calls-migration-python). Alternatively, there are fantastic community-led projects growing in the [TypeDB OSI](https://typedb.org) to facilitate fast and easy data loading, for example [TypeDB Loader](https://github.com/typedb-osi/typedb-loader).
+
+
+### Building from Source
 
 It's expected that you will use Pip to install, but should you need to make your own changes to the library, and import it into your project, you can build from source as follows:
 
@@ -85,10 +93,3 @@ Build the pip distribution. Outputs to `bazel-bin`:
 ```
 bazel build //:assemble-pip
 ```
-
-## Development
-
-To follow the development conversation, please join the [Vaticle Discord](https://discord.com/invite/vaticle), and join the `#typedb-ml` channel. Alternatively, start a new topic on the [Vaticle Discussion Forum](https://forum.vaticle.com).
-
-TypeDB-ML requires that you have migrated your data into a [TypeDB](https://github.com/vaticle/typedb) or TypeDB 
-Cluster instance. There is an [official examples repo](https://github.com/vaticle/examples) for how to go about this, and information available on [migration in the docs](https://docs.vaticle.com/docs/examples/phone-calls-migration-python). Alternatively, there are fantastic community-led projects growing in the [TypeDB OSI](https://typedb.org) to facilitate fast and easy data loading, for example [TypeDB Loader](https://github.com/typedb-osi/typedb-loader).
