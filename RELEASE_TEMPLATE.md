@@ -1,4 +1,3 @@
-PyPI package: https://pypi.org/project/typedb-ml
 Documentation: https://github.com/vaticle/typedb-ml
 
 ## Distribution
