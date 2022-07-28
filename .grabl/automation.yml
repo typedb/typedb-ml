@@ -130,9 +130,12 @@ release:
         export ARTIFACT_PASSWORD=$REPO_VATICLE_PASSWORD
         bazel run @vaticle_dependencies//distribution/artifact:create-netrc
         export NOTES_CREATE_TOKEN=$REPO_GITHUB_TOKEN
-        bazel run @vaticle_dependencies//tool/release/notes:create -- $GRABL_OWNER $GRABL_REPO $GRABL_COMMIT $(cat VERSION) ./RELEASE_TEMPLATE.md
         export DEPLOY_GITHUB_TOKEN=$REPO_GITHUB_TOKEN
         bazel run --define version=$(cat VERSION) //:deploy-github -- $GRABL_COMMIT
+#        TODO: Replace two lines above with these three when fixed:
+#        bazel run @vaticle_dependencies//tool/release/notes:create -- $GRABL_OWNER $GRABL_REPO $GRABL_COMMIT $(cat VERSION) ./RELEASE_TEMPLATE.md
+#        export DEPLOY_GITHUB_TOKEN=$REPO_GITHUB_TOKEN
+#        bazel run --define version=$(cat VERSION) //:deploy-github -- $GRABL_COMMIT
     deploy-pip-release:
       image: vaticle-ubuntu-20.04
       command: |
@@ -144,5 +147,5 @@ release:
         bazel run @vaticle_dependencies//distribution/artifact:create-netrc
         export DEPLOY_PIP_USERNAME=$REPO_PYPI_USERNAME
         export DEPLOY_PIP_PASSWORD=$REPO_PYPI_PASSWORD
-        bazel run --define version=$(cat VERSION) //:deploy-pip -- release
+        bazel run --define version=$(cat VERSION) //:deploy-pip
       dependencies: [deploy-github]

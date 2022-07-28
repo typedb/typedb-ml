@@ -71,6 +71,16 @@ deploy_pip(
     release = deployment["pypi.release"],
 )
 
+deploy_github(
+    name = "deploy-github",
+    release_description = "//:RELEASE_TEMPLATE.md",
+    title = "TypeDB-ML",
+    title_append_version = True,
+    organisation = github_deployment["github.organisation"],
+    repository = github_deployment["github.repository"],
+    draft = False
+)
+
 release_validate_python_deps(
     name = "release-validate-python-deps",
     requirements = "//:requirements.txt",
