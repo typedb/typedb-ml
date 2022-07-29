@@ -4,10 +4,10 @@
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typedb-796de3.svg)](https://stackoverflow.com/questions/tagged/typedb)
 [![Stack Overflow](https://img.shields.io/badge/stackoverflow-typeql-3dce8c.svg)](https://stackoverflow.com/questions/tagged/typeql)
 
-# TypeDB ML
+# TypeDB-ML
 _Previously known as KGLIB._
 
-**TypeDB ML provides tools to enable graph algorithms and machine learning with [TypeDB](https://github.com/vaticle/typedb).**
+**TypeDB-ML provides tools to enable graph algorithms and machine learning with [TypeDB](https://github.com/vaticle/typedb).**
 
 There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geometric (PyG)](https://github.com/pyg-team/pytorch_geometric).
 
@@ -22,7 +22,7 @@ There are integrations for [NetworkX](https://networkx.org) and for [PyTorch Geo
 - Query a TypeDB instance and combine many results across many queries into a single graph (`build_graph_from_queries`).
 ### PyTorch Geometric
 - A `DataSet` object to lazily load graphs from a TypeDB instance. Each graph is converted to a PyG `Data` object.
-- It's most natural to work with `HeteroData` objects since all data in TypeDB has a type. This conversion is available by default in PyG, but TypeDB-ML provides `store_concepts_by_type` to map concepts by type so that they can be re-associated after learning is finished.
+- It's most natural to work with PyG `HeteroData` objects since all data in TypeDB has a type. Conversion from `Data` to `HeteroData`is available in PyG, but it loses node ordering information. To remedy this, TypeDB-ML provides `store_concepts_by_type` to store concepts consistent with a `HeteroData` object. This enables concepts to be properly re-associated with predictions after learning is finished.
 - A `FeatureEncoder` to orchestrate encoders to generate features for graphs.
 - Encoders for Continuous and Categorical values to apply encodings/embedding spaces to the types and attribute values present in TypeDB data.
 - A [full example for link prediction](examples/diagnosis)
