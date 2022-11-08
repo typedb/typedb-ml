@@ -29,5 +29,5 @@ def vaticle_typedb_artifacts():
         artifact_name = "typedb-all-{platform}-{version}.{ext}",
         tag_source = deployment["artifact.release"],
         commit_source = deployment["artifact.snapshot"],
-        tag = "2.11.1",
+        tag = "2.12.0",
     )

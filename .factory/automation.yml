@@ -105,7 +105,7 @@ build:
         bazel run //tests/end_to_end:typedb-extractor-linux -- typedb-all-linux
         ./typedb-all-linux/typedb server &
         pip install -r requirements.txt
-        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-ml==0.0.0-$GRABL_COMMIT
+        pip install --extra-index-url https://repo.vaticle.com/repository/pypi-snapshot/simple typedb-ml==0.0.0-$FACTORY_COMMIT
         python -m examples.diagnosis.diagnosis "./typedb-all-linux" && export TEST_SUCCESS=0 ||
         export TEST_SUCCESS=1
         kill $(jps | awk '/TypeDBServer/ {print $1}')
@@ -131,11 +131,11 @@ release:
         bazel run @vaticle_dependencies//distribution/artifact:create-netrc
         export NOTES_CREATE_TOKEN=$REPO_GITHUB_TOKEN
         export DEPLOY_GITHUB_TOKEN=$REPO_GITHUB_TOKEN
-        bazel run --define version=$(cat VERSION) //:deploy-github -- $GRABL_COMMIT
+        bazel run --define version=$(cat VERSION) //:deploy-github -- $FACTORY_COMMIT
 #        TODO: Replace two lines above with these three when fixed:
-#        bazel run @vaticle_dependencies//tool/release/notes:create -- $GRABL_OWNER $GRABL_REPO $GRABL_COMMIT $(cat VERSION) ./RELEASE_TEMPLATE.md
+#        bazel run @vaticle_dependencies//tool/release/notes:create -- $FACTORY_OWNER $FACTORY_REPO $FACTORY_COMMIT $(cat VERSION) ./RELEASE_TEMPLATE.md
 #        export DEPLOY_GITHUB_TOKEN=$REPO_GITHUB_TOKEN
-#        bazel run --define version=$(cat VERSION) //:deploy-github -- $GRABL_COMMIT
+#        bazel run --define version=$(cat VERSION) //:deploy-github -- $FACTORY_COMMIT
     deploy-pip-release:
       image: vaticle-ubuntu-20.04
       command: |
