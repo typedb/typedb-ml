@@ -77,7 +77,19 @@ class TypeDBServer(object):
     def _unpack(self):
         self.__unpacked_dir = tempfile.mkdtemp(prefix='typedb')
         with tarfile.open(self.__distribution_location) as tf:
-            tf.extractall(self.__unpacked_dir)
+            def is_within_directory(directory, target):
+                abs_directory = os.path.abspath(directory)
+                prefix = os.path.commonprefix([abs_directory, os.path.abspath(target)])
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path="."):
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Detected unsafe path traversal in .tar file")
+                tar.extractall(path)
+
+            safe_extract(tf, self.__unpacked_dir)
             self.__distribution_root_dir = os.path.commonpath(tf.getnames()[1:])
 
     @property
