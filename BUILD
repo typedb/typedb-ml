@@ -93,7 +93,7 @@ checkstyle_test(
     name = "checkstyle",
     include = glob([
         "*",
-        ".grabl/*",
+        ".factory/*",
     ]),
     exclude = glob([
         "*.md"
