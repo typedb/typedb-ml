@@ -1,3 +1,6 @@
+# This repository is outdated and not supported. We will be closing this repository by end of 2023.
+---
+
 [![GitHub release](https://img.shields.io/github/release/vaticle/typedb-ml.svg)](https://github.com/vaticle/typedb/releases/latest)
 [![Discord](https://img.shields.io/discord/665254494820368395?color=7389D8&label=chat&logo=discord&logoColor=ffffff)](https://vaticle.com/discord)
 [![Discussion Forum](https://img.shields.io/discourse/https/forum.vaticle.com/topics.svg)](https://forum.vaticle.com)
